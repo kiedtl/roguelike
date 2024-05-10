@@ -1,21 +1,16 @@
-- why don't mobs appear in prefabs (Lab)
-- update alchemist description
-- ring pickup bug (disappears when cancelling "replace this ring with what
-  ring?" dialog
-- spires must look in direction of enemy!!
-  - repro: attack calcite spire while it's asleep
-- don't show non-existent ring slots
-- "spinning sword" -> "ethereal spin"
-- balance excision ring
-- lab shouldn't be so empty
+triage:
+- spires leave tangled metal prop (or themed corpse?)
+  - cleaners/engineers fix/replace it?
+
+- wrk shouldn't be so empty
   - more prefabs, more alarm traps, more enemies
-- why are night creatures always investigating
-- rounding issue in examine mode
-- fix examine weapons pane
-  - see: dagger
+  - pressure plates have unknown effects (that aren't too deadly)
+    - turn on lights
+    - cause noises some distance away (clicking, grinding, etc)
+    - permanently open doors
+
 - new shrine blowup effect
-- "coffins" (find word from old-english etc) near rings
-- if coroner dies, next coroners should be escorted
+- "coffins" (find word from old-english etc) near rings?
 - don't store state in prefab list, everything should be in fab_records
   - usage data
   - for serialization
@@ -57,3 +52,14 @@ Done
 - corruption effects
   - less dodge
   - no forget
+- fix examine weapons pane
+- balance excision ring
+  - "spinning sword" -> "ethereal spin"
+- don't show non-existent ring slots
+- spires must look in direction of enemy!!
+  - repro: attack calcite spire while it's asleep
+- why are night creatures always investigating
+- ring pickup bug (disappears when cancelling "replace this ring with what
+  ring?" dialog
+- why don't mobs appear in prefabs (Lab)
+- update alchemist, executioner description

@@ -79,31 +79,6 @@ x sulfur fiend x
   x Hasten Rot: makes a corpse emit a cloud of miasma, destroying the
     corpse in the process. Miasma causes nausea.
   x Summon Ball Lightning: conjures a ball lightning mobs.
-
-
-- fiend of vapours
-  - CANCELED: abilities just aren't that impressive, and would fit
-    better in Garrison on some other minor spellcaster.
-  -
-  - "A strange winged figure, cloaked in dirty rags. It is holding a
-    sceptre."
-  - Aura of Dispersal: resistably blinks all affected mobs away (range:
-    2).  Used to remove surrounding enemies.
-  - Dispel Cloud: removes all smoke clouds in caster's LOS. Used to
-    remove gas obscuring enemy.
-  - Dispel Fumes: removes harmful fumes near allies.
-  - Meat Offering: creates a vile protector from a corpse, using it up in
-    the process. Vile protector redirects damage done to allies to itself.
-    Vile protector is fairly tanky (15 HP) but immobile; shielding ends if
-    the dustlings/allies move out of its LOS.
-  - Windlash: moderate damage, smite-targeted.
-    - "The vapour fiend waves its arms around in wide circles!"
-    - "The air whirls around and strikes you!"
-    - "The air twists around and strikes you!"
-    - "The air twists itself inside-out and smites you!!"
-  - Vunerable to fire, resistant to electricity.
-  - Relatively fragile (12 HP) and slow (110).
-
 x vapour mage
   - Airblast: knockback foe (5 - distance_from_mage) spaces
   - Haste dustling
@@ -137,11 +112,6 @@ x frozen fiend
 - schalenblende statue
   - Appears in pairs guarding doorways of rooms in the Crypt.
   - Chance to prevent passage of intruders.
-
-- operator
-  - "Activates" spire, allowing attacks without other present allies. (Range: 1)
-  - "Repairs" spire, healing them completely. (Range: 1)
-  - "Reprograms" spire, reseting any player commands. (Range: 1)
 
 x lightning spire
   - Like dcss' lightning spire. Hurls powerful bolts of electricity.
@@ -249,14 +219,6 @@ x brimstone mage
   - Avoids melee.
   - Travels with packs of emberlings
 
-- blood mage (IN DESIGN)
-  - Toned-down pain spell that heals nearby bloodlings
-  - Can make a corpse explode in a wave of blood
-  - Can create 3-4 bloodlings from a corpse
-- bloodlings (IN DESIGN)
-  - Slow
-  - Heals when traveling over blood-stained ground
-
 x sparklings
   - Attacks that do electric damage
   - Spell: blinkbolt
@@ -271,7 +233,7 @@ x lightning mage
   - Can haste sparklings
   - Keeps distance
 
-- slinking terror
+x slinking terror
   - creeps near walls, refuses to move while being watched
   - very fast, attacks nearby enemies
   - fearless, tanky
@@ -287,24 +249,6 @@ x lightning mage
     - "You feel like something is watching you."
     - "You feel uneasy." (just before cat charges)
   - Is neutral to guards, alone among night creatures.
-- night wanderer
-  - "An invisible Presence that stalks the dungeon, clothed in suffocating Darkness."
-  - neutral/non-combatant, wanders around at night without doing anything.
-  - aura of paralysis? (i.e. paralyses mobs that can see it, for effect?)
-- grue
-  - 20% chance to acquires .Burning when in contact with light
-  - competent melee brute
-  - seeks out and attacks enemies during night
-    - requirement: target is in dark area, and is surrounded in darkness
-    - requirement: target must be alone.
-    - requirement: target must be reachable without going into light areas
-  - after killing, stands over corpse (unless enemy approaches, in which case it flees).
-- ???
-  - Slow, moderately tanky.
-  - Attacks: occasional push attack, otherwise 1-2 damage.
-  - Emits slowing gas. When player is too close to monster, will become too
-    slow to get away.
-    - Like that alien thingy in that horror-themed 7drl.
 
 x spectre mage
   x Spectral Sword: summons four spectral swords, which are very fast but
@@ -327,50 +271,30 @@ x death mage
   x Haste: give .Fast to nearby undead ally.
   x Heal: Uses up a corpse to restore 90% of lost health for nearby undead ally.
   x Prefers to keep distance.
-- beastmaster
-  - Slow (120) and heavily armored, but just a simple club.
-  - Releases chained allies (dogs, hounds, wolves) in same room when
-    seeing hostile.
-  - Goads beasts on, possibly giving them .Enraged status
 - sleeping beauty
   - "A hideous statue of some nameless creature, covered in metal plates."
   - Sleeps, when hit with electric damage, activates.
   - rElec+75% rFume∞ rFire∞
+  - (from notes:) Deploys emberlings
+  - (from notes:) Workshop room:
+    - Alchemist diary
+    - Wheels, steel pipes, welding setup
+    - SB frame (what's that?)
 x mellaent
   - kerejat-like nuisance
   - noncombatant
-- tentacling
-  - "A horrible twisted abomination, writhing and fidgeting uncontrollably. It
-    has retained its intelligence despite the countless decades of experiments
-    practiced on it.
-  - Monster with twenty tentacles, like DCSS tile for ugly things
-  - Faster than player.
-  - Ranged attack: throws boulders at player (i.e., DCSS' cyclops).
-  - Melee  attack: knock player across room to get more ranged hits.
-  - Usually tries to attack ranged, but may occasionally rush across room
-    and throw player around just for the heck of it.
-- revealer
-  - Casts glowing (will-checked).
-  - Uncommon. Found in Vaults, Crypt, higher Prison.
 x bloat
   - Bloated, very slow (150/200), 18 HP
   - When wounded, bursts forth miasma.
   - Analagous to TGGW's zombie.
   - Can see in the dark.
-- predator
-  - 10 HP, fast, no armor
-  - Vicious bite (3 dmg); may cause bleeding effect if it's added
-  - May be found chained w/ beastmasters
-x destroyer
-  - Armored executioner, w/ more HP + more evade% + more melee%
-  - Found instead of executioners above Caverns
 x sentinel
   - 12 HP. Armored, sword-wielding version of guard
 x cinder worm
   - Fire attacks, Prm burning
   - vomit fire: set surroundings of fire
   - Sometimes found as neutral prisoners
-- cinder brute
+x cinder brute
   - Just plain fire attacks, Prm burning
   - Hurls fireballs?
   - Sometimes found as neutral prisoners
@@ -383,36 +307,6 @@ x war olg
     but this one has been trained for war.
   - Three pairs of legs/hands.
   - Fast regeneration (0.5 per turn)
-- grey skuth
-  - Basically a war-trained jackrabbit.
-  - Joke monster. Hilariously weak creature that some bored alchemist trained
-    for war.
-  - 1 HP, 30% evade, 50% melee
-- lava flans
-  - Lava-dwelling monsters.
-  - 6 HP, normal speed.
-  - Conjures lava orbs (i.e. buffed fire orbs)
-- new monsters
-  - hydra-like monster, multiple attacks per turn
-  - Hurls bolts of paralysing dust (same as DCSS' catoblepas).
-
-
-
-Intelligence
-------------
-- Levels: mindless, moron, animal, human, genius
-- Stupid (<Human) mobs will have trouble determining what's a stronger enemy
-  (morale system).
-- Extra stupid (<Moron) mobs will employ ranged attacks even when it might hit
-  another ally.
-- Stupid (<Human) mobs will step on traps, mines, etc.
-- Stupid (<Human) mobs will assign a pathfinding penalty to areas they cannot
-  see, thus preferring to travel in areas they can vs areas they can't, even if
-  it's shorter.
-- Moron/mindless mobs will not reposition during a fight, and will not move off
-  of dangerous terrain intelligently (they'll just move randomly).
-- Mindless mobs will never flee.
-- Unintelligent mobs cannot use doors and machines marked as requiring INT.
 
 
 Equipment
@@ -447,6 +341,7 @@ x gambeson         15% armor   Sneak+
 - cuirass          35% armor   Sneak-  Martial-
 
 footwear:
+- won't be added just yet, need more ideas to justify new armor slot
 - sabatons:        15% armor
 - martial shoe:                Martial++
 - combat boots:    10% armor   +10% melee ("perfectly weighted for combat")
@@ -456,6 +351,7 @@ footwear:
 - ornate shoes:                Potential+10 Will-1
 ~ scale shoes:      5% armor   +10% speed when moving over ground that gives speed, -10% speed
                                 on ground that slows down
+
 headgear:
 - mining helmet:               Vision+ 
 - mail coif:       10% armor
@@ -494,11 +390,6 @@ x Miner's Map (echolocation)
 x Dispel Undead
   - Any undead adjacent to you take 2 dmg each turn.
   - Very powerful, but makes it impossible to sneak around them.
-- Demolish Undead
-  - Any undead adjacent burst into fiery explosion, each turn.
-  - Incredibly loud.
-  - Probably need mechanism to swap aux if this is the case...
-  - Does more damage than Dispel Undead
 - Crystal Ball
   - Small chance to dazzle enemies that can see you if you're running and in
     light. (daze or disorient?)
@@ -513,56 +404,8 @@ x Dispel Undead
     healing.)
 
 
-Movement patterns
------------------
-x sneak         [move, move, rest, move]
-- backstab      [attack(N), move(NE), move(NW), attack(S)]
-
-x lunge:       ....   ....
-               .m.@ → .m@.
-               ....   ....
-  i.e.: step into a square next to enemy.
-  automatic attack that doesn't miss and deals 2x damage. Noisy.
-
-x charge:            ........   ........   ........   ........
-          <wait>  →  m......@ → .m....@. → ..m..@.. → ...m@...
-                     ........   ........   ........   ........
-  i.e.: wait, move three spaces in the same direction towards enemy, ending
-  adjacent to enemy.
-  automatic attack that doesn't miss, and knocks opponent back three spaces,
-  dealing extra damage if they slam into a wall or another mob. Noisy.
-
-x pin:         ...            ...              ....
-               .m. → attack → .m@ → attack m → .m.@
-               .@.            ...              ....
-  gives foe .Held status for 5 turns, just enough to set up a charge.
-
-x cntrattack:  retreat, attack, retreat, attack, retreat.
-  Gives you the .Fast status for 4 turns.
-
-- drive-by:    ...   ...              ..@
-               .m. → .m@ → attack m → .m.
-               ..@   ...              ...
-  free attack that doesn't miss, evade += 10% for two turns
-
-- partng shot: .m..                               .m..
-               .m@. → attack from top to bottom → .m.@
-               .m..                               .m..
-  i.e.: attack three foes consectively, where the first and third are both
-  adjacent to the second, then step away.
-  gives a 20% speed boost for five turns, and increases evade by +10%.
-
-- rampage:     .m.m.   .m.m.
-               ..... → ..@.. → attack NW → attack NE
-               ..@..   .....
-  i.e.: move adjacent to two enemies, attack both consecutively.
-
-
-
 Rings
 -----
-Rings have "tiers" instead of an enchantment level (gold, silver, iron).
-
 x ring of concentration: [holy] Increase willpower by a factor of 2, at the
   cost of melee%, evade%, and slowness.
 
@@ -579,13 +422,11 @@ x ring of concentration: [holy] Increase willpower by a factor of 2, at the
 - ring of distortion: (alt) Bends space around player, granting +20% evade and
   -20% melee.
 
-- ring of obscuration: Grants "invisible" status, drains 1 MP for each enemy
+x ring of obscuration: Grants "invisible" status, drains 1 MP for each enemy
   that can see player in exchange for them not noticing player. No MP drain
   when player can't be seen. 0 MP to start with. (Needs downside. Maybe doesn't
   work if player is directly adjacent, or player is corrupted and target is
   undead?)
-  - Maybe MP drain only occurs if player fails will-check? (Maybe ring could
-    have Will-3)
 
 - ring of ____________: Grants enemy on conductive terrain "gathering charge"
   status, causing them to take damage each turn they stand on that terrain
@@ -630,109 +471,42 @@ x ring of deception: [anti-Holy] undead mistake you for ally unless non-undead
   - cannot be used while corrupt and target must be undead, doesn't affect
     non-undead
 
-- ring of distortion: bend space, blinking away all mobs in 3-5 tile radius of
-  player. Blinks player as well. All affected mobs, including player, have
-  health reduced by 10%.
-
 - ring of conscription: raise the corpse the player stands on at the end of the
   pattern to fight, giving it impressive tankiness and stat boosts (but
   slowness?).
-
-- ring of devastation: hurl beus lance, halving foe's health and causing 3-6
-  knockback.
-
-- ring of fear: confer fear on a single enemy.
 
 x ring of magnetization: cause knockback of all nearby foes onto a single foe.
   Like Gell's Gravitas in DCSS. Knockbacked foes could possibly hit player, so
   player must plan accordingly.
   - Attack foe and move behind it.
-    ....             .@..  ....
-    @m..  attack(m)  .m..  .m@.  attack(m)
-    ....             ....  ....
 
 x ring of insurrection: raise 3-7 nearby corpses to fight a specific mob, for
   14-28 turns. Zombies are completely blind and won't fight any other monster
   unless attacked.
-  - Move on both sides of foe, then move back.
-    .....        .@...  .....  .....  .....
-    @M...  wait  .M...  @M...  .M...  @M...
-    .....        .....  .....  .@...  .....
 
 x ring of electrification: Electrocute all mobs on one side.
   - Attack mob, move one tile backwards into corridor (ie with walls on the
     other two sides of your character), wait, attack forwards
-    ##.....             ##.....
-    ##.m...             ##m....
-    ..@M...  attack(M)  .@M....   wait   attack(M)
-    ##.m...             ##m....
-    ##.....             ##.....
 
 x ring of teleportation: Zap an enemy, then teleport to where the zap ended
   (i.e. Blinkbolt spell).
-  - Attack, move away, move in adjacent cardinal direction, move again in same
-    direction, attack any enemy.
-    .....           .....   .....   .....
-    m@...           .m@..   ..m..   .....
-    ..... attack(m) .....   ...@.   ...m. attack(any)
-    .....           .....   .....   ...@.
 
 x ring of damnation: create a fire explosion on all tiles containing foes.
   - Move towards a wall, wait, attack in the opposite direction.
-    .m...   .....
-    ..@..   ..m..
-    .....   ...@. wait, attack(m)
-    ...##   ...##
 
 x ring of electrocution: Electrocute tiles in four corners next to player.
   - Attack in a cardinal direction, move in opposite direction, move
     perpendicular, attack again
-    m...        ....   ....
-    @... attack m...   m... attack
-    ....        @...   .@..
-  x Iron:   2 damage.
-  - Silver: 3 damage.
-  - Gold:   4 damage.
 
 x ring of cremation: Makes all adjacent foes temporarily vulnerable to fire,
   and creates ring of flames in all adjacent squares.
   - Move all around mob in four turns (w/o attacking or resting).
-    .....          .....   .....   ..@..
-    ..m@.  attack  ..m..   .@m..   ..m..
-    .....          ..@..   .....   .....
-  - Silver: create ring of flames in 2-tile radius.
-  - Gold:   create ring of flames in 3-tile radius.
 
 x ring of extermination: fire bolt of fire in direction.
   - Move forward against guard, move right/left, move forward
-    ....   ....   ....   ....
-    @.m.   .@m.   ..m.   ..m.
-    ....   ....   .@..   ..@.
 
 - ring of ignition: Summon orbs of lava (a la DCSS' Foxfire).
   - Move in zig-zag direction away from mob.
-    .....   .....   ......   ......   ......
-    m@...   m....   m..@..   m.....   m....@
-    .....   ..@..   ......   ....@.   ......
-
-~ ring of debilitation: -10-30% melee, -10-30% missile
-  - Obsolete: covered by potions of debilitation, seizure traps
-
-~ ring of intimidation: confer stun/fear to mob when moving towards it, while
-  enraging all other monsters in FOV.
-  - Cancelled: overlaps with !intimidation and effect isn't good enough.
-
-~ ring of propulsion: knockback two foes next to you 5-9 spaces.
-  - Attack two enemies in opposite directions, move in cardinal direction,
-    move back, wait.
-  - Canceled: effect is too similar to charging
-    .....                           .....   .....
-    .....                           .....   .....
-    .1@2.   attack(1)   attack(2)   .1.2.   .1@2.   wait
-    .....                           ..@..   .....
-    .....                           .....   .....
-
-- ring of encumberation (gold only): melee,missile=100%, evade=0%
 
 Other ideas:
   - Passively allows player to know if they're still being pursued.
@@ -776,53 +550,6 @@ manuals
   - idea: book of torment -> 25% bloodlust
 
 
-Materials (v = vial, s = stone, g = gem, o = ore/metal)
----------
-g  vaand
-g  chlorovese
-g  chlus
-g  caus
-g  magenus
-g  silus    Silicate, composes fire-proof cloaks.
-g  beus    Yellow-white crystal, like mese in Minetest. Composes crystal statues.
-o  magonium
-o  sylvium
-o  magalt
-o  vibonium
-v  tanus    Extracted from talonium.
-v  slade    Extracted from sulon.
-v  pholenine  Extracted from phosire.
-v  chloroforon
-v  hyine    Extracted from hyalt.
-v  quagenine  Extracted from quaese.
-v  flouine
-v  cataline  Extracted from catasine.
-v  phytin    Extracted from phybro.
-s  talonium  Ore of tanus.
-s  sulon    Ore of slade.
-s  phosire    Ore of pholenine.
-s  hyalt    Ore of hyine.
-s  quaese    Ore of quagenine.
-s  catasine  Ore of cataline.
-s  phybro    Ore of phytin.
-s  dobalene  Makes up the walls of LAB.
-s  nebro    Like slade in Dwarf Fortress -- extremely heavy.
-      Supposed to be associated with demonic powers.
-s  vangenite  Makes up the walls of machinery in LAB. Glows dimly.
-s  bolyvese
-s  orthire    Uranium. Nuclear reactors are referred to as
-      "Orthire Furnaces".
-s  maron
-
-
-Headaches
----------
-- Prevent usage of all (or nearly all) evocables/rings (inability to focus).
-- Cure: potion of ibuprofenication (10% chance of "heartburn" aka 1-2 dmg)
-- Possible source: monster that shoots beams of migraine-inducing energy
-- Possible source: aura of microwave radiation (havana sickness? hah)
-
-
 Threat countermeasures
 ----------------------
 General:
@@ -832,7 +559,7 @@ x Patrols looking around even more                       180
 Specific:
 - Sentry spires placed in important rooms(s)              80
 - Reinforcements dispatched, tracking player normally    200, 300, 400, ...
-- Hunter squad sent out (escorted if deadly)             400, 500, 600, ...
+x Hunter squad sent out (escorted if deadly)             400, 500, 600, ...
 
 Unknown:
 x Watcher dispatched to rooms                            100, 300, 500
@@ -849,6 +576,458 @@ x Unknown threats should only rise for 30 turns in a row (before guards assume
   whatever it was moved along)
   x UNLESS incident_count > 10, then it continues rising indefinitely
 
+
+Animations
+==========
+- Event animations:
+  x Basic combat animations
+  x Throwing items
+  x lightning bolt, blinkbolt
+  x Bolts of fire
+  x Knockback
+  x Fire explosion
+  x Electricity explosion
+  x Normal explosion
+  x Hostile noticing you
+  x Picking up items
+  x Looting chests
+- Persistent animations:
+  - Dormant/sleeping monsters (blinking 'Z')
+  - Shimmering golden/obsidian/cuprite/rust doors/walls
+  - Lava and water
+  - Noisemaking monsters (blinking music sigil)
+  - Fleeing monsters (blinking '!')
+
+Lighting/FOV:
+=============
+x Allow for prefabs to "seed" a map
+  (Needed to ensure that power stations can appear on map)
+x Refactor/cleanup FOV helper methods:
+  x Generalize raycasting function
+  x Add quadrants to raycasting
+  x Use raycasting for everyone, remove shadowcasting
+  x Use matrix to store mob's FOV, instead of array.
+  x Update memoized sin/cos values
+x Ensure that raycasting method doesn't have any artifacts
+x Set a filter on area outside FOV (sepia? grayscale?)
+x Show vision "energies" on FOV
+x Make lighting system affect stealth/FOV
+~ Make raycasting use bounding box instead of slower trigonometry method?
+
+Room features/Mapgen:
+=====================
+- Allow close prefabs
+- Make connectors flanked by floors a floor or door
+- Terrain system
+  - Lichen:
+    x fluorescent fungi
+    x dead, flammable fungi
+    x tall fungi (very reduced LOS)
+    x camoflaging fungi (Camo++)
+    - brambles (retaliation; dmg on movement; 150% slowness)
+    - XXX fungi (haste undead)
+    - XXX fungi (slow living)
+    - XXX fungi (ctx corrupt effect)
+  - Floor materials:
+    x metal (rElec-)
+    x copper (elec dmg propagation)
+    x wood (rFire- rElec+)
+    x carpet (Noise-)
+    x gravel (Noise+)
+    x shallow water (Noise+ rFire++ rElec--)
+    - (v1.x.0) ashes/gypsum (cloud of dust on movement)
+  - Other:
+    x platform (less evade%, more melee% and missile%, vision++)
+    x pillar (+25 evade%)
+x Add statues and chests to corners of rooms
+x Add posters
+~ Allow for prefabs to be rotated
+x Allow for prefabs to have alternate layouts
+x Allow for prefabs to be restricted to a map
+x Create corridors between parallel prefabs/rooms
+x Make the "lamps" electric "braziers"
+  ~ Place them in center of rooms.
+  x Place them in corners of rooms.
+  x Make them explosive and electrocutive!
+* Useless items in bins, cabinets, etc
+  - dice, deck of cards
+x Weapons and armor in cabinets
+- Allow multiple subrooms in rooms (BSP?)
+- Cave-like boundaries around edges of map in CAV
+x Different types of power generators for different maps:
+    x VLT:  coal furnace
+    x PRI:  normal power plant
+    x CAV:  turbines (geothermal)
+    x LAB:  nuclear power plant
+x Prisoners chained up to the wall in PRI
+- Living Dungeon: useless items in various locations
+  - Lab offices: potted mushrooms, artwork
+  - Lab + Workshop corridors: named (ordinary) statues
+
+Morgue files
+============
+- Show annotated game notes (a la DCSS/Boohu).
+- Count the number of times the player "got lucky" (i.e., was at critical HP
+  but didn't take a hit).
+- Show total (IRL) time duration of game.
+- Show player's title.
+- Show number of steps player was from stairs when they died.
+- Record % of aggravated/spooked enemies on each floor.
+- Record other interacted machines (fountains, capacitor arrays, etc)
+- Record % of explored open space/explored rooms on each floor.
+- Record equipment state and HP when leaving each floor.
+- Replace augment/aptitude list in front of scoresheet with stat recording when
+  it was granted to player. (Consistency + less spaghetti info collection code)
+
+Mobs, AI
+========
+x Make watchers shout loudly
+x Allow mobs to shuffle past each other in corridors
+x Ensure that laborers don't leave to investigate noises
+x Ensure that the EnemyRecord counter is only decremented if the pursuer can
+  see the last spot where the hostile was seen
+x Make watchers smack intruders when they can't run
+x Fleeing mobs and mobs that have just spotted an enemy "tell" nearby allies
+  about the hostile
+x Define what undead are somewhere (combat bonuses, stat increases, miasma
+  emissions, etc)
+~ Make cleaners/engineers remove nets shot out by sentinels
+x Revamp squad AI.
+x Add morale system for each mob, affected by:
+  x Loss of leader (squad)
+  x Battlecry of leader (squad)
+  x Presence of stronger allies
+  x Presence of stronger enemies
+  x Presence of many enemies
+  x Pain,Fear effects
+  x Miasma gas, other gases
+  x Buffs on self or allies (haste, might, etc)
+- Enemies that surrender or start whimpering when fleeing and trapped in a
+  corner, or maybe prepare for one final all-out assault
+  - Dialog
+  x Would provide excuse for .Enraged status implementation.
+- Enemies that suicide when cornered and about to die.
+x Patrols report areas that need cleaning
+- Living dungeon: haulers occasionally bring prisoners food/alcohol rations
+- Living dungeon: cleaners occasionally go over prison cell
+- Living dungeon: guards drag new prisoners to replace ones which died
+  - Occasionally: mapgen schedules prisoner to be placed instead of placing one
+- Living dungeon: executioners periodically demolish a prisoner (new dialog!)
+- Living dungeon: dead coroners ensure next coroner is escorted
+- Living dungeon: spires leave tangled metal behind instead of no corpse
+  - Engineers/haulers fix/replace dead spires
+
+User Interface
+==============
+x Add padding between infopane/msgpane and map
+x Make it easier to tell the heavily wounded from dead
+x Fix showing of display percentage of last damage
+x UI for status effects (paralysis, etc)
+x Show red/yellow/orange for low health bars
+~ Use proper CP407 arrows for staircases
+x Show prisoner's activity as "prisoner" instead of {"investigate","attack"}, etc
+x Make bg of cell with noise green
+x @ command to see player's full AC and stats
+x Show information characters next to mob in enemy pane
+  x *:   red: low HP, white: HP
+  x n:   neutral
+  x p:   prisoner/chained
+  x u:   rFume∞
+  x i:   immobile
+  x f:   faster than player
+  x s:   slower than player
+  x ?:   investigating noise
+  x !:   fleeing
+  x @:   grey (unaware), red (seen), pink (remembers), blue (fleeing), white
+  x Z:   sleeping/dormand
+  - >:   drained attribute
+  - <:   increased attribute
+  - D:   unhearing (deaf or not curious)
+  - <M>: making noise
+  - ~:   off balance (ie won't act again before player's next turn)
+
+Items/Machines
+==============
+x Add cloaks:
+  x cloak of silicon (fire resistance)
+  x cloak of fur     (electricty resistance)
+  ~ cloak of velvet
+    - 30% chance for hostile to not notice mob, even when mob is in hostile's FOV
+    - Slightly increases dexterity
+  x cloak of thorns
+    - 40% chance for a missed melee attack to backfire on attacker, dealing
+      moderate damage.
+- Add evocables:
+  x "eldritch lantern": dazes or blinds mobs in FOV; blinds player
+    for 2 turns. 4 charges.
+  x "symbol of torment"
+  ~ "fume hood" (CAV): Grants rFume∞ for ~10 turns. 4 charges.
+  ~ "hammer": Destroys a machine. ∞ charges; cannot be recharged.
+  x "iron spike": Jams a door. 1 charge; cannot be recharged.
+  x "mine kit": Creates mine on tile. 2 charges; cannot be recharged.
+  x "tinderbox": Ignites a single tile. Like Conjure Flame in DCSS. 6 charges.
+  x "sparkthrower": Shoots a narrow beam of flames at a target. 6 charges.
+- Add machines:
+  x "capacitor array": kills all mobs without rElec in FOV. Deafening noise.
+  x recharging stations: 4 charges. 1-2 per level.
+    ~ 'r' key is shortcut to evoke recharging station, when such a station is
+      in LOS. Doing so invokes it for everything in inventory.
+  x fountain: Can be evoked to heal player by half of lost health. 2 charges.
+
+Fires/explosions
+================
+x Make monsters flee sooner if burning?
+- Make steam a fire retardant?
+
+Message pane
+============
+- Messages:
+  x On using ring
+  - On mob refusing to swap with player
+  - On enemy turning to flee
+  x On recieving a status (Confuse, Daze, etc)
+  x On seeing a mob cast a spell
+  x On dodging by enemy or player
+  x On death
+  x On resisting a spell
+  x On swapping weapon
+  x On making a noise, or mob making a noise
+x Messages that require confirm/keypress
+x Only print trap messages when culprit is player
+x Group identical messages in msgpane
+x Attack messages should be nice and descriptive ("You skewer the goblin!")
+  x Even more descriptive! ("The troll smashes you like an overripe mango!!")
+~ Put some messages on same line as previous.
+x Unify messages when using ring abilities
+x Append "*Stab*" to attack messages as appropriate
+
+Fixes
+=====
+x Add walls to edges of map after mapgen
+x Place stairs only in rooms
+x Fix sound propagation
+- Reject maps without enough open space
+~ Give player credit for deaths caused by malfunctioning machines
+- Give player credit for deaths caused by fires
+x Show appropriate number of exclamation points on messages about spell damage
+x Don't allow confused monsters to attack diagonally.
+- Fix bugged liquids with regards to thrown trajectories (fix w/ liquid rework)
+
+Ideas
+=====
+[+] planned, [~] obsolete, [x] done
+~ Layers, as in Brogue? (gas, liquid, surface, floor, etc.)
++ Cloaks of invisibility, confusion, blinding, camouflage, electricity
+  resistance, fire resistance, etc.
+  - cloak of shimmering: chance of daze mob that spots player?
+- Ring of seeing (magic mapping)
+~ Rings have negative effects (decreased piety/willpower)
+  - obsolete: rings are expected to be worn at all times, not an item that can
+    be swapped off or on depending on situation
+~ Add bonus (or neg bonus) to attacker if defender moved or didn't move in the
+  past two turns
+  - obsolete: this game isn't cogmind. besides, too many obscure combat bonuses
+    is bad.
+~ Ring of intimidation that magic maps dungeon based on mob's memory
+  - obsolete: mobs don't have memory. also, how would the UI tell what was mapped
+    from another mob's memory vs what the player visited (maybe take a cue from
+    cogmind and show such portions in greenscale/grayscale/bluescale?)
+~ Crafting grid/alchemy by arranging items on map and dancing
+  - obsolete: too complex
+x Lighting system and torches
+~ Light colors
+  - obsolete: would complicate ui too much. "Is that floor color change from a
+    light color, gas, or something else?"
+x Ring of echolocation to magic-map neighbors of sound-producing tiles
+- "Night", when guards sleep, torches go out, and night creatures awaken
+- "Ghost database" that stores bones for players who died during game, then
+  shows ingame bones/corpses/undead on other games
+- Candles that destory people/objects/rooms when quenched
+- "Permeability" instead of walkability, that lets creatures pass if they are
+  small enough (e.g., rats and small spiders could pass through iron bars)
+~ Tile "integrity" that reduces when tile is hit with explosion
+  - obsolete: too complex
+~ Radioactivity system: nuclear reactors, uranium, corium, nuclear bombs that
+  the player can blow up for fun
+  - obsolete: too complex, and wouldn't fit lore well
+~ Orchestra/Concert, that sings/players instruments and distracts guards
+  - obsolete: making all the guards move to one corner of the map suddenly is
+    obviously going to make things easier for player /s
+- Goblin "organizations" (purely eye candy)
+  - the Goblin Brotherhood, the ProudGobbos, the Seven Percenters, the
+    Goblin Nations, etc
+- Night creatures should pop out of artwork at night
+- Stone guardians that patrol map and cast confusion at enemies, but move at 1
+  tile per 10-20 turns
+  //- obsolete: that's abominations now
+- Headstones with previous player's comments on them, or ghosts that mourn
+  previous player's carelessnes (think DCSS ghosts)
+  - Bonus: the ghosts/gravestones are found in the temple in prison cells
+~ Pub for guards to get drunk
+  - obsolete: how would this affect gameplay? (maybe just a vault would be fine?)
+- Ring to detect powered machines
+- Ring/feature to detect what kind of mob made a noise
+- Radioactive gas leaking from a warehouse on a few levels, so a kind of food
+  clock
+~ Ability to rifle sleeping/drunk/stunned guards as well as corpses
+x Undead have other interesting kinds of negative effects when they score a
+  hit?
+  - Reduced max HP, less regen rate, reduced stealth
+  - Done: corruption mechanic
+~ Areas that speed up or slow down mobs
+- Lichen/fungi that puts mobs to sleep (enchanted ground)
+- Ice/oily floor that randomizes movement
+- Sticky ground that reduces evasion
+x Mobile traps that can be placed by player and used to lure guards on top
+  x {Bombs/landmines, bear trap, damage trap} "kits"
+x Item/lever player can trigger to unlock locked doors in room, releasing
+  prisoners and creating maximum chaos.
+~ Use Dijkstra for lighting/FOV?
+~ Potion and Ring ID system.
+  - obsolete: too complex
+x Blood spattering?
+x Speech bubbles in following situations: (removed)
+- Smell mechanics that allow, say, hellhounds and snakes to detect intruders
+  even if they can't see them.
+x Ranged melee weapons, e.g., spear and whips
+x Add braziers that are built into the walls (aka torches), and use that
+  instead for corridors
+x Some kind of squad-forming fast-moving swarming mob, like killer bees (DCSS)
+  or swarmers (Cogmind 7DRL)
+  - done: bone rats
+- "cameras kits" that create surface items that keep the surrounding area in the
+  FOV of all mobs that have a certain ring on
+~ Experiment with "bouncing" rays in raycasting routines
+~ Ring/item that has leaving a vunerable "copy" of yourself where that item/ring
+  was activated (that is, *two* tiles have the .mob field pointing to the player,
+  while the player.coord field points to only one of them).
+  - obsolete: could lead to subtle bugs
+- weapon runes:
+  - interleaving: Swap on hit
+  - banishing:    Teleports away
+x MP-like system that limits how often spellcasters can cast spells (providing
+  a way to tweak dangerous-ness) and how often player can use ring effects.
+x Extremely dangerous (but lucrative) vaults that have golden walls, warning
+  player of danger.
+- Nice floor tile patterns, like Ultima Ratio Regum.
+  E.g.:      #############    #############    #############
+             #·,·,·,·,·,·#    #·,·,·,·,·,·#    #▲▼▲▼▲▼▲▼▲▼▲#
+             #`.`.`.`.`.`#    #—.—.—.—.—.—#    #▼▲▼▲▼▲▼▲▼▲▼#
+             #,`,`,`,`,`,#    #—,—,—,—,—,—#    #▲▼▲▼▲▼▲▼▲▼▲#
+             #·,·,·,·,·,·#    #—.—.—.—.—.—#    #▼▲▼▲▼▲▼▲▼▲▼#
+             #`.`.`.`.`.`#    #·,·,·,·,·,·#    #▲▼▲▼▲▼▲▼▲▼▲#
+             #############    #############    #############
+- Bribing: bribe lone monsters to stay quiet, but they'll turn hostile again if
+  an unbribed comrade shows up
+  - Gold + jewelry collection
+  - Bri(b)ing key to bribe lone monsters
+- "Doormat" poster that has welcoming messages on it, right next to stairs
+  - Maybe describes level's challenges for new players?
+x Put actual loot in chests + plus new TGGW-like interace for containers
+- Monster: has strong ranged attack with copper weapon, and tries to lure you
+  into copper ground
+- Monster: spell that grants .Explosive status to nearby ally (while keeping
+  distance)
+- Monster: remotely hurl a single ally at player. Both projectile and player
+  take some damage. Eventually, player is completely surrounded.
+- Monster: shoots blinding gas at player from a distance
+- Sometimes monsters leave useless limbs behind instead of a corpse
+- Spell/item: makes nearby enemies forget about you faster
+  - Downside: if it fails, makes them remember you longer.
+  - Inspired by Cogmind's ECM suite
+- Spell/item: flingable lava orb! (ie: fiery orb-of-destruction, normally used
+  by lava flans)
+- Spell/pattern/item: Give +X% block bonus on every Xth turn. (inspiration: StS
+  captain's wheel relic)
+- Spell/pattern/item: Give +X% hit bonus on every Xth turn. (inspiration: StS
+  captain's wheel relic)
+- Spell/pattern/item: Deal 3 damage to all visible enemies (or only undead?)
+  after X turns (or every X turn?) (inspiration: StS stone calender relic)
+- Canceled evocables/machines that need reworking:
+  - summon stone: Summons a random (1-3) number of guards on the level to come
+    to the command stone's location. 1 charge.
+  - transporter stone: "Signals" a nearby spire to come nearby. Reprograms spire
+    additionally.
+  - "cannons" (LAB): fires projectile in direction, eviscerating any mobs.
+    Loud sound. 6 charges, pwr-station powered.
+  - "floodgates" (PRI): creates permanent pool of shallow water.
+    1 charge, pwr-station powered.
+  - "canister of sludge" (CAV): can be "broken open" to release torrent of toxic
+    sludge in direction, creating pool and damaging mobs. Takes 2 turns to empty.
+    1 charge.
+  - "canister of fuel" (VLT): can be "broken open" to release torrent of burning
+    fuel in direction, incinerating mobs and creating pool/cloud of fire. Takes 4
+    turns to completely empty. 1 charge.
+  - "blinding torch": Basically a laser. Can be evoked on a monster that can
+    currently see the player (or *could* see the player, if its LOS was long
+    enough), and will blind and daze that monster. 4 charges.
+  - room reader (TODO: name) (LAB): Can be evoked on an opaque tile that's
+    adjacent to the player, such as a door, and it will show player what's
+    behind it as if player was standing there. 6 charges.
+    - Inspired by that article demonstrating ability to roughly determine
+      what's in a room by shining a laser through a keyhole and analysing how
+      the light beams bounced around inside.
+  - camera reader (TODO: name)
+    - Can "hack" pre-placed cameras to spy on nearby areas for X turns?
+  - "cannon kit" (CAV): creates permanent cannon on use (see below). 1 charge.
+  - "lightning rod" (LAB): severely damages all mobs without rElec in FOV.
+    - Note: implement electricity damage propagation for this.
+- Headaches
+  - Prevent usage of all (or nearly all) evocables/rings (inability to focus).
+  - Cure: potion of ibuprofenication (10% chance of "heartburn" aka 1-2 dmg)
+  - Possible source: monster that shoots beams of migraine-inducing energy
+  - Possible source: aura of microwave radiation (havana sickness? hah)
+
+
+Optimizations
+=============
+- Use @mulAdd where possible (FOV, A*, Dijkstra, light/atmosphere/sound systems)
+- Use @setCold(true) where possible (see above for places to look)
+- Use SIMD where possible
+x Use a matrix to mark nodes as closed (instead of a heap-allocated list) for
+  Dijkstra.
+x Use Manhattan distance for A* algorithm (overestimating heuristic might be better?)
+- Allow functions that repeatedly call A* for the same mob to store an "AstarContext"
+  structure that allows astar.path() to reuse cell cost, walkablility, etc data
+  without calling those functions again.
+- Use atan to calculate octant in which coord appears relative to mob's coord, instead
+  of the slower method seen in Coord.closestDirectionTo()
+
+Code cleanups
+=============
+x Defined unimplemented(), todo(), and oom()
+x Stop using the `catch unreachable` syntax:
+    libera#zig 19:58 <ikskuh> "catch unreachable" will happily continue to execute code
+                              after the error in non-safe build modes
+- Remove all floats from color functions, sound systems, gas systems, etc.
+x Review usage of usize and change to u64/u32 where needed to prevent portability issues
+- Define custom assert() that can give additional context
+- Define Lua API and move the following to Lua data files:
+  - levelFeature definitions (see mapgen.zig)
+  - levelConfig (see mapgen.zig)
+- Cleanup/factorize container/item manipulation code for Machine AI.
+
+Refactorings
+============
+x Define Species struct and carry immutable data for each mob in it
+x Convert enum+union pair to union(enum) (see std/fifo.zig) where needed
+x Research Manhattan distance vs Euclidian distance vs Moore neighborhood:
+  https://reddit.com/r/roguelikedev/comments/nev1jg/a_pathfinding_unstablenondeterministic/
+x Add power component to machines
+x Use Chebyshev instead of Manhattan distance
+- Use arrays and indexes for state.* instead of linked lists and pointers
+- Use linked list for roomslist, and use raw pointers instead of indexes
+  whenever needed in mapgen code.
+x Keep track of each connected room in mapgen, so that no room connects to the
+  same room twice.
+
+Tests
+=====
+x Ensure that distance() treats diagonal moves as more expensive than cardinal moves, or
+  the opposite if Chebyshev is used later.
+- Full tests for all Coord.* methods
+- Full tests for all Rect.* methods
+- Full tests for all Direction.* methods
 
 Roadmap
 =======
@@ -1033,6 +1212,7 @@ x Level progression overhaul
   x Load level info, stairs from data/levelinfo.tsv
   x Make CAV optional, extra Prison level to compensate (for now)
 x Auxiliary items
+x Squad overhaul
 x UI
   x 'M'essages screen
   x Loading screen and art
@@ -1181,58 +1361,59 @@ x Laboratory/Workshop rework
 x Warn when stepping into enemy's FOV
 x Auto-wait: don't wait while in combat
 x Revamp messages for recieving/losing status
+x Analyse mob and loot distribution and tweak weights
 *** 3.0.0 release ***
+x UI
+  x Examine mode
+    x refactoring
+  x Basic mouse support
+    x Right-click for examine/info
+    x Tooltips for UI labels
+      ~ Tooltips/explanations for individual messages?
+    x Click on message pane for 'M' screen
+    x Click on tabs in examine mode
+    x Click on items/buttons in inventory mode
+x Vaults rework
+  x New marble room prefabs
+  x Armory rooms
+- Fix shrine-blowup particle effect (rework, simplify and speedup)
 - Change statue's FOV
-- Armor coatings
-  - Potion of absorption: +15% Potential, -1 Will
-  - Potion of fortification: +1 Will, -25% Potential (found in holy place)
-    - Incompat: absorption
-  - Potion of anti-corrosion: +25% rAcid (found only in special prefab?)
-    - Recipe: paralysation(?)
-  - Potion of anti-combustion: +25% rFire
-  - Multiple coating + incompatibilities
 - Lava and Water rework
   - Rework as terrain
   - Lava -> Glowing water
 - Caverns rework
   - Alchemist + dustling analyzer prefabs
   - Dustling machines
-- Mapgen features
-  - Guards in cubbyholes (both corridors and rooms)
-    - Diagonal cubbyholes
-  - "Siderooms"
-    x PRI: prisons and cages
-    - PRI and QRT: misc machinery (boilers, water pipes)
-    x LAB: misc machinery, cages of constructs and animals
-- More "Living Dungeon" content
-  x Patrols report areas that need cleaning
-  - Haulers periodically bring prisoners food/alcohol rations
-  - Cleaners occasionally go over prison cell
-  - Guards drag new prisoners to replace ones which died
-    - Occasionally: mapgen schedules prisoner to be placed instead of placing one
-  - Executioners periodically demolish a prisoner (new dialog!)
+- Living dungeon: execution sessions
+- Living dungeon: spire cleanup
+- Living dungeon: scheduled prisoner transport
 - Add "character" to game
   - Names for all goblin/human monsters
-  - Named statues
   - Fluff prefabs
-    - Washroom
+    - Washroom: zinc tiles surrounding water pool (zinc bathtub), sinks, bucket
     - Boiler room
-    - Trophy room
+    - Trophy room: cave-goblin armor, weapons, ...
     - Bathroom
     - Caverns: dustling workshop (paralyzed dustlings inside scanning machine)
     - Laboratory: insane & paralysed prisoners inside scanning machine
     - Laboratory: alchemist bending over workbench, with barrels of glycerin,
       nitric acid, and sulfuric acid and a pile of potions of decimation
       nearby.
+    - Laboratory: insane & paralysed Revgenunkim inside holding cells
+      - Poster explains that alchemists are experimenting with signal strength
+        and repetition patterns to determine how to cause specific effects
+      - Various other statuses: disoriented, debil, fear, enraged
+    - Laboratory: insane & paralysed Revgenunkim (single) inside holding cell
+      - Pump puts healing gas inside cell, while overclocked + high-powered
+        transmitter damages Revgenunkim (only if >2 HP)
+      - Poster explaining research.
 - Simplification: instead of having attack AI for stalker, have them actually
   transform into sparklings when hunter captain dies"
-- Analyse mob and loot distribution and tweak weights
 - Basalt monsters (-fiends, -mages, -lings)?
   - Plus: ability that confers status on player that causes Living Stone to
     continually spawn around player
 - Consider adding more ugrades
   - Hit% bonus, martial bonus (is that infringing on books too much?)
-  - Additional patterns (leap, counterattack, ...)
 - Warn when next to spreading gas and resting
 - Rework monster spells to be more positional in nature
   - Pain (range-limited AoE effect?)
@@ -1267,54 +1448,26 @@ x Revamp messages for recieving/losing status
   - Escape menu
     - List of visited/unvisited floors
   - Examine mode
-    - refactoring
     - Ability to view info on gas/terrain/wall/floor
-  - Basic mouse support
-    x Tooltips for UI labels
-      ~ Tooltips/explanations for individual messages?
     - Click on tile to move/attack/interact
-    - Right-click for examine/info
-    x Click on message pane for 'M' screen
-    - Click on tabs in examine mode
-    - Click on items/buttons in inventory mode
-- Load colors from data file
 - Basic speeches by mobs
 - Rework gases
   x Remove usage of floats entirely
   - Quantize all gas dissipation rates into VSLOW, SLOW, MED, FAST, VFAST, etc
   - SIMD where possible
-x Squad overhaul
 - Mob repositioning AI
   - AI to move out of dangerous tiles (gas/terrain)
   - AI to move out of reach of enemy, if mob has reaching weapon and is faster
   - AI to move onto advantageous terrain
-- BUG: If player wears Equ that grants status X, then get hits with Tmp status
-  X, then removes that equipment, they won't have status even if the Tmp status
-  should have replaced it.
-  - FIX: store statuses in a vector.
-- eXamine screen:
-  - Show last remembered items on out-of-sight tiles
-  - Show floor spattering, floor material, gas
 - Scoring
-- Basic save system, replaying of saves, scoresheet uploading
-~ Capacitor mechanic
-  ~ Basic capacitor, charging, discharging
-  ~ Capacitor expansion slots
-  ~ Wiring floors
-    ~ map generation
-~ Air purifiers
-~ Implement intelligence
-- Vaults
-  - Marble room reworks
-    x New prefabs
-    - Pure gold cloak prefab
-    - Tactic rooms
-      - Combat dummies
-      - Shooting targets, skeletal arbalist
-  x Armory room
-    - Anti-night-creature variant
-      - Potion of extermination
-      - Potion of illumination buf
+- Scoresheet uploading (to where?)
+- Basic save system, replaying of saves
+- Vaults pt 2
+  - Marble vaults: pure gold cloak prefab
+  - Marble vaults: tactic rooms, combat dummies, skeletal arbalists
+  - Armory room: anti-night-creature variant
+    - Potion of extermination
+    - See glow potion buf item below
   - Dobalene rooms
 - Crypt floor
   x Modify level data and spawn files
@@ -1364,480 +1517,28 @@ x Squad overhaul
     - Possible Angel counterattack event
   - Laboratory prefabs w/ caged monsters
   - "Quarantine" map/area
+- Make illumination/glow potions useful for raiding lairs
+  - Corona/glowing damages NC, causes fleeing if wounded
+  - Increased rarity + novel prefab for 7/ and 8/
+  - Special, rare NC-blasting items in Shrine/Temple/Workshop
+*** Untriaged/obsolete ***
 - Add bookshelves and book types
   - Maps
   - Books that grant an ability
   - Misc useless books
-
-Animations
-==========
-- Event animations:
-  x Basic combat animations
-  x Throwing items
-  x lightning bolt, blinkbolt
-  - Bolts of fire
-  x Knockback
-  x Fire explosion
-  - Electricity explosion
-  x Normal explosion
-  x Hostile noticing you
-  x Picking up items
-  x Looting chests
-- Persistent animations:
-  - Dormant/sleeping monsters (blinking 'Z')
-  - Shimmering golden/obsidian/cuprite/rust doors/walls
-  - Lava and water
-  - Noisemaking monsters (blinking music sigil)
-  - Fleeing monsters (blinking '!')
-
-Lighting/FOV:
-=============
-x Allow for prefabs to "seed" a map
-  (Needed to ensure that power stations can appear on map)
-x Refactor/cleanup FOV helper methods:
-  x Generalize raycasting function
-  x Add quadrants to raycasting
-  x Use raycasting for everyone, remove shadowcasting
-  x Use matrix to store mob's FOV, instead of array.
-  x Update memoized sin/cos values
-x Ensure that raycasting method doesn't have any artifacts
-x Set a filter on area outside FOV (sepia? grayscale?)
-x Show vision "energies" on FOV
-x Make lighting system affect stealth/FOV
-~ Make raycasting use bounding box instead of slower trigonometry method?
-
-Temperature
-===========
-x Add temperature matrix, tickTemperature(); make magma emit heat
-x Integrate with lighting system (make hot tiles emit light)
-x Update tickTemperature() to work with material's specific heat
-
-Room features/Mapgen:
-=====================
-- Allow close prefabs
-- Make connectors flanked by floors a floor or door
-- Terrain system
-  - Lichen:
-    x fluorescent fungi
-    x dead, flammable fungi
-    x tall fungi (very reduced LOS)
-    x camoflaging fungi (Camo++)
-    - brambles (retaliation; dmg on movement; 150% slowness)
-    - XXX fungi (haste undead)
-    - XXX fungi (slow living)
-    - XXX fungi (ctx corrupt effect)
-  - Floor materials:
-    x metal (rElec-)
-    x copper (elec dmg propagation)
-    x wood (rFire- rElec+)
-    x carpet (Noise-)
-    x gravel (Noise+)
-    x shallow water (Noise+ rFire++ rElec--)
-    - (v1.x.0) ashes/gypsum (cloud of dust on movement)
-  - Other:
-    x platform (less evade%, more melee% and missile%, vision++)
-    x pillar (+25 evade%)
-x Add statues and chests to corners of rooms
-x Add posters
-~ Allow for prefabs to be rotated
-x Allow for prefabs to have alternate layouts
-x Allow for prefabs to be restricted to a map
-x Create corridors between parallel prefabs/rooms
-x Make the "lamps" electric "braziers"
-  ~ Place them in center of rooms.
-  x Place them in corners of rooms.
-  x Make them explosive and electrocutive!
-* Useless items in bins, cabinets, etc
-  - dice, deck of cards
-x Weapons and armor in cabinets
-- Allow multiple subrooms in rooms (BSP?)
-- Cave-like boundaries around edges of map in CAV
-x Different types of power generators for different maps:
-    x VLT:  coal furnace
-    x PRI:  normal power plant
-    x CAV:  turbines (geothermal)
-    x LAB:  nuclear power plant
-- Allow multi-width corridors (aka hallways)
-- Prisoners chained up to the wall in PRI
-- Preserved corpses lined up along walls in PRI?
-  - Can be animated by angry necromancers.
-- Useless items in various locations:
-  - Potted mushrooms
-  - chairs/tables
-  - artwork
-- Useless food items in barrels:
-  - mangosteins, (dried) mushrooms, dried meat, slime molds, bread, dried fish, dried salamander
-  - kombucha, alcohol (should use some made-up names, in gobbo language)
-
-Morgue files
-============
-- Show annotated game notes (a la DCSS/Boohu).
-- Count the number of times the player "got lucky" (i.e., was at critical HP
-  but didn't take a hit).
-- Show total (IRL) time duration of game.
-- Show player's title.
-- Show number of steps player was from stairs when they died.
-- Record % of aggravated/spooked enemies on each floor.
-- Record other interacted machines (fountains, capacitor arrays, etc)
-- Record % of explored open space/explored rooms on each floor.
-- Record equipment state and HP when leaving each floor.
-- Replace augment/aptitude list in front of scoresheet with stat recording when
-  it was granted to player. (Consistency + less spaghetti info collection code)
-
-Mobs, AI
-========
-x Make watchers shout loudly
-x Allow mobs to shuffle past each other in corridors
-x Ensure that laborers don't leave to investigate noises
-x Ensure that the EnemyRecord counter is only decremented if the pursuer can
-  see the last spot where the hostile was seen
-- Move off of tile if that tile has dangerous gas
-- Go into rage when encountering corpse of allied mob
-- "Scan" room when encountering blood spattering
-x Make watchers smack intruders when they can't run
-- Mobs that throw potions of light at hostiles that are in areas too dark for
-  them to see
-x Fleeing mobs and mobs that have just spotted an enemy "tell" nearby allies
-  about the hostile
-x Define what undead are somewhere (combat bonuses, stat increases, miasma
-  emissions, etc)
-- Add rat+food system
-  - Farmers and vending machines fill food stockpiles
-  - Mobs go to stockpile, grab food, and eat
-  - Mobs spatter crumbs on the floor
-  - Rats, hiding in dark corners, emerge and eat/clean crumbs
-  - Rats come to lick up blood and feast on corpses as well
-  - Guards chase down rats and viciously kill them
-  - Guards jumping around chasing rats creates another threat to player (guard
-    may not be where the player last saw them!)
-  - Or, if the above is too much, we'll add some harmless cats to kill rats.
-  - Rats "spawn" in some way
-  - etc
-~ Make cleaners/engineers remove nets shot out by sentinels
-x Revamp squad AI.
-x Add morale system for each mob, affected by:
-  x Loss of leader (squad)
-  x Battlecry of leader (squad)
-  x Presence of stronger allies
-  x Presence of stronger enemies
-  x Presence of many enemies
-  x Pain,Fear effects
-  x Miasma gas, other gases
-  x Buffs on self or allies (haste, might, etc)
-- Enemies that surrender or start whimpering when fleeing and trapped in a
-  corner, or maybe prepare for one final all-out assault
-  - Dialog
-  x Would provide excuse for .Enraged status implementation.
-- Enemies that suicide when cornered and about to die.
-x Reaching weapon effects for beastmasters and patrols
-- Make sentinels and javelineers pickup projectiles they've thrown
-- Add orbs of destruction spell for ancient mages
-- Ancient mage: give range limit to "summon enemy" spell (don't forget
-  to display that in spell info pane)
-
-User Interface
-==============
-x Add padding between infopane/msgpane and map
-x Make it easier to tell the heavily wounded from dead
-x Fix showing of display percentage of last damage
-x UI for status effects (paralysis, etc)
-x Show red/yellow/orange for low health bars
-~ Use proper CP407 arrows for staircases
-x Show prisoner's activity as "prisoner" instead of {"investigate","attack"}, etc
-x Make bg of cell with noise green
-x @ command to see player's full AC and stats
-x Show information characters next to mob in enemy pane
-  x *:   red: low HP, white: HP
-  x n:   neutral
-  x p:   prisoner/chained
-  x u:   rFume∞
-  x i:   immobile
-  x f:   faster than player
-  x s:   slower than player
-  x ?:   investigating noise
-  x !:   fleeing
-  x @:   grey (unaware), red (seen), pink (remembers), blue (fleeing), white
-  x Z:   sleeping/dormand
-  - >:   drained attribute
-  - <:   increased attribute
-  - D:   unhearing (deaf or not curious)
-  - <M>: making noise
-  - ~:   off balance (ie won't act again before player's next turn)
-
-Items/Machines
-==============
-x Add cloaks:
-  x cloak of silicon (fire resistance)
-  x cloak of fur     (electricty resistance)
-  ~ cloak of velvet
-    - 30% chance for hostile to not notice mob, even when mob is in hostile's FOV
-    - Slightly increases dexterity
-  x cloak of thorns
-    - 40% chance for a missed melee attack to backfire on attacker, dealing
-      moderate damage.
-- Add evocables:
-  x "eldritch lantern": dazes or blinds mobs in FOV; blinds player
-    for 2 turns. 4 charges.
-  x "symbol of torment"
-  ~ "fume hood" (CAV): Grants rFume∞ for ~10 turns. 4 charges.
-  ~ "hammer": Destroys a machine. ∞ charges; cannot be recharged.
-  x "iron spike": Jams a door. 1 charge; cannot be recharged.
-  x "mine kit": Creates mine on tile. 2 charges; cannot be recharged.
-  x "tinderbox": Ignites a single tile. Like Conjure Flame in DCSS. 6 charges.
-  x "sparkthrower": Shoots a narrow beam of flames at a target. 6 charges.
-- Add machines:
-  x "capacitor array": kills all mobs without rElec in FOV. Deafening noise.
-  x recharging stations: 4 charges. 1-2 per level.
-    ~ 'r' key is shortcut to evoke recharging station, when such a station is
-      in LOS. Doing so invokes it for everything in inventory.
-  x fountain: Can be evoked to heal player by half of lost health. 2 charges.
-
-Fires/explosions
-================
-x Make monsters flee sooner if burning?
-- Make steam a fire retardant?
-
-Message pane
-============
-- Messages:
-  x On using ring
-  - On mob refusing to swap with player
-  - On enemy turning to flee
-  - On enemy noticing player
-  x On recieving a status (Confuse, Daze, etc)
-  x On seeing a mob cast a spell
-  x On dodging by enemy or player
-  x On death
-  x On resisting a spell
-  x On swapping weapon
-  x On making a noise, or mob making a noise
-x Messages that require confirm/keypress
-x Only print trap messages when culprit is player
-x Group identical messages in msgpane
-x Attack messages should be nice and descriptive ("You skewer the goblin!")
-  x Even more descriptive! ("The troll smashes you like an overripe mango!!")
-~ Put some messages on same line as previous.
-x Unify messages when using ring abilities
-- Append "*Stab*" to attack messages as appropriate
-
-Fixes
-=====
-x Add walls to edges of map after mapgen
-x Place stairs only in rooms
-x Fix sound propagation
-- Reject maps without enough open space
-~ Give player credit for deaths caused by malfunctioning machines
-- Give player credit for deaths caused by fires
-x Show appropriate number of exclamation points on messages about spell damage
-x Don't allow confused monsters to attack diagonally.
-- Fix bugged liquids with regards to thrown trajectories (fix w/ liquid rework)
-
-Ideas
-=====
-[+] planned, [~] obsolete, [x] done
-~ Layers, as in Brogue? (gas, liquid, surface, floor, etc.)
-+ Cloaks of invisibility, confusion, blinding, camouflage, electricity
-  resistance, fire resistance, etc.
-  - cloak of shimmering: chance of daze mob that spots player?
-- Ring of seeing (magic mapping)
-~ Rings have negative effects (decreased piety/willpower)
-  - obsolete: rings are expected to be worn at all times, not an item that can
-    be swapped off or on depending on situation
-~ Add bonus (or neg bonus) to attacker if defender moved or didn't move in the
-  past two turns
-  - obsolete: this game isn't cogmind. besides, too many obscure combat bonuses
-    is bad.
-~ Ring of intimidation that magic maps dungeon based on mob's memory
-  - obsolete: mobs don't have memory. also, how would the UI tell what was mapped
-    from another mob's memory vs what the player visited (maybe take a cue from
-    cogmind and show such portions in greenscale/grayscale/bluescale?)
-~ Crafting grid/alchemy by arranging items on map and dancing
-  - obsolete: too complex
-x Lighting system and torches
-~ Light colors
-  - obsolete: would complicate ui too much. "Is that floor color change from a
-    light color, gas, or something else?"
-x Ring of echolocation to magic-map neighbors of sound-producing tiles
-- "Night", when guards sleep, torches go out, and night creatures awaken
-- "Ghost database" that stores bones for players who died during game, then
-  shows ingame bones/corpses/undead on other games
-- Candles that destory people/objects/rooms when quenched
-- "Permeability" instead of walkability, that lets creatures pass if they are
-  small enough (e.g., rats and small spiders could pass through iron bars)
-~ Tile "integrity" that reduces when tile is hit with explosion
-  - obsolete: too complex
-~ Radioactivity system: nuclear reactors, uranium, corium, nuclear bombs that
-  the player can blow up for fun
-  - obsolete: too complex, and wouldn't fit lore well
-~ Orchestra/Concert, that sings/players instruments and distracts guards
-  - obsolete: making all the guards move to one corner of the map suddenly is
-    obviously going to make things easier for player /s
-- Goblin "organizations" (purely eye candy)
-  - the Goblin Brotherhood, the ProudGobbos, the Seven Percenters, the
-    Goblin Nations, etc
-- Night creatures should pop out of artwork at night
-- Stone guardians that patrol map and cast confusion at enemies, but move at 1
-  tile per 10-20 turns
-  //- obsolete: that's abominations now
-- Headstones with previous player's comments on them, or ghosts that mourn
-  previous player's carelessnes (think DCSS ghosts)
-  - Bonus: the ghosts/gravestones are found in the temple in prison cells
-~ Pub for guards to get drunk
-  - obsolete: how would this affect gameplay? (maybe just a vault would be fine?)
-- Ring to detect powered machines
-- Ring/feature to detect what kind of mob made a noise
-- Radioactive gas leaking from a warehouse on a few levels, so a kind of food
-  clock
-~ Ability to rifle sleeping/drunk/stunned guards as well as corpses
-x Undead have other interesting kinds of negative effects when they score a
-  hit?
-  - Reduced max HP, less regen rate, reduced stealth
-  - Done: corruption mechanic
-~ Areas that speed up or slow down mobs
-- Lichen/fungi that puts mobs to sleep (enchanted ground)
-- Ice/oily floor that randomizes movement
-- Sticky ground that reduces evasion
-x Mobile traps that can be placed by player and used to lure guards on top
-  x {Bombs/landmines, bear trap, damage trap} "kits"
-x Item/lever player can trigger to unlock locked doors in room, releasing
-  prisoners and creating maximum chaos.
-~ Use Dijkstra for lighting/FOV?
-~ Potion and Ring ID system.
-  - obsolete: too complex
-x Blood spattering?
-x Speech bubbles in following situations: (removed)
-- Smell mechanics that allow, say, hellhounds and snakes to detect intruders
-  even if they can't see them.
-x Ranged melee weapons, e.g., spear and whips
-x Add braziers that are built into the walls (aka torches), and use that
-  instead for corridors
-x Some kind of squad-forming fast-moving swarming mob, like killer bees (DCSS)
-  or swarmers (Cogmind 7DRL)
-  - done: bone rats
-- "cameras kits" that create surface items that keep the surrounding area in the
-  FOV of all mobs that have a certain ring on
-~ Experiment with "bouncing" rays in raycasting routines
-~ Ring/item that has leaving a vunerable "copy" of yourself where that item/ring
-  was activated (that is, *two* tiles have the .mob field pointing to the player,
-  while the player.coord field points to only one of them).
-  - obsolete: could lead to subtle bugs
-- weapon runes:
-  - interleaving: Swap on hit
-  - banishing:    Teleports away
-x MP-like system that limits how often spellcasters can cast spells (providing
-  a way to tweak dangerous-ness) and how often player can use ring effects.
-x Extremely dangerous (but lucrative) vaults that have golden walls, warning
-  player of danger.
-- Nice floor tile patterns, like Ultima Ratio Regum.
-  E.g.:      #############    #############    #############
-             #·,·,·,·,·,·#    #·,·,·,·,·,·#    #▲▼▲▼▲▼▲▼▲▼▲#
-             #`.`.`.`.`.`#    #—.—.—.—.—.—#    #▼▲▼▲▼▲▼▲▼▲▼#
-             #,`,`,`,`,`,#    #—,—,—,—,—,—#    #▲▼▲▼▲▼▲▼▲▼▲#
-             #·,·,·,·,·,·#    #—.—.—.—.—.—#    #▼▲▼▲▼▲▼▲▼▲▼#
-             #`.`.`.`.`.`#    #·,·,·,·,·,·#    #▲▼▲▼▲▼▲▼▲▼▲#
-             #############    #############    #############
-- Bribing: bribe lone monsters to stay quiet, but they'll turn hostile again if
-  an unbribed comrade shows up
-  - Gold + jewelry collection
-  - Bri(b)ing key to bribe lone monsters
-- "Doormat" poster that has welcoming messages on it, right next to stairs
-  - Maybe describes level's challenges for new players?
-x Put actual loot in chests + plus new TGGW-like interace for containers
-- Monster: has strong ranged attack with copper weapon, and tries to lure you
-  into copper ground
-- Monster: spell that grants .Explosive status to nearby ally (while keeping
-  distance)
-- Monster: remotely hurl a single ally at player. Both projectile and player
-  take some damage. Eventually, player is completely surrounded.
-- Monster: shoots blinding gas at player from a distance
-- Sometimes monsters leave useless limbs behind instead of a corpse
-- Spell/item: makes nearby enemies forget about you faster
-  - Downside: if it fails, makes them remember you longer.
-  - Inspired by Cogmind's ECM suite
-- Spell/item: flingable lava orb! (ie: fiery orb-of-destruction, normally used
-  by lava flans)
-- Spell/pattern/item: Give +X% block bonus on every Xth turn. (inspiration: StS
-  captain's wheel relic)
-- Spell/pattern/item: Give +X% hit bonus on every Xth turn. (inspiration: StS
-  captain's wheel relic)
-- Spell/pattern/item: Deal 3 damage to all visible enemies (or only undead?)
-  after X turns (or every X turn?) (inspiration: StS stone calender relic)
-- Canceled evocables/machines that need reworking:
-  - summon stone: Summons a random (1-3) number of guards on the level to come
-    to the command stone's location. 1 charge.
-  - transporter stone: "Signals" a nearby spire to come nearby. Reprograms spire
-    additionally.
-  - "cannons" (LAB): fires projectile in direction, eviscerating any mobs.
-    Loud sound. 6 charges, pwr-station powered.
-  - "floodgates" (PRI): creates permanent pool of shallow water.
-    1 charge, pwr-station powered.
-  - "canister of sludge" (CAV): can be "broken open" to release torrent of toxic
-    sludge in direction, creating pool and damaging mobs. Takes 2 turns to empty.
-    1 charge.
-  - "canister of fuel" (VLT): can be "broken open" to release torrent of burning
-    fuel in direction, incinerating mobs and creating pool/cloud of fire. Takes 4
-    turns to completely empty. 1 charge.
-  - "blinding torch": Basically a laser. Can be evoked on a monster that can
-    currently see the player (or *could* see the player, if its LOS was long
-    enough), and will blind and daze that monster. 4 charges.
-  - room reader (TODO: name) (LAB): Can be evoked on an opaque tile that's
-    adjacent to the player, such as a door, and it will show player what's
-    behind it as if player was standing there. 6 charges.
-    - Inspired by that article demonstrating ability to roughly determine
-      what's in a room by shining a laser through a keyhole and analysing how
-      the light beams bounced around inside.
-  - camera reader (TODO: name)
-    - Can "hack" pre-placed cameras to spy on nearby areas for X turns?
-  - "cannon kit" (CAV): creates permanent cannon on use (see below). 1 charge.
-  - "lightning rod" (LAB): severely damages all mobs without rElec in FOV.
-    - Note: implement electricity damage propagation for this.
-
-Optimizations
-=============
-- Use @mulAdd where possible (FOV, A*, Dijkstra, light/atmosphere/sound systems)
-- Use @setCold(true) where possible (see above for places to look)
-- Use SIMD where possible
-x Use a matrix to mark nodes as closed (instead of a heap-allocated list) for
-  Dijkstra.
-x Use Manhattan distance for A* algorithm (overestimating heuristic might be better?)
-- Allow functions that repeatedly call A* for the same mob to store an "AstarContext"
-  structure that allows astar.path() to reuse cell cost, walkablility, etc data
-  without calling those functions again.
-- Use atan to calculate octant in which coord appears relative to mob's coord, instead
-  of the slower method seen in Coord.closestDirectionTo()
-
-Code cleanups
-=============
-x Defined unimplemented(), todo(), and oom()
-x Stop using the `catch unreachable` syntax:
-    libera#zig 19:58 <ikskuh> "catch unreachable" will happily continue to execute code
-                              after the error in non-safe build modes
-- Remove all floats from color functions, sound systems, gas systems, etc.
-x Review usage of usize and change to u64/u32 where needed to prevent portability issues
-- Define custom assert() that can give additional context
-- Define Lua API and move the following to Lua data files:
-  - levelFeature definitions (see mapgen.zig)
-  - levelConfig (see mapgen.zig)
-- Cleanup/factorize container/item manipulation code for Machine AI.
-
-Refactorings
-============
-x Define Species struct and carry immutable data for each mob in it
-x Convert enum+union pair to union(enum) (see std/fifo.zig) where needed
-x Research Manhattan distance vs Euclidian distance vs Moore neighborhood:
-  https://reddit.com/r/roguelikedev/comments/nev1jg/a_pathfinding_unstablenondeterministic/
-x Add power component to machines
-x Use Chebyshev instead of Manhattan distance
-- Use arrays and indexes for state.* instead of linked lists and pointers
-- Use linked list for roomslist, and use raw pointers instead of indexes
-  whenever needed in mapgen code.
-x Keep track of each connected room in mapgen, so that no room connects to the
-  same room twice.
-
-Tests
-=====
-x Ensure that distance() treats diagonal moves as more expensive than cardinal moves, or
-  the opposite if Chebyshev is used later.
-- Full tests for all Coord.* methods
-- Full tests for all Rect.* methods
-- Full tests for all Direction.* methods
+- Load colors from data file
+- Armor coatings
+  - Potion of absorption: +15% Potential, -1 Will
+  - Potion of fortification: +1 Will, -25% Potential (found in holy place)
+    - Incompat: absorption
+  - Potion of anti-corrosion: +25% rAcid (found only in special prefab?)
+    - Recipe: paralysation(?)
+  - Potion of anti-combustion: +25% rFire
+  - Multiple coating + incompatibilities
+- Mapgen features
+  - Guards in cubbyholes (both corridors and rooms)
+    - Diagonal cubbyholes
+  - "Siderooms"
+    x PRI: prisons and cages
+    - PRI and QRT: misc machinery (boilers, water pipes)
+    x LAB: misc machinery, cages of constructs and animals
