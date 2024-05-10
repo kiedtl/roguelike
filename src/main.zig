@@ -599,9 +599,12 @@ fn viewerDisplay(tty_height: usize, sy: usize) void {
 }
 
 fn viewerMain() void {
+    // Wrap whole thing in comptime if condition to ensure no linker errors
     if (build_options.use_sdl) {
-        assert(false);
+        err.fatal("Viewer not available when compiled in SDL2 mode", .{});
     } else {
+        // mapgen.initLevel(11);
+        // state.current_level = 11;
         for (state.rooms) |*smh, i| {
             if (smh.items.len == 0) {
                 mapgen.initLevel(i);
