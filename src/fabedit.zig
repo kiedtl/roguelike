@@ -3,6 +3,7 @@ const math = std.math;
 const mem = std.mem;
 
 const display = @import("display.zig");
+const utils = @import("utils.zig");
 const font = @import("font.zig");
 const literature = @import("literature.zig");
 const mapgen = @import("mapgen.zig");
@@ -29,6 +30,51 @@ pub const EdState = struct {
     };
 };
 var st = EdState{};
+
+// Removes unused features, and returns first blank feature index if any
+pub fn removeUnusedFeatures() ?u8 {
+    var used_markers = [1]bool{false} ** 128;
+
+    var y: usize = 0;
+    while (y < st.fab.height) : (y += 1) {
+        var x: usize = 0;
+        while (x < st.fab.width) : (x += 1) {
+            if (st.fab.content[y][x] == .Feature) {
+                used_markers[st.fab.content[y][x].Feature] = true;
+            }
+        }
+    }
+
+    var first: ?u8 = null;
+    for (used_markers) |used_marker, i| if (!used_marker) {
+        if (first == null)
+            first = @intCast(u8, i);
+        st.fab.features[i] = null;
+    };
+
+    return first;
+}
+
+pub fn applyCursorProp() void {
+    const blank = removeUnusedFeatures();
+
+    const selected = &surfaces.props.items[st.cursor.Prop];
+    const feature = for (st.fab.features) |maybe_feature, i| {
+        if (maybe_feature) |feature|
+            if (feature == .Prop and mem.eql(u8, utils.used(feature.Prop), selected.id))
+                break @intCast(u8, i);
+    } else b: {
+        if (blank == null) {
+            std.log.err("Fab features are full", .{});
+        }
+        st.fab.features[blank.?] = mapgen.Prefab.Feature{ .Prop = [_:0]u8{0} ** 32 };
+        mem.copy(u8, &st.fab.features[blank.?].?.Prop, selected.id);
+        break :b blank.?;
+    };
+
+    st.fab.content[st.y][st.x] = .{ .Feature = feature };
+    st.fab_modified = true;
+}
 
 pub fn main() anyerror!void {
     state.sentry_disabled = true;
@@ -59,7 +105,7 @@ pub fn main() anyerror!void {
     defer surfaces.freeProps(state.gpa.allocator());
 
     for (mapgen.n_fabs.items) |*fab| {
-        if (mem.eql(u8, fab.name.constSlice(), "LAB_transmitter")) {
+        if (mem.eql(u8, fab.name.constSlice(), "LAB_prisoner_study")) {
             st.fab = fab;
             std.log.info("Using {s}", .{st.fab.name.constSlice()});
         }
@@ -83,6 +129,7 @@ pub fn main() anyerror!void {
                 .Wheel, .Hover, .Click => _ = ui.handleMouseEvent(ev, &st),
                 .Key => |k| {
                     switch (k) {
+                        .Enter => applyCursorProp(),
                         else => {},
                     }
                     ui.draw(&st);
