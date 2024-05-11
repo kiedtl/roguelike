@@ -15,8 +15,18 @@ const GeneratorCtx = @import("generators.zig").GeneratorCtx;
 
 pub const EdState = struct {
     fab: *mapgen.Prefab = undefined,
+    fab_modified: bool = true,
+    hud_pane: HudPane = .Props,
     y: usize = 0,
     x: usize = 0,
+    cursor: Cursor = .{ .Prop = 0 },
+
+    // TODO: terrain, mobs, machines
+    pub const HudPane = enum { Props };
+
+    pub const Cursor = union(enum) {
+        Prop: usize, // index to surfaces.props
+    };
 };
 var st = EdState{};
 
@@ -55,17 +65,22 @@ pub fn main() anyerror!void {
         }
     }
 
+    st.cursor.Prop = for (surfaces.props.items) |prop, i| {
+        if (prop.tile != ' ') break i;
+    } else unreachable;
+
     try ui.init();
     ui.draw(&st);
 
     main: while (true) {
+        ui.draw(&st);
+
         var evgen = Generator(display.getEvents).init(ui.FRAMERATE);
         while (evgen.next()) |ev| {
             switch (ev) {
                 .Quit => break :main,
                 .Resize => ui.draw(&st),
-                .Wheel, .Hover, .Click => if (ui.handleMouseEvent(ev))
-                    ui.draw(&st),
+                .Wheel, .Hover, .Click => _ = ui.handleMouseEvent(ev, &st),
                 .Key => |k| {
                     switch (k) {
                         else => {},
@@ -78,6 +93,10 @@ pub fn main() anyerror!void {
                         'j' => st.y = math.min(st.fab.height - 1, st.y + 1),
                         'h' => st.x -|= 1,
                         'k' => st.y -|= 1,
+                        'J' => st.cursor.Prop = math.min(surfaces.props.items.len - 1, st.cursor.Prop + 14),
+                        'K' => st.cursor.Prop -|= 14,
+                        'L' => st.cursor.Prop = math.min(surfaces.props.items.len - 1, st.cursor.Prop + 1),
+                        'H' => st.cursor.Prop -|= 1,
                         else => {},
                     }
                     ui.draw(&st);

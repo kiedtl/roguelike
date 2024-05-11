@@ -334,6 +334,7 @@ pub fn renderAreaAt(self: *Self, offset_x: usize, offset_y: usize, begin_x: usiz
             subconsole.console.renderAreaAt(sdx, offset_y + sdy, 0, i, subconsole.console.width, i + 1);
             sdy += 1;
         }
+        subconsole.console.rendered_offset_y = subconsole.y; // XXX: is this even correct?
     }
 }
 

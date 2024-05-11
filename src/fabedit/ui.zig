@@ -1,25 +1,82 @@
+const std = @import("std");
+const meta = std.meta;
+const math = std.math;
+const mem = std.mem;
+
 const colors = @import("../colors.zig");
 const display = @import("../display.zig");
+const err = @import("../err.zig");
 const fabedit = @import("../fabedit.zig");
 const mapgen = @import("../mapgen.zig");
 const state = @import("../state.zig");
 const surfaces = @import("../surfaces.zig");
+const types = @import("../types.zig");
 const utils = @import("../utils.zig");
 
+const Rect = types.Rect;
+const Coord = types.Coord;
 const Console = @import("../ui/Console.zig");
 
-pub const FRAMERATE = 1000 / 25;
+pub const FRAMERATE = 1000 / 45;
 
 pub var map_win: struct {
     main: Console = undefined,
+    lyr1: Console = undefined,
 
     pub fn init(self: *@This()) void {
         self.main = Console.init(state.gpa.allocator(), 40 * 2, 40);
+        self.lyr1 = Console.init(state.gpa.allocator(), 40 * 2, 40);
+        self.lyr1.default_transparent = true;
+        self.lyr1.clear();
+        self.lyr1.addMouseTrigger(self.main.dimensionsRect(), .Click, .Coord);
+        self.lyr1.addMouseTrigger(self.main.dimensionsRect(), .Hover, .Coord);
+        self.main.addSubconsole(&self.lyr1, 0, 0);
     }
 
-    pub fn handleMouseEvent(_: *@This(), ev: display.Event) bool {
+    pub fn handleMouseEvent(self: *@This(), ev: display.Event, st: *fabedit.EdState) bool {
         return switch (ev) {
-            .Click, .Hover => false,
+            .Click, .Hover => |c| switch (self.lyr1.handleMouseEvent(c, _evToMEvType(ev))) {
+                .Coord => |coord| b: {
+                    st.x = coord.x / 2;
+                    st.y = coord.y;
+                    break :b true;
+                },
+                .Signal => err.wat(),
+                .Unhandled, .Void => true,
+                .Outside => false,
+            },
+            .Wheel => false,
+            else => unreachable,
+        };
+    }
+} = .{};
+
+pub const HUD_WIDTH = 30;
+pub const HudMouseSignalTag = enum(u64) {
+    Prop = 1 << 16,
+};
+pub var hud_win: struct {
+    main: Console = undefined,
+
+    pub fn init(self: *@This()) void {
+        self.main = Console.init(state.gpa.allocator(), HUD_WIDTH, 40);
+    }
+
+    pub fn handleMouseEvent(self: *@This(), ev: display.Event, st: *fabedit.EdState) bool {
+        return switch (ev) {
+            .Click, .Hover => |c| switch (self.main.handleMouseEvent(c, _evToMEvType(ev))) {
+                .Coord => err.wat(),
+                .Signal => |s| b: {
+                    if (s & @enumToInt(HudMouseSignalTag.Prop) > 0) {
+                        const i = s & ~@enumToInt(HudMouseSignalTag.Prop);
+                        st.cursor.Prop = i;
+                        break :b true;
+                    }
+                    break :b false;
+                },
+                .Unhandled, .Void => true,
+                .Outside => false,
+            },
             .Wheel => false,
             else => unreachable,
         };
@@ -30,8 +87,9 @@ pub var container: struct {
     main: Console = undefined,
 
     pub fn init(self: *@This()) void {
-        self.main = Console.init(state.gpa.allocator(), (40 * 2) + 20, 40);
+        self.main = Console.init(state.gpa.allocator(), (40 * 2) + HUD_WIDTH + 1, 40);
         self.main.addSubconsole(&map_win.main, 0, 0);
+        self.main.addSubconsole(&hud_win.main, 40 * 2 + 1, 0);
     }
 
     pub fn deinit(self: *@This()) void {
@@ -40,12 +98,76 @@ pub var container: struct {
 } = .{};
 
 pub fn init() !void {
-    try display.init((40 * 2) + 20, 40, 1.0);
+    try display.init((40 * 2) + HUD_WIDTH + 1, 40, 1.0);
     map_win.init();
+    hud_win.init();
     container.init();
 }
 
-pub fn draw(st: *fabedit.EdState) void {
+pub fn drawHUD(st: *fabedit.EdState) void {
+    hud_win.main.clear();
+    hud_win.main.clearMouseTriggers();
+
+    var y: usize = 0;
+
+    var tabx: usize = 0;
+    inline for (meta.fields(fabedit.EdState.HudPane)) |field, i| {
+        if (i != 0) {
+            _ = hud_win.drawTextAt(tabx, y, " · ", .{});
+            tabx += 3;
+        }
+        var c: u21 = 'g';
+        if (mem.eql(u8, @tagName(st.hud_pane), field.name))
+            c = 'c';
+        _ = hud_win.main.drawTextAtf(tabx, y, "${u}{s}$.", .{ c, field.name }, .{});
+        //hud_win.addClickableTextBoth(.{ .Signal = i });
+        tabx += field.name.len;
+    }
+    y += 2;
+
+    switch (st.hud_pane) {
+        .Props => {
+            const PANEL_WIDTH = HUD_WIDTH / 2;
+
+            const cursor_x = st.cursor.Prop % PANEL_WIDTH;
+            var display_row = (st.cursor.Prop - cursor_x) / PANEL_WIDTH;
+            if (display_row >= 4)
+                display_row -= 4;
+
+            const selected = &surfaces.props.items[st.cursor.Prop];
+            y += hud_win.main.drawTextAtf(0, y, "$cSelected:$. {s}", .{selected.id}, .{});
+
+            var dx: usize = 0;
+            for (surfaces.props.items) |prop, i| {
+                var cell = display.Cell{};
+                cell.fg = prop.fg orelse colors.BG;
+                cell.bg = prop.bg orelse colors.BG;
+                cell.ch = prop.tile;
+                cell.sch = prop.sprite;
+                if (prop.tile == ' ')
+                    cell = .{ .ch = '·', .fg = 0xaaaaaa, .bg = colors.BG };
+                if (i == st.cursor.Prop)
+                    cell.bg = colors.mix(cell.bg, 0xffffff, 0.2);
+                cell.fl.wide = true;
+                hud_win.main.setCell(dx, y, cell);
+                hud_win.main.setCell(dx + 1, y, .{ .fl = .{ .skip = true } });
+                const signal = @enumToInt(HudMouseSignalTag.Prop) | i;
+                hud_win.main.addClickableTextBoth(.{ .Signal = signal });
+                hud_win.main.addMouseTrigger(Rect.new(Coord.new(dx, y), 0, 0), .Click, .{
+                    .Signal = signal,
+                });
+                dx += 2;
+                if (dx >= HUD_WIDTH - 2) {
+                    dx = 0;
+                    if (i / PANEL_WIDTH > display_row -| 4)
+                        y += 1;
+                }
+            }
+        },
+    }
+}
+
+pub fn drawMap(st: *fabedit.EdState) void {
     var y: usize = 0;
     while (y < map_win.main.height) : (y += 1) {
         var x: usize = 0;
@@ -130,14 +252,25 @@ pub fn draw(st: *fabedit.EdState) void {
                 else => '@',
             };
 
-            if (st.x == x and st.y == y)
-                cell.bg = colors.mix(cell.bg, 0xffffff, 0.2);
-
             cell.fl.wide = true;
             map_win.main.setCell(dx, y, cell);
             map_win.main.setCell(dx + 1, y, .{ .fl = .{ .skip = true } });
         }
     }
+}
+
+pub fn draw(st: *fabedit.EdState) void {
+    drawHUD(st);
+
+    if (st.fab_modified) {
+        drawMap(st);
+        st.fab_modified = false;
+    }
+
+    map_win.lyr1.clear();
+    var mark = map_win.main.getCell(st.x * 2, st.y);
+    mark.bg = colors.mix(mark.bg, 0xffffff, 0.2);
+    map_win.lyr1.setCell(st.x * 2, st.y, mark);
 
     container.main.renderFully(0, 0);
     display.present();
@@ -148,7 +281,16 @@ pub fn deinit() !void {
     container.deinit();
 }
 
-pub fn handleMouseEvent(ev: display.Event) bool {
-    _ = ev;
-    return false;
+pub fn handleMouseEvent(ev: display.Event, st: *fabedit.EdState) bool {
+    return map_win.handleMouseEvent(ev, st) or
+        hud_win.handleMouseEvent(ev, st);
+}
+
+fn _evToMEvType(ev: display.Event) Console.MouseTrigger.Kind {
+    return switch (ev) {
+        .Click => .Click,
+        .Hover => .Hover,
+        .Wheel => .Wheel,
+        else => err.wat(),
+    };
 }

@@ -62,6 +62,7 @@ pub fn build(b: *Builder) void {
         fabedit_run_cmd.step.dependOn(b.getInstallStep());
         const fabedit_run_step = b.step("run-fabedit", "Run fabedit");
         fabedit_run_step.dependOn(&fabedit_run_cmd.step);
+        return;
     }
 
     const exe = b.addExecutable("rl", "src/main.zig");
