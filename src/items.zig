@@ -297,14 +297,14 @@ pub const BlackHood = Headgear{
     .id = "head_hood",
     .name = "black hood",
     .stats = .{ .Evade = 5 },
-    .resists = .{ .rFume = 70 },
+    .resists = .{ .rElec = 25 },
 };
 
 pub const FumeHood = Headgear{
     .id = "head_hood_fume",
     .name = "fume hood",
     .stats = .{ .Vision = -1 },
-    .resists = .{ .rElec = 25 },
+    .resists = .{ .rFume = 70 },
 };
 
 pub const WeldingHood = Headgear{
