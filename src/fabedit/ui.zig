@@ -102,13 +102,45 @@ pub var hud_win: struct {
     }
 } = .{};
 
+pub var bar_win: struct {
+    main: Console = undefined,
+
+    pub fn init(self: *@This()) void {
+        self.main = Console.init(state.gpa.allocator(), 40 * 2, 1);
+    }
+
+    pub fn handleMouseEvent(self: *@This(), ev: display.Event, _: *fabedit.EdState) bool {
+        return switch (ev) {
+            .Click, .Hover => |c| switch (self.main.handleMouseEvent(c, _evToMEvType(ev))) {
+                .Coord => err.wat(),
+                .Signal => |s| switch (s) {
+                    1 => b: {
+                        fabedit.prevFab();
+                        break :b true;
+                    },
+                    2 => b: {
+                        fabedit.nextFab();
+                        break :b true;
+                    },
+                    else => unreachable,
+                },
+                .Unhandled, .Void => true,
+                .Outside => false,
+            },
+            .Wheel => false,
+            else => unreachable,
+        };
+    }
+} = .{};
+
 pub var container: struct {
     main: Console = undefined,
 
     pub fn init(self: *@This()) void {
-        self.main = Console.init(state.gpa.allocator(), (40 * 2) + HUD_WIDTH + 1, 40);
+        self.main = Console.init(state.gpa.allocator(), (40 * 2) + HUD_WIDTH + 1, 40 + 1);
         self.main.addSubconsole(&map_win.main, 0, 0);
         self.main.addSubconsole(&hud_win.main, 40 * 2 + 1, 0);
+        self.main.addSubconsole(&bar_win.main, 0, 40);
     }
 
     pub fn deinit(self: *@This()) void {
@@ -117,9 +149,10 @@ pub var container: struct {
 } = .{};
 
 pub fn init() !void {
-    try display.init((40 * 2) + HUD_WIDTH + 1, 40, 1.0);
+    try display.init((40 * 2) + HUD_WIDTH + 1, 40 + 1, 1.0);
     map_win.init();
     hud_win.init();
+    bar_win.init();
     container.init();
 }
 
@@ -171,6 +204,41 @@ pub fn displayAs(st: *fabedit.EdState, ftile: mapgen.Prefab.FabTile) display.Cel
         },
         else => unreachable,
     };
+}
+
+pub fn drawBar(st: *fabedit.EdState) void {
+    bar_win.main.clear();
+    bar_win.main.clearMouseTriggers();
+
+    var x: usize = 1;
+
+    // *name
+    if (st.fab_info[st.fab_index].unsaved) {
+        bar_win.main.setCell(x, 0, .{ .ch = '*', .fg = 0xff1111, .bg = colors.BG });
+        x += 1;
+    }
+    _ = bar_win.main.drawTextAt(x, 0, st.fab_name, .{ .xptr = &x });
+    x += 1;
+
+    // « {}/{} »
+    const can_go_back = st.fab_index > 0;
+    const can_go_forw = st.fab_index < st.fab_variants.len - 1;
+
+    const c1: u32 = if (can_go_back) 0xffd700 else 0xaaaaaa;
+    bar_win.main.setCell(x, 0, .{ .ch = '«', .fg = c1, .bg = colors.BG });
+    bar_win.main.addMouseTrigger(Rect.new(Coord.new(x, 0), 0, 0), .Click, .{
+        .Signal = 1,
+    });
+    x += 2;
+
+    _ = bar_win.main.drawTextAtf(x, 0, "{}$g/$.{}", .{ st.fab_index, st.fab_variants.len - 1 }, .{ .xptr = &x });
+    x += 1;
+
+    const c2: u32 = if (can_go_forw) 0xffd700 else 0xaaaaaa;
+    bar_win.main.setCell(x, 0, .{ .ch = '»', .fg = c2, .bg = colors.BG });
+    bar_win.main.addMouseTrigger(Rect.new(Coord.new(x, 0), 0, 0), .Click, .{
+        .Signal = 2,
+    });
 }
 
 pub fn drawHUD(st: *fabedit.EdState) void {
@@ -353,11 +421,12 @@ pub fn drawMap(st: *fabedit.EdState) void {
 }
 
 pub fn draw(st: *fabedit.EdState) void {
+    drawBar(st);
     drawHUD(st);
 
-    if (st.fab_modified) {
+    if (st.fab_redraw) {
         drawMap(st);
-        st.fab_modified = false;
+        st.fab_redraw = false;
     }
 
     map_win.lyr1.clear();
@@ -376,7 +445,8 @@ pub fn deinit() !void {
 
 pub fn handleMouseEvent(ev: display.Event, st: *fabedit.EdState) bool {
     return map_win.handleMouseEvent(ev, st) or
-        hud_win.handleMouseEvent(ev, st);
+        hud_win.handleMouseEvent(ev, st) or
+        bar_win.handleMouseEvent(ev, st);
 }
 
 fn _evToMEvType(ev: display.Event) Console.MouseTrigger.Kind {

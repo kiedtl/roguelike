@@ -98,7 +98,7 @@ pub fn StackBuffer(comptime T: type, comptime capacity: usize) type {
             for (items) |item| try self.append(item);
         }
 
-        pub usingnamespace if (@typeInfo(T) == .Int or @typeInfo(T) == .Enum) struct {
+        pub usingnamespace if (@typeInfo(T) == .Int or @typeInfo(T) == .Enum or @typeInfo(T) == .Pointer) struct {
             pub fn linearSearch(self: *const Self, value: T) ?usize {
                 return for (self.constSlice()) |item, i| {
                     if (item == value) break i;

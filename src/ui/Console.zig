@@ -498,6 +498,8 @@ pub fn drawTextAt(self: *Self, startx: usize, starty: usize, str: []const u8, op
         }
         if (x > self.last_text_endx + 1)
             self.last_text_endx = x -| 1;
+        if (opts.xptr) |xptr|
+            xptr.* = x;
         x = startx;
     }) {
         if (skipped < opts.skip_lines) {

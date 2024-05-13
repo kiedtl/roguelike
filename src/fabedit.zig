@@ -15,16 +15,24 @@ const utils = @import("utils.zig");
 
 const Generator = @import("generators.zig").Generator;
 const GeneratorCtx = @import("generators.zig").GeneratorCtx;
+const StackBuffer = @import("buffer.zig").StackBuffer;
 
 pub const EdState = struct {
     fab_path: []const u8 = "",
     fab_name: []const u8 = "", // fab_path trimmed of parent dir and .fab
     fab: *mapgen.Prefab = undefined,
-    fab_modified: bool = true,
+    fab_variants: StackBuffer(*mapgen.Prefab, 32) = StackBuffer(*mapgen.Prefab, 32).init(null),
+    fab_index: usize = 99999,
+    fab_info: [32]FabInfo = [1]FabInfo{.{}} ** 32,
+    fab_redraw: bool = true,
     hud_pane: HudPane = .Props,
     y: usize = 0,
     x: usize = 0,
     cursor: Cursor = .{ .Prop = 0 },
+
+    pub const FabInfo = struct {
+        unsaved: bool = false,
+    };
 
     // TODO: terrain, mobs, machines
     pub const HudPane = enum(usize) { Props = 0, Basic = 1 };
@@ -59,6 +67,22 @@ pub const EdState = struct {
 };
 var st = EdState{};
 
+pub fn prevFab() void {
+    st.x = 0;
+    st.y = 0;
+    st.fab_index -|= 1;
+    st.fab = st.fab_variants.slice()[st.fab_index];
+    st.fab_redraw = true;
+}
+
+pub fn nextFab() void {
+    st.x = 0;
+    st.y = 0;
+    st.fab_index = math.min(st.fab_variants.len - 1, st.fab_index + 1);
+    st.fab = st.fab_variants.slice()[st.fab_index];
+    st.fab_redraw = true;
+}
+
 // Removes unused features, and returns first blank feature index if any
 pub fn removeUnusedFeatures() ?u8 {
     var used_markers = [1]bool{false} ** 128;
@@ -88,7 +112,8 @@ pub fn removeUnusedFeatures() ?u8 {
 
 pub fn erase() void {
     st.fab.content[st.y][st.x] = .Floor;
-    st.fab_modified = true;
+    st.fab_redraw = true;
+    st.fab_info[st.fab_index].unsaved = true;
 }
 
 pub fn applyCursorBasic() void {
@@ -100,7 +125,8 @@ pub fn applyCursorBasic() void {
         .Connection => .Connection,
         .Any => .Any,
     };
-    st.fab_modified = true;
+    st.fab_redraw = true;
+    st.fab_info[st.fab_index].unsaved = true;
 }
 
 pub fn applyCursorProp() void {
@@ -121,7 +147,8 @@ pub fn applyCursorProp() void {
     };
 
     st.fab.content[st.y][st.x] = .{ .Feature = feature };
-    st.fab_modified = true;
+    st.fab_redraw = true;
+    st.fab_info[st.fab_index].unsaved = true;
 }
 
 pub fn saveFile() void {
@@ -207,6 +234,7 @@ pub fn saveFile() void {
         writer.writeByte('\n') catch err.wat();
     }
 
+    st.fab_info[st.fab_index].unsaved = false;
     std.log.info("Saved file.", .{});
 }
 
@@ -249,13 +277,16 @@ pub fn main() anyerror!void {
     const trimmed = mem.trimRight(u8, st.fab_path, ".fab");
     const index = if (mem.lastIndexOfScalar(u8, trimmed, '/')) |sep| sep + 1 else 0;
     st.fab_name = trimmed[index..];
-    st.fab = for (mapgen.n_fabs.items) |*fab| {
-        if (mem.eql(u8, fab.name.constSlice(), st.fab_name))
-            break fab;
-    } else {
+    for (mapgen.n_fabs.items) |*fab| {
+        if (mem.eql(u8, fab.name.constSlice(), st.fab_name)) {
+            st.fab_variants.append(fab) catch err.wat();
+        }
+    }
+    st.fab = st.fab_variants.last() orelse {
         std.log.err("Could not find {s}", .{st.fab_name});
         return;
     };
+    st.fab_index = st.fab_variants.len - 1;
 
     // Cursor is initially props
     st.cursor.Prop = for (surfaces.props.items) |prop, i| {
@@ -304,6 +335,8 @@ pub fn main() anyerror!void {
                             .Props => .Basic,
                             .Basic => .Props,
                         },
+                        '[' => prevFab(),
+                        ']' => nextFab(),
                         else => {},
                     }
                     ui.draw(&st);

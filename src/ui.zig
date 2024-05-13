@@ -1281,6 +1281,8 @@ pub const DrawStrOpts = struct {
     fold: bool = true,
     // When folding text, skip the first X lines. Used to implement scrolling.
     skip_lines: usize = 0,
+    // When done, record last position of x in variable
+    xptr: ?*usize = null,
 };
 
 fn _drawStrf(_x: usize, _y: usize, endx: usize, comptime format: []const u8, args: anytype, opts: DrawStrOpts) usize {
@@ -1302,6 +1304,8 @@ fn _drawStrf(_x: usize, _y: usize, endx: usize, comptime format: []const u8, arg
 //     $.       reset fg and bg to defaults
 //     $~       inverg fg/bg
 fn _drawStr(_x: usize, _y: usize, endx: usize, str: []const u8, opts: DrawStrOpts) usize {
+    assert(opts.xptr == null); // unsupported, use Console you degenerate
+
     // const width = display.width();
     const height = display.height();
 
