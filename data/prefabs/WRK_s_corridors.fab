@@ -28,7 +28,7 @@
 
 :tunneler_orientation east
 :tunneler_orientation west
-@m m trap_light_plate
+@0 m trap_light_plate
 0
 0
 
