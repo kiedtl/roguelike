@@ -3,18 +3,20 @@ const math = std.math;
 const mem = std.mem;
 
 const display = @import("display.zig");
-const utils = @import("utils.zig");
+const err = @import("err.zig");
 const font = @import("font.zig");
 const literature = @import("literature.zig");
 const mapgen = @import("mapgen.zig");
 const state = @import("state.zig");
 const surfaces = @import("surfaces.zig");
 const ui = @import("fabedit/ui.zig");
+const utils = @import("utils.zig");
 
 const Generator = @import("generators.zig").Generator;
 const GeneratorCtx = @import("generators.zig").GeneratorCtx;
 
 pub const EdState = struct {
+    fab_path: []const u8 = "",
     fab: *mapgen.Prefab = undefined,
     fab_modified: bool = true,
     hud_pane: HudPane = .Props,
@@ -48,11 +50,19 @@ pub fn removeUnusedFeatures() ?u8 {
     var first: ?u8 = null;
     for (used_markers) |used_marker, i| if (!used_marker) {
         if (first == null)
-            first = @intCast(u8, i);
+            switch (i) {
+                '0'...'9', 'a'...'z' => first = @intCast(u8, i),
+                else => {},
+            };
         st.fab.features[i] = null;
     };
 
     return first;
+}
+
+pub fn erase() void {
+    st.fab.content[st.y][st.x] = .Floor;
+    st.fab_modified = true;
 }
 
 pub fn applyCursorProp() void {
@@ -74,6 +84,92 @@ pub fn applyCursorProp() void {
 
     st.fab.content[st.y][st.x] = .{ .Feature = feature };
     st.fab_modified = true;
+}
+
+pub fn saveFile() void {
+    var fab_f = std.fs.cwd().openFile(st.fab_path, .{ .write = true }) catch |e| {
+        std.log.err("Could not save file: {}", .{e});
+        return;
+    };
+    defer fab_f.close();
+
+    var buf = [1]u8{0} ** 4096;
+    const read = fab_f.readAll(buf[0..]) catch err.wat();
+    const writer = fab_f.writer();
+    fab_f.seekTo(0) catch err.wat();
+    fab_f.setEndPos(0) catch err.wat();
+
+    var lines = mem.split(u8, buf[0..read], "\n");
+    while (lines.next()) |line| {
+        writer.writeAll(line) catch err.wat();
+        writer.writeByte('\n') catch err.wat();
+        if (mem.eql(u8, "% FABEDIT_REPLACE", line)) {
+            writer.writeByte('\n') catch err.wat();
+            break;
+        }
+    }
+
+    for (st.fab.features) |maybe_feature, i| if (maybe_feature) |feature| {
+        const chr: u21 = switch (feature) {
+            .Item => 'i',
+            .Mob => 'M',
+            .Machine => 'm',
+            .Prop => 'p',
+            .CMob, .Poster => {
+                std.log.warn("Assuming Cmons/P definition is prior to FABEDIT_REPLACE directive", .{});
+                continue;
+            },
+            else => {
+                std.log.err("Can only serialize i/M/m/p features. Aborting save.", .{});
+                return;
+            },
+        };
+        const str: []const u8 = switch (feature) {
+            .Item => |item| item.i.id() catch unreachable,
+            .Mob => |m| m.mob.id,
+            .Machine => |m| utils.used(m.id),
+            .Prop => |p| utils.used(p),
+            else => {
+                std.log.err("Can only serialize i/M/m/p features. Aborting save.", .{});
+                return;
+            },
+        };
+        writer.print("@{u} {u} {s}\n", .{ @intCast(u8, i), chr, str }) catch err.wat();
+    };
+
+    writer.writeByte('\n') catch err.wat();
+
+    var y: usize = 0;
+    while (y < st.fab.height) : (y += 1) {
+        var x: usize = 0;
+        while (x < st.fab.width) : (x += 1) {
+            const chr: u21 = switch (st.fab.content[y][x]) {
+                .Window => '&',
+                .Wall => '#',
+                .LockedDoor => '±',
+                .HeavyLockedDoor => '⊞',
+                .Door => '+',
+                .Brazier => '•',
+                .ShallowWater => '˜',
+                .Floor => '.',
+                .Connection => '*',
+                .Water => '~',
+                .Lava => '≈',
+                .Bars => '≡',
+                .Feature => |u| u,
+                .Loot1 => 'L',
+                .RareLoot => 'R',
+                .LevelFeature => |i| 'α' + @intCast(u21, i),
+                .Corpse => '%',
+                .Ring => '=',
+                .Any => '?',
+            };
+            writer.print("{u}", .{chr}) catch err.wat();
+        }
+        writer.writeByte('\n') catch err.wat();
+    }
+
+    std.log.info("Saved file.", .{});
 }
 
 pub fn main() anyerror!void {
@@ -104,12 +200,24 @@ pub fn main() anyerror!void {
     defer state.freeLevelInfo();
     defer surfaces.freeProps(state.gpa.allocator());
 
-    for (mapgen.n_fabs.items) |*fab| {
-        if (mem.eql(u8, fab.name.constSlice(), "LAB_prisoner_study")) {
-            st.fab = fab;
-            std.log.info("Using {s}", .{st.fab.name.constSlice()});
-        }
-    }
+    var args = std.process.args();
+    _ = args.skip();
+    st.fab_path = try args.next(state.gpa.allocator()) orelse {
+        std.log.err("Usage: rl_fabedit [path]", .{});
+        return;
+    };
+    defer state.gpa.allocator().free(st.fab_path);
+
+    const trimmed = mem.trimRight(u8, st.fab_path, ".fab");
+    const index = if (mem.lastIndexOfScalar(u8, trimmed, '/')) |sep| sep + 1 else 0;
+    const fab_name = trimmed[index..];
+    st.fab = for (mapgen.n_fabs.items) |*fab| {
+        if (mem.eql(u8, fab.name.constSlice(), fab_name))
+            break fab;
+    } else {
+        std.log.err("Could not find {s}", .{fab_name});
+        return;
+    };
 
     st.cursor.Prop = for (surfaces.props.items) |prop, i| {
         if (prop.tile != ' ') break i;
@@ -129,6 +237,7 @@ pub fn main() anyerror!void {
                 .Wheel, .Hover, .Click => _ = ui.handleMouseEvent(ev, &st),
                 .Key => |k| {
                     switch (k) {
+                        .Backspace => erase(),
                         .Enter => applyCursorProp(),
                         else => {},
                     }
@@ -136,6 +245,7 @@ pub fn main() anyerror!void {
                 },
                 .Char => |c| {
                     switch (c) {
+                        's' => saveFile(),
                         'l' => st.x = math.min(st.fab.width - 1, st.x + 1),
                         'j' => st.y = math.min(st.fab.height - 1, st.y + 1),
                         'h' => st.x -|= 1,

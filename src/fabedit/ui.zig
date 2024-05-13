@@ -37,9 +37,14 @@ pub var map_win: struct {
         return switch (ev) {
             .Click, .Hover => |c| switch (self.lyr1.handleMouseEvent(c, _evToMEvType(ev))) {
                 .Coord => |coord| b: {
-                    st.x = coord.x / 2;
-                    st.y = coord.y;
-                    break :b true;
+                    if (ev == .Click) {
+                        fabedit.applyCursorProp();
+                        break :b true;
+                    } else {
+                        st.x = coord.x / 2;
+                        st.y = coord.y;
+                        break :b true;
+                    }
                 },
                 .Signal => err.wat(),
                 .Unhandled, .Void => true,
