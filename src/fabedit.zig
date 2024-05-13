@@ -361,6 +361,10 @@ pub fn main() anyerror!void {
                         },
                         '[' => prevFab(),
                         ']' => nextFab(),
+                        'r' => {
+                            surfaces.freeProps(state.gpa.allocator());
+                            surfaces.readProps(state.gpa.allocator());
+                        },
                         else => {},
                     }
                     ui.draw(&st);

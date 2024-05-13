@@ -377,7 +377,7 @@ pub fn drawMap(st: *fabedit.EdState) void {
                         }),
                     .CCont, .Poster => 0xffd700,
                     .Prop => |pid| surfaces.props.items[utils.findById(surfaces.props.items, pid).?].fg orelse 0xffffff,
-                    .Machine => |mid| surfaces.MACHINES[utils.findById(&surfaces.MACHINES, mid.id).?].powered_fg orelse 0xffffff,
+                    .Machine => |mid| surfaces.MACHINES[utils.findById(&surfaces.MACHINES, mid.id).?].unpowered_fg orelse 0xffffff,
                     else => colors.LIGHT_CONCRETE,
                 },
                 .LevelFeature => colors.LIGHT_STEEL_BLUE,
@@ -393,6 +393,14 @@ pub fn drawMap(st: *fabedit.EdState) void {
                 .Water => 0x0000ff,
                 .Lava => 0xff0000,
                 else => cell.fg,
+            };
+
+            cell.bg = switch (st.fab.content[y][x]) {
+                .Feature => |f| switch (st.fab.features[f].?) {
+                    .Machine => |mid| surfaces.MACHINES[utils.findById(&surfaces.MACHINES, mid.id).?].unpowered_bg orelse colors.BG,
+                    else => cell.bg,
+                },
+                else => cell.bg,
             };
 
             cell.ch = switch (st.fab.content[y][x]) {
