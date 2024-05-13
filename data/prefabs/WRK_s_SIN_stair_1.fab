@@ -4,8 +4,8 @@
 :priority 100
 :g_whitelist 6/Workshop
 
-@h M hulk_swollen
-@s s 6/Shrine
+@@h M hulk_swollen
+@@s s 6/Shrine
 
 ..###..
 ..#s#..
@@ -14,3 +14,11 @@
 #h..h.#
 #.....#
 #######
+
+\
+
+#&&#
+#h.#
+#..#
+####
+#ss#
