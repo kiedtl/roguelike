@@ -225,6 +225,8 @@
 "chamber_p_n1s1w2"     	 "paralysis system"     	 '╡' 	                        -  	 0x008c00 	 -        	 nay 	 - 	 -
 "chamber_p_n2s2w1e1"   	 "paralysis system"     	 '╫' 	                        -  	 0x008c00 	 -        	 nay 	 - 	 -
 "chamber_p_n2s2"       	 "paralysis system"     	 '║' 	                        -  	 0x008c00 	 -        	 nay 	 - 	 -
+"chamber_p_n1s1w2e1"   	 "paralysis system"     	 '╪' 	                        -  	 0x008c00 	 -        	 nay 	 - 	 -
+"chamber_p_n1s1w1"     	 "paralysis system"     	 '┤' 	                        -  	 0x008c00 	 -        	 nay 	 - 	 -
 "eldr_junction"        	 "eldritch junction"    	 '╬' 	                        -  	 0x008c00 	 -        	 nay 	 - 	 -
 "eldr_transmitter_1"   	 "eldritch transmitter" 	 '/' 	                        -  	 0x008c00 	 -        	 nay 	 - 	 -
 "eldr_transmitter_2"   	 "eldritch transmitter" 	'\\' 	                        -  	 0x008c00 	 -        	 nay 	 - 	 -

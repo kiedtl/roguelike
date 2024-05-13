@@ -1,0 +1,44 @@
+:g_global_restriction 2
+:g_tunneler
+:noguards
+:nostairs
+:noitems
+:notraps
+:priority 999
+
+:tunneler_orientation east
+:prison 3,2 0 0
+
+@p P
+Unfortunately it does seem that eldritch transmitters have no significant
+effect on non-Revgenunkim creatures, disregarding headaches, dizziness, and
+other mild inconveniences. -- KASDRUIN
+END POSTER
+
+% FABEDIT_REPLACE
+
+@0 p chamber_s1w1
+@1 p eldr_transmitter_2
+@2 p chamber_n1e1
+@3 p eldr_junction
+@4 p eldr_targeting
+@5 p generator_green
+@6 p chamber_s1e1
+@7 p chamber_e1w1
+@8 p chamber_n1w1
+@9 p chamber_p_n1w1
+@a p chamber_p_n1e1w1
+@b p chamber_p_n1s1
+@c p chamber_p_n1s1e1w1
+@d p chamber_n1s1
+@e p chamber_p_n1s1w1
+@f p chamber_p_n2s2w1e1
+@g p chamber_p_n1s1w2e1
+@z Cmons goblin ([prisoner_of]Necromancer [prm_status1]Daze)
+
+........1056
+..670p..127e
+..dzd0..134g
+..27cb..134g
+...2a9..167e
+........1852
