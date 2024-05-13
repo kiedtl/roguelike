@@ -2271,6 +2271,7 @@ pub const PlaceMobOptions = struct {
     prisoner_of: ?types.Faction = null,
     prm_status1: ?Status = null,
     prm_status2: ?Status = null,
+    cancel_status1: ?Status = null,
     job: ?types.AIJob.Type = null,
     tag: ?u8 = null,
     near_stair_opts: struct {
@@ -2334,6 +2335,9 @@ pub fn placeMob(
     for (template.statuses) |status_info| {
         mob.addStatus(status_info.status, status_info.power, status_info.duration);
     }
+
+    if (opts.cancel_status1) |s|
+        mob.cancelStatus(s);
 
     state.mobs.append(mob) catch err.wat();
     const mob_ptr = state.mobs.last().?;

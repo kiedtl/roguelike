@@ -1,0 +1,109 @@
+:g_tunneler
+:g_restriction 5
+:g_individual_restriction 1
+:noitems
+:noguards
+
+@@p Cmons sparkling     ([prm_status1]Sleeping [no_squads]yea)
+@@e Cmons emberling     ([prm_status1]Sleeping [no_squads]yea)
+@@y Cmons copper_hornet ([prm_status1]Sleeping [no_squads]yea)
+@@1 Cmons copper_hornet ([cancel_status1]Sleeping [no_squads]yea)
+@@2 Cmons sparkling     ([cancel_status1]Sleeping [no_squads]yea)
+@@3 Cmons emberling     ([cancel_status1]Sleeping [no_squads]yea)
+
+:tunneler_orientation north
+:tunneler_orientation east
+:tunneler_orientation south
+:tunneler_orientation west
+:tunneler_inset
+p
+
+\
+
+:tunneler_orientation north
+:tunneler_orientation east
+:tunneler_orientation south
+:tunneler_orientation west
+:tunneler_inset
+e
+
+\
+
+:tunneler_orientation north
+:tunneler_orientation east
+:tunneler_orientation south
+:tunneler_orientation west
+:tunneler_inset
+y
+
+\
+
+:tunneler_orientation north
+•
+3
+.
+
+\
+
+:tunneler_orientation south
+.
+3
+•
+
+\
+
+:tunneler_orientation east
+.3•
+
+\
+
+:tunneler_orientation west
+•3.
+
+\
+
+:tunneler_orientation north
+•
+1
+.
+
+\
+
+:tunneler_orientation south
+.
+1
+•
+
+\
+
+:tunneler_orientation east
+.1•
+
+\
+
+:tunneler_orientation west
+•1.
+
+\
+
+:tunneler_orientation north
+•
+2
+.
+
+\
+
+:tunneler_orientation south
+.
+2
+•
+
+\
+
+:tunneler_orientation east
+.2•
+
+\
+
+:tunneler_orientation west
+•2.
