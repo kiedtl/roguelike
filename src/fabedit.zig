@@ -151,30 +151,23 @@ pub fn applyCursorProp() void {
     st.fab_info[st.fab_index].unsaved = true;
 }
 
-pub fn saveFile() void {
-    var fab_f = std.fs.cwd().openFile(st.fab_path, .{ .write = true }) catch |e| {
-        std.log.err("Could not save file: {}", .{e});
-        return;
-    };
-    defer fab_f.close();
+fn _saveVariant(ind: usize, writer: anytype) void {
+    const fab = st.fab_variants.data[ind];
 
-    var buf = [1]u8{0} ** 4096;
-    const read = fab_f.readAll(buf[0..]) catch err.wat();
-    const writer = fab_f.writer();
-    fab_f.seekTo(0) catch err.wat();
-    fab_f.setEndPos(0) catch err.wat();
+    const oldpos = writer.context.getPos() catch err.wat();
 
-    var lines = mem.split(u8, buf[0..read], "\n");
-    while (lines.next()) |line| {
-        writer.writeAll(line) catch err.wat();
-        writer.writeByte('\n') catch err.wat();
-        if (mem.eql(u8, "% FABEDIT_REPLACE", line)) {
-            writer.writeByte('\n') catch err.wat();
-            break;
-        }
+    if (fab.tunneler_prefab) {
+        for (fab.tunneler_orientation.constSlice()) |orien|
+            writer.print(":tunneler_orientation {s}\n", .{orien.name()}) catch err.wat();
+        if (fab.tunneler_inset)
+            writer.print(":tunneler_inset\n", .{}) catch err.wat();
     }
 
-    for (st.fab.features) |maybe_feature, i| if (maybe_feature) |feature| {
+    if (writer.context.getPos() catch err.wat() != oldpos)
+        writer.writeByte('\n') catch err.wat();
+
+    const oldpos2 = writer.context.getPos() catch err.wat();
+    for (fab.features) |maybe_feature, i| if (maybe_feature) |feature| {
         const chr: u21 = switch (feature) {
             .Item => 'i',
             .Mob => 'M',
@@ -202,13 +195,14 @@ pub fn saveFile() void {
         writer.print("@{u} {u} {s}\n", .{ @intCast(u8, i), chr, str }) catch err.wat();
     };
 
-    writer.writeByte('\n') catch err.wat();
+    if (writer.context.getPos() catch err.wat() != oldpos2)
+        writer.writeByte('\n') catch err.wat();
 
     var y: usize = 0;
-    while (y < st.fab.height) : (y += 1) {
+    while (y < fab.height) : (y += 1) {
         var x: usize = 0;
-        while (x < st.fab.width) : (x += 1) {
-            const chr: u21 = switch (st.fab.content[y][x]) {
+        while (x < fab.width) : (x += 1) {
+            const chr: u21 = switch (fab.content[y][x]) {
                 .Window => '&',
                 .Wall => '#',
                 .LockedDoor => '±',
@@ -233,8 +227,38 @@ pub fn saveFile() void {
         }
         writer.writeByte('\n') catch err.wat();
     }
+}
 
-    st.fab_info[st.fab_index].unsaved = false;
+pub fn saveFile() void {
+    var fab_f = std.fs.cwd().openFile(st.fab_path, .{ .write = true }) catch |e| {
+        std.log.err("Could not save file: {}", .{e});
+        return;
+    };
+    defer fab_f.close();
+
+    var buf = [1]u8{0} ** 4096;
+    const read = fab_f.readAll(buf[0..]) catch err.wat();
+    const writer = fab_f.writer();
+    fab_f.seekTo(0) catch err.wat();
+    fab_f.setEndPos(0) catch err.wat();
+
+    var lines = mem.split(u8, buf[0..read], "\n");
+    while (lines.next()) |line| {
+        writer.writeAll(line) catch err.wat();
+        writer.writeByte('\n') catch err.wat();
+        if (mem.eql(u8, "% FABEDIT_REPLACE", line)) {
+            writer.writeByte('\n') catch err.wat();
+            break;
+        }
+    }
+
+    for (st.fab_variants.constSlice()) |_, i| {
+        _saveVariant(i, writer);
+        if (i < st.fab_variants.len - 1)
+            writer.print("\n\\\n", .{}) catch err.wat();
+    }
+
+    for (st.fab_info) |*inf| inf.unsaved = false;
     std.log.info("Saved file.", .{});
 }
 
