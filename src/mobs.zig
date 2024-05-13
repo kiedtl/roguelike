@@ -909,19 +909,20 @@ pub const AlchemistTemplate = MobTemplate{
             .profession_name = "alchemist",
             .profession_description = "experimenting",
             .work_fn = ai.guardWork,
-            .fight_fn = ai.mageFight,
-            .spellcaster_backup_action = .Flee,
+            .fight_fn = ai.alchemistFight,
+            .spellcaster_backup_action = .KeepDistAlarm,
             .is_curious = false,
             .flags = &[_]AI.Flag{ .ScansForJobs, .ScansForCorpses },
         },
 
         .spells = &[_]SpellOptions{
-            .{ .MP_cost = 50, .spell = &spells.CAST_AWAKEN_CONSTRUCT },
+            .{ .MP_cost = 25, .spell = &spells.CAST_AWAKEN_CONSTRUCT },
+            .{ .MP_cost = 50, .spell = &spells.CAST_SCHEDULE_ALARM_PULL },
         },
-        .max_MP = 51,
+        .max_MP = 100,
 
         .max_HP = 7,
-        .memory_duration = 6,
+        .memory_duration = 4,
 
         .stats = .{ .Willpower = 2, .Evade = 10, .Vision = 6 },
     },

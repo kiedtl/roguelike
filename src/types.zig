@@ -1115,7 +1115,8 @@ pub const EnemyRecord = struct {
         return self.last_seen orelse self.mob.coord;
     }
 
-    pub fn finish(enemy: EnemyRecord, mob: *Mob) void {
+    // Report threats, and maybe call for reinforcements
+    pub fn reportMajorThreat(enemy: EnemyRecord, mob: *Mob) void {
         if (mob.faction != .Necromancer) return;
 
         const confrontation: alert.ThreatIncrease =
@@ -1779,7 +1780,7 @@ pub const AI = struct {
     // What should a mage-fighter do when it didn't/couldn't cast a spell?
     //
     // Obviously, only makes sense on mages.
-    spellcaster_backup_action: union(enum) { KeepDistance, Melee, Flee } = .Melee,
+    spellcaster_backup_action: union(enum) { KeepDistance, Melee, KeepDistAlarm } = .Melee,
 
     flee_effect: ?StatusDataInfo = null,
 
@@ -1850,11 +1851,14 @@ pub const AIJob = struct {
 
     pub const CTX_CORPSE_LOCATION = "ctx_corpse_location";
     pub const CTX_ROOM_ID = "ctx_room_id";
+    pub const CTX_ALARM_TARGET = "ctx_alarm_target";
+    pub const CTX_ALARM_COORD = "ctx_alarm_coord";
 
     pub const Value = union(enum) {
         usize: usize,
         bool: bool,
         Coord: Coord,
+        @"*types.Mob": *Mob,
         @"std.array_list.ArrayListAligned(types.Coord,null)": CoordArrayList,
     };
 
@@ -1870,6 +1874,7 @@ pub const AIJob = struct {
         WRK_BuildMob,
         GRD_LookAround,
         GRD_SweepRoom,
+        ALM_PullAlarm,
         SPC_NCAlignment,
 
         pub fn func(self: @This()) fn (*Mob, *AIJob) JStatus {
@@ -1885,6 +1890,7 @@ pub const AIJob = struct {
                 .WRK_WrkstationBusyWork => ai._Job_WRK_WrkstationBusyWork,
                 .GRD_LookAround => ai._Job_GRD_LookAround,
                 .GRD_SweepRoom => ai._Job_GRD_SweepRoom,
+                .ALM_PullAlarm => ai._Job_ALM_PullAlarm,
                 .SPC_NCAlignment => ai._Job_SPC_NCAlignment,
             };
         }
@@ -1897,6 +1903,11 @@ pub const AIJob = struct {
             else => {},
         };
         self.ctx.deinit();
+    }
+
+    pub fn getCtxOrNone(self: *@This(), comptime T: type, key: []const u8) ?T {
+        const val = self.ctx.get(key) orelse return null;
+        return @field(val, @typeName(T));
     }
 
     pub fn getCtx(self: *@This(), comptime T: type, key: []const u8, default: T) T {
@@ -3949,6 +3960,20 @@ pub const Mob = struct { // {{{
         }
     }
 
+    pub fn availableDirections(self: *Mob) []const Direction {
+        return b: {
+            if (self.hasStatus(.Disorient)) {
+                break :b &DIAGONAL_DIRECTIONS;
+            } else {
+                if (self.ai.flag(.MovesDiagonally)) {
+                    break :b &DIAGONAL_DIRECTIONS;
+                } else {
+                    break :b &DIRECTIONS;
+                }
+            }
+        };
+    }
+
     pub fn nextDirectionTo(self: *Mob, to: Coord) ?Direction {
         if (self.immobile) return null;
 
@@ -3972,19 +3997,7 @@ pub const Mob = struct { // {{{
         const pathobj = Path{ .from = self.coord, .to = to, .confused_state = is_disoriented };
 
         if (!self.path_cache.contains(pathobj)) {
-            const directions = b: {
-                if (is_disoriented) {
-                    break :b &DIAGONAL_DIRECTIONS;
-                } else {
-                    if (self.ai.flag(.MovesDiagonally)) {
-                        break :b &DIAGONAL_DIRECTIONS;
-                    } else {
-                        break :b &DIRECTIONS;
-                    }
-                }
-            };
-
-            const pth = astar.path(self.coord, to, state.mapgeometry, state.is_walkable, .{ .mob = self }, astar.basePenaltyFunc, directions, state.gpa.allocator()) orelse return null;
+            const pth = astar.path(self.coord, to, state.mapgeometry, state.is_walkable, .{ .mob = self }, astar.basePenaltyFunc, self.availableDirections(), state.gpa.allocator()) orelse return null;
             defer pth.deinit();
 
             assert(pth.items[0].eq(self.coord));

@@ -316,7 +316,9 @@ pub const Ctx = struct {
 
             var tunnelers = self.tunnelers.iterator();
             while (tunnelers.next()) |tunneler| {
-                if (!tunneler.is_eviscerated and tunneler.isChildless(require_dead)) {
+                if (!tunneler.is_eviscerated and tunneler.isChildless(require_dead) and
+                    (!self.opts.pardon_first_gen or tunneler.generation > 0))
+                {
                     mapgen.fillRect(&tunneler.rect, .Wall);
                     tunneler.rect.height = 0;
                     tunneler.rect.width = 0;
@@ -858,6 +860,10 @@ pub const TunnelerOptions = struct {
     // attempt constantly after that until succeeding)
     //
     corridor_prefab_interval: ?usize = null,
+
+    // Don't eviscerate first-gen corridors (the ones created directly from
+    // config definition) if they're childless.
+    pardon_first_gen: bool = false,
 
     initial_tunnelers: []const InitialTunneler = &[_]InitialTunneler{
         // .{ .start = Coord.new(1, 1), .width = 0, .height = 3, .direction = .East },

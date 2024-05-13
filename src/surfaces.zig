@@ -7,6 +7,7 @@ const meta = std.meta;
 const math = std.math;
 const enums = std.enums;
 
+const ai = @import("ai.zig");
 const alert = @import("alert.zig");
 const colors = @import("colors.zig");
 const dijkstra = @import("dijkstra.zig");
@@ -27,6 +28,7 @@ const types = @import("types.zig");
 const ui = @import("ui.zig");
 const utils = @import("utils.zig");
 
+const AIJob = types.AIJob;
 const Rect = types.Rect;
 const Coord = types.Coord;
 const Direction = types.Direction;
@@ -306,6 +308,7 @@ pub const MACHINES = [_]Machine{
     CapacitorArray,
     Candle,
     Shrine,
+    Alarm,
     RechargingStation,
     Drain,
     FirstAidStation,
@@ -1191,6 +1194,88 @@ pub const Shrine = Machine{
             }
         }.f,
     },
+};
+
+pub const Alarm = Machine{
+    .id = "alarm",
+    .name = "alarm lever",
+    .show_on_hud = true,
+    .powered_tile = 'A',
+    .unpowered_tile = 'A',
+    .powered_fg = 0,
+    .unpowered_fg = 0,
+    .powered_walkable = false,
+    .unpowered_walkable = false,
+    .powered_bg = 0xff5c07,
+    .unpowered_bg = 0xff9144,
+    .power_drain = 100,
+    .power = 0,
+    .on_place = struct {
+        pub fn f(machine: *Machine) void {
+            state.alarm_locations[machine.coord.z].append(machine.coord) catch err.wat();
+        }
+    }.f,
+    .on_power = struct {
+        pub fn f(machine: *Machine) void {
+            const mob = machine.last_interaction orelse return;
+            if (mob == state.player) {
+                state.message(.Info, "You pull the alarm, but nothing happens.", .{});
+                return;
+            }
+
+            if (state.player.canSeeMob(mob) and state.player.cansee(machine.coord)) {
+                state.message(.Info, "{c} pulls the alarm!", .{mob});
+            } else {
+                state.message(.Info, "You hear an ominous alarm blaring.", .{});
+            }
+
+            const target = if (mob.hasJob(.ALM_PullAlarm)) |j| j.getCtxOrNone(*Mob, AIJob.CTX_ALARM_TARGET) else null;
+
+            alert.reportThreat(mob, if (target) |t| .{ .Specific = t } else .Unknown, .Alarm);
+
+            // Find the closest construct ally, and wake some of the rest
+            var maybe_ally: ?*Mob = null;
+            var y: usize = 0;
+            while (y < HEIGHT) : (y += 1) {
+                var x: usize = 0;
+                while (x < WIDTH) : (x += 1) {
+                    const coord = Coord.new2(machine.coord.z, x, y);
+                    if (state.dungeon.at(coord).mob) |candidate| {
+                        if (candidate.faction == .Necromancer and
+                            candidate.life_type == .Construct and
+                            candidate.ai.phase != .Hunt)
+                        {
+                            if (maybe_ally) |previous_choice| {
+                                if (previous_choice.distance2(machine.coord) > candidate.distance2(machine.coord))
+                                    maybe_ally = candidate;
+                            } else {
+                                maybe_ally = candidate;
+                            }
+
+                            if (candidate.hasStatus(.Sleeping) and rng.onein(4)) {
+                                candidate.cancelStatus(.Sleeping);
+                            }
+                        }
+                    }
+                }
+            }
+
+            const ally = maybe_ally orelse return;
+
+            if (ally.ai.phase == .Work) {
+                ally.sustiles.append(.{ .coord = machine.coord, .unforgettable = true }) catch err.wat();
+            } else if (ally.ai.phase == .Investigate) {
+                if (target) |t|
+                    ai.updateEnemyKnowledge(ally, t, null);
+            } else unreachable;
+
+            if (ally.ai.work_area.items.len > 0) {
+                // XXX: laziness: use mob.coord instead of finding an adjacent
+                // tile (mob will be next to machine, hopefully)
+                ally.ai.work_area.items[0] = mob.coord;
+            }
+        }
+    }.f,
 };
 
 pub const RechargingStation = Machine{

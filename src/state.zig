@@ -55,6 +55,7 @@ const TaskArrayList = @import("tasks.zig").TaskArrayList;
 const EvocableList = @import("items.zig").EvocableList;
 const Generator = @import("generators.zig").Generator;
 const GeneratorCtx = @import("generators.zig").GeneratorCtx;
+const StackBuffer = @import("buffer.zig").StackBuffer;
 
 pub const GameState = union(enum) { Game, Win, Lose, Quit, Viewer };
 pub const Layout = union(enum) { Unknown, Room: usize };
@@ -140,6 +141,7 @@ pub var score: usize = 0;
 pub var destroyed_candles: usize = 0;
 pub var shrines_in_lockdown: [LEVELS]bool = [1]bool{false} ** LEVELS;
 pub var shrine_locations: [LEVELS]?Coord = [1]?Coord{null} ** LEVELS;
+pub var alarm_locations: [LEVELS]StackBuffer(Coord, 4) = [1]StackBuffer(Coord, 4){StackBuffer(Coord, 4).init(null)} ** LEVELS;
 
 pub var dungeon: *Dungeon = undefined;
 pub var layout: [LEVELS][HEIGHT][WIDTH]Layout = [1][HEIGHT][WIDTH]Layout{[1][WIDTH]Layout{[1]Layout{.Unknown} ** WIDTH} ** HEIGHT} ** LEVELS;

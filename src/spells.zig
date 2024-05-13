@@ -27,6 +27,7 @@ const types = @import("types.zig");
 const ui = @import("ui.zig");
 const utils = @import("utils.zig");
 
+const AIJob = types.AIJob;
 const Coord = types.Coord;
 const Tile = types.Tile;
 const Item = types.Item;
@@ -137,6 +138,25 @@ pub const CAST_ALERT_ALLY = Spell{
         .Custom = struct {
             fn f(caster_coord: Coord, _: Spell, _: SpellOptions, _: Coord) void {
                 ai.alertAllyOfHostile(state.dungeon.at(caster_coord).mob.?);
+            }
+        }.f,
+    },
+};
+
+pub const CAST_SCHEDULE_ALARM_PULL = Spell{
+    .id = "sp_alarm",
+    .name = "find alarm",
+    .cast_type = .Smite,
+    .smite_target_type = .Self,
+    .noise = .Loud,
+    .effect_type = .{
+        .Custom = struct {
+            fn f(_: Coord, _: Spell, _: SpellOptions, target: Coord) void {
+                const mob = state.dungeon.at(target).mob.?;
+                if (mob.hasJob(.ALM_PullAlarm) == null) {
+                    mob.newJob(.ALM_PullAlarm);
+                    mob.newestJob().?.setCtx(*Mob, AIJob.CTX_ALARM_TARGET, ai.closestEnemy(mob).mob);
+                }
             }
         }.f,
     },

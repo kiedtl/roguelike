@@ -1114,6 +1114,7 @@ pub fn resetLevel(level: usize) void {
             state.machines.remove(machine);
         }
     }
+    state.alarm_locations[level].reinit(null);
 
     var y: usize = 0;
     while (y < HEIGHT) : (y += 1) {
@@ -1216,7 +1217,14 @@ pub fn validateLevel(level: usize, alloc: mem.Allocator) !void {
     const point = state.dungeon.entries[level];
 
     for (rooms) |*otherroom| {
-        if (otherroom.type == .Corridor) continue;
+        if (otherroom.type == .Corridor)
+            continue;
+
+        // Hack to fix mapgen screwing up when determining paths to machine-only
+        // inset prefabs, like SIN candles or WRK alarms
+        if (otherroom.prefab) |fab|
+            if (fab.tunneler_inset)
+                continue;
 
         const otherpoint = _f._getWalkablePoint(otherroom);
 
@@ -3476,6 +3484,8 @@ pub fn initLevel(level: usize) void {
             placeStair(level, floor, state.gpa.allocator());
         };
 
+        emitGif(level);
+
         if (validateLevel(level, state.gpa.allocator())) |_| {
             // .
         } else |e| {
@@ -3491,7 +3501,6 @@ pub fn initLevel(level: usize) void {
             }
         }
 
-        emitGif(level);
         placeRoomFeatures(level, state.gpa.allocator());
         placeRoomTerrain(level);
         placeTraps(level);
@@ -4781,11 +4790,12 @@ pub fn createLevelConfig_WRK(crowd: usize, comptime prefabs: []const []const u8)
             .max_length = math.max(WIDTH, HEIGHT),
             .turn_chance = 0,
             .branch_chance = 5,
-            .shrink_chance = 60,
+            .shrink_chance = 65,
             .grow_chance = 5,
             .intersect_chance = 100,
             .intersect_with_childless = true,
             .corridor_prefab_interval = 6,
+            .pardon_first_gen = true,
 
             .initial_tunnelers = &[_]tunneler.TunnelerOptions.InitialTunneler{
                 .{ .start = Coord.new(1, 1), .width = 0, .height = 3, .direction = .East },
@@ -4794,7 +4804,7 @@ pub fn createLevelConfig_WRK(crowd: usize, comptime prefabs: []const []const u8)
                 .{ .start = Coord.new(1, HEIGHT - 1), .width = 3, .height = 0, .direction = .North },
             },
         },
-        .prefab_chance = 60,
+        .prefab_chance = 55,
         .mapgen_func = tunneler.placeTunneledRooms,
 
         .level_features = [_]?LevelConfig.LevelFeatureFunc{

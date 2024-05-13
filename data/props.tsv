@@ -156,20 +156,22 @@
 "fuel_burner"          	 "fuel burner"          	 '#' 	                        -  	 0xffa0a0 	 -        	 nay 	 - 	20
 "steel_gas_reservoir"  	 "steel gas reservoir"  	 '■' 	                        -  	 0xd7d7ff 	 -        	 nay
 "steel_pin"            	 "steel pin"            	 '*' 	                        -  	 0xa6c2d4 	 -        	 -
+"alrm_antenna"         	 "alarm antenna"        	 '■' 	                        -  	 0xffb887 	 -        	 nay 	 - 	10
+"alrm_platform"        	 "alarm base"           	 '■' 	                        -  	 0x3a1800 	 -        	 nay 	 - 	10
 
 # capacitor array
-"capacitor_discharger" 	 "capacitor discharger" 	 '■' 	                        -  	 0xb7b7ef 	 -        	 nay
-"discharger_vane"      	 "discharger vane"      	 '|' 	                        -  	 0xb7b7ef 	 -        	 nay
+#"capacitor_discharger" 	 "capacitor discharger" 	 '■' 	                        -  	 0xb7b7ef 	 -        	 nay
+#"discharger_vane"      	 "discharger vane"      	 '|' 	                        -  	 0xb7b7ef 	 -        	 nay
 
 # recharging station
-"antenna"              	 "antenna"              	 '▂' 	                        -  	 0x90a3b7 	 -        	 nay 	 - 	20
-"battery_pack"         	 "battery pack"         	 'Ÿ' 	                        -  	 0x90a3b7 	 -        	 nay 	 - 	 - 	 .Laboratory
+#"antenna"              	 "antenna"              	 '▂' 	                        -  	 0x90a3b7 	 -        	 nay 	 - 	20
+#"battery_pack"         	 "battery pack"         	 'Ÿ' 	                        -  	 0x90a3b7 	 -        	 nay 	 - 	 - 	 .Laboratory
 
 # PRI power station
 "battery_pack2"        	 "battery pack"         	 '⊠' 	                        -  	 0x90a3b7 	 -        	 nay 	 - 	 - 	 .Laboratory
 
 # stalker station
-"antenna_controller"   	 "control antenna"      	 '▌' 	                        -  	 0x90b7a3 	 -        	 nay 	 - 	10
+#"antenna_controller"   	 "control antenna"      	 '▌' 	                        -  	 0x90b7a3 	 -        	 nay 	 - 	10
 
 # unused?
 #"antenna_tip"          	 "antenna tip"          	 '´' 	                        -  	 0x90a3b7 	 -        	 nay 	 - 	 - 	 .Laboratory
@@ -199,6 +201,8 @@
 "alch_frame_blk1"      	 "frame"                	 '▓' 	                        -  	 0x9e8664 	 -        	 nay 	 - 	10
 "broken_turtle"        	 "broken lead turtle"   	 't' 	                        -  	 0xaaaaaa 	 -        	 nay 	 - 	10
 "broken_emberling"     	 "broken emberling"     	 'e' 	                        -  	 0xaaaaaa 	 -        	 nay 	 - 	10
+"broken_sparkling"     	 "broken sparkling"     	 'p' 	                        -  	 0xaaaaaa 	 -        	 nay 	 - 	10
+"broken_hornet"        	 "broken hornet"        	 'ÿ' 	                        -  	 0xaaaaaa 	 -        	 nay 	 - 	10
 
 # Sparkling workstation
 "tool_rack"            	 "tool rack"            	 '{' 	                        -  	 0xaaaaaa 	 -        	 nay 	 - 	10
@@ -323,6 +327,8 @@
 "wire_n1s1w2"          	 "copper wire"          	 '╡' 	                        -  	 0xffe5d3 	 -        	 nay
 "wire_n1s1e2"          	 "copper wire"          	 '╞' 	                        -  	 0xffe5d3 	 -        	 nay
 "wire_n1s1e2w2"        	 "copper wire"          	 '╪' 	                        -  	 0xffe5d3 	 -        	 nay
+"wire_n1s1e1w1"        	 "copper wire"          	 '┼' 	                        -  	 0xffe5d3 	 -        	 nay
+"wire_n2s2e1w1"        	 "copper wire"          	 '╫' 	                        -  	 0xffe5d3 	 -        	 nay
 "wire_n1e2w2"          	 "copper wire"          	 '╧' 	                        -  	 0xffe5d3 	 -        	 nay
 "wire_n1s1"            	 "copper wire"          	 '│' 	                        -  	 0xffe5d3 	 -        	 nay
 "wire_s1e1w1"          	 "copper wire"          	 '┬' 	                        -  	 0xffe5d3 	 -        	 nay

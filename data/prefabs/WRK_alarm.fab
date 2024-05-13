@@ -1,0 +1,101 @@
+:g_tunneler
+:g_individual_restriction 1
+:g_restriction 3
+:noguards
+:notraps
+:noitems
+:nostairs
+
+% FABEDIT_REPLACE
+
+:tunneler_orientation north
+:tunneler_inset
+
+@0 p alrm_antenna
+@1 p wire_n1e1
+@2 p wire_n1w1
+@3 p wire_n1s1
+@4 p wire_s1e1
+@5 p wire_s1w1
+@z m alarm
+
+43335
+10z02
+
+\
+:tunneler_orientation south
+:tunneler_inset
+
+@0 p wire_n1s1
+@1 p wire_s1w1
+@2 p wire_s1e1
+@3 p wire_n1e1
+@4 p wire_n1w1
+@5 p alrm_antenna
+@z m alarm
+
+25z51
+30004
+
+\
+:tunneler_orientation east
+:tunneler_inset
+
+@0 p wire_n1s1e1w1
+@1 p alrm_antenna
+@2 p wire_n2s2e1w1
+@4 p sparkling_guts
+@z m alarm
+
+01.
+z02
+01.
+
+\
+:tunneler_orientation west
+:tunneler_inset
+
+@0 p wire_n2s2e1w1
+@1 p wire_n1s1e1w1
+@2 p alrm_antenna
+@3 p sparkling_guts
+@5 p alrm_platform
+@z m alarm
+
+.21
+01z
+.21
+
+\
+:tunneler_orientation east
+:tunneler_inset
+
+@0 p wire_n1s1w2
+@1 p wire_s1w1
+@2 p wire_s1e1
+@3 p wire_n1w1
+@4 p alrm_antenna
+@5 p alrm_platform
+@6 p sparkling_guts
+@z m alarm
+
+.21
+.z0
+43.
+
+\
+:tunneler_orientation west
+:tunneler_inset
+
+@0 p alrm_antenna
+@1 p wire_n1e1
+@2 p wire_n1s1e2
+@3 p wire_s1e1
+@4 p wire_s1w1
+@5 p alrm_platform
+@6 p sparkling_guts
+@z m alarm
+
+34.
+2z.
+.10

@@ -69,11 +69,12 @@ pub const ThreatIncrease = enum(usize) {
     Noise = 10,
     Death = 12,
     Confrontation = 15,
+    Alarm = 16,
     ArmedConfrontation = 20,
 
     pub fn isDeadly(self: @This()) bool {
         return switch (self) {
-            .Noise, .Confrontation => false,
+            .Noise, .Confrontation, .Alarm => false,
             .Death, .ArmedConfrontation => true,
         };
     }

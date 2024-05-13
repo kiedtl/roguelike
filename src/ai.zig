@@ -5,6 +5,7 @@ const math = std.math;
 const meta = std.meta;
 
 const alert = @import("alert.zig");
+const astar = @import("astar.zig");
 const colors = @import("colors.zig");
 const combat = @import("combat.zig");
 const ui = @import("ui.zig");
@@ -510,12 +511,12 @@ pub fn checkForHostiles(mob: *Mob) void {
             enemy.mob.is_dead)
         {
             const e = mob.enemyList().orderedRemove(i);
-            e.finish(mob);
+            e.reportMajorThreat(mob);
         } else if (enemy.mob.faction == .Night and
             mob.nextDirectionTo(enemy.mob.coordMT(mob.coord)) == null)
         {
             const e = mob.enemyList().orderedRemove(i);
-            e.finish(mob);
+            e.reportMajorThreat(mob);
         } else {
             if ((mob.ai.phase != .Flee or enemy.alerted_allies > 0) and
                 mob.isAloneOrLeader() and enemy.last_seen == null and
@@ -1555,6 +1556,10 @@ fn _findValidTargetForSpell(caster: *Mob, spell: SpellOptions) ?Coord {
     }
 }
 
+pub fn alchemistFight(mob: *Mob, alloc: mem.Allocator) void {
+    mageFight(mob, alloc);
+}
+
 pub fn mageFight(mob: *Mob, alloc: mem.Allocator) void {
     if (mob.ai.flag(.SocialFighter) or mob.ai.flag(.SocialFighter2)) {
         // Check if there's an ally that satisfies the following conditions
@@ -1593,11 +1598,21 @@ pub fn mageFight(mob: *Mob, alloc: mem.Allocator) void {
         } else {
             tryRest(mob);
         },
-        .Flee => {
-            assert(!mob.immobile);
-            const moved = runAwayFromEnemies(mob, 1000);
-            if (!moved) meleeFight(mob, alloc);
+        .KeepDistAlarm => {
+            if (mob.hasJob(.ALM_PullAlarm)) |_| {
+                assert(workJobs(mob));
+            } else {
+                assert(!mob.immobile);
+                const dist = @intCast(usize, mob.stat(.Vision) -| 1);
+                const moved = runAwayFromEnemies(mob, dist);
+                if (!moved) meleeFight(mob, alloc);
+            }
         },
+        // .Flee => {
+        //     assert(!mob.immobile);
+        //     const moved = runAwayFromEnemies(mob, 1000);
+        //     if (!moved) meleeFight(mob, alloc);
+        // },
     }
 }
 
@@ -1681,7 +1696,7 @@ pub fn _Job_WRK_LeaveFloor(mob: *Mob, job: *AIJob) AIJob.JStatus {
 
     if (mob.distance2(stair) == 1) {
         for (mob.enemyList().items) |enemy|
-            enemy.finish(mob);
+            enemy.reportMajorThreat(mob);
         mob.deinitNoCorpse();
         return .Complete;
     } else {
@@ -1977,6 +1992,46 @@ pub fn _Job_GRD_SweepRoom(mob: *Mob, job: *AIJob) AIJob.JStatus {
         const prev_facing = mob.facing;
         mob.tryMoveTo(room_dst);
         guardGlanceLeftRight(mob, prev_facing);
+        return .Ongoing;
+    }
+}
+
+pub fn _Job_ALM_PullAlarm(mob: *Mob, job: *AIJob) AIJob.JStatus {
+    if (state.alarm_locations[mob.coord.z].len == 0)
+        return .Complete;
+
+    if (job.getCtxOrNone(Coord, AIJob.CTX_ALARM_COORD) == null) {
+        var closest: ?Coord = null;
+        var closest_dist: usize = 0xFFFF;
+        for (state.alarm_locations[mob.coord.z].constSlice()) |alarm_loc| {
+            const path = astar.path(mob.coord, alarm_loc, state.mapgeometry, state.is_walkable, .{ .mob = mob }, astar.basePenaltyFunc, mob.availableDirections(), state.gpa.allocator()) orelse continue;
+            defer path.deinit();
+            if (path.items.len < closest_dist) {
+                closest_dist = path.items.len;
+                closest = alarm_loc;
+            }
+        }
+
+        job.setCtx(Coord, AIJob.CTX_ALARM_COORD, closest orelse return .Complete);
+    }
+
+    const alarm = job.getCtxOrNone(Coord, AIJob.CTX_ALARM_COORD).?;
+
+    if (mob.distance2(alarm) == 1) {
+        // Repeatedly try to move into machine to power it
+        // TODO: refactor in reusable func, I assume we'll be doing this a lot
+        if (mob.nextDirectionTo(alarm)) |d| {
+            if (!mob.moveInDirection(d)) {
+                tryRest(mob);
+                return .Ongoing;
+            }
+        } else {
+            tryRest(mob);
+            return .Ongoing;
+        }
+        return .Complete;
+    } else {
+        mob.tryMoveTo(alarm);
         return .Ongoing;
     }
 }
