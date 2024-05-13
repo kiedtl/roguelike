@@ -1,11 +1,14 @@
-triage:
-- spires leave tangled metal prop (or themed corpse?)
-  - cleaners/engineers fix/replace it?
+- full-body clothing that is fire resistant
+  - laboratory prefab
+
+- thermal generator
+  - does something interesting when @ is on fire
+    - causes electricity to discharge in tiles adjacent to player?
 
 - wrk shouldn't be so empty
   - more prefabs, more alarm traps, more enemies
   - pressure plates have unknown effects (that aren't too deadly)
-    - turn on lights
+    x turn on lights
     - cause noises some distance away (clicking, grinding, etc)
     - permanently open doors
 

@@ -409,6 +409,22 @@ Rings
 x ring of concentration: [holy] Increase willpower by a factor of 2, at the
   cost of melee%, evade%, and slowness.
 
+x ring of condemnation: [holy] instakill undead, at cost of 10 turns held.
+  Ancient Mage should have some kind of countermeasure (transform into
+  something else? explode into swarm of enemies?)
+
+- ring of fustigation: [holy] undead explode, causing other undead to explode,
+  chain reaction
+  - Explosion only over cardinals... unless disoriented, then it's only
+    diagonals
+  - will/2-will damage, damage stacks
+  - cannot be used while corrupt and target must be undead, doesn't affect
+    non-undead
+
+- ring of deceleration: Adjacent mobs have their attack speeds slowed
+  significantly. Three willpower checks are carried out, stopping at first
+  failure: 1 succeeded == 150%, 2 succeeded == 300%, 3 succeeded == 400%.
+
 - ring of provocation: (Alvoc) Tear apart a nearby (standing on/adjacent)
   corpse in a crazed animal rage, causing all visible enemies to either flee or
   become enraged (50/50 chance). Target corpse must be "named".
@@ -442,10 +458,6 @@ x ring of obscuration: Grants "invisible" status, drains 1 MP for each enemy
   affect mobs with .Held. Creates puzzle-like gameplay. Damage could scale with
   some stat.
 
-x ring of condemnation: [holy] instakill undead, at cost of 10 turns held.
-  Ancient Mage should have some kind of countermeasure (transform into
-  something else? explode into swarm of enemies?)
-
 - ring of infestation: Gives infestation status (mob-only), "night beatles"
   burst out of affected mob when status effect ends. Night beatles should only
   be dangerous in larger numbers (maybe steal ghoul respawn mechanic from SPD?)
@@ -462,14 +474,6 @@ x ring of deception: [anti-Holy] undead mistake you for ally unless non-undead
   allies are nearby
 
 - ring of deconstruction: rolling boulder
-
-- ring of fustigation: [holy] undead explode, causing other undead to explode,
-  chain reaction
-  - Explosion only over cardinals... unless disoriented, then it's only
-    diagonals
-  - will/2-will damage, damage stacks
-  - cannot be used while corrupt and target must be undead, doesn't affect
-    non-undead
 
 - ring of conscription: raise the corpse the player stands on at the end of the
   pattern to fight, giving it impressive tankiness and stat boosts (but
@@ -817,10 +821,10 @@ Ideas
 =====
 [+] planned, [~] obsolete, [x] done
 ~ Layers, as in Brogue? (gas, liquid, surface, floor, etc.)
-+ Cloaks of invisibility, confusion, blinding, camouflage, electricity
+x Cloaks of invisibility, confusion, blinding, camouflage, electricity
   resistance, fire resistance, etc.
   - cloak of shimmering: chance of daze mob that spots player?
-- Ring of seeing (magic mapping)
+~ Ring of seeing (magic mapping)
 ~ Rings have negative effects (decreased piety/willpower)
   - obsolete: rings are expected to be worn at all times, not an item that can
     be swapped off or on depending on situation
@@ -842,7 +846,7 @@ x Ring of echolocation to magic-map neighbors of sound-producing tiles
 - "Night", when guards sleep, torches go out, and night creatures awaken
 - "Ghost database" that stores bones for players who died during game, then
   shows ingame bones/corpses/undead on other games
-- Candles that destory people/objects/rooms when quenched
+x Candles that destory people/objects/rooms when quenched
 - "Permeability" instead of walkability, that lets creatures pass if they are
   small enough (e.g., rats and small spiders could pass through iron bars)
 ~ Tile "integrity" that reduces when tile is hit with explosion
@@ -853,19 +857,15 @@ x Ring of echolocation to magic-map neighbors of sound-producing tiles
 ~ Orchestra/Concert, that sings/players instruments and distracts guards
   - obsolete: making all the guards move to one corner of the map suddenly is
     obviously going to make things easier for player /s
-- Goblin "organizations" (purely eye candy)
-  - the Goblin Brotherhood, the ProudGobbos, the Seven Percenters, the
-    Goblin Nations, etc
-- Night creatures should pop out of artwork at night
+~ Night creatures should pop out of artwork at night
 - Stone guardians that patrol map and cast confusion at enemies, but move at 1
   tile per 10-20 turns
-  //- obsolete: that's abominations now
-- Headstones with previous player's comments on them, or ghosts that mourn
+~ Headstones with previous player's comments on them, or ghosts that mourn
   previous player's carelessnes (think DCSS ghosts)
-  - Bonus: the ghosts/gravestones are found in the temple in prison cells
+  ~ Bonus: the ghosts/gravestones are found in the temple in prison cells
 ~ Pub for guards to get drunk
   - obsolete: how would this affect gameplay? (maybe just a vault would be fine?)
-- Ring to detect powered machines
+x Ring/item to detect powered machines
 - Ring/feature to detect what kind of mob made a noise
 - Radioactive gas leaking from a warehouse on a few levels, so a kind of food
   clock
@@ -903,7 +903,7 @@ x Some kind of squad-forming fast-moving swarming mob, like killer bees (DCSS)
   while the player.coord field points to only one of them).
   - obsolete: could lead to subtle bugs
 - weapon runes:
-  - interleaving: Swap on hit
+  x interleaving: Swap on hit
   - banishing:    Teleports away
 x MP-like system that limits how often spellcasters can cast spells (providing
   a way to tweak dangerous-ness) and how often player can use ring effects.
@@ -1376,17 +1376,27 @@ x UI
 x Vaults rework
   x New marble room prefabs
   x Armory rooms
-- Fix shrine-blowup particle effect (rework, simplify and speedup)
-- Change statue's FOV
+*** 3.1.0 release ***
 - Lava and Water rework
   - Rework as terrain
   - Lava -> Glowing water
-- Caverns rework
-  - Alchemist + dustling analyzer prefabs
-  - Dustling machines
-- Living dungeon: execution sessions
-- Living dungeon: spire cleanup
-- Living dungeon: scheduled prisoner transport
+- Fix shrine-blowup particle effect (rework, simplify and speedup)
+- Crypt floor
+  x Modify level data and spawn files
+  - New monsters:
+    - Vile protector
+    - Tormenters
+    - Hornblende statues
+    - Schalenblende statues(?)
+    - Pitchblende statues
+    - Skeletal arbalists
+  - Garrison inset prefabs
+  - 1/Crypt/3 prefab
+  - Prefabs:
+    - Arbalists shooting at targets, with death mage observing
+    - Blademasters practicing formations, with death mage observing
+- Ring of deceleration
+  - Workshop prefab
 - Add "character" to game
   - Names for all goblin/human monsters
   - Fluff prefabs
@@ -1395,7 +1405,9 @@ x Vaults rework
     - Trophy room: cave-goblin armor, weapons, ...
     - Bathroom
     - Caverns: dustling workshop (paralyzed dustlings inside scanning machine)
-    - Laboratory: insane & paralysed prisoners inside scanning machine
+    - Laboratory: insane & paralysed prisoners inside holding cells
+      - "Since the bastards won't tell us what these potions are for, we'll
+	just have to find out ourselves."
     - Laboratory: alchemist bending over workbench, with barrels of glycerin,
       nitric acid, and sulfuric acid and a pile of potions of decimation
       nearby.
@@ -1407,11 +1419,21 @@ x Vaults rework
       - Pump puts healing gas inside cell, while overclocked + high-powered
         transmitter damages Revgenunkim (only if >2 HP)
       - Poster explaining research.
+    - Quarantine: dead Revgen, with cloud of miasma.
+      - experiment had been carried out on Revgen with strange/modified
+        transmitter that was found in a random tinkerer's room in Lab with no
+        explanation/record. Revgen had woken up, violently vomited up acid and
+        some of its internal organs, had a series of horrific seizures, and
+        then died in agony a few hours later.
+      - A few blademasters nearby (called in a panic when it woke up)
+      - Alchemists drawing up record of incident
+      - Some barrels/potions of sludge/acid.
+    - Crypt + Marble room: Death mage trying (and failing) to resurrect Revgen.
+    x Laboratory: Prisoners being blasted with transmitters on full power.
+      - They are dazed if kept for many hours, but are otherwise unharmed.
+      - Some have headaches (only in record, not an actual status).
 - Simplification: instead of having attack AI for stalker, have them actually
   transform into sparklings when hunter captain dies"
-- Basalt monsters (-fiends, -mages, -lings)?
-  - Plus: ability that confers status on player that causes Living Stone to
-    continually spawn around player
 - Consider adding more ugrades
   - Hit% bonus, martial bonus (is that infringing on books too much?)
 - Warn when next to spreading gas and resting
@@ -1420,30 +1442,29 @@ x Vaults rework
   - Various resurrection spells (limited range?)
   - Paralysing zap (directional bolt only)
   - Fry (Cardinal directional bolt only)
-- Night Creatures, part two
-    - Creeping Death
-      - Inject venom spell
-      - Dijkstra vision
-      - Stalking enemy AI
-  - Infestation abilities
-    - Cherbs, actual spell
-    - Winged terrors
-    - Ring of Infestation
-    - Exterminator specialists
-  - Alignment map/mechanics
-    - Map design + cloak of the night
-    - NC dropping map/key
-    - Props on map for effect
-    - Animation (need particle engine[DONE])
-  - Demolisher specialists
-  - Additional spectral orb augments
-    - (100) Augment [s]: Will-checked survival when against opposing blades
-    - ( 50) Augment [d]: 10%/20% chance to die when no hostiles, instead of instantly.
-    - ( 10) Augment [x]: Blades spawn immobile and explode (elec) on death.
-    - ( 10) Augment [i]: Blades spawn immobile, but get +1 HP and 100% Melee.
-    - (100) Augment [k]: Each blade gets +1 Spikes and -25% Melee.
-    - (100) Augment [y]: Blade attacks cause insanity for 1 turn in vulnerable foes.
-    - (100) Augment [f]: Blade attacks have minor chance to infest foe.
+- Holy temple map + faction
+  - Items
+    - Ring of fustigation
+    - Mark ring of concentration, condemnation as holy
+    - Max HP increasing item(?) ("bread of life") (holy only, ofc) 
+    - Inability to use holy items w/ evil ones equipped
+      - Symbol is destroyed
+  - Angels spells
+    - Hellfire spell (irresist damage)
+    - Disintegration (punch through walls, same as ring)
+    - Dispelling bolt (dispell undead, will-checked)
+    - Rolling boulder
+    - Martial, Spikes/riposte
+    - Frozen fiend living ice ability (basalt themed, like basalt fiend)
+    - Speeding bolt (more damage per distance)
+  - Angel procgen
+    - Initial generation
+    - Name generation
+    - Strength rating, tweaking
+    - Simulation testing
+  - Caverns rework
+    - Alchemist + dustling analyzer prefabs
+    - Dustling machines
 - UI
   - Escape menu
     - List of visited/unvisited floors
@@ -1469,16 +1490,6 @@ x Vaults rework
     - Potion of extermination
     - See glow potion buf item below
   - Dobalene rooms
-- Crypt floor
-  x Modify level data and spawn files
-  - New monsters:
-    - Vile protector
-    - Tormenters
-    - Hornblende statues
-    - Schalenblende statues(?)
-    - Pitchblende statues
-  - Garrison inset prefabs
-  - -1/Crypt/3 prefab
 - Rework -1/Prison to -1/Hub
   - Exiting staircase to "outside" on top
   - Doorway to Crypt on bottom side
@@ -1486,6 +1497,33 @@ x Vaults rework
     - If player tries to go up w/ center staircase, staircase gets
       locked down, and guards start pouring out. i.e. challenge mode
       - Prevents Revgenunkim invasion event?
+- Basalt monsters (-mages, -lings)?
+  - Plus: ability that confers status on player that causes Living Stone to
+    continually spawn around player
+- Night Creatures, part two
+    - Creeping Death
+      - Inject venom spell
+      - Dijkstra vision
+      - Stalking enemy AI
+  - Infestation abilities
+    - Cherbs, actual spell
+    - Winged terrors
+    - Ring of Infestation
+    - Exterminator specialists
+  - Alignment map/mechanics
+    - Map design + cloak of the night
+    - NC dropping map/key
+    - Props on map for effect
+    - Animation (need particle engine[DONE])
+  - Demolisher specialists
+  - Additional spectral orb augments
+    - (100) Augment [s]: Will-checked survival when against opposing blades
+    - ( 50) Augment [d]: 10%/20% chance to die when no hostiles, instead of instantly.
+    - ( 10) Augment [x]: Blades spawn immobile and explode (elec) on death.
+    - ( 10) Augment [i]: Blades spawn immobile, but get +1 HP and 100% Melee.
+    - (100) Augment [k]: Each blade gets +1 Spikes and -25% Melee.
+    - (100) Augment [y]: Blade attacks cause insanity for 1 turn in vulnerable foes.
+    - (100) Augment [f]: Blade attacks have minor chance to infest foe.
 - Revgenuhelkim
   - Acid damage and resistance
     - 'slimy' status (knockback in direction of last move + rFire)
@@ -1507,20 +1545,21 @@ x Vaults rework
   - Cinder Brutes
     - Renaming
     - Unsure if any other changes needed
-  - -1/Prison invasion event
-    - Initial wave
-    - Additional invasion waves
-    - Initial counterattack
-    - Further counterattack waves
-    - Final counter attack with Archmagi
-    - Possible Night Creature counterattack event
-    - Possible Angel counterattack event
-  - Laboratory prefabs w/ caged monsters
-  - "Quarantine" map/area
+- "Quarantine"/"Holding" map
+  - Timekeeper's pendant
+  - Empty prefab/area, labeled as being for earthen shield
+  - Skeletal arbalists, corridor prefabs
+    - Porous props: change porous field to usize, 1 == porous to gas, 2 ==
+      porous for projectile
+  - Revgenunhelkim prisoners
 - Make illumination/glow potions useful for raiding lairs
   - Corona/glowing damages NC, causes fleeing if wounded
   - Increased rarity + novel prefab for 7/ and 8/
   - Special, rare NC-blasting items in Shrine/Temple/Workshop
+- Change statue's FOV
+- Living dungeon: execution sessions
+- Living dungeon: spire cleanup
+- Living dungeon: scheduled prisoner transport
 *** Untriaged/obsolete ***
 - Add bookshelves and book types
   - Maps
@@ -1542,3 +1581,11 @@ x Vaults rework
     x PRI: prisons and cages
     - PRI and QRT: misc machinery (boilers, water pipes)
     x LAB: misc machinery, cages of constructs and animals
+- Revgenunhelkim 1/Prison invasion event
+  - Initial wave
+  - Additional invasion waves
+  - Initial counterattack
+  - Further counterattack waves
+  - Final counter attack with Archmagi
+  - Possible Night Creature counterattack event
+  - Possible Angel counterattack event
