@@ -1,6 +1,7 @@
 const std = @import("std");
 const math = std.math;
 const mem = std.mem;
+const meta = std.meta;
 
 const display = @import("display.zig");
 const err = @import("err.zig");
@@ -17,6 +18,7 @@ const GeneratorCtx = @import("generators.zig").GeneratorCtx;
 
 pub const EdState = struct {
     fab_path: []const u8 = "",
+    fab_name: []const u8 = "", // fab_path trimmed of parent dir and .fab
     fab: *mapgen.Prefab = undefined,
     fab_modified: bool = true,
     hud_pane: HudPane = .Props,
@@ -25,10 +27,34 @@ pub const EdState = struct {
     cursor: Cursor = .{ .Prop = 0 },
 
     // TODO: terrain, mobs, machines
-    pub const HudPane = enum { Props };
+    pub const HudPane = enum(usize) { Props = 0, Basic = 1 };
 
     pub const Cursor = union(enum) {
         Prop: usize, // index to surfaces.props
+        Basic: BasicCursor,
+
+        pub fn incrBy(self: *Cursor, by: usize) void {
+            switch (self.*) {
+                .Prop => self.Prop = math.min(surfaces.props.items.len - 1, self.Prop + by),
+                .Basic => self.Basic = @intToEnum(BasicCursor, math.min(meta.fields(BasicCursor).len - 1, @enumToInt(self.Basic) + by)),
+            }
+        }
+
+        pub fn decrBy(self: *Cursor, by: usize) void {
+            switch (st.cursor) {
+                .Prop => self.Prop -|= by,
+                .Basic => |b| self.Basic = @intToEnum(BasicCursor, @enumToInt(b) -| by),
+            }
+        }
+    };
+
+    pub const BasicCursor = enum(usize) {
+        Wall = 0,
+        Window = 1,
+        Door = 2,
+        LockedDoor = 3,
+        Connection = 4,
+        Any = 5,
     };
 };
 var st = EdState{};
@@ -62,6 +88,18 @@ pub fn removeUnusedFeatures() ?u8 {
 
 pub fn erase() void {
     st.fab.content[st.y][st.x] = .Floor;
+    st.fab_modified = true;
+}
+
+pub fn applyCursorBasic() void {
+    st.fab.content[st.y][st.x] = switch (st.cursor.Basic) {
+        .Wall => .Wall,
+        .Window => .Window,
+        .Door => .Door,
+        .LockedDoor => .LockedDoor,
+        .Connection => .Connection,
+        .Any => .Any,
+    };
     st.fab_modified = true;
 }
 
@@ -210,15 +248,16 @@ pub fn main() anyerror!void {
 
     const trimmed = mem.trimRight(u8, st.fab_path, ".fab");
     const index = if (mem.lastIndexOfScalar(u8, trimmed, '/')) |sep| sep + 1 else 0;
-    const fab_name = trimmed[index..];
+    st.fab_name = trimmed[index..];
     st.fab = for (mapgen.n_fabs.items) |*fab| {
-        if (mem.eql(u8, fab.name.constSlice(), fab_name))
+        if (mem.eql(u8, fab.name.constSlice(), st.fab_name))
             break fab;
     } else {
-        std.log.err("Could not find {s}", .{fab_name});
+        std.log.err("Could not find {s}", .{st.fab_name});
         return;
     };
 
+    // Cursor is initially props
     st.cursor.Prop = for (surfaces.props.items) |prop, i| {
         if (prop.tile != ' ') break i;
     } else unreachable;
@@ -238,7 +277,10 @@ pub fn main() anyerror!void {
                 .Key => |k| {
                     switch (k) {
                         .Backspace => erase(),
-                        .Enter => applyCursorProp(),
+                        .Enter => switch (st.cursor) {
+                            .Prop => applyCursorProp(),
+                            .Basic => applyCursorBasic(),
+                        },
                         else => {},
                     }
                     ui.draw(&st);
@@ -250,10 +292,18 @@ pub fn main() anyerror!void {
                         'j' => st.y = math.min(st.fab.height - 1, st.y + 1),
                         'h' => st.x -|= 1,
                         'k' => st.y -|= 1,
-                        'J' => st.cursor.Prop = math.min(surfaces.props.items.len - 1, st.cursor.Prop + 14),
+                        'J' => st.cursor.incrBy(14),
                         'K' => st.cursor.Prop -|= 14,
-                        'L' => st.cursor.Prop = math.min(surfaces.props.items.len - 1, st.cursor.Prop + 1),
+                        'L' => st.cursor.incrBy(1),
                         'H' => st.cursor.Prop -|= 1,
+                        '>' => st.hud_pane = switch (st.hud_pane) {
+                            .Props => .Basic,
+                            .Basic => .Props,
+                        },
+                        '<' => st.hud_pane = switch (st.hud_pane) {
+                            .Props => .Basic,
+                            .Basic => .Props,
+                        },
                         else => {},
                     }
                     ui.draw(&st);

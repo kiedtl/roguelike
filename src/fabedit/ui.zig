@@ -8,6 +8,7 @@ const display = @import("../display.zig");
 const err = @import("../err.zig");
 const fabedit = @import("../fabedit.zig");
 const mapgen = @import("../mapgen.zig");
+const materials = @import("../materials.zig");
 const state = @import("../state.zig");
 const surfaces = @import("../surfaces.zig");
 const types = @import("../types.zig");
@@ -38,7 +39,10 @@ pub var map_win: struct {
             .Click, .Hover => |c| switch (self.lyr1.handleMouseEvent(c, _evToMEvType(ev))) {
                 .Coord => |coord| b: {
                     if (ev == .Click) {
-                        fabedit.applyCursorProp();
+                        switch (st.cursor) {
+                            .Prop => fabedit.applyCursorProp(),
+                            .Basic => fabedit.applyCursorBasic(),
+                        }
                         break :b true;
                     } else {
                         st.x = coord.x / 2;
@@ -58,7 +62,9 @@ pub var map_win: struct {
 
 pub const HUD_WIDTH = 30;
 pub const HudMouseSignalTag = enum(u64) {
-    Prop = 1 << 16,
+    SwitchPane = 1 << 16,
+    Prop = 1 << 17,
+    Basic = 1 << 18,
 };
 pub var hud_win: struct {
     main: Console = undefined,
@@ -72,9 +78,17 @@ pub var hud_win: struct {
             .Click, .Hover => |c| switch (self.main.handleMouseEvent(c, _evToMEvType(ev))) {
                 .Coord => err.wat(),
                 .Signal => |s| b: {
-                    if (s & @enumToInt(HudMouseSignalTag.Prop) > 0) {
+                    if (s & @enumToInt(HudMouseSignalTag.SwitchPane) > 0) {
+                        const i = s & ~@enumToInt(HudMouseSignalTag.SwitchPane);
+                        st.hud_pane = @intToEnum(fabedit.EdState.HudPane, i);
+                        break :b true;
+                    } else if (s & @enumToInt(HudMouseSignalTag.Prop) > 0) {
                         const i = s & ~@enumToInt(HudMouseSignalTag.Prop);
-                        st.cursor.Prop = i;
+                        st.cursor = .{ .Prop = i };
+                        break :b true;
+                    } else if (s & @enumToInt(HudMouseSignalTag.Basic) > 0) {
+                        const i = s & ~@enumToInt(HudMouseSignalTag.Basic);
+                        st.cursor = .{ .Basic = @intToEnum(fabedit.EdState.BasicCursor, i) };
                         break :b true;
                     }
                     break :b false;
@@ -109,6 +123,56 @@ pub fn init() !void {
     container.init();
 }
 
+pub fn displayAs(st: *fabedit.EdState, ftile: mapgen.Prefab.FabTile) display.Cell {
+    const prefix = st.fab_name[0..3];
+    const wall_material = if (mem.eql(u8, prefix, "CAV"))
+        &materials.Basalt
+    else if (mem.eql(u8, prefix, "LAB") or mem.eql(u8, prefix, "WRK"))
+        &materials.Dobalene
+    else if (mem.eql(u8, prefix, "CRY") or mem.eql(u8, prefix, "SIN"))
+        &materials.Marble
+    else
+        &materials.Concrete;
+    const win_material = if (mem.eql(u8, prefix, "LAB") or mem.eql(u8, prefix, "WRK"))
+        &materials.LabGlass
+    else
+        &materials.Glass;
+    const door_machine = if (mem.eql(u8, prefix, "LAB") or mem.eql(u8, prefix, "WRK"))
+        &surfaces.LabDoor
+    else
+        &surfaces.NormalDoor;
+    return switch (ftile) {
+        .Wall => .{
+            .ch = '#',
+            .sch = wall_material.sprite,
+            .fg = wall_material.color_fg,
+            .bg = wall_material.color_bg orelse colors.BG,
+        },
+        .Window => .{
+            .ch = '#',
+            .sch = win_material.sprite,
+            .fg = win_material.color_fg,
+            .bg = win_material.color_bg orelse colors.BG,
+        },
+        .Any => .{ .ch = '?', .fg = 0xaaaaaa, .bg = colors.BG },
+        .Connection => .{ .ch = '*', .fg = 0xaaaaaa, .bg = colors.BG },
+        .Floor => .{ .ch = '·', .fg = 0x777777, .bg = colors.BG },
+        .Door => .{
+            .ch = '·',
+            .sch = door_machine.unpowered_sprite,
+            .fg = door_machine.unpowered_fg orelse 0xcccccc,
+            .bg = door_machine.unpowered_bg orelse colors.BG,
+        },
+        .LockedDoor => .{
+            .ch = '±',
+            .sch = surfaces.LockedDoor.unpowered_sprite,
+            .fg = surfaces.LockedDoor.unpowered_fg orelse 0xcccccc,
+            .bg = surfaces.LockedDoor.unpowered_bg orelse colors.BG,
+        },
+        else => unreachable,
+    };
+}
+
 pub fn drawHUD(st: *fabedit.EdState) void {
     hud_win.main.clear();
     hud_win.main.clearMouseTriggers();
@@ -118,22 +182,48 @@ pub fn drawHUD(st: *fabedit.EdState) void {
     var tabx: usize = 0;
     inline for (meta.fields(fabedit.EdState.HudPane)) |field, i| {
         if (i != 0) {
-            _ = hud_win.drawTextAt(tabx, y, " · ", .{});
+            _ = hud_win.main.drawTextAt(tabx, y, " · ", .{});
             tabx += 3;
         }
         var c: u21 = 'g';
         if (mem.eql(u8, @tagName(st.hud_pane), field.name))
             c = 'c';
         _ = hud_win.main.drawTextAtf(tabx, y, "${u}{s}$.", .{ c, field.name }, .{});
-        //hud_win.addClickableTextBoth(.{ .Signal = i });
+        const signal = @enumToInt(HudMouseSignalTag.SwitchPane) | i;
+        hud_win.main.addClickableTextBoth(.{ .Signal = signal });
         tabx += field.name.len;
     }
     y += 2;
 
-    switch (st.hud_pane) {
-        .Props => {
-            const PANEL_WIDTH = HUD_WIDTH / 2;
+    const PANEL_WIDTH = HUD_WIDTH / 2;
 
+    switch (st.hud_pane) {
+        .Basic => {
+            var dx: usize = 0;
+            inline for (meta.fields(fabedit.EdState.BasicCursor)) |field| {
+                const v = @intToEnum(fabedit.EdState.BasicCursor, field.value);
+                var cell: display.Cell = switch (v) {
+                    .Wall => displayAs(st, .Wall),
+                    .Window => displayAs(st, .Window),
+                    .Door => displayAs(st, .Door),
+                    .LockedDoor => displayAs(st, .LockedDoor),
+                    .Connection => displayAs(st, .Connection),
+                    .Any => displayAs(st, .Any),
+                };
+                if (st.cursor == .Basic and v == st.cursor.Basic)
+                    cell.bg = colors.mix(cell.bg, 0xffffff, 0.2);
+                cell.fl.wide = true;
+                hud_win.main.setCell(dx, y, cell);
+                hud_win.main.setCell(dx + 1, y, .{ .fl = .{ .skip = true } });
+                const signal = @enumToInt(HudMouseSignalTag.Basic) | field.value;
+                hud_win.main.addClickableTextBoth(.{ .Signal = signal });
+                hud_win.main.addMouseTrigger(Rect.new(Coord.new(dx, y), 0, 0), .Click, .{
+                    .Signal = signal,
+                });
+                dx += 2;
+            }
+        },
+        .Props => {
             const cursor_x = st.cursor.Prop % PANEL_WIDTH;
             var display_row = (st.cursor.Prop - cursor_x) / PANEL_WIDTH;
             if (display_row >= 4)
@@ -151,7 +241,7 @@ pub fn drawHUD(st: *fabedit.EdState) void {
                 cell.sch = prop.sprite;
                 if (prop.tile == ' ')
                     cell = .{ .ch = '·', .fg = 0xaaaaaa, .bg = colors.BG };
-                if (i == st.cursor.Prop)
+                if (st.cursor == .Prop and i == st.cursor.Prop)
                     cell.bg = colors.mix(cell.bg, 0xffffff, 0.2);
                 cell.fl.wide = true;
                 hud_win.main.setCell(dx, y, cell);
@@ -170,6 +260,8 @@ pub fn drawHUD(st: *fabedit.EdState) void {
             }
         },
     }
+
+    hud_win.main.highlightMouseArea(colors.BG_L);
 }
 
 pub fn drawMap(st: *fabedit.EdState) void {
@@ -189,9 +281,12 @@ pub fn drawMap(st: *fabedit.EdState) void {
 
             var cell = display.Cell{};
 
+            switch (st.fab.content[y][x]) {
+                .Floor, .Wall, .Window, .Any, .Connection, .LockedDoor, .Door => cell = displayAs(st, st.fab.content[y][x]),
+                else => {},
+            }
+
             cell.fg = switch (st.fab.content[y][x]) {
-                .Any, .Connection => 0xaaaaaa,
-                .Window, .Wall => colors.LIGHT_CONCRETE,
                 .Feature => |f| switch (st.fab.features[f].?) {
                     .Stair => |s| if (s.locked)
                         0xff4400
@@ -206,9 +301,7 @@ pub fn drawMap(st: *fabedit.EdState) void {
                     else => colors.LIGHT_CONCRETE,
                 },
                 .LevelFeature => colors.LIGHT_STEEL_BLUE,
-                .LockedDoor,
                 .HeavyLockedDoor,
-                .Door,
                 .Bars,
                 .Brazier,
                 .ShallowWater,
@@ -217,14 +310,12 @@ pub fn drawMap(st: *fabedit.EdState) void {
                 .Corpse,
                 .Ring,
                 => 0xffffff,
-                .Floor => 0x777777,
                 .Water => 0x0000ff,
                 .Lava => 0xff0000,
+                else => cell.fg,
             };
 
             cell.ch = switch (st.fab.content[y][x]) {
-                .Any => '?',
-                .Connection => '*',
                 .LevelFeature => |l| '0' + @intCast(u21, l),
                 .Feature => |f| switch (st.fab.features[f].?) {
                     .Stair => |s| @as(u21, switch (s.stairtype) {
@@ -242,9 +333,7 @@ pub fn drawMap(st: *fabedit.EdState) void {
                     .Prop => |pid| surfaces.props.items[utils.findById(surfaces.props.items, pid).?].tile,
                     .Machine => |mid| surfaces.MACHINES[utils.findById(&surfaces.MACHINES, mid.id).?].powered_tile,
                 },
-                .LockedDoor => '±',
                 .HeavyLockedDoor => '±', // TODO: fg
-                .Door => '+',
                 .Brazier => '¤',
                 .ShallowWater => '~',
                 .Bars => '×',
@@ -253,8 +342,7 @@ pub fn drawMap(st: *fabedit.EdState) void {
                 .Corpse => '%', // TODO: fg
                 .Ring => '=',
                 .Lava, .Water => '≈',
-                .Floor => '.',
-                else => '@',
+                else => cell.ch,
             };
 
             cell.fl.wide = true;

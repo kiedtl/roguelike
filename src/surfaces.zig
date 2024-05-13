@@ -646,8 +646,11 @@ pub const LabDoor = Machine{
     .powered_tile = '+',
     .unpowered_tile = 'x',
     .powered_fg = 0xffdf10,
-    .unpowered_fg = 0xffbfff,
     .powered_sprite = .S_O_M_LabDoorOpen,
+
+    // Not used since door is always powered, but defined for fabedit's benefit
+    .unpowered_fg = 0xffdf10,
+    .unpowered_sprite = .S_O_M_LabDoorShut,
 
     .power_drain = 0,
     .power = 100,
