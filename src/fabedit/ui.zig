@@ -239,6 +239,18 @@ pub fn drawBar(st: *fabedit.EdState) void {
     bar_win.main.addMouseTrigger(Rect.new(Coord.new(x, 0), 0, 0), .Click, .{
         .Signal = 2,
     });
+    x += 2;
+
+    if (st.fab.tunneler_prefab) {
+        _ = bar_win.main.drawTextAt(x, 0, "$g·$. $cTun $g($.", .{ .xptr = &x });
+        for (st.fab.tunneler_orientation.constSlice()) |orien| {
+            bar_win.main.setCell(x, 0, .{ .ch = orien.name()[0], .fg = colors.OFF_WHITE, .bg = colors.BG });
+            x += 1;
+        }
+        if (st.fab.tunneler_inset)
+            _ = bar_win.main.drawTextAt(x, 0, "$g; $pinset", .{ .xptr = &x });
+        _ = bar_win.main.drawTextAt(x, 0, "$g)", .{ .xptr = &x });
+    }
 }
 
 pub fn drawHUD(st: *fabedit.EdState) void {
