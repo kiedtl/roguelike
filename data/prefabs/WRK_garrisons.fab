@@ -12,33 +12,6 @@
 @@3 Cmons emberling     ([cancel_status1]Sleeping [no_squads]yea)
 
 :tunneler_orientation north
-:tunneler_orientation east
-:tunneler_orientation south
-:tunneler_orientation west
-:tunneler_inset
-p
-
-\
-
-:tunneler_orientation north
-:tunneler_orientation east
-:tunneler_orientation south
-:tunneler_orientation west
-:tunneler_inset
-e
-
-\
-
-:tunneler_orientation north
-:tunneler_orientation east
-:tunneler_orientation south
-:tunneler_orientation west
-:tunneler_inset
-y
-
-\
-
-:tunneler_orientation north
 •
 3
 .
