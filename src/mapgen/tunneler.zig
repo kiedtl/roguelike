@@ -132,6 +132,16 @@ pub const Ctx = struct {
                         else => unreachable,
                     }
 
+                    // Update born_at
+                    // XXX: I have no idea if this is correct or not
+                    switch (roomie.parent.direction) {
+                        .North => roomie.born_at += fab.height,
+                        .South => roomie.born_at -= roomie.rect.height - fab.height,
+                        .West => roomie.born_at += fab.width,
+                        .East => roomie.born_at -= roomie.rect.width - fab.width,
+                        else => unreachable,
+                    }
+
                     roomie.rect.width = fab.width;
                     roomie.rect.height = fab.height;
 
