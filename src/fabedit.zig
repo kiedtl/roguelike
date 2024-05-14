@@ -301,11 +301,12 @@ pub fn main() anyerror!void {
     const trimmed = mem.trimRight(u8, st.fab_path, ".fab");
     const index = if (mem.lastIndexOfScalar(u8, trimmed, '/')) |sep| sep + 1 else 0;
     st.fab_name = trimmed[index..];
-    for (mapgen.n_fabs.items) |*fab| {
-        if (mem.eql(u8, fab.name.constSlice(), st.fab_name)) {
+    for (mapgen.n_fabs.items) |*fab|
+        if (mem.eql(u8, fab.name.constSlice(), st.fab_name))
             st.fab_variants.append(fab) catch err.wat();
-        }
-    }
+    for (mapgen.s_fabs.items) |*fab|
+        if (mem.eql(u8, fab.name.constSlice(), st.fab_name))
+            st.fab_variants.append(fab) catch err.wat();
     st.fab = st.fab_variants.last() orelse {
         std.log.err("Could not find {s}", .{st.fab_name});
         return;

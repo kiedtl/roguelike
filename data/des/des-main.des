@@ -126,6 +126,10 @@ The sparsely-woven fibers composing this eldritch clothing seem be absorbing all
 light and color nearby, appearing only as criss-crossing web of pitch-black
 lines.
 
+% cloak_silus
+A cloak of woven silus and reflective metal threads, of the finest cave-goblin
+craft.
+
 % cloak_gold
 A wool cloak with intricate gold embroidery, usually worn by those channeling
 the Necromancer's power.
@@ -139,6 +143,13 @@ items, it actively shields them from hostile hexes.
 Unfortunately, the cloak's composition comes with certain drawbacks, which might
 explain why such a valuable item is lying here unused.
 
+% silus_armor
+A double-layered full-body suit of woven silus and reflective metal threading,
+with a thick padding of vermiculite. Of the highest quality cave-goblin craft,
+it was made to effectively protect those maintaining smelting arrays, kilns,
+and other furnaces from the extreme heat. Unfortunately, it is equally
+effective at impeding combat.
+
 % gold_armor
 A soft leather jacket is beautifully adorned with gold embroidery,
 depicting towering mansions and palaces rising above a northern pine forest.
@@ -148,7 +159,7 @@ useless for protection.
 % ornate_gold_armor
 The leather jacket's gold embroidery depicts a walled city overlooking dense
 forests, while unidentifiable enemies assail the ornate wooden gates. The
-jacket's lower rim features cryptic writing:
+jacket's lower rim features cryptic hill-goblin writing:
 
 
 $g- Remember Baron Tyeburenet Kulbin --

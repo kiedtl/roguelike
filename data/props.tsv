@@ -187,6 +187,7 @@
 "alch_table_r_t1"      	 "table"                	 '▐' 	                        -  	 0xbfab8f 	 -        	 nay 	 - 	10 
 "alch_table_r_t2"      	 "table"                	 '▐' 	                        -  	 0x9e8664 	 -        	 nay 	 - 	10
 "alch_table_r_t3"      	 "table"                	 '▐' 	                        -  	 0x806640 	 -        	 nay 	 - 	10
+"fire_extinguisher"    	 "fire extinguisher"    	 '♣' 	                        -  	 0x806640 	 -        	 nay 	 - 	10
 "whiteboard_r"         	 "whiteboard"           	 '▐' 	                        -  	 0x888888 	 -        	 nay 	 - 	10 
 "alch_frame_n1s1e2"    	 "frame"                	 '╞' 	                        -  	 0x9e8664 	 -        	 nay 	 - 	10
 "alch_frame_n1s1w2"    	 "frame"                	 '╡' 	                        -  	 0x9e8664 	 -        	 nay 	 - 	10
@@ -339,6 +340,8 @@
 "steel_support_nsw2"   	 "steel support"        	 '╡' 	                        -  	 0xa6c2d4 	 -        	 nay
 "steel_support_nse2w2" 	 "steel support"        	 '╪' 	                        -  	 0xa6c2d4 	 -        	 nay
 "steel_support_e2w2"   	 "steel support"        	 '═' 	                        -  	 0xa6c2d4 	 -        	 nay
+"steel_support_e2w2s1" 	 "steel support"        	 '╤' 	                        -  	 0xa6c2d4 	 -        	 nay
+"steel_pillar"         	 "pillar"               	 '◙' 	                        -  	 0xa6c2d4 	 -        	 nay
 
 "limestone_wall_upper" 	 "limestone wall"       	 '▀' 	                        -  	 0xffffef 	 -        	 nay
 "limestone_wall_lower" 	 "limestone wall"       	 '▄' 	                        -  	 0xffffef 	 -        	 nay

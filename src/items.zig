@@ -245,6 +245,7 @@ pub const ALL_ITEMS = [_]ItemTemplate{
     .{ .w = 0, .i = .{ .List = &NIGHT_RINGS } },
     .{ .w = 0, .i = .{ .E = SymbolEvoc } },
     .{ .w = 0, .i = .{ .A = OrnateGoldArmor } },
+    .{ .w = 0, .i = .{ .A = SilusArmor } },
     .{ .w = 0, .i = .{ .X = &Earthen1ShieldAux } },
     .{ .w = 0, .i = .{ .X = &Earthen2ShieldAux } },
     .{ .w = 0, .i = .{ .r = DisintegrationRing } },
@@ -264,7 +265,7 @@ pub const Cloak = struct {
 };
 
 pub const SpectralCloak = Cloak{ .id = "cloak_spectral", .name = "spectres", .stats = .{ .Conjuration = 1 } };
-pub const SilCloak = Cloak{ .id = "cloak_silicon", .name = "silicon", .resists = .{ .rFire = 25 } };
+pub const SilCloak = Cloak{ .id = "cloak_silus", .name = "silus", .resists = .{ .rFire = 25 } };
 pub const FurCloak = Cloak{ .id = "cloak_fur", .name = "fur", .resists = .{ .rElec = 25 } };
 pub const GoldCloak = Cloak{ .id = "cloak_gold", .name = "gold", .stats = .{ .Potential = 10 } };
 pub const PureGoldCloak = Cloak{ .id = "cloak_gold_pure", .name = "pure gold", .stats = .{ .Potential = 25, .Willpower = 1 }, .resists = .{ .rElec = -25 } };
@@ -1654,6 +1655,13 @@ pub const SilusGambesonArmor = Armor{
     .id = "silus_gambeson_armor",
     .name = "silus gambeson",
     .resists = .{ .Armor = 15, .rFire = 25 },
+};
+
+pub const SilusArmor = Armor{
+    .id = "silus_armor",
+    .name = "full-body silus armor",
+    .resists = .{ .Armor = 10, .rFire = 75 },
+    .stats = .{ .Melee = -10, .Evade = -10, .Martial = -3 },
 };
 
 pub const SpikedLeatherArmor = Armor{

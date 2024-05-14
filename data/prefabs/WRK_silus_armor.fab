@@ -1,0 +1,20 @@
+:g_tunneler
+:g_global_restriction 1
+:priority 100
+
+% FABEDIT_REPLACE
+
+:tunneler_orientation north
+:tunneler_orientation south
+:tunneler_orientation east
+:tunneler_orientation west
+
+@0 p steel_pillar
+@1 p steel_support_e2w2s1
+@2 p fire_extinguisher
+@z i silus_armor
+
+......
+.0111.
+.z222.
+......
