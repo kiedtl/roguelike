@@ -1,4 +1,5 @@
 :g_subroom
+:g_restriction 1
 
 :stockpile 1,1 5 3
 #####
