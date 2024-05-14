@@ -1,0 +1,100 @@
+:priority 100
+:g_tunneler
+:noitems
+:noguards
+:nostairs
+
+:tunneler_orientation south
+:prison 2,2 4 3
+:subroom_area 2,2 4 3 WRK_s_storage_misfits_contents
+
+@0 p chamber_n1s1
+@1 p chamber_s1e1
+@2 p chamber_s1w1
+@3 p chamber_e1w1
+
+........
+.133332.
+.0....0.
+.0....0.
+.0....0.
+
+\
+
+:tunneler_orientation north
+:prison 2,0 4 3
+:subroom_area 2,0 4 3 WRK_s_storage_misfits_contents
+
+@0 p chamber_n1s1
+@1 p chamber_n1e1
+@2 p chamber_e1w1
+@3 p chamber_n1w1
+
+.0....0.
+.0....0.
+.0....0.
+.122223.
+........
+
+
+% -----------------------------------------------------------------------------
+
+:begin_prefab WRK_s_storage_misfits_contents
+
+:g_subroom
+:invisible
+:notraps
+:noitems
+:nostairs
+:g_transform .Turn1
+:g_transform .Turn2
+:g_transform .Turn3
+
+@@1 p broken_turtle
+@@2 p broken_sparkling
+@@3 p broken_emberling
+@@4 p broken_hornet
+@@a Cmons lead_turtle   ([prm_status1]Insane [prisoner_of]Necromancer)
+@@b Cmons sparkling     ([prm_status1]Insane [prisoner_of]Necromancer)
+@@c Cmons emberling     ([prm_status1]Insane [prisoner_of]Necromancer)
+@@d Cmons copper_hornet ([prm_status1]Insane [prisoner_of]Necromancer)
+
+ac34
+a1dd
+a3a4
+
+\
+
+1ca3
+23d1
+1b1a
+
+\
+
+b2cb
+141a
+d4cb
+
+\
+
+1d4b
+1ac1
+141d
+
+\
+
+421b
+2d2a
+3331
+
+\
+
+41b1
+2cca
+b2ca
+
+\
+
+d11b
+c4c2
+aad2
