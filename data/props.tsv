@@ -5,8 +5,6 @@
 #
 
 # Tools props
-#
-# TODO: once hammer weapon is added, remove useless hammer prop to avoid confusion
 ""                     	 "hammer"               	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .Tools
 ""                     	 "screwdriver"          	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .Tools
 ""                     	 "gimlet"               	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .Tools
@@ -94,11 +92,11 @@
 #"sparkling_heart"      	 "sparkling heart"      	 '©' 	                        -  	 0xcacbca 	 -        	 -   	 - 	 - 	 .WRK_CompA
 #"sparkling_wings"      	 "sparkling wings"      	 '©' 	                        -  	 0xcacbca 	 -        	 -   	 - 	 - 	 .WRK_CompA
 #"sparkling_muscles"    	 "sparkling muscles"    	 '©' 	                        -  	 0xcacbca 	 -        	 -   	 - 	 - 	 .WRK_CompA
-"sparkling_guts"       	 "sparkling muscles"    	 '©' 	                        -  	 0xcacbca 	 -        	 -   	 - 	 - 	 .WRK_CompA
-"sparkling_nerves"     	 "sparkling muscles"    	 '©' 	                        -  	 0xcacbca 	 -        	 -   	 - 	 - 	 .WRK_CompA
-"sparkling_glands"     	 "sparkling muscles"    	 '©' 	                        -  	 0xcacbca 	 -        	 -   	 - 	 - 	 .WRK_CompA
-"sparkling_stinger"    	 "sparkling muscles"    	 '©' 	                        -  	 0xcacbca 	 -        	 -   	 - 	 - 	 .WRK_CompA
-"sparkling_shell"      	 "sparkling muscles"    	 '©' 	                        -  	 0xcacbca 	 -        	 -   	 - 	 - 	 .WRK_CompA
+"sparkling_guts"       	 "sparkling guts"       	 '©' 	                        -  	 0xcacbca 	 -        	 -   	 - 	 - 	 .WRK_CompA
+"sparkling_nerves"     	 "sparkling nerves"     	 '©' 	                        -  	 0xcacbca 	 -        	 -   	 - 	 - 	 .WRK_CompA
+"sparkling_glands"     	 "sparkling gland"      	 '©' 	                        -  	 0xcacbca 	 -        	 -   	 - 	 - 	 .WRK_CompA
+"sparkling_stinger"    	 "sparkling stinger"    	 '©' 	                        -  	 0xcacbca 	 -        	 -   	 - 	 - 	 .WRK_CompA
+"sparkling_shell"      	 "sparkling shell"      	 '©' 	                        -  	 0xcacbca 	 -        	 -   	 - 	 - 	 .WRK_CompA
 
 "small_fountain"       	 "small fountain"       	 '¶' 	                        -  	 0xa4cfff 	 -        	 -   	 - 	 -
 
