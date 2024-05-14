@@ -4804,7 +4804,7 @@ pub fn createLevelConfig_WRK(crowd: usize, comptime prefabs: []const []const u8)
                 .{ .start = Coord.new(1, HEIGHT - 1), .width = 3, .height = 0, .direction = .North },
             },
         },
-        .prefab_chance = 55,
+        .prefab_chance = 65,
         .mapgen_func = tunneler.placeTunneledRooms,
 
         .level_features = [_]?LevelConfig.LevelFeatureFunc{
@@ -4828,7 +4828,7 @@ pub fn createLevelConfig_WRK(crowd: usize, comptime prefabs: []const []const u8)
         .single_props = &[_][]const u8{"table"},
 
         .room_crowd_max = crowd,
-        .subroom_chance = 70,
+        .subroom_chance = 90,
         .allow_statues = false,
 
         .machines = &[_]*const Machine{&surfaces.FirstAidStation},
