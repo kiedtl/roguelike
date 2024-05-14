@@ -42,11 +42,12 @@ pub var map_win: struct {
                         switch (st.cursor) {
                             .Prop => fabedit.applyCursorProp(),
                             .Basic => fabedit.applyCursorBasic(),
+                            .PrisonArea => fabedit.applyCursorPrisonArea(),
                         }
                         break :b true;
                     } else {
-                        st.x = coord.x / 2;
-                        st.y = coord.y;
+                        st.x = math.min(st.fab.width, coord.x / 2);
+                        st.y = math.min(st.fab.height, coord.y);
                         break :b true;
                     }
                 },
@@ -65,6 +66,12 @@ pub const HudMouseSignalTag = enum(u64) {
     SwitchPane = 1 << 16,
     Prop = 1 << 17,
     Basic = 1 << 18,
+    Area = 1 << 19,
+    AreaIncH = 1 << 20,
+    AreaDecH = 1 << 21,
+    AreaIncW = 1 << 22,
+    AreaDecW = 1 << 23,
+    AreaAddDel = 1 << 24, // 0 == add, 1 == del
 };
 pub var hud_win: struct {
     main: Console = undefined,
@@ -81,6 +88,7 @@ pub var hud_win: struct {
                     if (s & @enumToInt(HudMouseSignalTag.SwitchPane) > 0) {
                         const i = s & ~@enumToInt(HudMouseSignalTag.SwitchPane);
                         st.hud_pane = @intToEnum(fabedit.EdState.HudPane, i);
+                        st.fab_redraw = true;
                         break :b true;
                     } else if (s & @enumToInt(HudMouseSignalTag.Prop) > 0) {
                         const i = s & ~@enumToInt(HudMouseSignalTag.Prop);
@@ -90,8 +98,52 @@ pub var hud_win: struct {
                         const i = s & ~@enumToInt(HudMouseSignalTag.Basic);
                         st.cursor = .{ .Basic = @intToEnum(fabedit.EdState.BasicCursor, i) };
                         break :b true;
-                    }
-                    break :b false;
+                    } else if (s & @enumToInt(HudMouseSignalTag.Area) > 0) {
+                        const i = s & ~@enumToInt(HudMouseSignalTag.Area);
+                        st.cursor = .{ .PrisonArea = i };
+                        break :b true;
+                    } else if (s & @enumToInt(HudMouseSignalTag.AreaIncH) > 0) {
+                        const i = s & ~@enumToInt(HudMouseSignalTag.AreaIncH);
+                        st.fab.prisons.slice()[i].height += 1;
+                        st.fab_info[st.fab_index].unsaved = true;
+                        st.fab_redraw = true;
+                        break :b true;
+                    } else if (s & @enumToInt(HudMouseSignalTag.AreaDecH) > 0) {
+                        const i = s & ~@enumToInt(HudMouseSignalTag.AreaDecH);
+                        st.fab.prisons.slice()[i].height -|= 1;
+                        st.fab_info[st.fab_index].unsaved = true;
+                        st.fab_redraw = true;
+                        break :b true;
+                    } else if (s & @enumToInt(HudMouseSignalTag.AreaIncW) > 0) {
+                        const i = s & ~@enumToInt(HudMouseSignalTag.AreaIncW);
+                        st.fab.prisons.slice()[i].width += 1;
+                        st.fab_info[st.fab_index].unsaved = true;
+                        st.fab_redraw = true;
+                        break :b true;
+                    } else if (s & @enumToInt(HudMouseSignalTag.AreaDecW) > 0) {
+                        const i = s & ~@enumToInt(HudMouseSignalTag.AreaDecW);
+                        st.fab.prisons.slice()[i].width -|= 1;
+                        st.fab_info[st.fab_index].unsaved = true;
+                        st.fab_redraw = true;
+                        break :b true;
+                    } else if (s & @enumToInt(HudMouseSignalTag.AreaAddDel) > 0) {
+                        switch (s & ~@enumToInt(HudMouseSignalTag.AreaAddDel)) {
+                            0 => st.fab.prisons.append(Rect.new(Coord.new(0, 0), 1, 1)) catch {
+                                std.log.err("Too many prison areas", .{});
+                            },
+                            1 => if (st.cursor == .PrisonArea) {
+                                _ = st.fab.prisons.orderedRemove(st.cursor.PrisonArea) catch err.wat();
+                                st.cursor.PrisonArea -|= 1;
+                                if (st.fab.prisons.len == 0) {
+                                    st.cursor = .{ .Basic = .Wall };
+                                }
+                            },
+                            else => unreachable,
+                        }
+                        st.fab_info[st.fab_index].unsaved = true;
+                        st.fab_redraw = true;
+                        break :b true;
+                    } else unreachable;
                 },
                 .Unhandled, .Void => true,
                 .Outside => false,
@@ -231,7 +283,7 @@ pub fn drawBar(st: *fabedit.EdState) void {
     });
     x += 2;
 
-    _ = bar_win.main.drawTextAtf(x, 0, "{}$g/$.{}", .{ st.fab_index, st.fab_variants.len - 1 }, .{ .xptr = &x });
+    _ = bar_win.main.drawTextAtf(x, 0, "{}$g/$.{}", .{ st.fab_index + 1, st.fab_variants.len }, .{ .xptr = &x });
     x += 1;
 
     const c2: u32 = if (can_go_forw) 0xffd700 else 0xaaaaaa;
@@ -304,12 +356,13 @@ pub fn drawHUD(st: *fabedit.EdState) void {
             }
         },
         .Props => {
-            const cursor_x = st.cursor.Prop % PANEL_WIDTH;
-            var display_row = (st.cursor.Prop - cursor_x) / PANEL_WIDTH;
+            const selected_i = if (st.cursor == .Prop) st.cursor.Prop else 0;
+            const cursor_x = selected_i % PANEL_WIDTH;
+            var display_row = (selected_i - cursor_x) / PANEL_WIDTH;
             if (display_row >= 4)
                 display_row -= 4;
 
-            const selected = &surfaces.props.items[st.cursor.Prop];
+            const selected = &surfaces.props.items[selected_i];
             y += hud_win.main.drawTextAtf(0, y, "$cSelected:$. {s}", .{selected.id}, .{});
 
             var dx: usize = 0;
@@ -327,7 +380,6 @@ pub fn drawHUD(st: *fabedit.EdState) void {
                 hud_win.main.setCell(dx, y, cell);
                 hud_win.main.setCell(dx + 1, y, .{ .fl = .{ .skip = true } });
                 const signal = @enumToInt(HudMouseSignalTag.Prop) | i;
-                hud_win.main.addClickableTextBoth(.{ .Signal = signal });
                 hud_win.main.addMouseTrigger(Rect.new(Coord.new(dx, y), 0, 0), .Click, .{
                     .Signal = signal,
                 });
@@ -338,6 +390,60 @@ pub fn drawHUD(st: *fabedit.EdState) void {
                         y += 1;
                 }
             }
+        },
+        .Areas => {
+            for (st.fab.prisons.constSlice()) |prect, i| {
+                const sel = st.cursor == .PrisonArea and st.cursor.PrisonArea == i;
+                const c1: u21 = if (sel) 'c' else '.';
+                const c2: u21 = if (sel) '.' else 'g';
+                const c3: u21 = if (sel) 'g' else 'G';
+                _ = hud_win.main.drawTextAtf(0, y, "$g{: >2}: ${u}prison ${u}(${u}{}${u},${u}{} {}${u}×${u}{}${u})", .{
+                    i, c1, c3, c2, prect.start.x, c3, c2, prect.start.y, prect.width, c3, c2, prect.height, c3,
+                }, .{});
+                if (!sel) {
+                    const signal = @enumToInt(HudMouseSignalTag.Area) | i;
+                    hud_win.main.addClickableTextBoth(.{ .Signal = signal });
+                }
+
+                var x = hud_win.main.width - 1 - 7;
+                const buttons = [_]HudMouseSignalTag{
+                    .AreaDecH,
+                    .AreaIncH,
+                    .AreaDecW,
+                    .AreaIncW,
+                };
+                for (&buttons) |button, bi| {
+                    if (bi == 1 or bi == 3) {
+                        hud_win.main.setCell(x, y, .{ .ch = '/', .fg = colors.GREY });
+                        x += 1;
+                    } else if (bi == 2) {
+                        x += 1;
+                    }
+                    const ch: u21 = if (bi % 2 == 1) '+' else '-';
+                    hud_win.main.setCell(x, y, .{ .ch = ch, .fg = colors.LIGHT_CONCRETE });
+                    const signal = @enumToInt(button) | i;
+                    hud_win.main.addMouseTrigger(Rect.new(Coord.new(x, y), 0, 0), .Click, .{
+                        .Signal = signal,
+                    });
+                    hud_win.main.addMouseTrigger(Rect.new(Coord.new(x, y), 0, 0), .Hover, .{
+                        .RecordElem = &hud_win.main,
+                    });
+                    x += 1;
+                }
+
+                y += 1;
+            }
+
+            y += 1;
+
+            var x: usize = 0;
+            _ = hud_win.main.drawTextAt(x, y, " Add new ", .{ .xptr = &x });
+            const s1 = @enumToInt(HudMouseSignalTag.AreaAddDel) | 0;
+            hud_win.main.addClickableTextBoth(.{ .Signal = s1 });
+            _ = hud_win.main.drawTextAt(x, y, " $g·$. ", .{ .xptr = &x });
+            _ = hud_win.main.drawTextAt(x, y, " Delete selected ", .{});
+            const s2 = @enumToInt(HudMouseSignalTag.AreaAddDel) | 1;
+            hud_win.main.addClickableTextBoth(.{ .Signal = s2 });
         },
     }
 
@@ -436,6 +542,20 @@ pub fn drawMap(st: *fabedit.EdState) void {
             cell.fl.wide = true;
             map_win.main.setCell(dx, y, cell);
             map_win.main.setCell(dx + 1, y, .{ .fl = .{ .skip = true } });
+        }
+    }
+
+    if (st.hud_pane == .Areas) {
+        for (st.fab.prisons.constSlice()) |rect| {
+            y = rect.start.y;
+            while (y < rect.end().y) : (y += 1) {
+                var x: usize = rect.start.x;
+                while (x < rect.end().x) : (x += 1) {
+                    var cell = map_win.main.getCell(x * 2, y);
+                    cell.bg = colors.mix(cell.bg, 0xff0000, 0.2);
+                    map_win.main.setCell(x * 2, y, cell);
+                }
+            }
         }
     }
 }

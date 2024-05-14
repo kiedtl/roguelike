@@ -35,16 +35,18 @@ pub const EdState = struct {
     };
 
     // TODO: terrain, mobs, machines
-    pub const HudPane = enum(usize) { Props = 0, Basic = 1 };
+    pub const HudPane = enum(usize) { Props = 0, Basic = 1, Areas = 2 };
 
     pub const Cursor = union(enum) {
         Prop: usize, // index to surfaces.props
         Basic: BasicCursor,
+        PrisonArea: usize,
 
         pub fn incrBy(self: *Cursor, by: usize) void {
             switch (self.*) {
                 .Prop => self.Prop = math.min(surfaces.props.items.len - 1, self.Prop + by),
                 .Basic => self.Basic = @intToEnum(BasicCursor, math.min(meta.fields(BasicCursor).len - 1, @enumToInt(self.Basic) + by)),
+                .PrisonArea => self.PrisonArea = math.min(st.fab.prisons.len - 1, self.PrisonArea + 1),
             }
         }
 
@@ -52,6 +54,7 @@ pub const EdState = struct {
             switch (st.cursor) {
                 .Prop => self.Prop -|= by,
                 .Basic => |b| self.Basic = @intToEnum(BasicCursor, @enumToInt(b) -| by),
+                .PrisonArea => self.PrisonArea -|= 1,
             }
         }
     };
@@ -116,6 +119,13 @@ pub fn erase() void {
     st.fab_info[st.fab_index].unsaved = true;
 }
 
+pub fn applyCursorPrisonArea() void {
+    st.fab.prisons.slice()[st.cursor.PrisonArea].start.x = st.x;
+    st.fab.prisons.slice()[st.cursor.PrisonArea].start.y = st.y;
+    st.fab_redraw = true;
+    st.fab_info[st.fab_index].unsaved = true;
+}
+
 pub fn applyCursorBasic() void {
     st.fab.content[st.y][st.x] = switch (st.cursor.Basic) {
         .Wall => .Wall,
@@ -162,6 +172,11 @@ fn _saveVariant(ind: usize, writer: anytype) void {
         if (fab.tunneler_inset)
             writer.print(":tunneler_inset\n", .{}) catch err.wat();
     }
+
+    for (fab.prisons.constSlice()) |prect|
+        writer.print(":prison {},{} {} {}\n", .{
+            prect.start.x, prect.start.y, prect.height, prect.width,
+        }) catch unreachable;
 
     if (writer.context.getPos() catch err.wat() != oldpos)
         writer.writeByte('\n') catch err.wat();
@@ -336,6 +351,7 @@ pub fn main() anyerror!void {
                         .Enter => switch (st.cursor) {
                             .Prop => applyCursorProp(),
                             .Basic => applyCursorBasic(),
+                            .PrisonArea => applyCursorPrisonArea(),
                         },
                         else => {},
                     }
@@ -352,13 +368,21 @@ pub fn main() anyerror!void {
                         'K' => st.cursor.Prop -|= 14,
                         'L' => st.cursor.incrBy(1),
                         'H' => st.cursor.Prop -|= 1,
-                        '>' => st.hud_pane = switch (st.hud_pane) {
-                            .Props => .Basic,
-                            .Basic => .Props,
+                        '>' => {
+                            st.hud_pane = switch (st.hud_pane) {
+                                .Props => .Basic,
+                                .Basic => .Areas,
+                                .Areas => .Props,
+                            };
+                            st.fab_redraw = true;
                         },
-                        '<' => st.hud_pane = switch (st.hud_pane) {
-                            .Props => .Basic,
-                            .Basic => .Props,
+                        '<' => {
+                            st.hud_pane = switch (st.hud_pane) {
+                                .Props => .Areas,
+                                .Basic => .Props,
+                                .Areas => .Basic,
+                            };
+                            st.fab_redraw = true;
                         },
                         '[' => prevFab(),
                         ']' => nextFab(),
