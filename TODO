@@ -74,6 +74,27 @@ Mob speech
 
 New mobs
 --------
+- enhanced emberling
+  - 4 tiles, noisy
+  - has Overpowered Engine
+    - +200% speed when enemy is far away, but has chance to break down and
+      become and immobile
+  - firebolt thing, range-limited
+  - 25% rFire, -25% rElec, 10% Armor
+  - event: it goes insane, assault called
+    - "The enh. emberling emits strange sparks."
+    - "The alchemists examines the enh. emberling closely."
+    - "You hear a terrific CRASH!"
+    - "The enh. emberling breaks out of the enclosure!"
+    - "You hear an alarm going off!"
+  - Can break down a door and an adjacent wall when pursuing enemy.
+  - Stationed as guard in workshop/3, lab/2, lab/3.
+    - (Workshop one is rare and diluted with broken ones)
+- ember beast
+  - enh emberling, but doesn't break down
+  - no rFire, -50% rElec
+  - fiery javelin instead of spurting flame
+  - kept in some place where player might bring allies(?), Holding
 x sulfur fiend x
   x rElec∞ and rFire+.
   x Hasten Rot: makes a corpse emit a cloud of miasma, destroying the
@@ -1407,7 +1428,7 @@ x Vaults rework
     - Caverns: dustling workshop (paralyzed dustlings inside scanning machine)
     - Laboratory: insane & paralysed prisoners inside holding cells
       - "Since the bastards won't tell us what these potions are for, we'll
-	just have to find out ourselves."
+        just have to find out ourselves."
     - Laboratory: alchemist bending over workbench, with barrels of glycerin,
       nitric acid, and sulfuric acid and a pile of potions of decimation
       nearby.
@@ -1546,11 +1567,11 @@ x Vaults rework
     - Renaming
     - Unsure if any other changes needed
 - "Quarantine"/"Holding" map
+  - Tunneling + BSP mapgen
   - Timekeeper's pendant
   - Empty prefab/area, labeled as being for earthen shield
   - Skeletal arbalists, corridor prefabs
-    - Porous props: change porous field to usize, 1 == porous to gas, 2 ==
-      porous for projectile
+  - Ember beast
   - Revgenunhelkim prisoners
 - Make illumination/glow potions useful for raiding lairs
   - Corona/glowing damages NC, causes fleeing if wounded
