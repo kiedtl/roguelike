@@ -161,18 +161,28 @@ pub const Ctx = struct {
                 }
             }
 
+            // Check afterwards, instead of with other checks, because
+            // prefab choice can affect overlap
+            if (!Roomie.checkOverlap(room, roomie.parent)) {
+                _ = self.roomies.swapRemove(i);
+                continue;
+            }
+
+            var door: Coord = undefined;
+
             if (prefab) |fab| {
                 room.prefab = fab;
-                roomie.door = Roomie.getRandomDoorCoord(room, roomie.parent) orelse continue;
                 mapgen.excavatePrefab(&room, fab, state.gpa.allocator(), 0, 0);
+                door = Roomie.getRandomDoorCoord(room, roomie.parent);
                 fab.incrementRecord(level);
             } else {
                 mapgen.excavateRect(&roomie.rect);
+                door = Roomie.getRandomDoorCoord(room, roomie.parent);
             }
 
             if (prefab == null or !prefab.?.tunneler_inset) {
-                mapgen.placeDoor(roomie.door, false);
-                room.connections.append(.{ .room = roomie.parent.rect.start, .door = roomie.door }) catch err.wat();
+                mapgen.placeDoor(door, false);
+                room.connections.append(.{ .room = roomie.parent.rect.start, .door = door }) catch err.wat();
             } else if (prefab.?.tunneler_inset) {
                 room.is_extension_room = true;
                 room.connections.append(.{ .room = roomie.parent.rect.start, .door = null }) catch err.wat();
@@ -238,20 +248,19 @@ pub const Ctx = struct {
                 else => unreachable,
             };
 
-            if (!too_far) {
-                if (Roomie.getRandomDoorCoord(new, parent)) |door| {
-                    new.connections.append(.{ .room = parent.rect.start, .door = door }) catch err.wat();
-                    mapgen.excavateRect(&new.rect);
-                    if (rng.percent(Configs[level].subroom_chance)) {
-                        _ = mapgen.placeSubroom(&new, &Rect{
-                            .start = Coord.new(0, 0),
-                            .width = new.rect.width,
-                            .height = new.rect.height,
-                        }, state.gpa.allocator(), .{});
-                    }
-                    mapgen.placeDoor(door, false);
-                    state.rooms[level].append(new) catch err.wat();
+            if (!too_far and Roomie.checkOverlap(new, parent)) {
+                mapgen.excavateRect(&new.rect);
+                const door = Roomie.getRandomDoorCoord(new, parent);
+                mapgen.placeDoor(door, false);
+                new.connections.append(.{ .room = parent.rect.start, .door = door }) catch err.wat();
+                if (rng.percent(Configs[level].subroom_chance)) {
+                    _ = mapgen.placeSubroom(&new, &Rect{
+                        .start = Coord.new(0, 0),
+                        .width = new.rect.width,
+                        .height = new.rect.height,
+                    }, state.gpa.allocator(), .{});
                 }
+                state.rooms[level].append(new) catch err.wat();
             }
         }
     }
@@ -407,10 +416,26 @@ pub const Roomie = struct {
     generation: usize,
     born_at: usize,
     rect: Rect,
-    door: Coord,
     orientation: Direction,
 
-    pub fn getRandomDoorCoord(room: Room, parent: *const Tunneler) ?Coord {
+    // Returns false if invalid
+    pub fn checkOverlap(room: Room, parent: *const Tunneler) bool {
+        const door_x = [_]usize{
+            math.max(room.rect.start.x, parent.rect.start.x),
+            math.min(room.rect.end().x - 1, parent.rect.end().x - 1),
+        };
+        const door_y = [_]usize{
+            math.max(room.rect.start.y, parent.rect.start.y),
+            math.min(room.rect.end().y - 1, parent.rect.end().y - 1),
+        };
+        return switch (parent.direction) {
+            .North, .South => door_y[0] < door_y[1],
+            .East, .West => door_x[0] < door_x[1],
+            else => unreachable,
+        };
+    }
+
+    pub fn getRandomDoorCoord(room: Room, parent: *const Tunneler) Coord {
         const level = room.rect.start.z;
 
         const door_x = [_]usize{
@@ -424,20 +449,40 @@ pub const Roomie = struct {
 
         switch (parent.direction) {
             .North, .South => {
-                if (door_y[1] < door_y[0]) {
-                    return null;
+                var x: usize = undefined;
+                var y: usize = undefined;
+                var coord: Coord = undefined;
+                var tries: usize = 77;
+                while (tries > 0) : (tries -= 1) {
+                    x = if (room.rect.start.x < parent.rect.start.x) room.rect.end().x else room.rect.start.x - 1;
+                    y = rng.range(usize, door_y[0], door_y[1]);
+                    coord = Coord.new2(level, x, y);
+
+                    // Check doorstep is clear
+                    const doorstep_d: Direction = if (room.rect.start.x < parent.rect.start.x) .West else .East;
+                    const doorstep = coord.move(doorstep_d, state.mapgeometry) orelse return coord;
+                    if (state.is_walkable(doorstep, .{ .ignore_mobs = true }))
+                        break;
                 }
-                const x = if (room.rect.start.x < parent.rect.start.x) room.rect.end().x else room.rect.start.x - 1;
-                const y = rng.range(usize, door_y[0], door_y[1]);
-                return Coord.new2(level, x, y);
+                return coord;
             },
             .East, .West => {
-                if (door_x[1] < door_x[0]) {
-                    return null;
+                var x: usize = undefined;
+                var y: usize = undefined;
+                var coord: Coord = undefined;
+                var tries: usize = 77;
+                while (tries > 0) : (tries -= 1) {
+                    x = rng.range(usize, door_x[0], door_x[1]);
+                    y = if (room.rect.start.y < parent.rect.start.y) room.rect.end().y else room.rect.start.y - 1;
+                    coord = Coord.new2(level, x, y);
+
+                    // Check doorstep is clear
+                    const doorstep_d: Direction = if (room.rect.start.y < parent.rect.start.y) .South else .North;
+                    const doorstep = coord.move(doorstep_d, state.mapgeometry).?;
+                    if (state.is_walkable(doorstep, .{ .ignore_mobs = true }))
+                        break;
                 }
-                const x = rng.range(usize, door_x[0], door_x[1]);
-                const y = if (room.rect.start.y < parent.rect.start.y) room.rect.end().y else room.rect.start.y - 1;
-                return Coord.new2(level, x, y);
+                return coord;
             },
             else => unreachable,
         }
@@ -500,9 +545,7 @@ pub const Tunneler = struct {
     }
 
     pub fn shrinkTo(self: *Self, new_length: usize) void {
-        // Commented out
-        // Can be true since prefabs might do wonky stuff with roomie_last_born_at
-        //assert(new_length <= self.corridorLength());
+        assert(new_length <= self.corridorLength());
 
         // debug thing
         mapgen.fillRect(&self.rect, .Wall);
@@ -771,7 +814,6 @@ pub const Tunneler = struct {
                 .generation = self.generation + 1,
                 .born_at = self.corridorLength(),
                 .rect = rect,
-                .door = Roomie.getRandomDoorCoord(Room{ .rect = rect }, self).?,
                 .orientation = orientation,
             };
         }
