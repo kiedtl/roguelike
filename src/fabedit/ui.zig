@@ -390,6 +390,112 @@ pub fn drawHUD(st: *fabedit.EdState) void {
                         y += 1;
                 }
             }
+
+            const box_chars = [_]u21{ '┌', '╥', '┐', '╔', '╤', '╗', '╓', '┬', '╖', '\n', '╞', '╬', '╡', '╟', '┼', '╢', '╠', '╪', '╣', '\n', '└', '╨', '┘', '╚', '╧', '╝', '╙', '┴', '╜', '\n', '┌', '─', '┬', '┐', '╔', '═', '╦', '╗', '╒', '╕', '\n', '├', '─', '┼', '┤', '╠', '═', '╬', '╣', '╘', '╛', '\n', '│', ' ', '│', '│', '║', ' ', '║', '║', '╭', '╮', '\n', '└', '─', '┴', '┘', '╚', '═', '╩', '╝', '╰', '╯' };
+            const box_char_names = [_]struct { ch: u21, name: []const u8 }{
+                .{ .ch = '┌', .name = "s1e1" },
+                .{ .ch = '└', .name = "n1e1" },
+                .{ .ch = '┘', .name = "n1w1" },
+                .{ .ch = '┐', .name = "s1w1" },
+                .{ .ch = '┬', .name = "s1e1w1" },
+                .{ .ch = '┼', .name = "n1s1e1w1" },
+                .{ .ch = '┴', .name = "n1e1w1" },
+                .{ .ch = '─', .name = "e1w1" },
+                .{ .ch = '├', .name = "n1s1e1" },
+                .{ .ch = '┤', .name = "n1s1w1" },
+                .{ .ch = '│', .name = "n1s1" },
+                .{ .ch = '╞', .name = "n1s1e2" },
+                .{ .ch = '╡', .name = "n1s1w2" },
+                .{ .ch = '╟', .name = "n2s2e1" },
+                .{ .ch = '╢', .name = "n2s2w1" },
+                .{ .ch = '╨', .name = "n2e1w1" },
+                .{ .ch = '╥', .name = "s2e1w1" },
+                .{ .ch = '╪', .name = "n1s1e2w2" },
+                .{ .ch = '╧', .name = "n1e2w2" },
+                .{ .ch = '╙', .name = "n2e1" },
+                .{ .ch = '╜', .name = "n2w1" },
+                .{ .ch = '╒', .name = "s1e2" },
+                .{ .ch = '╕', .name = "s1w2" },
+                .{ .ch = '╘', .name = "n1e2" },
+                .{ .ch = '╛', .name = "n1w2" },
+                .{ .ch = '╤', .name = "s1e2w2" },
+                .{ .ch = '╔', .name = "s2e2" },
+                .{ .ch = '╝', .name = "n2w2" },
+                .{ .ch = '╗', .name = "s2w2" },
+                .{ .ch = '╓', .name = "s2e1" },
+                .{ .ch = '╖', .name = "s2w1" },
+                .{ .ch = '╬', .name = "n2s2e2w2" },
+                .{ .ch = '╠', .name = "n2s2e2" },
+                .{ .ch = '╣', .name = "n1s1w2" },
+                .{ .ch = '╚', .name = "n2e2" },
+                .{ .ch = '═', .name = "e2w2" },
+                .{ .ch = '╦', .name = "s2e2w2" },
+                .{ .ch = '╩', .name = "n2e2w2" },
+                .{ .ch = '║', .name = "n2s2" },
+                .{ .ch = '╭', .name = "s1e1c" },
+                .{ .ch = '╮', .name = "s1w1c" },
+                .{ .ch = '╰', .name = "n1e1c" },
+                .{ .ch = '╯', .name = "n1w1c" },
+            };
+
+            var sel_prefix: ?[]const u8 = null;
+            var sel_char: ?usize = null; // index into box_char_names
+
+            if (st.cursor == .Prop) {
+                const sel = &surfaces.props.items[st.cursor.Prop];
+                if (mem.lastIndexOfScalar(u8, sel.id, '_')) |last| {
+                    if (last + 1 < sel.id.len) {
+                        const sel_charname = sel.id[last + 1 ..];
+                        sel_char = for (box_char_names) |charname, i| {
+                            if (mem.eql(u8, charname.name, sel_charname))
+                                break i;
+                        } else null;
+                        sel_prefix = sel.id[0..last];
+                    }
+                }
+            }
+
+            y += 3;
+            dx = 0;
+            for (box_chars) |box_char| {
+                if (box_char == '\n') {
+                    y += 1;
+                    dx = 0;
+                    continue;
+                } else if (box_char == ' ') {
+                    dx += 2;
+                    continue;
+                }
+
+                const info = for (box_char_names) |charname| {
+                    if (charname.ch == box_char) break charname;
+                } else unreachable;
+
+                var cell = display.Cell{ .ch = box_char, .fg = 0x555555 };
+                var prop: ?usize = null;
+                if (sel_char) |sel_char_| {
+                    if (mem.eql(u8, info.name, box_char_names[sel_char_].name)) {
+                        cell.bg = colors.mix(cell.bg, 0xffffff, 0.2);
+                    }
+                    var buf: [32]u8 = undefined;
+                    const prop_id = utils.print(&buf, "{s}_{s}", .{ sel_prefix.?, info.name });
+                    prop = utils.findById(surfaces.props.items, prop_id);
+                    if (prop != null)
+                        cell.fg = surfaces.props.items[st.cursor.Prop].fg orelse 0xffffff;
+                }
+                cell.fl.wide = true;
+                hud_win.main.setCell(dx, y, cell);
+                hud_win.main.setCell(dx + 1, y, .{ .fl = .{ .skip = true } });
+
+                if (prop) |prop_index| {
+                    const signal = @enumToInt(HudMouseSignalTag.Prop) | prop_index;
+                    hud_win.main.addMouseTrigger(Rect.new(Coord.new(dx, y), 0, 0), .Click, .{
+                        .Signal = signal,
+                    });
+                }
+
+                dx += 2;
+            }
         },
         .Areas => {
             for (st.fab.prisons.constSlice()) |prect, i| {

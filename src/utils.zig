@@ -32,6 +32,14 @@ const StackBuffer = buffer.StackBuffer;
 const Generator = @import("generators.zig").Generator;
 const GeneratorCtx = @import("generators.zig").GeneratorCtx;
 
+// Print into fixed buffer, no allocation
+pub fn print(buf: []u8, comptime fmt: []const u8, args: anytype) []const u8 {
+    for (buf) |*i| i.* = 0;
+    var fbs = std.io.fixedBufferStream(buf);
+    std.fmt.format(fbs.writer(), fmt, args) catch err.wat();
+    return fbs.getWritten();
+}
+
 // Should not be left in compiled code, as it's incompatible with Windows
 pub fn debugPrintDirectCaller() void {
     const debug_info = std.debug.getSelfDebugInfo() catch err.wat();
