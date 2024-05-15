@@ -1,0 +1,30 @@
+:g_tunneler
+:noguards
+:noitems
+:notraps
+:nostairs
+:priority 100
+
+:tunneler_orientation west
+
+% FABEDIT_REPLACE
+
+@0 p alch_frame_s1e1
+@1 p alch_frame_n1s1
+@2 p alch_frame_n1e1
+@3 p alch_frame_n1w1
+@4 p alch_frame_s1w1
+@5 p alch_frame_e1w1
+@6 p broken_emberling
+@7 p alch_table_u_t2
+@8 p alch_table_u_t1
+@9 p alch_frame_n2e1w1
+@y M emberling
+@z M alchemist
+
+0555999
+1661787
+1661.z.
+0554...
+1yy....
+2553...
