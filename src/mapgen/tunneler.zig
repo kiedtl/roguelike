@@ -136,9 +136,10 @@ pub const Ctx = struct {
                     // XXX: I have no idea if this is correct or not
                     switch (roomie.parent.direction) {
                         .North => roomie.born_at += fab.height,
-                        .South => roomie.born_at -= roomie.rect.height - fab.height,
+                        //.South => roomie.born_at -= fab.height,
                         .West => roomie.born_at += fab.width,
-                        .East => roomie.born_at -= roomie.rect.width - fab.width,
+                        //.East => roomie.born_at -= fab.width,
+                        .South, .East => {},
                         else => unreachable,
                     }
 
@@ -457,6 +458,8 @@ pub const Tunneler = struct {
     born_at: usize = 0,
     room_index: usize = 0, // Index in state.rooms[level]. Set in Ctx.killThemAll()
 
+    opts: TunnelerOptions,
+
     __prev: ?*Self = null,
     __next: ?*Self = null,
 
@@ -497,7 +500,9 @@ pub const Tunneler = struct {
     }
 
     pub fn shrinkTo(self: *Self, new_length: usize) void {
-        assert(new_length <= self.corridorLength());
+        // Commented out
+        // Can be true since prefabs might do wonky stuff with roomie_last_born_at
+        //assert(new_length <= self.corridorLength());
 
         // debug thing
         mapgen.fillRect(&self.rect, .Wall);
@@ -711,7 +716,10 @@ pub const Tunneler = struct {
                 .parent = self,
                 .generation = self.generation + 1,
                 .born_at = self.corridorLength(),
+                .opts = self.opts,
             };
+            if (ctx.opts.reduce_branch_chance)
+                res[i].opts.branch_chance -|= 1;
         }
         return res;
     }
@@ -768,6 +776,23 @@ pub const Tunneler = struct {
             };
         }
         return res;
+    }
+
+    pub fn canBranch(self: *Self, ctx: *Ctx) bool {
+        return self.is_dead or
+            (rng.percent(self.opts.branch_chance) and
+            (ctx.opts.allow_chaotic_branching or
+            self.advancesSinceLastBranch() > self.corridorWidth() * 3));
+    }
+
+    pub fn advancesSinceLastBranch(self: *const Self) usize {
+        var last_branch: usize = 0;
+        for (self.child_corridors.constSlice()) |child| {
+            if (!child.is_eviscerated) {
+                last_branch = math.max(child.born_at, last_branch);
+            }
+        }
+        return self.corridorLength() - last_branch;
     }
 
     pub fn getLastBranch(self: *const Self) usize {
@@ -847,6 +872,13 @@ pub const TunnelerOptions = struct {
     turn_chance: usize = 7,
     branch_chance: usize = 6,
 
+    // If true, will reduce branching chance by 1 per generation
+    reduce_branch_chance: bool = false,
+
+    // If false, will prevent branching if advances since last branch is less
+    // than width*3.
+    allow_chaotic_branching: bool = true,
+
     room_tries: usize = 14,
 
     shrink_chance: usize = 50,
@@ -918,6 +950,7 @@ pub fn placeTunneledRooms(level: usize, allocator: mem.Allocator) void {
         ctx.tunnelers.append(Tunneler{
             .rect = Rect{ .start = Coord.new2(level, initial.start.x, initial.start.y), .width = initial.width, .height = initial.height },
             .direction = initial.direction,
+            .opts = ctx.opts,
         }) catch err.wat();
     }
 
@@ -968,7 +1001,7 @@ pub fn placeTunneledRooms(level: usize, allocator: mem.Allocator) void {
                     new.generation = tunneler.generation;
                     new_tuns.append(new) catch err.wat();
                     tunneler.die();
-                } else if (tunneler.is_dead or rng.percent(ctx.opts.branch_chance)) {
+                } else if (tunneler.canBranch(&ctx)) {
                     new_tuns.append(child) catch err.wat();
                 }
             }
