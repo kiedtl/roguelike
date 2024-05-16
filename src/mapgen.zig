@@ -4723,8 +4723,6 @@ pub fn createLevelConfig_SIN(comptime width: usize) LevelConfig {
             .add_junctions = false,
             .remove_childless = false,
             .force_prefabs = true,
-
-            // Due to having 2 tunnelers, and candles having restriction=4 each branch will likely spawn only two rooms
             .max_room_per_tunnel = 1,
 
             .initial_tunnelers = &[_]tunneler.TunnelerOptions.InitialTunneler{
@@ -4756,15 +4754,19 @@ pub fn createLevelConfig_CRY() LevelConfig {
         .tunneler_opts = .{
             .max_iters = 350,
             .turn_chance = 8,
+            .turn_min_ticks_since_last = 20,
+            .turn_min_factor = 5,
             .branch_chance = 6,
+            .reduce_branch_chance = true,
             .allow_chaotic_branching = false,
-            .shrink_chance = 65,
-            .grow_chance = 35,
+            .shrink_chance = 80,
+            .grow_chance = 20,
             // .remove_childless = false,
             .shrink_corridors = false,
 
             .initial_tunnelers = &[_]tunneler.TunnelerOptions.InitialTunneler{
-                .{ .start = Coord.new(WIDTH / 4, HEIGHT / 2), .width = 0, .height = 1, .direction = .East },
+                .{ .start = Coord.new(WIDTH - (WIDTH / 4), 10), .width = 0, .height = 1, .direction = .West },
+                .{ .start = Coord.new(WIDTH / 4, HEIGHT - 10), .width = 0, .height = 1, .direction = .East },
             },
         },
         .prefab_chance = 0, // No prefabs for CRY

@@ -58,6 +58,7 @@ pub const Ctx = struct {
     pub fn findIntersectingTunnel(self: *Ctx, rect: Rect, ign1: ?*Tunneler, ign2: ?*Tunneler) ?*Tunneler {
         var tunnelers = self.tunnelers.iterator();
         return while (tunnelers.next()) |tunneler| {
+            if (tunneler.is_eviscerated) continue;
             if (ign1) |ign1_| if (tunneler == ign1_) continue;
             if (ign2) |ign2_| if (tunneler == ign2_) continue;
             if (tunneler.rect.intersects(&rect, 1)) break tunneler;
@@ -336,19 +337,10 @@ pub const Ctx = struct {
 
             var tunnelers = self.tunnelers.iterator();
             while (tunnelers.next()) |tunneler| {
-                if (!tunneler.is_eviscerated and tunneler.isChildless(require_dead) and
+                if (!tunneler.is_eviscerated and tunneler.neverHadRoomies(require_dead) and
                     (!self.opts.pardon_first_gen or tunneler.generation > 0))
                 {
-                    mapgen.fillRect(&tunneler.rect, .Wall);
-                    tunneler.rect.height = 0;
-                    tunneler.rect.width = 0;
-                    for (tunneler.child_corridors.constSlice()) |child| {
-                        mapgen.fillRect(&child.rect, .Wall);
-                        child.rect.height = 0;
-                        child.rect.width = 0;
-                        child.is_eviscerated = true;
-                    }
-                    tunneler.is_eviscerated = true;
+                    tunneler.eviscerate();
                     changes_were_made = true;
                 }
             }
@@ -497,7 +489,8 @@ pub const Tunneler = struct {
     is_intersected: bool = false,
     child_corridors: StackBuffer(*Tunneler, 128) = StackBuffer(*Tunneler, 128).init(null),
     child_rooms: usize = 0,
-    roomie_last_born_at: usize = 0,
+    last_turn_at: usize = 0, // tick/iteration
+    roomie_last_born_at: usize = 0, // corridor length
     parent: ?*Self = null,
     generation: usize = 0,
     born_at: usize = 0,
@@ -574,6 +567,19 @@ pub const Tunneler = struct {
         assert(self.corridorLength() == new_length);
     }
 
+    pub fn eviscerate(self: *Self) void {
+        mapgen.fillRect(&self.rect, .Wall);
+        self.rect.height = 0;
+        self.rect.width = 0;
+        for (self.child_corridors.constSlice()) |child| {
+            mapgen.fillRect(&child.rect, .Wall);
+            child.rect.height = 0;
+            child.rect.width = 0;
+            child.is_eviscerated = true;
+        }
+        self.is_eviscerated = true;
+    }
+
     pub fn createJunction(self: *Self, other: *Self, ctx: *Ctx) void {
         if (!ctx.opts.add_junctions)
             return;
@@ -605,13 +611,13 @@ pub const Tunneler = struct {
         //}
     }
 
-    pub fn isChildless(self: *const Self, require_dead: bool) bool {
+    pub fn neverHadRoomies(self: *const Self, require_dead: bool) bool {
         if (self.child_rooms > 0)
             return false;
         if (require_dead and !self.is_dead)
             return false;
         for (self.child_corridors.constSlice()) |child_corridor|
-            if (!child_corridor.isChildless(require_dead))
+            if (!child_corridor.neverHadRoomies(require_dead))
                 return false;
         return true;
     }
@@ -767,10 +773,8 @@ pub const Tunneler = struct {
         return res;
     }
 
-    pub fn getPotentialRooms(self: *Self, ctx: *Ctx) [2]?Roomie {
-        _ = ctx;
-
-        var res = [2]?Roomie{ null, null };
+    pub fn getPotentialRooms(self: *Self, _: *Ctx) [2]?Roomie {
+        var res = [1]?Roomie{null} ** 2;
 
         const level = self.rect.start.z;
 
@@ -778,7 +782,8 @@ pub const Tunneler = struct {
             var rectw = rng.range(usize, Configs[level].min_room_width, Configs[level].max_room_width);
             var recth = rng.range(usize, Configs[level].min_room_height, Configs[level].max_room_height);
 
-            if (rng.onein(5)) {
+            // Min-sized rooms as last choice
+            if (rng.onein(6)) {
                 rectw = Configs[level].min_room_width;
                 recth = Configs[level].min_room_height;
             }
@@ -820,11 +825,32 @@ pub const Tunneler = struct {
         return res;
     }
 
+    pub fn isParasite(self: *Self) bool {
+        return self.parent != null and
+            self.parent.?.parent != null and
+            self.parent.?.parent.?.parent != null and
+            self.parent.?.parent.?.parent.?.parent != null and
+            self.parent.?.parent.?.parent.?.parent.?.parent != null and
+            self.parent.?.parent.?.parent.?.parent.?.parent.?.parent != null and
+            self.parent.?.parent.?.parent.?.parent.?.parent.?.parent.?.neverHadRoomies(false);
+    }
+
+    pub fn canRetire(self: *Self, child: Self, tries: usize, ctx: *Ctx) bool {
+        const length = self.corridorLength();
+        return !self.is_dead and
+            length > self.corridorWidth() * ctx.opts.turn_min_factor and
+            tries - self.last_turn_at > ctx.opts.turn_min_ticks_since_last and
+            child.canAdvance(ctx) != .No and
+            (length > ctx.opts.max_length or rng.percent(ctx.opts.turn_chance)) and
+            !self.isParasite();
+    }
+
     pub fn canBranch(self: *Self, ctx: *Ctx) bool {
-        return self.is_dead or
+        const has_advanced_nicely = self.advancesSinceLastBranch() > self.corridorWidth() * 3;
+        return (self.is_dead or
             (rng.percent(self.opts.branch_chance) and
-            (ctx.opts.allow_chaotic_branching or
-            self.advancesSinceLastBranch() > self.corridorWidth() * 3));
+            (ctx.opts.allow_chaotic_branching or has_advanced_nicely))) and
+            !self.isParasite();
     }
 
     pub fn advancesSinceLastBranch(self: *const Self) usize {
@@ -912,6 +938,14 @@ pub const TunnelerOptions = struct {
 
     // Chance (percentage) to change direction.
     turn_chance: usize = 7,
+
+    // Minimum ticks/iterations to pass since last turn to allow a turn
+    turn_min_ticks_since_last: usize = 0,
+
+    // Minimum factor against which corridor length is compared before allowing turn
+    // i.e. corridor_length > corridor_width * factor
+    turn_min_factor: usize = 3,
+
     branch_chance: usize = 6,
 
     // If true, will reduce branching chance by 1 per generation
@@ -1031,19 +1065,18 @@ pub fn placeTunneledRooms(level: usize, allocator: mem.Allocator) void {
                 tunneler.die();
             }
 
+            var had_new_child = false;
             const children = tunneler.getPotentialChildren(&ctx);
-            const tlength = tunneler.corridorLength();
-            const twidth = tunneler.corridorWidth();
             for (children) |child| {
-                if (!tunneler.is_dead and tlength > twidth * 3 and
-                    child.canAdvance(&ctx) != .No and
-                    (tlength > ctx.opts.max_length or rng.percent(ctx.opts.turn_chance)))
-                {
+                if (tunneler.canRetire(child, tries, &ctx)) {
                     var new = child;
                     new.generation = tunneler.generation;
+                    new.last_turn_at = tries;
                     new_tuns.append(new) catch err.wat();
+                    had_new_child = true;
                     tunneler.die();
                 } else if (tunneler.canBranch(&ctx)) {
+                    had_new_child = true;
                     new_tuns.append(child) catch err.wat();
                 }
             }

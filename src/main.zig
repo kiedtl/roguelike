@@ -599,6 +599,50 @@ fn viewerDisplay(tty_height: usize, sy: usize) void {
 }
 
 fn viewerMain() void {
+    // const RUNS = 60;
+
+    // var open_space_min: usize = 100;
+    // var open_space_max: usize = 0;
+    // var open_space_total_percent: usize = 0;
+
+    // var j: usize = RUNS;
+    // while (j > 0) : (j -= 1) {
+    //     state.floor_seeds[0] = @intCast(u64, std.time.milliTimestamp());
+    //     mapgen.resetLevel(0);
+    //     mapgen.initLevel(0);
+
+    //     var open_space_rtotal_: usize = 0;
+    //     var open_space_ctotal_: usize = 0;
+    //     var open_space_total_: usize = 0;
+    //     for (state.rooms[0].items) |room| {
+    //         open_space_total_ += room.rect.height * room.rect.width;
+    //         if (room.type == .Corridor)
+    //             open_space_ctotal_ += room.rect.height * room.rect.width
+    //         else
+    //             open_space_rtotal_ += room.rect.height * room.rect.width;
+    //     }
+
+    //     const open_space_percent_ = open_space_total_ * 100 / (WIDTH * HEIGHT);
+    //     // const open_space_rpercent_ = open_space_rtotal_ / (WIDTH * HEIGHT);
+    //     // const open_space_cpercent_ = open_space_ctotal_ / (WIDTH * HEIGHT);
+
+    //     if (open_space_min > open_space_percent_)
+    //         open_space_min = open_space_percent_;
+    //     if (open_space_max < open_space_percent_)
+    //         open_space_max = open_space_percent_;
+    //     open_space_total_percent += open_space_percent_;
+
+    //     std.log.info("try {} ({}%)", .{ j, open_space_percent_ });
+    // }
+
+    // const avg = open_space_total_percent / RUNS;
+    // std.log.info("Average% open space: {}", .{avg});
+    // std.log.info("Min open space: {}", .{open_space_min});
+    // std.log.info("Max open space: {}", .{open_space_max});
+    // std.log.info("Deviation: ±{}", .{math.max(open_space_max - avg, avg - open_space_min)});
+
+    // if (true) return;
+
     // Wrap whole thing in comptime if condition to ensure no linker errors
     if (build_options.use_sdl) {
         err.fatal("Viewer not available when compiled in SDL2 mode", .{});
