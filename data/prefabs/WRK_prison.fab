@@ -1,0 +1,33 @@
+:g_tunneler
+:priority 100 % Force generation for demonstration purposes
+
+:noguards
+:noitems
+:notraps
+:nostairs
+
+@0 P
+This is a poster.
+END POSTER
+@1 Cmons goblin ([prisoner_of]Necromancer)
+
+% FABEDIT_REPLACE
+
+:tunneler_orientation east
+:prison 3,0 2 2
+
+@2 p alch_frame_s1e1
+@3 p alch_frame_e1w1
+@4 p alch_frame_n1s1
+@5 p broken_sparkling
+@6 M sparkling
+@7 M executioner
+@8 p corpse_ubetalrego
+
+8C&11
+..&..
+..#±#
+.....
+....6
+...23
+0C745
