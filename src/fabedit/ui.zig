@@ -9,6 +9,7 @@ const err = @import("../err.zig");
 const fabedit = @import("../fabedit.zig");
 const mapgen = @import("../mapgen.zig");
 const materials = @import("../materials.zig");
+const mobs = @import("../mobs.zig");
 const state = @import("../state.zig");
 const surfaces = @import("../surfaces.zig");
 const types = @import("../types.zig");
@@ -43,6 +44,7 @@ pub var map_win: struct {
                             .Prop => fabedit.applyCursorProp(),
                             .Basic => fabedit.applyCursorBasic(),
                             .PrisonArea => fabedit.applyCursorPrisonArea(),
+                            .Mob => fabedit.applyCursorMob(),
                         }
                         break :b true;
                     } else {
@@ -72,6 +74,7 @@ pub const HudMouseSignalTag = enum(u64) {
     AreaIncW = 1 << 22,
     AreaDecW = 1 << 23,
     AreaAddDel = 1 << 24, // 0 == add, 1 == del
+    Mob = 1 << 25,
 };
 pub var hud_win: struct {
     main: Console = undefined,
@@ -93,6 +96,10 @@ pub var hud_win: struct {
                     } else if (s & @enumToInt(HudMouseSignalTag.Prop) > 0) {
                         const i = s & ~@enumToInt(HudMouseSignalTag.Prop);
                         st.cursor = .{ .Prop = i };
+                        break :b true;
+                    } else if (s & @enumToInt(HudMouseSignalTag.Mob) > 0) {
+                        const i = s & ~@enumToInt(HudMouseSignalTag.Mob);
+                        st.cursor = .{ .Mob = i };
                         break :b true;
                     } else if (s & @enumToInt(HudMouseSignalTag.Basic) > 0) {
                         const i = s & ~@enumToInt(HudMouseSignalTag.Basic);
@@ -353,6 +360,37 @@ pub fn drawHUD(st: *fabedit.EdState) void {
                     .Signal = signal,
                 });
                 dx += 2;
+            }
+        },
+        .Mobs => {
+            const selected_i = if (st.cursor == .Mob) st.cursor.Mob else 0;
+            //const cursor_x = selected_i % PANEL_WIDTH;
+            //var display_row = (selected_i - cursor_x) / PANEL_WIDTH;
+            //if (display_row >= 4)
+            //display_row -= 4;
+
+            const selected = &mobs.MOBS[selected_i];
+            y += hud_win.main.drawTextAtf(0, y, "$cSelected:$. {s}", .{selected.mob.id}, .{});
+            y += 1;
+
+            var dx: usize = 0;
+            for (mobs.MOBS) |template, i| {
+                var cell = display.Cell{ .ch = template.mob.tile, .fg = colors.OFF_WHITE };
+                if (st.cursor == .Mob and i == st.cursor.Mob)
+                    cell.bg = colors.mix(cell.bg, 0xffffff, 0.2);
+                cell.fl.wide = true;
+                hud_win.main.setCell(dx, y, cell);
+                hud_win.main.setCell(dx + 1, y, .{ .fl = .{ .skip = true } });
+                const signal = @enumToInt(HudMouseSignalTag.Mob) | i;
+                hud_win.main.addMouseTrigger(Rect.new(Coord.new(dx, y), 0, 0), .Click, .{
+                    .Signal = signal,
+                });
+                dx += 2;
+                if (dx >= HUD_WIDTH - 2) {
+                    dx = 0;
+                    //if (i / PANEL_WIDTH > display_row -| 4)
+                    y += 1;
+                }
             }
         },
         .Props => {

@@ -8,6 +8,7 @@ const err = @import("err.zig");
 const font = @import("font.zig");
 const literature = @import("literature.zig");
 const mapgen = @import("mapgen.zig");
+const mobs = @import("mobs.zig");
 const state = @import("state.zig");
 const surfaces = @import("surfaces.zig");
 const ui = @import("fabedit/ui.zig");
@@ -25,28 +26,30 @@ pub const EdState = struct {
     fab_index: usize = 99999,
     fab_info: [32]FabInfo = [1]FabInfo{.{}} ** 32,
     fab_redraw: bool = true,
-    hud_pane: HudPane = .Props,
+    hud_pane: HudPane = .Basic,
     y: usize = 0,
     x: usize = 0,
-    cursor: Cursor = .{ .Prop = 0 },
+    cursor: Cursor = .{ .Basic = .Wall },
 
     pub const FabInfo = struct {
         unsaved: bool = false,
     };
 
     // TODO: terrain, mobs, machines
-    pub const HudPane = enum(usize) { Props = 0, Basic = 1, Areas = 2 };
+    pub const HudPane = enum(usize) { Basic = 0, Props = 1, Mobs = 2, Areas = 3 };
 
     pub const Cursor = union(enum) {
         Prop: usize, // index to surfaces.props
         Basic: BasicCursor,
         PrisonArea: usize,
+        Mob: usize,
 
         pub fn incrBy(self: *Cursor, by: usize) void {
             switch (self.*) {
                 .Prop => self.Prop = math.min(surfaces.props.items.len - 1, self.Prop + by),
                 .Basic => self.Basic = @intToEnum(BasicCursor, math.min(meta.fields(BasicCursor).len - 1, @enumToInt(self.Basic) + by)),
                 .PrisonArea => self.PrisonArea = math.min(st.fab.prisons.len - 1, self.PrisonArea + 1),
+                .Mob => self.Mob = math.min(mobs.MOBS.len - 1, self.Mob + by),
             }
         }
 
@@ -55,6 +58,7 @@ pub const EdState = struct {
                 .Prop => self.Prop -|= by,
                 .Basic => |b| self.Basic = @intToEnum(BasicCursor, @enumToInt(b) -| by),
                 .PrisonArea => self.PrisonArea -|= 1,
+                .Mob => self.Mob -|= by,
             }
         }
     };
@@ -135,6 +139,27 @@ pub fn applyCursorBasic() void {
         .Connection => .Connection,
         .Any => .Any,
     };
+    st.fab_redraw = true;
+    st.fab_info[st.fab_index].unsaved = true;
+}
+
+pub fn applyCursorMob() void {
+    const blank = removeUnusedFeatures();
+
+    const selected = &mobs.MOBS[st.cursor.Mob];
+    const feature = for (st.fab.features) |maybe_feature, i| {
+        if (maybe_feature) |feature|
+            if (feature == .Mob and feature.Mob == selected)
+                break @intCast(u8, i);
+    } else b: {
+        if (blank == null) {
+            std.log.err("Fab features are full", .{});
+        }
+        st.fab.features[blank.?] = mapgen.Prefab.Feature{ .Mob = selected };
+        break :b blank.?;
+    };
+
+    st.fab.content[st.y][st.x] = .{ .Feature = feature };
     st.fab_redraw = true;
     st.fab_info[st.fab_index].unsaved = true;
 }
@@ -328,11 +353,6 @@ pub fn main() anyerror!void {
     };
     st.fab_index = st.fab_variants.len - 1;
 
-    // Cursor is initially props
-    st.cursor.Prop = for (surfaces.props.items) |prop, i| {
-        if (prop.tile != ' ') break i;
-    } else unreachable;
-
     try ui.init();
     ui.draw(&st);
 
@@ -352,6 +372,7 @@ pub fn main() anyerror!void {
                             .Prop => applyCursorProp(),
                             .Basic => applyCursorBasic(),
                             .PrisonArea => applyCursorPrisonArea(),
+                            .Mob => applyCursorMob(),
                         },
                         else => {},
                     }
@@ -370,17 +391,19 @@ pub fn main() anyerror!void {
                         'H' => st.cursor.Prop -|= 1,
                         '>' => {
                             st.hud_pane = switch (st.hud_pane) {
-                                .Props => .Basic,
-                                .Basic => .Areas,
+                                .Basic => .Props,
+                                .Props => .Mobs,
+                                .Mobs => .Areas,
                                 .Areas => .Props,
                             };
                             st.fab_redraw = true;
                         },
                         '<' => {
                             st.hud_pane = switch (st.hud_pane) {
-                                .Props => .Areas,
-                                .Basic => .Props,
-                                .Areas => .Basic,
+                                .Basic => .Areas,
+                                .Props => .Basic,
+                                .Mobs => .Props,
+                                .Areas => .Mobs,
                             };
                             st.fab_redraw = true;
                         },
