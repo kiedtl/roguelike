@@ -1,0 +1,39 @@
+:g_tunneler
+:priority 100
+:noguards
+:noitems
+
+% FABEDIT_REPLACE
+
+:tunneler_orientation north
+:tunneler_orientation east
+
+@0 p alch_table_r_t3
+@1 p alch_table_r_t1
+@2 p alch_table_r_t2
+@3 p alch_frame_n1s1w2
+@4 p alch_frame_n1s1
+@5 p alch_frame_s1e1
+@6 p alch_frame_e1w1
+@7 p alch_frame_s1w1
+@8 p alch_frame_n1w1
+@9 p broken_sparkling
+@a p sparkling_guts
+@b p sparkling_glands
+@c p sparkling_shell
+@d p sparkling_nerves
+@e p whiteboard_r
+@y M alchemist
+@z M copper_hornet
+
+...2567
+..y1494
+a..03.8
+a....y.
+...d...
+...bc.z
+......z
+.....de
+.y..dbe
+.d...ce
+.......
