@@ -11,6 +11,14 @@ The silver pole is topped with a solid piece of bone, carved into an axe-head.
 It is wound about with a curse to inflict more damage on the living, but less on
 the undead.
 
+% stiletto
+A long dagger, ending in a razor-sharp point but with rather dull edges. It
+works very well for stabbing unaware enemies.
+
+% bone_stiletto
+A stiletto carved out of ancient bone. It is wound about with a curse to inflict
+more damage on the living, but less on the undead.
+
 % evoc_brazier_wand
 This wand can fire a beam of electricity at a light source, disabling it.
 
@@ -62,3 +70,16 @@ A sphere of pure electricity, encased in a shell of burning sulfur. It will seek
 out nearby conductive creatures, hostile or not, before exploding in a blast of
 fire and lightning.
 
+% cons_coal
+You can cauterise your wounds with this coal. Only useful if you have fire
+resistance (rFire).
+
+
+The damage from this item is never lethal.
+
+% warden
+The Dungeon warden. It will call for help with its warning horn if it spots you.
+
+% thrashing_sculptor
+A hideous mass of writhing bones and sundry body parts, created by some
+braindamaged death mage.
