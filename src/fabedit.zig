@@ -69,7 +69,8 @@ pub const EdState = struct {
         Door = 2,
         LockedDoor = 3,
         Connection = 4,
-        Any = 5,
+        Corpse = 5,
+        Any = 6,
     };
 };
 var st = EdState{};
@@ -137,6 +138,7 @@ pub fn applyCursorBasic() void {
         .Door => .Door,
         .LockedDoor => .LockedDoor,
         .Connection => .Connection,
+        .Corpse => .Corpse,
         .Any => .Any,
     };
     st.fab_redraw = true;
@@ -259,7 +261,7 @@ fn _saveVariant(ind: usize, writer: anytype) void {
                 .Loot1 => 'L',
                 .RareLoot => 'R',
                 .LevelFeature => |i| 'α' + @intCast(u21, i),
-                .Corpse => '%',
+                .Corpse => 'C',
                 .Ring => '=',
                 .Any => '?',
             };

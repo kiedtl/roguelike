@@ -261,6 +261,7 @@ pub fn displayAs(st: *fabedit.EdState, ftile: mapgen.Prefab.FabTile) display.Cel
             .fg = surfaces.LockedDoor.unpowered_fg orelse 0xcccccc,
             .bg = surfaces.LockedDoor.unpowered_bg orelse colors.BG,
         },
+        .Corpse => .{ .ch = '%', .fg = 0xd966ff },
         else => unreachable,
     };
 }
@@ -347,6 +348,7 @@ pub fn drawHUD(st: *fabedit.EdState) void {
                     .Door => displayAs(st, .Door),
                     .LockedDoor => displayAs(st, .LockedDoor),
                     .Connection => displayAs(st, .Connection),
+                    .Corpse => displayAs(st, .Corpse),
                     .Any => displayAs(st, .Any),
                 };
                 if (st.cursor == .Basic and v == st.cursor.Basic)
@@ -612,7 +614,7 @@ pub fn drawMap(st: *fabedit.EdState) void {
             var cell = display.Cell{};
 
             switch (st.fab.content[y][x]) {
-                .Floor, .Wall, .Window, .Any, .Connection, .LockedDoor, .Door => cell = displayAs(st, st.fab.content[y][x]),
+                .Floor, .Wall, .Window, .Any, .Connection, .LockedDoor, .Door, .Corpse => cell = displayAs(st, st.fab.content[y][x]),
                 else => {},
             }
 
@@ -625,7 +627,8 @@ pub fn drawMap(st: *fabedit.EdState) void {
                             .Up, .Access => @as(u32, 0xffd700),
                             .Down => 0xeeeeee,
                         }),
-                    .CCont, .Poster => 0xffd700,
+                    .CCont => colors.GOLD,
+                    .Poster => 0x0,
                     .Prop => |pid| surfaces.props.items[utils.findById(surfaces.props.items, pid).?].fg orelse 0xffffff,
                     .Machine => |mid| surfaces.MACHINES[utils.findById(&surfaces.MACHINES, mid.id).?].unpowered_fg orelse 0xffffff,
                     else => colors.LIGHT_CONCRETE,
@@ -637,7 +640,6 @@ pub fn drawMap(st: *fabedit.EdState) void {
                 .ShallowWater,
                 .Loot1,
                 .RareLoot,
-                .Corpse,
                 .Ring,
                 => 0xffffff,
                 .Water => 0x0000ff,
@@ -648,6 +650,7 @@ pub fn drawMap(st: *fabedit.EdState) void {
             cell.bg = switch (st.fab.content[y][x]) {
                 .Feature => |f| switch (st.fab.features[f].?) {
                     .Machine => |mid| surfaces.MACHINES[utils.findById(&surfaces.MACHINES, mid.id).?].unpowered_bg orelse colors.BG,
+                    .Poster => colors.GOLD,
                     else => cell.bg,
                 },
                 else => cell.bg,
@@ -667,7 +670,7 @@ pub fn drawMap(st: *fabedit.EdState) void {
                     .CMob => |mob_info| mob_info.t.mob.tile,
                     .CCont => |container_info| container_info.t.tile,
                     .Cpitem => '%',
-                    .Poster => 'P',
+                    .Poster => '=',
                     .Prop => |pid| surfaces.props.items[utils.findById(surfaces.props.items, pid).?].tile,
                     .Machine => |mid| surfaces.MACHINES[utils.findById(&surfaces.MACHINES, mid.id).?].powered_tile,
                 },
@@ -677,7 +680,6 @@ pub fn drawMap(st: *fabedit.EdState) void {
                 .Bars => '×',
                 .Loot1 => 'L',
                 .RareLoot => 'R',
-                .Corpse => '%', // TODO: fg
                 .Ring => '=',
                 .Lava, .Water => '≈',
                 else => cell.ch,
