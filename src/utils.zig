@@ -426,7 +426,11 @@ pub fn findPatternMatch(coord: Coord, patterns: []const []const u8) ?usize {
                     .Prop => |p| if (!p.walkable) {
                         tiletype = .Wall;
                     },
-                    .Corpse, .Container, .Poster, .Stair => tiletype = .Wall,
+                    .Corpse, .Container, .Poster => tiletype = .Wall,
+
+                    // Treating this as a wall can cause props etc to be placed
+                    // in front of stairs -- very bad!
+                    .Stair => {},
                 };
             }
 
