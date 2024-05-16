@@ -135,10 +135,11 @@ pub const Ctx = struct {
 
                     // Update born_at
                     // XXX: I have no idea if this is correct or not
+                    const p_length = roomie.parent.corridorLength();
                     switch (roomie.parent.direction) {
-                        .North => roomie.born_at += fab.height,
+                        .North => roomie.born_at = math.min(p_length, roomie.born_at + fab.height),
                         //.South => roomie.born_at -= fab.height,
-                        .West => roomie.born_at += fab.width,
+                        .West => roomie.born_at = math.min(p_length, roomie.born_at + fab.width),
                         //.East => roomie.born_at -= fab.width,
                         .South, .East => {},
                         else => unreachable,
