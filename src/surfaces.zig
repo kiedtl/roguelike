@@ -510,6 +510,7 @@ pub const Lamp = Machine{
     .unpowered_tile = '○',
     .powered_sprite = .S_O_M_LabLight,
     .unpowered_sprite = .S_O_M_LabLight,
+    .show_on_hud = true,
 
     .powered_fg = 0xffdf12,
     .unpowered_fg = 0x88e0ee,
