@@ -1629,8 +1629,6 @@ pub const CuirassArmor = Armor{
     .resists = .{ .rElec = -25, .Armor = 35 },
 };
 
-// noun: byrnie
-// TODO: look it up when writing the description for this
 pub const HauberkArmor = Armor{
     .id = "chainmail_armor",
     .name = "hauberk",
