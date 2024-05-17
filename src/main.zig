@@ -1199,6 +1199,16 @@ fn analyzerMain() void {
             mapgen.resetLevel(z);
 
         deinitGameState();
+
+        // Re-init prefabs.
+        //
+        // We shouldn't have to do this, but events.executeGlobalEvents() modifies
+        // this stuff...
+        //
+        // FIXME
+        mapgen.s_fabs.deinit();
+        mapgen.n_fabs.deinit();
+        mapgen.readPrefabs(state.gpa.allocator());
     }
 
     std.json.stringify(results[0..ITERS], .{}, std.io.getStdOut().writer()) catch err.wat();

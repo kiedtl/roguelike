@@ -7,11 +7,13 @@ const state = @import("state.zig");
 const types = @import("types.zig");
 const mapgen = @import("mapgen.zig");
 
-fn _gimmePrefab(name: []const u8) *mapgen.Prefab {
-    return mapgen.Prefab.findPrefabByName(name, &mapgen.n_fabs) orelse
-        mapgen.Prefab.findPrefabByName(name, &mapgen.s_fabs) orelse {
-        err.bug("Couldn't find required prefab {s}", .{name});
-    };
+const Generator = @import("generators.zig").Generator;
+const GeneratorCtx = @import("generators.zig").GeneratorCtx;
+
+fn gimmePrefabs(ctx: *GeneratorCtx(*mapgen.Prefab), name: []const u8) void {
+    for (mapgen.n_fabs.items) |*f| if (mem.eql(u8, name, f.name.constSlice())) ctx.yield(f);
+    for (mapgen.s_fabs.items) |*f| if (mem.eql(u8, name, f.name.constSlice())) ctx.yield(f);
+    ctx.finish();
 }
 
 pub const Effect = union(enum) {
@@ -21,18 +23,22 @@ pub const Effect = union(enum) {
     pub fn apply(self: @This()) !void {
         switch (self) {
             .SetPrefabGlobalRestriction => |ctx| {
-                _gimmePrefab(ctx.prefab).global_restriction = ctx.val;
+                var gen = Generator(gimmePrefabs).init(ctx.prefab);
+                while (gen.next()) |fab| {
+                    fab.global_restriction = ctx.val;
+                }
             },
             .AppendPrefabWhitelist => |ctx| {
-                const prefab = _gimmePrefab(ctx.prefab);
+                var gen = Generator(gimmePrefabs).init(ctx.prefab);
+                while (gen.next()) |prefab| {
+                    const z = if (mem.eql(u8, ctx.val, "$SPAWN_LEVEL"))
+                        state.PLAYER_STARTING_LEVEL
+                    else
+                        state.findLevelByName(ctx.val).?;
 
-                const z = if (mem.eql(u8, ctx.val, "$SPAWN_LEVEL"))
-                    state.PLAYER_STARTING_LEVEL
-                else
-                    state.findLevelByName(ctx.val).?;
-
-                if (prefab.whitelist.linearSearch(z) == null)
-                    prefab.whitelist.append(z) catch err.wat();
+                    if (prefab.whitelist.linearSearch(z) == null)
+                        prefab.whitelist.append(z) catch err.wat();
+                }
             },
         }
     }
@@ -77,8 +83,8 @@ pub const EV_SHIELD_DISALLOW = Event{
 pub const EVENTS = [_]struct { p: usize, v: *const Event }{
     .{ .p = 30, .v = &EV_SYMBOL_DISALLOW },
     .{ .p = 30, .v = &EV_SYMBOL_RESTRICT_TO_UPPER_SHRINE },
-    .{ .p = 75, .v = &EV_DISINT_DISALLOW },
-    .{ .p = 75, .v = &EV_SHIELD_DISALLOW },
+    .{ .p = 45, .v = &EV_DISINT_DISALLOW },
+    .{ .p = 45, .v = &EV_SHIELD_DISALLOW },
 };
 
 pub fn init() void {
