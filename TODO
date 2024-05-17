@@ -1408,11 +1408,21 @@ x Workshop enhancements
   - Rework as terrain
   - Lava -> Glowing water
 - Fix shrine-blowup particle effect (rework, simplify and speedup)
+- Ring of deceleration
+  - Workshop prefab
+- "Quarantine"/"Holding" map
+  - Tunneling + BSP mapgen
+  - Items
+    - Timekeeper's pendant
+      - Ring of deceleration
+    - Move earthen shield here
+  - Skeletal arbalists, corridor prefabs
+  - Ember beast
+  - Revgenunhelkim prisoners
 - Crypt floor
   x Modify level data and spawn files
   - New monsters:
     - Vile protector
-    - Tormenters
     - Hornblende statues
     - Schalenblende statues(?)
     - Pitchblende statues
@@ -1427,8 +1437,6 @@ x Workshop enhancements
     - DM failing to resurrect dead revgen, cinder brute
   - Hall map at end
     - Win condition
-- Ring of deceleration
-  - Workshop prefab
 - Add "character" to game
   - Names for all goblin/human monsters
   - Fluff prefabs
@@ -1440,8 +1448,8 @@ x Workshop enhancements
     - Laboratory: alchemist bending over workbench, with barrels of glycerin,
       nitric acid, and sulfuric acid and a pile of potions of decimation
       nearby.
-- Lore prefabs
     - Laboratory: boxes/chunks of slade, with crushing/analyzing machines nearby.
+- Lore prefabs
     - Laboratory: insane & paralysed prisoners inside holding cells
       - "Since the bastards won't tell us what these potions are for, we'll
         just have to find out ourselves."
@@ -1467,7 +1475,7 @@ x Workshop enhancements
       - Some barrels/potions of sludge/acid.
     - Crypt + Marble room: Death mage trying (and failing) to resurrect Revgen.
 - Simplification: instead of having attack AI for stalker, have them actually
-  transform into sparklings when hunter captain dies"
+  transform into sparklings when hunter captain dies
 - Consider adding more ugrades
   - Hit% bonus, martial bonus (is that infringing on books too much?)
 - Warn when next to spreading gas and resting
@@ -1544,10 +1552,13 @@ x Workshop enhancements
   - Plus: ability that confers status on player that causes Living Stone to
     continually spawn around player
 - Night Creatures, part two
-    - Creeping Death
-      - Inject venom spell
-      - Dijkstra vision
-      - Stalking enemy AI
+  - Decreased rep for:
+    - Killing NC
+    - Throwing fire/illuminations potions at NC
+  - Creeping Death
+    - Inject venom spell
+    - Dijkstra vision
+    - Stalking enemy AI
   - Infestation abilities
     - Cherbs, actual spell
     - Winged terrors
@@ -1588,13 +1599,6 @@ x Workshop enhancements
   - Cinder Brutes
     - Renaming
     - Unsure if any other changes needed
-- "Quarantine"/"Holding" map
-  - Tunneling + BSP mapgen
-  - Timekeeper's pendant
-  - Empty prefab/area, labeled as being for earthen shield
-  - Skeletal arbalists, corridor prefabs
-  - Ember beast
-  - Revgenunhelkim prisoners
 - Make illumination/glow potions useful for raiding lairs
   - Corona/glowing damages NC, causes fleeing if wounded
   - Increased rarity + novel prefab for 7/ and 8/
