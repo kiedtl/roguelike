@@ -188,8 +188,8 @@ comptime {
 fn triggerNone(_: *Mob, _: usize) void {}
 
 fn triggerParalysis(mob: *Mob, _: usize) void {
-    // TODO: Make the duration a clumping random value, depending on quantity
-    mob.addStatus(.Paralysis, 0, .{ .Tmp = Status.MAX_DURATION });
+    const dur = if (mob == state.player) 10 else Status.MAX_DURATION;
+    mob.addStatus(.Paralysis, 0, .{ .Tmp = dur });
 }
 
 fn triggerDisorient(mob: *Mob, _: usize) void {
