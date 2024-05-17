@@ -1398,6 +1398,12 @@ x Vaults rework
   x New marble room prefabs
   x Armory rooms
 *** 3.1.0 release ***
+x Workshop enhancements
+  x Fabedit
+  x Pressure plates and corridor lights
+  x Construct garrisons in corridors
+  x Alarm systems, improved alchemist AI
+  x Additional prefabs for variety
 - Lava and Water rework
   - Rework as terrain
   - Lava -> Glowing water
@@ -1412,10 +1418,15 @@ x Vaults rework
     - Pitchblende statues
     - Skeletal arbalists
   - Garrison inset prefabs
-  - 1/Crypt/3 prefab
+  - 1/Crypt/3 prefab(?)
+  - Ability to gain MP/HP
   - Prefabs:
-    - Arbalists shooting at targets, with death mage observing
-    - Blademasters practicing formations, with death mage observing
+    - Paralysed+dormant arbalists/blademasters behind bars
+    - Arbalists shooting at targets (DM observing)
+    - Blademasters practicing formations (DM observing)
+    - DM failing to resurrect dead revgen, cinder brute
+  - Hall map at end
+    - Win condition
 - Ring of deceleration
   - Workshop prefab
 - Add "character" to game
@@ -1426,12 +1437,17 @@ x Vaults rework
     - Trophy room: cave-goblin armor, weapons, ...
     - Bathroom
     - Caverns: dustling workshop (paralyzed dustlings inside scanning machine)
-    - Laboratory: insane & paralysed prisoners inside holding cells
-      - "Since the bastards won't tell us what these potions are for, we'll
-        just have to find out ourselves."
     - Laboratory: alchemist bending over workbench, with barrels of glycerin,
       nitric acid, and sulfuric acid and a pile of potions of decimation
       nearby.
+- Lore prefabs
+    - Laboratory: boxes/chunks of slade, with crushing/analyzing machines nearby.
+    - Laboratory: insane & paralysed prisoners inside holding cells
+      - "Since the bastards won't tell us what these potions are for, we'll
+        just have to find out ourselves."
+    x Laboratory: Prisoners being blasted with transmitters on full power.
+      - They are dazed if kept for many hours, but are otherwise unharmed.
+      - Some have headaches (only in record, not an actual status).
     - Laboratory: insane & paralysed Revgenunkim inside holding cells
       - Poster explains that alchemists are experimenting with signal strength
         and repetition patterns to determine how to cause specific effects
@@ -1450,9 +1466,6 @@ x Vaults rework
       - Alchemists drawing up record of incident
       - Some barrels/potions of sludge/acid.
     - Crypt + Marble room: Death mage trying (and failing) to resurrect Revgen.
-    x Laboratory: Prisoners being blasted with transmitters on full power.
-      - They are dazed if kept for many hours, but are otherwise unharmed.
-      - Some have headaches (only in record, not an actual status).
 - Simplification: instead of having attack AI for stalker, have them actually
   transform into sparklings when hunter captain dies"
 - Consider adding more ugrades
@@ -1463,13 +1476,21 @@ x Vaults rework
   - Various resurrection spells (limited range?)
   - Paralysing zap (directional bolt only)
   - Fry (Cardinal directional bolt only)
+- Unholy temple map + faction
+  - Items
+    - Ornate gold armor
+  - Workshop/2 and Workshop/3
+    - Additional fluff prefabs (see REXPaint sketch, rooms marked w/ '*')
+    - Enh. Emberling
+    - Enh. Emberling event
 - Holy temple map + faction
   - Items
     - Ring of fustigation
     - Mark ring of concentration, condemnation as holy
     - Max HP increasing item(?) ("bread of life") (holy only, ofc) 
     - Inability to use holy items w/ evil ones equipped
-      - Symbol is destroyed
+      - Symbol is destroyed (since it's an item)
+    - Dispel Undead
   - Angels spells
     - Hellfire spell (irresist damage)
     - Disintegration (punch through walls, same as ring)
@@ -1506,6 +1527,7 @@ x Vaults rework
 - Basic save system, replaying of saves
 - Vaults pt 2
   - Marble vaults: pure gold cloak prefab
+  - Marble vaults: ornate gold armor prefab (rare, usually in unholy temple)
   - Marble vaults: tactic rooms, combat dummies, skeletal arbalists
   - Armory room: anti-night-creature variant
     - Potion of extermination
