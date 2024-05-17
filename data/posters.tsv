@@ -13,13 +13,9 @@
 # Prison
 "PRI"	"A new shipment of prisoners from Traumbulnahl will arrive next week."
 "PRI"	"Please do not feed the prisoners."
-"PRI"	"Prison staffers must strive to be inclusive and welcoming to all new inmates."
-"PRI"	"Prison torturers must strive to be inclusive and welcoming to all new inmates."
-"PRI"	"Absence without leave is punishable by a mandatory interview with the High Priest."
 "PRI"	"WANTED: Obmirnul, human, escaped prisoner."
-"PRI"	"WANTED: kiedtl, human, escaped prisoner."
 "PRI"	"Reinforcements from the company of Thornsthom Nath should be arriving by noon tomorrow."
-"PRI"	"Korskuth ðalsmalbehl, goblin pikemaster, will be hanged tomorrow morning for attempted murder of a fellow guard while intoxicated."
+"PRI"	"Korskuth ðalsmalbehl, goblin pikemaster, will be hanged tomorrow morning for attempted murder of a fellow guard."
 "PRI"	"Unauthorized consumption of prisoners is punishable with up to 20 lashes."
 "PRI"	"Naughty prisoners get extra solitary time."
 "PRI"	"Rations will be halved for two weeks in preparation for the upcoming sewer maintenance. -- COG (probably)"
@@ -33,8 +29,6 @@
 "PRI"	"The Necromancer knows your thoughts."
 "PRI"	"The Necromancer knows your loyalties."
 "PRI"	"A goblin's honor is his loyalty."
-"PRI"	"We must secure the existence of the Goblin Nation and a future for our seed."
-"PRI"	"The Cave Goblins will not replace us."
 
 # Laboratory
 #
