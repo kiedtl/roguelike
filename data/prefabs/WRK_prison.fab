@@ -1,13 +1,15 @@
 :g_tunneler
-:priority 100 % Force generation for demonstration purposes
-
 :noguards
 :noitems
 :notraps
 :nostairs
 
 @0 P
-This is a poster.
+Executions will continue until morale improves.
+
+
+(Or until these bastards fully explain the process of manufacturing sparkling
+nerves and control devices.)
 END POSTER
 @1 Cmons goblin ([prisoner_of]Necromancer)
 
