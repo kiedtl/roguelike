@@ -2004,7 +2004,7 @@ pub fn _Job_ALM_PullAlarm(mob: *Mob, job: *AIJob) AIJob.JStatus {
         var closest: ?Coord = null;
         var closest_dist: usize = 0xFFFF;
         for (state.alarm_locations[mob.coord.z].constSlice()) |alarm_loc| {
-            const path = astar.path(mob.coord, alarm_loc, state.mapgeometry, state.is_walkable, .{ .mob = mob }, astar.basePenaltyFunc, mob.availableDirections(), state.gpa.allocator()) orelse continue;
+            const path = astar.path(mob.coord, alarm_loc, state.mapgeometry, state.is_walkable, .{ .ignore_mobs = true }, astar.basePenaltyFunc, mob.availableDirections(), state.gpa.allocator()) orelse continue;
             defer path.deinit();
             if (path.items.len < closest_dist) {
                 closest_dist = path.items.len;
@@ -2024,12 +2024,13 @@ pub fn _Job_ALM_PullAlarm(mob: *Mob, job: *AIJob) AIJob.JStatus {
             if (!mob.moveInDirection(d)) {
                 tryRest(mob);
                 return .Ongoing;
+            } else {
+                return .Complete;
             }
         } else {
             tryRest(mob);
             return .Ongoing;
         }
-        return .Complete;
     } else {
         mob.tryMoveTo(alarm);
         return .Ongoing;
