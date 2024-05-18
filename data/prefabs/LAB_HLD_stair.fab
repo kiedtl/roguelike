@@ -1,0 +1,25 @@
+:g_tunneler
+:g_material plated_dobalene
+:g_restriction 1
+:priority 100
+:noitems
+:nostairs
+
+:tunneler_orientation north
+:tunneler_orientation south
+:tunneler_orientation east
+:tunneler_orientation west
+
+@b M skeletal_blademaster
+@s s 3/Holding
+
+..........
+.b#ssss#b.
+.########.
+.s######s.
+.s######s.
+.s######s.
+.s######s.
+.########.
+.b#ssss#b.
+..........

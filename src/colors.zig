@@ -13,6 +13,7 @@ pub const LIGHT_CONCRETE: u32 = 0xefdfc4;
 pub const PINK: u32 = 0xffc0cb;
 pub const DOBALENE_BLUE: u32 = 0xb5d0ff;
 pub const LIGHT_STEEL_BLUE: u32 = 0xb0c4de;
+pub const RED: u32 = 0xebafaf;
 pub const PALE_VIOLET_RED: u32 = 0xdb7093;
 pub const LIGHT_PALE_VIOLET_RED: u32 = 0xfb90b3;
 pub const AQUAMARINE: u32 = 0x7fffd4;

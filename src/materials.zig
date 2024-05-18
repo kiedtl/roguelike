@@ -14,6 +14,7 @@ pub const MATERIALS = [_]*const Material{
     &Slade,
     &Basalt,
     &Rust,
+    &PlatedDobalene,
 };
 
 pub const PaintedConcrete = Material{
@@ -34,7 +35,7 @@ pub const Marble = Material{
     .color_fg = 0xffffff,
     .color_bg = null,
     .color_floor = 0xcacbca,
-    .sprite = .S_G_Wall_Polished,
+    .sprite = .S_G_Wall_Ornate,
     .tileset = 0,
     .luminescence = 0,
     .opacity = 1.0,
@@ -47,7 +48,7 @@ pub const Gold = Material{
     .color_fg = colors.percentageOf(colors.GOLD, 80),
     .color_bg = null,
     .color_floor = colors.percentageOf(colors.GOLD, 40),
-    .sprite = .S_G_Wall_Polished,
+    .sprite = .S_G_Wall_Ornate,
     .tileset = 0,
     .luminescence = 0,
     .opacity = 1.0,
@@ -226,6 +227,18 @@ pub const Dobalene = Material{
     .color_bg = null,
     .color_floor = 0xb5d0ff,
     .sprite = .S_G_Wall_Scifish,
+    .tileset = 1,
+    .luminescence = 0,
+    .opacity = 1.0,
+};
+
+pub const PlatedDobalene = Material{
+    .id = "plated_dobalene",
+    .name = "plated dobalene",
+    .color_fg = colors.RED,
+    .color_bg = null,
+    .color_floor = colors.percentageOf(colors.RED, 30),
+    .sprite = .S_G_Wall_Plated,
     .tileset = 1,
     .luminescence = 0,
     .opacity = 1.0,

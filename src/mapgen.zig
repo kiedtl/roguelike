@@ -110,8 +110,9 @@ pub const VAULT_LEVELS = [LEVELS][]const VaultType{
     &.{        .Marble           }, // -1/Crypt
     &.{        .Marble           }, // -1/Prison
     &.{        .Marble           }, // -2/Prison
-    // &.{                          }, // -3/Laboratory/3
-    // &.{                          }, // -3/Laboratory/2
+    &.{                          }, // -3/Holding
+    &.{                          }, // -3/Laboratory/3
+    &.{                          }, // -3/Laboratory/2
     &.{                          }, // -3/Shrine
     &.{        .Marble,          }, // -3/Laboratory
     &.{        .Marble,          }, // -4/Prison
@@ -4658,6 +4659,47 @@ pub fn createLevelConfig_PRI(crowd: usize, comptime prefabs: []const []const u8)
     };
 }
 
+const HLD_BASE_LEVELCONFIG = LevelConfig{
+    .prefabs = &[_][]const u8{},
+    .tunneler_opts = .{
+        .max_iters = 450,
+        .max_length = math.max(WIDTH, HEIGHT),
+        .turn_chance = 0,
+        .branch_chance = 5,
+        .reduce_branch_chance = true,
+        .shrink_chance = 90,
+        .grow_chance = 10,
+        .intersect_chance = 100,
+        .intersect_with_childless = true,
+        .initial_tunnelers = &[_]tunneler.TunnelerOptions.InitialTunneler{
+            //.{ .start = Coord.new(14, 20), .width = 0, .height = 1, .direction = .East },
+            .{ .start = Coord.new(WIDTH - 14, 20), .width = 1, .height = 0, .direction = .South },
+            //.{ .start = Coord.new(WIDTH - 13, HEIGHT - 21), .width = 0, .height = 1, .direction = .West },
+            .{ .start = Coord.new(14, HEIGHT - 20), .width = 1, .height = 0, .direction = .North },
+        },
+    },
+    .prefab_chance = 40,
+    .mapgen_func = tunneler.placeTunneledRooms,
+    .lair_max = 0,
+
+    .min_room_width = 5,
+    .min_room_height = 5,
+    .max_room_width = 24,
+    .max_room_height = 24,
+
+    .level_features = [_]?LevelConfig.LevelFeatureFunc{ null, null, null, null },
+
+    .material = &materials.PlatedDobalene,
+    .window_material = &materials.LabGlass,
+    .light = &surfaces.Lamp,
+    .bars = "titanium_bars",
+    .door = &surfaces.LabDoor,
+    .subroom_chance = 70,
+    .allow_statues = false,
+
+    .machines = &[_]*const Machine{&surfaces.FirstAidStation},
+};
+
 pub fn createLevelConfig_LAB(comptime prefabs: []const []const u8) LevelConfig {
     return LevelConfig{
         .prefabs = prefabs,
@@ -4930,8 +4972,9 @@ pub var Configs = [LEVELS]LevelConfig{
     createLevelConfig_CRY(),
     createLevelConfig_PRI(2, &[_][]const u8{ "PRI_main_exit", "PRI_main_exit_key" }),
     createLevelConfig_PRI(2, &[_][]const u8{}),
-    // createLevelConfig_LAB(&[_][]const u8{}),
-    // createLevelConfig_LAB(&[_][]const u8{}),
+    HLD_BASE_LEVELCONFIG,
+    createLevelConfig_LAB(&[_][]const u8{"LAB_HLD_stair"}),
+    createLevelConfig_LAB(&[_][]const u8{}),
     createLevelConfig_SIN(6),
     createLevelConfig_LAB(&[_][]const u8{"LAB_s_SIN_stair_1"}),
     createLevelConfig_PRI(2, &[_][]const u8{}),
