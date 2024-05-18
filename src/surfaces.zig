@@ -1244,6 +1244,7 @@ pub const Alarm = Machine{
                     if (state.dungeon.at(coord).mob) |candidate| {
                         if (candidate.faction == .Necromancer and
                             candidate.life_type == .Construct and
+                            !candidate.hasStatus(.Insane) and
                             candidate.ai.phase != .Hunt)
                         {
                             if (maybe_ally) |previous_choice| {
