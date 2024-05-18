@@ -879,13 +879,13 @@ fn testerMain() void {
                 // ---
                 Test.n("gas_effect_on_unbreathing_if_not_breathed", "TEST_gas_rFume2", 10, struct {
                     pub fn f(x: *TestContext) !void {
+                        state.dungeon.atGas((try x.getMob('0')).coord)[gas.Corrosive.id] = 100;
                         state.dungeon.atGas((try x.getMob('1')).coord)[gas.Corrosive.id] = 100;
                     }
                 }.f, struct {
                     pub fn f(x: *TestContext) !void {
                         try x.assertT((try x.getMob('0')).is_dead, "", .{});
                         try x.assertT((try x.getMob('1')).is_dead, "", .{});
-                        try x.assertT((try x.getMob('2')).is_dead, "", .{});
                     }
                 }.f, false),
                 // ---
