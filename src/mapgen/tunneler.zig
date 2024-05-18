@@ -422,8 +422,8 @@ pub const Roomie = struct {
             math.min(room.rect.end().y - 1, parent.rect.end().y - 1),
         };
         return switch (parent.direction) {
-            .North, .South => door_y[0] < door_y[1],
-            .East, .West => door_x[0] < door_x[1],
+            .North, .South => door_y[0] <= door_y[1],
+            .East, .West => door_x[0] <= door_x[1],
             else => unreachable,
         };
     }
