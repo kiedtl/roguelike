@@ -1,6 +1,7 @@
 :g_tunneler
 :g_restriction 5
 :g_individual_restriction 1
+:priority 20
 :noitems
 :noguards
 

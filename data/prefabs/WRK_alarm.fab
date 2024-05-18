@@ -5,6 +5,7 @@
 :notraps
 :noitems
 :nostairs
+:priority 20
 
 % FABEDIT_REPLACE
 
