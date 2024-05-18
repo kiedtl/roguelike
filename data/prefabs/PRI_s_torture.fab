@@ -8,7 +8,7 @@
 :g_subroom
 :g_restriction 1
 :g_global_restriction 2
-:g_whitelist 6/Prison
+:g_whitelist 4/Prison
 :g_whitelist 5/Prison
 
 :prison 0,0 4 4
