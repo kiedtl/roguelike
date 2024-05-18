@@ -162,7 +162,7 @@ pub const MetalTerrain = Terrain{
         .{ .status = .Conductive, .duration = .{ .Ctx = null } },
     },
 
-    .for_levels = &[_][]const u8{ "WRK", "LAB" },
+    .for_levels = &[_][]const u8{ "WRK", "LAB", "HLD" },
     .placement = .EntireRoom,
     .weight = 6,
 };
@@ -177,7 +177,7 @@ pub const CopperTerrain = Terrain{
         .{ .status = .CopperWeapon, .duration = .{ .Ctx = null } },
     },
 
-    .for_levels = &[_][]const u8{ "PRI", "WRK", "LAB" },
+    .for_levels = &[_][]const u8{ "PRI", "WRK", "LAB", "HLD" },
     .placement = .EntireRoom,
     .weight = 8,
 };
@@ -221,7 +221,7 @@ pub const DeadFungiTerrain = Terrain{
     .flammability = 30,
     .repairable = false,
 
-    .for_levels = &[_][]const u8{"ANY"},
+    .for_levels = &[_][]const u8{ "PRI", "SIN", "CAV", "WRK" },
     .placement = .RoomBlob,
     .weight = 5,
 };
@@ -249,7 +249,7 @@ pub const PillarTerrain = Terrain{
     .opacity = 50,
     .repairable = false,
 
-    .for_levels = &[_][]const u8{ "PRI", "WRK", "LAB" },
+    .for_levels = &[_][]const u8{ "PRI", "WRK", "LAB", "HLD" },
     .placement = .{ .RoomSpotty = 5 },
     .weight = 8,
 };

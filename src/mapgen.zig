@@ -1933,7 +1933,9 @@ pub fn placeDrunkenWalkerCave(level: usize, alloc: mem.Allocator) void {
     placeRandomRooms(level, alloc);
 }
 
-pub fn placeBSPRooms(level: usize, allocator: mem.Allocator) void {
+pub fn placeBSPRooms(grandma_rect: Rect, _min_room_width: usize, _min_room_height: usize, _max_room_width: usize, _max_room_height: usize, allocator: mem.Allocator) void {
+    const level = grandma_rect.start.z;
+
     const Node = struct {
         const Self = @This();
 
@@ -1994,6 +1996,10 @@ pub fn placeBSPRooms(level: usize, allocator: mem.Allocator) void {
             failed: *ArrayList,
             leaves: *ArrayList,
             maplevel: usize,
+            min_room_width: usize,
+            min_room_height: usize,
+            max_room_width: usize,
+            max_room_height: usize,
             alloc: mem.Allocator,
         ) mem.Allocator.Error!void {
             var branches = ArrayList.init(alloc);
@@ -2016,7 +2022,7 @@ pub fn placeBSPRooms(level: usize, allocator: mem.Allocator) void {
                 //
                 // e.g., if percent == 30%, then new1 will be 30% of original,
                 // and new2 will be 70% of original.
-                const percent = rng.range(usize, 40, 60);
+                const percent = rng.range(usize, 30, 70);
 
                 // Split horizontally or vertically
                 if ((cur.rect.height * 2) > cur.rect.width) {
@@ -2024,7 +2030,7 @@ pub fn placeBSPRooms(level: usize, allocator: mem.Allocator) void {
                 } else if (cur.rect.width > (cur.rect.height * 2)) {
                     cur.splitV(percent, &new1, &new2);
                 } else {
-                    if (rng.tenin(18)) {
+                    if (rng.onein(2)) {
                         cur.splitH(percent, &new1, &new2);
                     } else {
                         cur.splitV(percent, &new1, &new2);
@@ -2038,13 +2044,13 @@ pub fn placeBSPRooms(level: usize, allocator: mem.Allocator) void {
                     node.* = .{ .rect = prospective_child, .group = undefined, .parent = cur };
                     cur.childs[i] = node;
 
-                    if (prospective_child.width > Configs[maplevel].min_room_width and
-                        prospective_child.height > Configs[maplevel].min_room_height)
+                    if (prospective_child.width >= min_room_width and
+                        prospective_child.height >= min_room_height)
                     {
                         has_child = true;
 
-                        if (prospective_child.width < Configs[maplevel].max_room_width or
-                            prospective_child.height < Configs[maplevel].max_room_height)
+                        if (prospective_child.width < max_room_width or
+                            prospective_child.height < max_room_height)
                         {
                             try leaves.append(node);
                             node.group = .Leaf;
@@ -2052,6 +2058,18 @@ pub fn placeBSPRooms(level: usize, allocator: mem.Allocator) void {
                             try branches.append(node);
                             node.group = .Branch;
                         }
+                    } else if ((cur.rect.width > max_room_width and
+                        cur.rect.width < min_room_width * 2) or
+                        (cur.rect.height > max_room_height and
+                        cur.rect.height < min_room_height * 2))
+                    {
+                        // Failed height/width test, but it's not possible to
+                        // split it properly AND parent was previously greater than
+                        // the max dimensions anyway. Give some slack.
+                        //
+                        has_child = true;
+                        try leaves.append(node);
+                        node.group = .Leaf;
                     } else {
                         try failed.append(node);
                         node.group = .Failed;
@@ -2074,10 +2092,10 @@ pub fn placeBSPRooms(level: usize, allocator: mem.Allocator) void {
     defer leaves.deinit();
 
     var grandma_node = Node{
-        .rect = Rect{ .start = Coord.new2(level, 1, 1), .height = HEIGHT - 2, .width = WIDTH - 2 },
+        .rect = grandma_rect, // orelse Rect{ .start = Coord.new2(level, 1, 1), .height = HEIGHT - 2, .width = WIDTH - 2 },
         .group = .Root,
     };
-    grandma_node.splitTree(&failed, &leaves, level, allocator) catch err.wat();
+    grandma_node.splitTree(&failed, &leaves, level, _min_room_width, _min_room_height, _max_room_width, _max_room_height, allocator) catch err.wat();
     defer grandma_node.freeRecursively(allocator);
 
     for (failed.items) |container_node| {
@@ -4669,6 +4687,9 @@ const HLD_BASE_LEVELCONFIG = LevelConfig{
         .reduce_branch_chance = true,
         .shrink_chance = 90,
         .grow_chance = 10,
+        .room_bsp_split = true,
+        .room_chance_min_size = 30,
+        .room_chance_max_size = 45,
         .intersect_chance = 100,
         .intersect_with_childless = true,
         .initial_tunnelers = &[_]tunneler.TunnelerOptions.InitialTunneler{
@@ -4684,8 +4705,8 @@ const HLD_BASE_LEVELCONFIG = LevelConfig{
 
     .min_room_width = 5,
     .min_room_height = 5,
-    .max_room_width = 24,
-    .max_room_height = 24,
+    .max_room_width = 25,
+    .max_room_height = 25,
 
     .level_features = [_]?LevelConfig.LevelFeatureFunc{ null, null, null, null },
 

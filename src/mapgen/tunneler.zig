@@ -116,8 +116,11 @@ pub const Ctx = struct {
                 continue;
             }
 
+            const bsp = self.opts.room_bsp_split and
+                (roomie.rect.height > 7 or roomie.rect.width > 7);
+
             var prefab: ?*Prefab = null;
-            if (rng.percent(Configs[level].prefab_chance)) {
+            if (!bsp and rng.percent(Configs[level].prefab_chance)) {
                 if (mapgen.choosePrefab(level, &mapgen.n_fabs, .{
                     .t_only = true,
                     .t_orientation = roomie.orientation,
@@ -177,6 +180,9 @@ pub const Ctx = struct {
                 mapgen.excavatePrefab(&room, fab, state.gpa.allocator(), 0, 0);
                 door = Roomie.getRandomDoorCoord(room, roomie.parent);
                 fab.incrementRecord(level);
+            } else if (bsp) {
+                mapgen.placeBSPRooms(roomie.rect, 5, 5, 7, 7, state.gpa.allocator());
+                door = Roomie.getRandomDoorCoord(room, roomie.parent);
             } else {
                 mapgen.excavateRect(&roomie.rect);
                 door = Roomie.getRandomDoorCoord(room, roomie.parent);
@@ -190,7 +196,7 @@ pub const Ctx = struct {
                 room.connections.append(.{ .room = roomie.parent.rect.start, .door = null }) catch err.wat();
             }
 
-            if (prefab == null and rng.percent(Configs[level].subroom_chance)) {
+            if (!bsp and prefab == null and rng.percent(Configs[level].subroom_chance)) {
                 _ = mapgen.placeSubroom(&room, &Rect{
                     .start = Coord.new(0, 0),
                     .width = room.rect.width,
@@ -198,7 +204,8 @@ pub const Ctx = struct {
                 }, state.gpa.allocator(), .{});
             }
 
-            state.rooms[level].append(room) catch err.wat();
+            if (!bsp)
+                state.rooms[level].append(room) catch err.wat();
 
             roomie.parent.child_rooms += 1;
             roomie.parent.roomie_last_born_at = math.max(roomie.parent.roomie_last_born_at, roomie.born_at);
@@ -774,7 +781,7 @@ pub const Tunneler = struct {
         return res;
     }
 
-    pub fn getPotentialRooms(self: *Self, _: *Ctx) [2]?Roomie {
+    pub fn getPotentialRooms(self: *Self, ctx: *Ctx) [2]?Roomie {
         var res = [1]?Roomie{null} ** 2;
 
         const level = self.rect.start.z;
@@ -783,10 +790,14 @@ pub const Tunneler = struct {
             var rectw = rng.range(usize, Configs[level].min_room_width, Configs[level].max_room_width);
             var recth = rng.range(usize, Configs[level].min_room_height, Configs[level].max_room_height);
 
-            // Min-sized rooms as last choice
-            if (rng.onein(6)) {
+            if (rng.percent(ctx.opts.room_chance_min_size)) {
                 rectw = Configs[level].min_room_width;
                 recth = Configs[level].min_room_height;
+            }
+
+            if (rng.percent(ctx.opts.room_chance_max_size)) {
+                rectw = Configs[level].max_room_width;
+                recth = Configs[level].max_room_height;
             }
 
             const start_coords = switch (self.direction) {
@@ -957,6 +968,9 @@ pub const TunnelerOptions = struct {
     allow_chaotic_branching: bool = true,
 
     room_tries: usize = 14,
+    room_bsp_split: bool = false,
+    room_chance_min_size: usize = 16,
+    room_chance_max_size: usize = 0,
 
     shrink_chance: usize = 50,
     grow_chance: usize = 50,
