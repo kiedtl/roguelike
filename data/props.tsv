@@ -310,18 +310,32 @@
 "pipe_n1s1e1"          	 "steel pipe"           	 '├' 	                        -  	 0xa6c2d4 	 -        	 nay
 "pipe_n1e1w1"          	 "steel pipe"           	 '┴' 	                        -  	 0xa6c2d4 	 -        	 nay
 
-"wire_n1s1e1"          	 "copper wire"          	 '├' 	                        -  	 0xffe5d3 	 -        	 nay
-"wire_n1e1w1"          	 "copper wire"          	 '┴' 	                        -  	 0xffe5d3 	 -        	 nay
-"wire_s2e1"            	 "copper wire"          	 '╓' 	                        -  	 0xffe5d3 	 -        	 nay
-"wire_s2w1"            	 "copper wire"          	 '╖' 	                        -  	 0xffe5d3 	 -        	 nay
-"wire_e1w1"            	 "copper wire"          	 '─' 	                        -  	 0xffe5d3 	 -        	 nay
+"wire_n2s2e2w2"        	 "copper wire"          	 '╬' 	                        -  	 0xffe5d3 	 -        	 nay
+"wire_s2e2"            	 "copper wire"          	 '╔' 	                        -  	 0xffe5d3 	 -        	 nay
+"wire_s2w2"            	 "copper wire"          	 '╗' 	                        -  	 0xffe5d3 	 -        	 nay
+"wire_n2w2"            	 "copper wire"          	 '╝' 	                        -  	 0xffe5d3 	 -        	 nay
+"wire_n2e2"            	 "copper wire"          	 '╚' 	                        -  	 0xffe5d3 	 -        	 nay
+"wire_s2e2w2"          	 "copper wire"          	 '╦' 	                        -  	 0xffe5d3 	 -        	 nay
+"wire_n2s2"            	 "copper wire"          	 '║' 	                        -  	 0xffe5d3 	 -        	 nay
+"wire_n2s2e2"          	 "copper wire"          	 '╠' 	                        -  	 0xffe5d3 	 -        	 nay
+"wire_n2s2w2"          	 "copper wire"          	 '╣' 	                        -  	 0xffe5d3 	 -        	 nay
+"wire_n2e2w2"          	 "copper wire"          	 '╩' 	                        -  	 0xffe5d3 	 -        	 nay
+"wire_e2w2"            	 "copper wire"          	 '═' 	                        -  	 0xffe5d3 	 -        	 nay
+"wire_n1e1c"           	 "copper wire"          	 '╰' 	                        -  	 0xffe5d3 	 -        	 nay
+"wire_s1w1c"           	 "copper wire"          	 '╮' 	                        -  	 0xffe5d3 	 -        	 nay
+"wire_s1e1c"           	 "copper wire"          	 '╭' 	                        -  	 0xffe5d3 	 -        	 nay
+"wire_n1w1c"           	 "copper wire"          	 '╯' 	                        -  	 0xffe5d3 	 -        	 nay
 "wire_n1e1"            	 "copper wire"          	 '└' 	                        -  	 0xffe5d3 	 -        	 nay
 "wire_s1w1"            	 "copper wire"          	 '┐' 	                        -  	 0xffe5d3 	 -        	 nay
 "wire_s1e1"            	 "copper wire"          	 '┌' 	                        -  	 0xffe5d3 	 -        	 nay
 "wire_n1w1"            	 "copper wire"          	 '┘' 	                        -  	 0xffe5d3 	 -        	 nay
-"wire_n2s2"            	 "copper wire"          	 '║' 	                        -  	 0xffe5d3 	 -        	 nay
+"wire_s1e1w1"          	 "copper wire"          	 '┬' 	                        -  	 0xffe5d3 	 -        	 nay
+"wire_n1s1"            	 "copper wire"          	 '│' 	                        -  	 0xffe5d3 	 -        	 nay
 "wire_n1s1w1"          	 "copper wire"          	 '┤' 	                        -  	 0xffe5d3 	 -        	 nay
-"wire_n2w1"            	 "copper wire"          	 '╜' 	                        -  	 0xffe5d3 	 -        	 nay
+"wire_n1s1e1"          	 "copper wire"          	 '├' 	                        -  	 0xffe5d3 	 -        	 nay
+"wire_n1e1w1"          	 "copper wire"          	 '┴' 	                        -  	 0xffe5d3 	 -        	 nay
+"wire_e1w1"            	 "copper wire"          	 '─' 	                        -  	 0xffe5d3 	 -        	 nay
+"wire_s1e2"            	 "copper wire"          	 '╒' 	                        -  	 0xffe5d3 	 -        	 nay
 "wire_n1w2"            	 "copper wire"          	 '╛' 	                        -  	 0xffe5d3 	 -        	 nay
 "wire_n1e2"            	 "copper wire"          	 '╘' 	                        -  	 0xffe5d3 	 -        	 nay
 "wire_s1w2"            	 "copper wire"          	 '╕' 	                        -  	 0xffe5d3 	 -        	 nay
@@ -330,20 +344,64 @@
 "wire_n1s1e2w2"        	 "copper wire"          	 '╪' 	                        -  	 0xffe5d3 	 -        	 nay
 "wire_n1s1e1w1"        	 "copper wire"          	 '┼' 	                        -  	 0xffe5d3 	 -        	 nay
 "wire_n2s2e1w1"        	 "copper wire"          	 '╫' 	                        -  	 0xffe5d3 	 -        	 nay
+"wire_s1e2w2"          	 "copper wire"          	 '╤' 	                        -  	 0xffe5d3 	 -        	 nay
 "wire_n1e2w2"          	 "copper wire"          	 '╧' 	                        -  	 0xffe5d3 	 -        	 nay
-"wire_n1s1"            	 "copper wire"          	 '│' 	                        -  	 0xffe5d3 	 -        	 nay
-"wire_s1e1w1"          	 "copper wire"          	 '┬' 	                        -  	 0xffe5d3 	 -        	 nay
-"wire_n2e1w1"          	 "copper wire"          	 '╨' 	                        -  	 0xffe5d3 	 -        	 nay
+"wire_s2e1"            	 "copper wire"          	 '╓' 	                        -  	 0xffe5d3 	 -        	 nay
+"wire_n2e1"            	 "copper wire"          	 '╙' 	                        -  	 0xffe5d3 	 -        	 nay
+"wire_s2w1"            	 "copper wire"          	 '╖' 	                        -  	 0xffe5d3 	 -        	 nay
+"wire_n2w1"            	 "copper wire"          	 '╜' 	                        -  	 0xffe5d3 	 -        	 nay
 "wire_s2e1w1"          	 "copper wire"          	 '╥' 	                        -  	 0xffe5d3 	 -        	 nay
+"wire_n2s2e1"          	 "copper wire"          	 '╟' 	                        -  	 0xffe5d3 	 -        	 nay
+"wire_n2s2w1"          	 "copper wire"          	 '╢' 	                        -  	 0xffe5d3 	 -        	 nay
+"wire_n2e1w1"          	 "copper wire"          	 '╨' 	                        -  	 0xffe5d3 	 -        	 nay
 
-"steel_support_ne2"    	 "steel support"        	 '╘' 	                        -  	 0xa6c2d4 	 -        	 nay
-"steel_support_se2"    	 "steel support"        	 '╒' 	                        -  	 0xa6c2d4 	 -        	 nay
-"steel_support_nse2"   	 "steel support"        	 '╞' 	                        -  	 0xa6c2d4 	 -        	 nay
-"steel_support_nsw2"   	 "steel support"        	 '╡' 	                        -  	 0xa6c2d4 	 -        	 nay
-"steel_support_nse2w2" 	 "steel support"        	 '╪' 	                        -  	 0xa6c2d4 	 -        	 nay
-"steel_support_e2w2"   	 "steel support"        	 '═' 	                        -  	 0xa6c2d4 	 -        	 nay
-"steel_support_e2w2s1" 	 "steel support"        	 '╤' 	                        -  	 0xa6c2d4 	 -        	 nay
-"steel_pillar"         	 "pillar"               	 '◙' 	                        -  	 0xa6c2d4 	 -        	 nay
+"steel_spt_n2s2e2w2"   	 "steep support"        	 '╬' 	                        -  	 0xa6c2d4 	 -        	 nay
+"steel_spt_s2e2"       	 "steep support"        	 '╔' 	                        -  	 0xa6c2d4 	 -        	 nay
+"steel_spt_s2w2"       	 "steep support"        	 '╗' 	                        -  	 0xa6c2d4 	 -        	 nay
+"steel_spt_n2w2"       	 "steep support"        	 '╝' 	                        -  	 0xa6c2d4 	 -        	 nay
+"steel_spt_n2e2"       	 "steep support"        	 '╚' 	                        -  	 0xa6c2d4 	 -        	 nay
+"steel_spt_s2e2w2"     	 "steep support"        	 '╦' 	                        -  	 0xa6c2d4 	 -        	 nay
+"steel_spt_n2s2"       	 "steep support"        	 '║' 	                        -  	 0xa6c2d4 	 -        	 nay
+"steel_spt_n2s2e2"     	 "steep support"        	 '╠' 	                        -  	 0xa6c2d4 	 -        	 nay
+"steel_spt_n2s2w2"     	 "steep support"        	 '╣' 	                        -  	 0xa6c2d4 	 -        	 nay
+"steel_spt_n2e2w2"     	 "steep support"        	 '╩' 	                        -  	 0xa6c2d4 	 -        	 nay
+"steel_spt_e2w2"       	 "steep support"        	 '═' 	                        -  	 0xa6c2d4 	 -        	 nay
+"steel_spt_n1e1c"      	 "steep support"        	 '╰' 	                        -  	 0xa6c2d4 	 -        	 nay
+"steel_spt_s1w1c"      	 "steep support"        	 '╮' 	                        -  	 0xa6c2d4 	 -        	 nay
+"steel_spt_s1e1c"      	 "steep support"        	 '╭' 	                        -  	 0xa6c2d4 	 -        	 nay
+"steel_spt_n1w1c"      	 "steep support"        	 '╯' 	                        -  	 0xa6c2d4 	 -        	 nay
+"steel_spt_n1e1"       	 "steep support"        	 '└' 	                        -  	 0xa6c2d4 	 -        	 nay
+"steel_spt_s1w1"       	 "steep support"        	 '┐' 	                        -  	 0xa6c2d4 	 -        	 nay
+"steel_spt_s1e1"       	 "steep support"        	 '┌' 	                        -  	 0xa6c2d4 	 -        	 nay
+"steel_spt_n1w1"       	 "steep support"        	 '┘' 	                        -  	 0xa6c2d4 	 -        	 nay
+"steel_spt_s1e1w1"     	 "steep support"        	 '┬' 	                        -  	 0xa6c2d4 	 -        	 nay
+"steel_spt_n1s1"       	 "steep support"        	 '│' 	                        -  	 0xa6c2d4 	 -        	 nay
+"steel_spt_n1s1w1"     	 "steep support"        	 '┤' 	                        -  	 0xa6c2d4 	 -        	 nay
+"steel_spt_n1s1e1"     	 "steep support"        	 '├' 	                        -  	 0xa6c2d4 	 -        	 nay
+"steel_spt_n1e1w1"     	 "steep support"        	 '┴' 	                        -  	 0xa6c2d4 	 -        	 nay
+"steel_spt_e1w1"       	 "steep support"        	 '─' 	                        -  	 0xa6c2d4 	 -        	 nay
+"steel_spt_s1e2"       	 "steep support"        	 '╒' 	                        -  	 0xa6c2d4 	 -        	 nay
+"steel_spt_n1w2"       	 "steep support"        	 '╛' 	                        -  	 0xa6c2d4 	 -        	 nay
+"steel_spt_n1e2"       	 "steep support"        	 '╘' 	                        -  	 0xa6c2d4 	 -        	 nay
+"steel_spt_s1w2"       	 "steep support"        	 '╕' 	                        -  	 0xa6c2d4 	 -        	 nay
+"steel_spt_n1s1w2"     	 "steep support"        	 '╡' 	                        -  	 0xa6c2d4 	 -        	 nay
+"steel_spt_n1s1e2"     	 "steep support"        	 '╞' 	                        -  	 0xa6c2d4 	 -        	 nay
+"steel_spt_n1s1e2w2"   	 "steep support"        	 '╪' 	                        -  	 0xa6c2d4 	 -        	 nay
+"steel_spt_n1s1e1w1"   	 "steep support"        	 '┼' 	                        -  	 0xa6c2d4 	 -        	 nay
+"steel_spt_n2s2e1w1"   	 "steep support"        	 '╫' 	                        -  	 0xa6c2d4 	 -        	 nay
+"steel_spt_s1e2w2"     	 "steep support"        	 '╤' 	                        -  	 0xa6c2d4 	 -        	 nay
+"steel_spt_n1e2w2"     	 "steep support"        	 '╧' 	                        -  	 0xa6c2d4 	 -        	 nay
+"steel_spt_s2e1"       	 "steep support"        	 '╓' 	                        -  	 0xa6c2d4 	 -        	 nay
+"steel_spt_n2e1"       	 "steep support"        	 '╙' 	                        -  	 0xa6c2d4 	 -        	 nay
+"steel_spt_s2w1"       	 "steep support"        	 '╖' 	                        -  	 0xa6c2d4 	 -        	 nay
+"steel_spt_n2w1"       	 "steep support"        	 '╜' 	                        -  	 0xa6c2d4 	 -        	 nay
+"steel_spt_s2e1w1"     	 "steep support"        	 '╥' 	                        -  	 0xa6c2d4 	 -        	 nay
+"steel_spt_n2s2e1"     	 "steep support"        	 '╟' 	                        -  	 0xa6c2d4 	 -        	 nay
+"steel_spt_n2s2w1"     	 "steep support"        	 '╢' 	                        -  	 0xa6c2d4 	 -        	 nay
+"steel_spt_n2e1w1"     	 "steep support"        	 '╨' 	                        -  	 0xa6c2d4 	 -        	 nay
+
+"steel_pillar"         	 "steel pillar"         	 '◙' 	                        -  	 0xa6c2d4 	 -        	 nay
+"steel_pillar_solid"   	 "steel pillar"         	 '■' 	                        -  	 0xa6c2d4 	 -        	 nay
 
 "limestone_wall_upper" 	 "limestone wall"       	 '▀' 	                        -  	 0xffffef 	 -        	 nay
 "limestone_wall_lower" 	 "limestone wall"       	 '▄' 	                        -  	 0xffffef 	 -        	 nay
@@ -386,3 +444,6 @@
 "garbage"              	 "pile of garbage"      	 '%' 	                        -  	 0xaaaa88 	 -        	 -  
 
 "corpse_ubetalrego"    	 "Ubetalrego Lyehuld (corpse)" 	 '%' 	                        -  	 0x8888aa 	 -        	 -  
+
+# temporary, shouldn't be used
+"tmp_first_aid"        	 "fake aid station"     	 'F' 	                        -  	 0x000000 	0x008c00  	nay  	 - 	10

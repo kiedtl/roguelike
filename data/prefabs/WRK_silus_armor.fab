@@ -9,7 +9,7 @@
 :tunneler_orientation west
 
 @0 p steel_pillar
-@1 p steel_support_e2w2s1
+@1 p steel_spt_s1e2w2
 @2 p fire_extinguisher
 @z i silus_armor
 
