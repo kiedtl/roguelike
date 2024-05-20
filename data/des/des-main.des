@@ -54,7 +54,7 @@ A mask made of green silus.
 A hood made of green silus chainmail.
 
 % sword
-A slightly-curve sword of cave-goblin craft. Although mostly intended for
+A slightly-curved sword of cave-goblin craft. Although mostly intended for
 sporting and ceremonial purposes, it is still very much capable as a lethal
 weapon.
 
@@ -66,10 +66,6 @@ about with spells to inflict more damage on the living, but less on the undead.
 A self-defense polearm, with a U-shaped piece of metal on one end and a blade
 on the other. It is often used by travelers in these parts to deter bandits and
 wild animals.
-
-% martial_sword
-A strangely curved foreign longsword. You can attack enemies multiple times in a
-turn with this, if you're skilled enough.
 
 % dagger
 An medium-sized double-edged knife, useful for stabbing foes.
@@ -177,9 +173,10 @@ $g- Remember Baron Tyeburenet Kulbin --
 % Note, replace "west forest" when I finally give it a name
 
 % aux_wolfram_orb
-A heavy sphere of some wolfram alloy, polished to a silver sheen. It is
-extraordinarily heavily, but will help conduct electricity through itself
-instead of through you.
+A heavy sphere of some wolfram alloy, polished to a silver sheen. A small
+copper device is embedded on the base, with miniature spikes extruding
+outwards. Although extraordinarily heavily, it will help conduct electricity
+through itself instead of through you.
 
 % aux_miners_map
 A metal device typically used by miners to navigate the widespread cave systems
@@ -464,9 +461,6 @@ He does not appear particularly resilient on his own.
 A humanoid construct, currently being designed and tested in these deep caves
 away from the city's bustle.
 
-% cinder_worm
-An ancient demon, incarnate as a writhing mass of molten granite.
-
 % war_olg
 Also known as the plains-troll to the swarthy men, the olg is a naturally
 peaceful grazing animal, equipped with three pairs of legs and a protective coat
@@ -574,6 +568,15 @@ have to do for now...
 A particularly sadistic death mage. His features are perpetually twisted into a
 leer of cruel contempt.
 
+% revgenunkim
+A hideous, yellow-furred squatting creature of legendary terror. An unusual
+intelligence flickers in its glazed eyes, seeming to hint at greater age and
+veiled power than its animal incarnation would suggest.
+
+% cinder_brute
+An ancient demon, incarnate as a writhing mass of molten granite caked in a
+charcoal-like substance.
+
 % burning_brute
 A raging winged demon composed of boiling basalt, feared even by its peers for
 its vicious fire attacks.
@@ -615,9 +618,9 @@ If you're seeing this message, please tell kiedtl.
 % hideously enormous and diminutive at once. Although its overall shape
 % might resemble that of a four-legged beast, the more you strain to see its
 % individual features, the more it withers and dissipates into maddening
-% illusions, only to reform just outside of your direct vision. Seeing it, you
-% dimly recall strange legends of it from your homeland, and the terror it
-% wrecked on impious trespassers and would-be worshippers alike.
+% illusions, only to reform just outside of your direct vision. You dimly
+% recall strange legends of it from your homeland, and the terror it wrecked on
+% impious trespassers and would-be worshippers alike.
 
 % sp_hasten_undead
 Hasten a nearby undead ally, making them twice as fast.
