@@ -221,15 +221,21 @@ pub fn displayAs(st: *fabedit.EdState, ftile: mapgen.Prefab.FabTile) display.Cel
         &materials.Basalt
     else if (mem.eql(u8, prefix, "LAB") or mem.eql(u8, prefix, "WRK"))
         &materials.Dobalene
+    else if (mem.eql(u8, prefix, "HLD"))
+        &materials.PlatedDobalene
     else if (mem.eql(u8, prefix, "CRY") or mem.eql(u8, prefix, "SIN"))
         &materials.Marble
     else
         &materials.Concrete;
     const win_material = if (mem.eql(u8, prefix, "LAB") or mem.eql(u8, prefix, "WRK"))
         &materials.LabGlass
+    else if (mem.eql(u8, prefix, "HLD"))
+        &materials.LabGlass
     else
         &materials.Glass;
     const door_machine = if (mem.eql(u8, prefix, "LAB") or mem.eql(u8, prefix, "WRK"))
+        &surfaces.LabDoor
+    else if (mem.eql(u8, prefix, "HLD"))
         &surfaces.LabDoor
     else
         &surfaces.NormalDoor;
@@ -649,6 +655,7 @@ pub fn drawMap(st: *fabedit.EdState) void {
 
             cell.bg = switch (st.fab.content[y][x]) {
                 .Feature => |f| switch (st.fab.features[f].?) {
+                    .Prop => |pid| surfaces.props.items[utils.findById(surfaces.props.items, pid).?].bg orelse colors.BG,
                     .Machine => |mid| surfaces.MACHINES[utils.findById(&surfaces.MACHINES, mid.id).?].unpowered_bg orelse colors.BG,
                     .Poster => colors.GOLD,
                     else => cell.bg,
