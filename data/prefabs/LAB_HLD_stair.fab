@@ -4,6 +4,7 @@
 :priority 100
 :noitems
 :nostairs
+:g_whitelist 3/Laboratory/3
 
 :tunneler_orientation north
 :tunneler_orientation south
