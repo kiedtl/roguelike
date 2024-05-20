@@ -1,0 +1,84 @@
+:g_subroom
+:g_individual_restriction 3
+:g_restriction 99
+:g_global_restriction 99
+:priority 10
+:center_align
+
+@@v Cmons revgenunkim ([prisoner_of]Necromancer [prm_status1]Paralysis [prm_status2]Sleeping)
+
+% FABEDIT_REPLACE
+
+:prison 2,3 1 1
+
+@0 p chamber_s1e1
+@1 p chamber_n1s1
+@2 p chamber_n1e1
+@3 p chamber_p_s1e1w1
+@4 p chamber_e1w1
+@5 p chamber_p_n1s1e1w1
+@6 p chamber_p_n1s1
+@8 p chamber_p_n1s1w1
+@a p chamber_n1w1
+@b p chamber_p_s1w1
+
+..3b
+0456
+1v1a
+24a.
+
+\
+:prison 3,3 1 1
+
+@0 p chamber_p_s1e1w1
+@1 p chamber_n1s1
+@2 p chamber_n1e1
+@3 p chamber_s1w1
+@4 p chamber_e1w1
+@5 p chamber_p_n1s1e1w1
+@6 p chamber_p_n1w1
+@7 p chamber_p_n1e1w1
+@8 p chamber_p_s1e1
+@9 p chamber_p_n1s1
+@a p chamber_n1w1
+
+80..
+9543
+21v1
+.24a
+
+\
+:prison 2,2 1 1
+
+@0 p chamber_s1e1
+@1 p chamber_n1s1
+@2 p chamber_n1e1
+@3 p chamber_s1w1
+@4 p chamber_e1w1
+@5 p chamber_p_n1s1e1w1
+@6 p chamber_p_n1w1
+@7 p chamber_p_n1e1w1
+@9 p chamber_p_n1s1
+
+043.
+1v13
+2459
+.276
+
+\
+:prison 3,2 1 1
+
+@0 p chamber_s1e1
+@1 p chamber_n1s1
+@2 p chamber_p_n1e1w1
+@3 p chamber_s1w1
+@4 p chamber_e1w1
+@5 p chamber_p_n1s1e1w1
+@6 p chamber_p_n1e1
+@7 p chamber_p_n1s1
+@8 p chamber_n1w1
+
+.043
+01v1
+7548
+62..

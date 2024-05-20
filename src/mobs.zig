@@ -2080,6 +2080,37 @@ pub const CreepingDeathTemplate = MobTemplate{
     },
 };
 
+const REVGENUNKIM_CLAW_WEAPON = Weapon{
+    .name = "acid claw",
+    .damage = 1,
+    .damage_kind = .Acid,
+    .strs = &items.CLAW_STRS,
+    .martial = true,
+    .delay = 150,
+};
+
+pub const RevgenunkimTemplate = MobTemplate{
+    .mob = .{
+        .id = "revgenunkim",
+        .species = &Species{
+            .name = "revgenunkim",
+            .default_attack = &REVGENUNKIM_CLAW_WEAPON,
+        },
+        .tile = 'V',
+        .ai = AI{
+            .profession_description = "wandering",
+            .work_fn = ai.wanderWork,
+            .fight_fn = ai.meleeFight,
+        },
+        .max_HP = 6,
+
+        .memory_duration = 15,
+        .faction = .Revgenunkim,
+        .innate_resists = .{ .rAcid = RESIST_IMMUNE, .rFire = 50, .rElec = -25, .rFume = 50 },
+        .stats = .{ .Willpower = 5, .Melee = 80, .Martial = 1, .Vision = 6 },
+    },
+};
+
 pub const CinderBruteTemplate = MobTemplate{
     .mob = .{
         .id = "cinder_brute",
@@ -2115,7 +2146,7 @@ pub const CinderBruteTemplate = MobTemplate{
         .blood_spray = gas.SmokeGas.id,
         .corpse = .None,
         .faction = .Revgenunkim,
-        .innate_resists = .{ .rFire = RESIST_IMMUNE, .rElec = -25, .rFume = 100 },
+        .innate_resists = .{ .rAcid = RESIST_IMMUNE, .rFire = RESIST_IMMUNE, .rElec = -25, .rFume = 100 },
         .stats = .{ .Willpower = 6, .Melee = 80, .Vision = 4 },
     },
     .statuses = &[_]StatusDataInfo{.{ .status = .Fire, .duration = .Prm }},
@@ -2164,7 +2195,7 @@ pub const BurningBruteTemplate = MobTemplate{
         .blood = null,
         .corpse = .None,
 
-        .innate_resists = .{ .rFire = RESIST_IMMUNE, .rElec = -25 },
+        .innate_resists = .{ .rAcid = RESIST_IMMUNE, .rFire = RESIST_IMMUNE, .rElec = -25 },
         .stats = .{ .Willpower = 8, .Evade = 10, .Melee = 80 },
     },
     .statuses = &[_]StatusDataInfo{
@@ -2240,6 +2271,7 @@ pub const MOBS = [_]MobTemplate{
     GrueTemplate,
     SlinkingTerrorTemplate,
     CreepingDeathTemplate,
+    RevgenunkimTemplate,
     CinderBruteTemplate,
     BurningBruteTemplate,
 } ++ templates_test.MOBS;

@@ -181,7 +181,7 @@ pub const Ctx = struct {
                 door = Roomie.getRandomDoorCoord(room, roomie.parent);
                 fab.incrementRecord(level);
             } else if (bsp) {
-                mapgen.placeBSPRooms(roomie.rect, 5, 5, 7, 7, state.gpa.allocator());
+                mapgen.placeBSPRooms(roomie.rect, 6, 6, 7, 7, state.gpa.allocator());
                 door = Roomie.getRandomDoorCoord(room, roomie.parent);
             } else {
                 mapgen.excavateRect(&roomie.rect);
