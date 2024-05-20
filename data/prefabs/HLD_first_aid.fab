@@ -1,0 +1,99 @@
+:g_tunneler
+:g_restriction 1
+:priority 100
+
+@@p P
+FIRST AID STATIONS
+
+
+SEE ALARM ROOM TO REQUEST BLADEMASTER SQUAD
+
+
+$g-- Zilodothrod Hubsel, Captain of the Guard$.
+END POSTER
+
+% FABEDIT_REPLACE
+
+:tunneler_orientation north
+:tunneler_orientation west
+
+@0 m first_aid_station
+@1 p steel_pillar_solid
+@2 p steel_spt_e2w2
+@3 p steel_spt_n1s1e2w2
+@4 p titanium_bars
+@5 p steel_spt_s1e1
+@6 p steel_spt_n1e1
+@7 p steel_pillar
+@8 p steel_spt_s1e1w1
+@9 p steel_spt_e1w1
+@a p steel_spt_s2w1
+@b p steel_spt_n2s2
+@c p steel_spt_n1s1e1
+@d p steel_spt_n2s2w1
+
+589a.
+4c7b.
+3210.
+p60..
+.....
+
+\
+:tunneler_orientation south
+:tunneler_orientation east
+:tunneler_orientation west
+
+@0 m first_aid_station
+@1 p steel_pillar_solid
+@2 p steel_spt_n2e2w2
+@3 p steel_spt_e2w2
+@4 p steel_spt_s1e2
+@5 p steel_spt_s1w2
+
+.....
+....p
+.....
+01010
+42325
+
+\
+:tunneler_orientation east
+
+@0 m first_aid_station
+@1 p steel_spt_s1e1
+@2 p steel_spt_n1e1
+@3 p steel_spt_n2w1
+@4 p steel_spt_e2w2
+@5 p steel_pillar_solid
+@6 p steel_spt_s2w2
+@7 p steel_spt_n2s2
+@8 p steel_pillar
+@9 p steel_spt_e1w1
+@a p steel_spt_s2e1w1
+@b p steel_spt_n2e1w1
+
+.p546
+.0137
+...07
+.02a7
+.29b8
+
+\
+:tunneler_orientation west
+
+@0 m first_aid_station
+@1 p steel_pillar_solid
+@2 p steel_spt_s1e1w1
+@3 p steel_spt_n1e1w1
+@4 p steel_spt_n1w1
+@5 p steel_spt_s1w1
+@6 p steel_spt_n1e1
+@7 p steel_pillar
+@8 p steel_spt_s1e1
+@9 p steel_spt_n2s2e2w2
+
+824..
+70...
+91...
+70...
+635p.

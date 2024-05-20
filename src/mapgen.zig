@@ -4678,7 +4678,7 @@ pub fn createLevelConfig_PRI(crowd: usize, comptime prefabs: []const []const u8)
 }
 
 const HLD_BASE_LEVELCONFIG = LevelConfig{
-    .prefabs = &[_][]const u8{},
+    .prefabs = &[_][]const u8{"HLD_first_aid"},
     .tunneler_opts = .{
         .max_iters = 450,
         .max_length = math.max(WIDTH, HEIGHT),
@@ -4693,10 +4693,8 @@ const HLD_BASE_LEVELCONFIG = LevelConfig{
         .intersect_chance = 100,
         .intersect_with_childless = true,
         .initial_tunnelers = &[_]tunneler.TunnelerOptions.InitialTunneler{
-            //.{ .start = Coord.new(14, 20), .width = 0, .height = 1, .direction = .East },
-            .{ .start = Coord.new(WIDTH - 14, 20), .width = 1, .height = 0, .direction = .South },
-            //.{ .start = Coord.new(WIDTH - 13, HEIGHT - 21), .width = 0, .height = 1, .direction = .West },
-            .{ .start = Coord.new(14, HEIGHT - 20), .width = 1, .height = 0, .direction = .North },
+            .{ .start = Coord.new(WIDTH - 14, 20), .width = 2, .height = 0, .direction = .South },
+            .{ .start = Coord.new(14, HEIGHT - 20), .width = 2, .height = 0, .direction = .North },
         },
     },
     .prefab_chance = 40,
@@ -4718,7 +4716,7 @@ const HLD_BASE_LEVELCONFIG = LevelConfig{
     .subroom_chance = 70,
     .allow_statues = false,
 
-    .machines = &[_]*const Machine{&surfaces.FirstAidStation},
+    .machines = &[_]*const Machine{},
 };
 
 pub fn createLevelConfig_LAB(comptime prefabs: []const []const u8) LevelConfig {
