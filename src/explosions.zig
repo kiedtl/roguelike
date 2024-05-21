@@ -3,13 +3,14 @@ const meta = std.meta;
 const math = std.math;
 
 const colors = @import("colors.zig");
-const types = @import("types.zig");
-const fov = @import("fov.zig");
-const state = @import("state.zig");
+const err = @import("err.zig");
 const fire = @import("fire.zig");
+const fov = @import("fov.zig");
 const items = @import("items.zig");
-const sound = @import("sound.zig");
 const rng = @import("rng.zig");
+const sound = @import("sound.zig");
+const state = @import("state.zig");
+const types = @import("types.zig");
 const ui = @import("ui.zig");
 const StackBuffer = @import("buffer.zig").StackBuffer;
 
@@ -60,11 +61,17 @@ pub fn fireBurst(ground0: Coord, max_radius: usize, opts: FireBurstOpts) void {
     }
     result[ground0.y][ground0.x] = 100; // Ground zero is always incinerated
 
+    var mob_cache = std.AutoHashMap(*Mob, void).init(state.gpa.allocator());
+    defer mob_cache.deinit();
+
     for (result) |row, y| for (row) |cell, x| {
         if (cell > 0) {
             const cellc = Coord.new2(ground0.z, x, y);
             if (state.dungeon.at(cellc).mob) |mob| {
-                if (opts.initial_damage > 0 and !mob.isFullyResistant(.rFire)) {
+                if (opts.initial_damage > 0 and !mob.isFullyResistant(.rFire) and
+                    mob_cache.get(mob) != null)
+                {
+                    mob_cache.put(mob, {}) catch err.wat();
                     mob.takeDamage(.{
                         .amount = opts.initial_damage,
                         .by_mob = opts.culprit,

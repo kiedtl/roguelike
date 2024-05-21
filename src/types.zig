@@ -3102,7 +3102,16 @@ pub const Mob = struct { // {{{
             var gen = Generator(Rect.rectIter).init(self.areaRect());
             while (gen.next()) |mobcoord| {
                 assert(state.dungeon.at(mobcoord).mob == null);
-                assert(state.dungeon.at(mobcoord).surface == null);
+
+                if (state.dungeon.at(dest).surface) |surface| {
+                    switch (surface) {
+                        .Machine => |m| if (m.isWalkable()) {
+                            _ = m.addPower(self);
+                        },
+                        else => {},
+                    }
+                }
+
                 state.dungeon.at(mobcoord).mob = self;
             }
         }
@@ -3150,8 +3159,9 @@ pub const Mob = struct { // {{{
     }
 
     pub fn distance(a: *Mob, b: *Mob) usize {
-        const ac = a.coordMT(b.coord);
-        const bc = b.coordMT(ac);
+        const tc = a.coordMT(b.coord);
+        const bc = b.coordMT(tc);
+        const ac = a.coordMT(bc);
         return ac.distance(bc);
     }
 
@@ -3183,8 +3193,14 @@ pub const Mob = struct { // {{{
         const weapons = attacker.listOfWeapons();
         const dist = attacker.distance(defender);
 
+        const attacker_c_tmp = attacker.coordMT(defender.coord);
+        const defender_c = defender.coordMT(attacker_c_tmp);
+        const attacker_c = attacker.coordMT(defender_c);
+        if (!utils.hasClearLOF(attacker_c, defender_c))
+            return false;
+
         return for (weapons.constSlice()) |weapon| {
-            if (weapon.reach >= dist and utils.hasClearLOF(attacker.coordMT(defender.coord), defender.coordMT(attacker.coord)))
+            if (weapon.reach >= dist)
                 break true;
         } else false;
     }

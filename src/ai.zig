@@ -1511,9 +1511,21 @@ fn _isValidTargetForSpell(caster: *Mob, spell: SpellOptions, target: *Mob) bool 
         }
     }
 
-    if (spell.spell.cast_type == .Bolt and
-        !utils.hasClearLOF(caster.coord, target.coord))
-        return false;
+    if (spell.spell.cast_type == .Bolt) {
+        var caster_c = caster.coord;
+        var target_c = target.coord;
+        if (caster.multitile != null and target.multitile != null) {
+            caster_c = caster.coordMT(target_c);
+            target_c = target.coordMT(caster_c);
+            caster_c = caster.coordMT(target_c);
+        } else if (caster.multitile != null or target.multitile != null) {
+            caster_c = caster.coordMT(target_c);
+            target_c = target.coordMT(caster_c);
+            caster_c = caster.coordMT(target_c);
+        }
+        if (!utils.hasClearLOF(caster_c, target_c))
+            return false;
+    }
 
     if (spell.spell.effect_type == .Status and
         target.hasStatus(spell.spell.effect_type.Status))
@@ -1546,12 +1558,12 @@ fn _findValidTargetForSpell(caster: *Mob, spell: SpellOptions) ?Coord {
     {
         return for (caster.allies.items) |ally| {
             if (_isValidTargetForSpell(caster, spell, ally))
-                return ally.coord;
+                return ally.coordMT(caster.coord);
         } else null;
     } else {
         return for (caster.enemyList().items) |enemy_record| {
             if (_isValidTargetForSpell(caster, spell, enemy_record.mob))
-                return enemy_record.mob.coord;
+                return enemy_record.mob.coordMT(caster.coord);
         } else null;
     }
 }
@@ -1584,7 +1596,7 @@ pub fn mageFight(mob: *Mob, alloc: mem.Allocator) void {
     for (mob.spells) |spell| {
         if (spell.MP_cost > mob.MP) continue;
         if (_findValidTargetForSpell(mob, spell)) |coord| {
-            spell.spell.use(mob, mob.coord, coord, spell);
+            spell.spell.use(mob, mob.coordMT(coord), coord, spell);
             return;
         }
     }
