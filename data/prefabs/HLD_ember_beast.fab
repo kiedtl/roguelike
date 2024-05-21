@@ -1,6 +1,5 @@
 :g_tunneler
 :g_restriction 1
-:priority 100
 :notraps
 :noitems
 :noguards
@@ -12,6 +11,7 @@
 :tunneler_orientation south
 :tunneler_orientation east
 :tunneler_orientation west
+:tunneler_inset
 
 
 e.
@@ -21,6 +21,7 @@ e.
 \
 
 :tunneler_orientation north
+:tunneler_inset
 
 e.
 ..
@@ -29,6 +30,7 @@ e.
 \
 
 :tunneler_orientation south
+:tunneler_inset
 
 ..
 e.
@@ -37,6 +39,7 @@ e.
 \
 
 :tunneler_orientation east
+:tunneler_inset
 
 .e.
 ...
@@ -44,6 +47,7 @@ e.
 \
 
 :tunneler_orientation west
+:tunneler_inset
 
 e..
 ...

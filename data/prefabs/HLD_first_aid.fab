@@ -1,6 +1,10 @@
 :g_tunneler
 :g_restriction 1
-:priority 100
+:priority 50
+:nostairs
+:notraps
+:noitems
+:noguards
 
 @@p P
 FIRST AID STATIONS
