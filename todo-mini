@@ -1,3 +1,5 @@
+- bug: attacking unaware enemy standing in locked door
+
 - "coffins" (find word from old-english etc) near rings?
 - don't store state in prefab list, everything should be in fab_records
   - usage data

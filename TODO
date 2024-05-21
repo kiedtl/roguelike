@@ -78,21 +78,23 @@ New mobs
   - 4 tiles, noisy
   - has Overpowered Engine
     - +200% speed when enemy is far away, but has chance to break down and
-      become and immobile
+      become immobile
   - firebolt thing, range-limited
-  - 25% rFire, -25% rElec, 10% Armor
+  - 0% rFire, -25% rElec, 10% Armor, 6 HP
   - event: it goes insane, assault called
     - "The enh. emberling emits strange sparks."
+      - "You hear strange sparking and clicking sounds."
     - "The alchemists examines the enh. emberling closely."
-    - "You hear a terrific CRASH!"
+      - (none)
     - "The enh. emberling breaks out of the enclosure!"
+      - "You hear a terrific CRASH!"
     - "You hear an alarm going off!"
   - Can break down a door and an adjacent wall when pursuing enemy.
   - Stationed as guard in workshop/3, lab/2, lab/3.
     - (Workshop one is rare and diluted with broken ones)
 - ember beast
   - enh emberling, but doesn't break down
-  - no rFire, -50% rElec
+  - 50% rAcid, 25% rFire, -75% rElec, 10% Armor, 7 HP
   - fiery javelin instead of spurting flame
   - kept in some place where player might bring allies(?), Holding
 x sulfur fiend x
@@ -1404,21 +1406,34 @@ x Workshop enhancements
   x Construct garrisons in corridors
   x Alarm systems, improved alchemist AI
   x Additional prefabs for variety
+- Spell flavor text and HUD description improvements
+  - Describe custom effects properly
+- Fire: don't destroy corpses entirely, only char them
 - Lava and Water rework
   - Rework as terrain
   - Lava -> Glowing water
 - Fix shrine-blowup particle effect (rework, simplify and speedup)
 - Ring of deceleration
   - Workshop prefab
-- "Quarantine"/"Holding" map
-  - Tunneling + BSP mapgen
+- Holding map
+  x Tunneling + BSP mapgen
   - Items
     - Timekeeper's pendant
       - Ring of deceleration
     - Alternate earthen shield prefab (don't want to entirely remove shinies from Lab...)
   - Skeletal arbalists, corridor prefabs
-  - Ember beast
-  - Revgenunhelkim prisoners
+  x Ember beast
+  - Prisoners
+    x Revgenunhelkim
+    x Burning brutes
+    - Cinder beasts
+    - Night creature (slinking terror)
+- Holding map, pt 2 (after holy temple + insurrection maps)
+  - Alvoc artifact prefabs + lore
+  - Holy artifact prefabs + lore
+  - Revgenuhelkim
+    - Acid claws, acid damage and resistance
+- Fix prisoner hostility issues (with Revgen)
 - Crypt floor
   x Modify level data and spawn files
   - New monsters:
@@ -1507,6 +1522,10 @@ x Workshop enhancements
     - Martial, Spikes/riposte
     - Frozen fiend living ice ability (basalt themed, like basalt fiend)
     - Speeding bolt (more damage per distance)
+  - Angelic life_type
+    - Immune to dazing, pain, nausea
+    - Cannot be surprised
+    - Not immune to fear (unless specified in template)
   - Angel procgen
     - Initial generation
     - Name generation
@@ -1578,26 +1597,26 @@ x Workshop enhancements
     - (100) Augment [k]: Each blade gets +1 Spikes and -25% Melee.
     - (100) Augment [y]: Blade attacks cause insanity for 1 turn in vulnerable foes.
     - (100) Augment [f]: Blade attacks have minor chance to infest foe.
-- Revgenuhelkim
-  - Acid damage and resistance
+- Revgenunkim pt 2
+  - Slime
     - 'slimy' status (knockback in direction of last move + rFire)
       - note for later: no rings, should be unique status
       - 1/10 chance of hitting wall when moving towards it (otherwise no hit)
       - barrels/pools of sludge
       - potion of slimification (rare) [recipe: disorient]
-  - Revgenuhelkim
-    - Acid claws
-    - Digging abilities
+  - Set burning brute life_type to Angelic
   - Quicklime Brutes
     - Acid bolt spell
     - Acid bolt animation
+  - Revgenuhelkim
+    - Digging abilities
   - Burning Brutes
     - Digging abilities
     - Reworked burnt offering spell(?)
-    - Make multitile
-      - Add ground triggers to multitile code
+    x Make multitile
+    - Add ground triggers to multitile code
   - Cinder Brutes
-    - Renaming
+    - Renaming (to "cinder beast")
     - Unsure if any other changes needed
 - Make illumination/glow potions useful for raiding lairs
   - Corona/glowing damages NC, causes fleeing if wounded
