@@ -1,0 +1,118 @@
+:g_tunneler
+:g_global_restriction 1
+:priority 30
+:noguards
+:noitems
+:notraps
+:nostairs
+
+@@0 Cmons burning_brute ([prisoner_of]Necromancer [prm_status1]Sleeping [prm_status2]Paralysis)
+
+% FABEDIT_REPLACE
+
+:tunneler_orientation west
+:tunneler_orientation south
+:tunneler_orientation north
+:prison 2,2 2 2
+
+@1 p chamber_p_n1e1
+@2 p chamber_n1w1
+@3 p chamber_s1e1
+@b p chamber_s1w1
+@c p chamber_n1e1
+@e p chamber_e1w1
+@f p chamber_n1s1
+@g p chamber_p_n1s1e1w1
+@h p chamber_p_s1e1w1
+@i p chamber_p_n1e1w1
+@j p chamber_p_n1s1
+@l p chamber_p_s1e1
+
+lhb...
+jgeeb.
+cf0.f.
+3f..f.
+jgee2.
+1i2...
+
+\
+:tunneler_orientation east
+:tunneler_orientation north
+:tunneler_orientation south
+:prison 3,2 2 2
+
+@1 p chamber_p_s1w1
+@2 p chamber_n1w1
+@3 p chamber_s1e1
+@b p chamber_s1w1
+@c p chamber_n1e1
+@e p chamber_e1w1
+@f p chamber_n1s1
+@g p chamber_p_n1s1e1w1
+@h p chamber_p_s1e1w1
+@i p chamber_p_n1e1w1
+@j p chamber_p_n1s1
+@m p chamber_p_n1w1
+
+...3h1
+.3eegj
+.f0.f2
+.f..fb
+.ceegj
+...cim
+
+\
+:tunneler_orientation south
+:prison 2,3 2 2
+
+@1 p chamber_p_n1e1
+@2 p chamber_s1e1
+@3 p chamber_n1w1
+@4 p chamber_p_n1s1w1
+@5 p chamber_p_s1w1
+@b p chamber_s1w1
+@c p chamber_n1e1
+@e p chamber_e1w1
+@f p chamber_n1s1
+@g p chamber_p_n1s1e1w1
+@h p chamber_p_s1e1w1
+@i p chamber_p_n1e1w1
+@j p chamber_p_n1s1
+@l p chamber_p_s1e1
+@m p chamber_p_n1w1
+
+......
+lhb2h5
+jgeegj
+cf0.f3
+2f..fb
+jgeegj
+1i3cim
+
+\
+:tunneler_orientation north
+:prison 2,2 2 2
+
+@1 p chamber_p_n1e1
+@2 p chamber_s1e1
+@3 p chamber_n1w1
+@4 p chamber_p_n1s1w1
+@5 p chamber_p_s1w1
+@b p chamber_s1w1
+@c p chamber_n1e1
+@e p chamber_e1w1
+@f p chamber_n1s1
+@g p chamber_p_n1s1e1w1
+@h p chamber_p_s1e1w1
+@i p chamber_p_n1e1w1
+@j p chamber_p_n1s1
+@l p chamber_p_s1e1
+@m p chamber_p_n1w1
+
+lhb2h5
+jgeegj
+cf0.f3
+2f..fb
+jgeegj
+1i3cim
+......
