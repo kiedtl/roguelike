@@ -4697,7 +4697,7 @@ const HLD_BASE_LEVELCONFIG = LevelConfig{
             .{ .start = Coord.new(14, HEIGHT - 20), .width = 2, .height = 0, .direction = .North },
         },
     },
-    .prefab_chance = 50,
+    .prefab_chance = 70,
     .mapgen_func = tunneler.placeTunneledRooms,
     .lair_max = 0,
 
@@ -4713,7 +4713,7 @@ const HLD_BASE_LEVELCONFIG = LevelConfig{
     .light = &surfaces.Lamp,
     .bars = "titanium_bars",
     .door = &surfaces.LabDoor,
-    .subroom_chance = 90,
+    .subroom_chance = 99,
     .allow_statues = false,
 
     .machines = &[_]*const Machine{},
