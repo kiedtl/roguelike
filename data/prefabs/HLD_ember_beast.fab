@@ -1,0 +1,49 @@
+:g_tunneler
+:g_restriction 1
+:priority 100
+:notraps
+:noitems
+:noguards
+:nostairs
+
+@@e M ember_beast
+
+:tunneler_orientation north
+:tunneler_orientation south
+:tunneler_orientation east
+:tunneler_orientation west
+
+
+e.
+..
+
+
+\
+
+:tunneler_orientation north
+
+e.
+..
+..
+
+\
+
+:tunneler_orientation south
+
+..
+e.
+..
+
+\
+
+:tunneler_orientation east
+
+.e.
+...
+
+\
+
+:tunneler_orientation west
+
+e..
+...

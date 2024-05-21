@@ -1577,7 +1577,7 @@ pub const EmberlingTemplate = MobTemplate{
 
         .max_HP = 2,
         .memory_duration = 4,
-        .innate_resists = .{ .rFume = 100, .rFire = RESIST_IMMUNE },
+        .innate_resists = .{ .rFume = 100, .rFire = 50 },
         .stats = .{ .Willpower = 1, .Evade = 5, .Vision = 5, .Melee = 50 },
     },
     // XXX: Emberlings are never placed alone, this determines number of
@@ -1590,7 +1590,52 @@ pub const EmberlingTemplate = MobTemplate{
     },
     .statuses = &[_]StatusDataInfo{
         .{ .status = .Sleeping, .duration = .Prm },
-        .{ .status = .Fire, .duration = .Prm },
+        .{ .status = .Noisy, .duration = .Prm },
+    },
+};
+
+pub const EmberBeastTemplate = MobTemplate{
+    .mob = .{
+        .id = "ember_beast",
+        .species = &Species{
+            .name = "ember beast",
+            .default_attack = &Weapon{
+                .name = "burning lance",
+                .damage = 2,
+                .damage_kind = .Fire,
+                .strs = &items.PIERCING_STRS,
+                .delay = 90,
+            },
+        },
+        .tile = 'E',
+        .ai = AI{
+            .profession_description = "watching",
+            .work_fn = ai.standStillAndGuardWork,
+            .fight_fn = ai.mageFight,
+            .is_curious = false,
+            .is_fearless = true,
+            .flags = &[_]AI.Flag{.DetectWithHeat},
+        },
+        .life_type = .Construct,
+
+        .spells = &[_]SpellOptions{
+            .{ .MP_cost = 3, .spell = &spells.BOLT_FIERY_JAVELIN, .power = 1 },
+            .{ .MP_cost = 20, .spell = &spells.CAST_ENGINE, .power = 10 },
+        },
+        .max_MP = 30,
+
+        .blood = null,
+        .blood_spray = gas.SmokeGas.id,
+        .corpse = .None,
+
+        .multitile = 2,
+        .max_HP = 7,
+        .memory_duration = 20,
+        .innate_resists = .{ .rFume = 100, .rAcid = 50, .rFire = 25, .rElec = -75, .Armor = 10 },
+        .stats = .{ .Willpower = 1, .Evade = 0, .Vision = 6, .Melee = 90 },
+    },
+    .statuses = &[_]StatusDataInfo{
+        .{ .status = .Sleeping, .duration = .Prm },
         .{ .status = .Noisy, .duration = .Prm },
     },
 };
@@ -2190,12 +2235,12 @@ pub const BurningBruteTemplate = MobTemplate{
 
         .faction = .Revgenunkim,
         .multitile = 2,
-        .max_HP = 15,
+        .max_HP = 13,
         .memory_duration = 10,
         .blood = null,
         .corpse = .None,
 
-        .innate_resists = .{ .rAcid = RESIST_IMMUNE, .rFire = RESIST_IMMUNE, .rElec = -25 },
+        .innate_resists = .{ .rAcid = RESIST_IMMUNE, .rFire = RESIST_IMMUNE, .rElec = -25, .Armor = 25 },
         .stats = .{ .Willpower = 8, .Evade = 10, .Melee = 80 },
     },
     .statuses = &[_]StatusDataInfo{
@@ -2259,6 +2304,7 @@ pub const MOBS = [_]MobTemplate{
     StalkerTemplate,
     BoneRatTemplate,
     EmberlingTemplate,
+    EmberBeastTemplate,
     SparklingTemplate,
     SkeletalBlademasterTemplate,
     TorturerNecromancerTemplate,

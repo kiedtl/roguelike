@@ -244,6 +244,21 @@ pub const CAST_CALL_UNDEAD = Spell{
     },
 };
 
+pub const CAST_ENGINE = Spell{
+    .id = "sp_sprint_engine",
+    .name = "overpowered engine",
+    .cast_type = .Smite,
+    .smite_target_type = .Self,
+    .check_has_effect = struct {
+        // Enemy must be far far away
+        fn f(caster: *Mob, opts: SpellOptions, _: Coord) bool {
+            return ai.closestEnemy(caster).mob.distance(caster) > opts.power;
+        }
+    }.f,
+    .noise = .Louder,
+    .effect_type = .{ .Status = .Fast },
+};
+
 // TODO: generalize into a healing spell?
 pub const CAST_REGEN = Spell{
     .id = "sp_regen",
@@ -267,10 +282,10 @@ pub const CAST_REGEN = Spell{
 
 // Spells that give specific status to specific class of mobs. {{{
 
-fn _createSpecificStatusSp(comptime id: []const u8, name: []const u8, anim: []const u8, s: Status) Spell {
+fn _createSpecificStatusSp(comptime id: []const u8, name: []const u8, anim: []const u8, status_str: []const u8, s: Status) Spell {
     return Spell{
-        .id = "sp_haste_" ++ id,
-        .name = "haste " ++ name,
+        .id = "sp_" ++ status_str ++ "_" ++ id,
+        .name = status_str ++ " " ++ name,
         .animation = .{ .Particle = .{ .name = anim } },
         .cast_type = .Smite,
         .smite_target_type = .{ .SpecificAlly = id },
@@ -278,9 +293,9 @@ fn _createSpecificStatusSp(comptime id: []const u8, name: []const u8, anim: []co
     };
 }
 
-pub const CAST_ENRAGE_BONE_RAT = _createSpecificStatusSp("bone_rat", "bone rat", "glow-white-gray", .Enraged);
-pub const CAST_FIREPROOF_DUSTLING = _createSpecificStatusSp("dustling", "dustling", "glow-cream", .Fireproof);
-pub const CAST_ENRAGE_DUSTLING = _createSpecificStatusSp("dustling", "dustling", "glow-cream", .Enraged);
+pub const CAST_ENRAGE_BONE_RAT = _createSpecificStatusSp("bone_rat", "bone rat", "glow-white-gray", "enrage", .Enraged);
+pub const CAST_FIREPROOF_DUSTLING = _createSpecificStatusSp("dustling", "dustling", "glow-cream", "fireproof", .Fireproof);
+pub const CAST_ENRAGE_DUSTLING = _createSpecificStatusSp("dustling", "dustling", "glow-cream", "enrage", .Enraged);
 
 // }}}
 
@@ -349,6 +364,39 @@ pub const BOLT_AIRBLAST = Spell{
                 const direction = caster_c.closestDirectionTo(coord, state.mapgeometry);
                 combat.throwMob(state.dungeon.at(caster_c).mob, victim, direction, knockback);
             } else err.wat();
+        }
+    }.f },
+};
+
+pub const BOLT_FIERY_JAVELIN = Spell{
+    .id = "sp_javelin_fire",
+    .name = "fiery javelin",
+    .cast_type = .Bolt,
+    .bolt_dodgeable = true,
+    .bolt_missable = true,
+    .bolt_multitarget = false,
+    .animation = .{ .Particle = .{ .name = "zap-bolt" } },
+    .noise = .Loud,
+    .check_has_effect = struct {
+        fn f(caster: *Mob, _: SpellOptions, target: Coord) bool {
+            return caster.distance2(target) >= 3;
+        }
+    }.f,
+    .effect_type = .{ .Custom = struct {
+        fn f(caster_c: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
+            if (state.dungeon.at(coord).mob) |victim| {
+                victim.takeDamage(.{
+                    .amount = opts.power,
+                    .source = .RangedAttack,
+                    .by_mob = state.dungeon.at(caster_c).mob,
+                }, .{ .noun = "The blazing javelin", .strs = &items.PIERCING_STRS });
+                victim.takeDamage(.{
+                    .amount = opts.power,
+                    .source = .RangedAttack,
+                    .by_mob = state.dungeon.at(caster_c).mob,
+                    .kind = .Fire,
+                }, .{ .noun = "The blazing javelin", .strs = &items.BURN_STRS });
+            }
         }
     }.f },
 };
@@ -923,13 +971,18 @@ pub const BOLT_FIREBALL = Spell{
         }
     }.f,
     .noise = .Loud,
-    .effect_type = .{ .Custom = struct {
-        fn f(caster_coord: Coord, _: Spell, opts: SpellOptions, target: Coord) void {
-            const caster = state.dungeon.at(caster_coord).mob;
-            explosions.fireBurst(target, 2, .{ .initial_damage = opts.power, .culprit = caster });
-            state.dungeon.at(target).mob.?.addStatus(.Fire, 0, .{ .Tmp = opts.duration });
-        }
-    }.f },
+    .effect_type = .{
+        .Custom = struct {
+            fn f(caster_coord: Coord, _: Spell, opts: SpellOptions, target: Coord) void {
+                const caster = state.dungeon.at(caster_coord).mob;
+                explosions.fireBurst(target, 1, .{ .initial_damage = opts.power, .culprit = caster });
+
+                // Target might have been destroyed in explosion
+                if (state.dungeon.at(target).mob) |m_targ|
+                    m_targ.addStatus(.Fire, 0, .{ .Tmp = opts.duration });
+            }
+        }.f,
+    },
 };
 
 pub const CAST_ENRAGE_UNDEAD = Spell{
@@ -1000,7 +1053,7 @@ pub const CAST_RESURRECT_FIRE = Spell{
     .effect_type = .{ .Custom = _resurrectFire },
     .checks_will = false,
 };
-fn _resurrectFire(_: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
+fn _resurrectFire(caster_coord: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
     const corpse = state.dungeon.at(coord).surface.?.Corpse;
     if (corpse.raiseAsUndead(coord)) {
         if (state.player.cansee(coord)) {
@@ -1008,10 +1061,11 @@ fn _resurrectFire(_: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
                 corpse.displayName(),
             });
         }
+        corpse.faction = state.dungeon.at(caster_coord).mob.?.faction;
         corpse.addStatus(.Fire, 0, .Prm);
         corpse.addStatus(.Fast, 0, .Prm);
         corpse.addStatus(.Explosive, opts.power, .Prm);
-        corpse.addStatus(.Lifespan, opts.power, .{ .Tmp = 20 });
+        corpse.addStatus(.Lifespan, opts.power, .{ .Tmp = 10 });
     }
 }
 

@@ -1810,6 +1810,13 @@ pub const KICK_STRS = [_]DamageStr{
     _dmgstr(81, "curbstomp", "curbstomps", ""),
 };
 
+pub const BURN_STRS = [_]DamageStr{
+    _dmgstr(8, "singe", "singes", ""),
+    _dmgstr(20, "scorch", "scorches", ""),
+    _dmgstr(40, "burn", "burns", ""),
+    _dmgstr(80, "burn", "burns", " horribly"),
+    _dmgstr(150, "incinerate", "incinerates", ""),
+};
 pub const SHOCK_STRS = [_]DamageStr{
     _dmgstr(10, "zap", "zaps", ""),
     _dmgstr(40, "shock", "shocks", ""),
