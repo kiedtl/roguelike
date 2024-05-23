@@ -454,9 +454,10 @@ x ring of condemnation: [holy] instakill undead, at cost of 10 turns held.
 
 - ring of ____________: (Alvoc) +50 attack speed, -50 move speed
 
-- ring of anticipation: +10% innate melee boost, will-checked chance to grant
-  adjacent enemies `anticipated movements` status, giving them -15% evasion
-  - Problem: kinda boring, lots of these kinds of bufs already
+- ring of precognition: 0 MP, +15% evasion, MP drained selectively
+  - option: 1 MP each time attacked
+  - option: 1 MP every turn w/ enemies adjacent
+  - option: MP every turn for every adjacent enemy
 
 - ring of distortion: (alt) Bends space around player, granting +20% evade and
   -20% melee.
@@ -498,9 +499,10 @@ x ring of deception: [anti-Holy] undead mistake you for ally unless non-undead
 
 - ring of deconstruction: rolling boulder
 
-- ring of conscription: raise the corpse the player stands on at the end of the
-  pattern to fight, giving it impressive tankiness and stat boosts (but
-  slowness?).
+- ring of conscription: [anti-Holy] raise the corpse the player stands on at
+  the end of the pattern to fight, giving it impressive tankiness and stat
+  boosts. Zombie will be immobile however, and will die if player moves more
+  than 4 tiles away.
 
 x ring of magnetization: cause knockback of all nearby foes onto a single foe.
   Like Gell's Gravitas in DCSS. Knockbacked foes could possibly hit player, so
@@ -1406,7 +1408,8 @@ x Workshop enhancements
   x Construct garrisons in corridors
   x Alarm systems, improved alchemist AI
   x Additional prefabs for variety
-- Spell flavor text and HUD description improvements
+- Spell/ability flavor text and HUD description improvements
+  - Popups for spell description/flavor
   - Describe custom effects properly
 - Fire: don't destroy corpses entirely, only char them
 - Lava and Water rework
@@ -1502,6 +1505,8 @@ x Workshop enhancements
 - Unholy temple map + faction
   - Items
     - Ornate gold armor
+    - Golden orbs
+    - Unnamed: +max_MP
   - Workshop/2 and Workshop/3
     - Additional fluff prefabs (see REXPaint sketch, rooms marked w/ '*')
     - Enh. Emberling
@@ -1514,6 +1519,7 @@ x Workshop enhancements
     - Inability to use holy items w/ evil ones equipped
       - Symbol is destroyed (since it's an item)
     - Dispel Undead
+    - Bread of life: +max_HP, -Pot
   - Angels spells
     - Hellfire spell (irresist damage)
     - Disintegration (punch through walls, same as ring)
