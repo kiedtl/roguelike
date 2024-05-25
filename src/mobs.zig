@@ -2160,14 +2160,14 @@ pub const CinderBruteTemplate = MobTemplate{
     .mob = .{
         .id = "cinder_brute",
         .species = &Species{
-            .name = "cinder brute",
+            .name = "cinder beast",
             .default_attack = &Weapon{
                 .name = "teeth",
                 .damage = 1,
                 .strs = &items.BITING_STRS,
             },
         },
-        .tile = '¢',
+        .tile = 'C',
         .ai = AI{
             .profession_description = "wandering",
             .work_fn = ai.standStillAndGuardWork,
