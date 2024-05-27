@@ -1502,11 +1502,14 @@ x Workshop enhancements
   - Various resurrection spells (limited range?)
   - Paralysing zap (directional bolt only)
   - Fry (Cardinal directional bolt only)
+- Change statue's FOV method
 - Unholy temple map + faction
   - Items
     - Ornate gold armor
     - Golden orbs
     - Unnamed: +max_MP
+    - Sceptre
+      - Dijkstra vision
   - Workshop/2 and Workshop/3
     - Additional fluff prefabs (see REXPaint sketch, rooms marked w/ '*')
     - Enh. Emberling
@@ -1540,6 +1543,7 @@ x Workshop enhancements
   - Caverns rework
     - Alchemist + dustling analyzer prefabs
     - Dustling machines
+    - Event: dustling components brought in and assembled, new dustling squads formed
 - UI
   - Escape menu
     - List of visited/unvisited floors
@@ -1628,7 +1632,6 @@ x Workshop enhancements
   - Corona/glowing damages NC, causes fleeing if wounded
   - Increased rarity + novel prefab for 7/ and 8/
   - Special, rare NC-blasting items in Shrine/Temple/Workshop
-- Change statue's FOV
 - Living dungeon: execution sessions
 - Living dungeon: spire cleanup
 - Living dungeon: scheduled prisoner transport
