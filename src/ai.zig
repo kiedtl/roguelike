@@ -1862,7 +1862,7 @@ pub fn _Job_WRK_ExamineCorpse(mob: *Mob, job: *AIJob) AIJob.JStatus {
             if (corpse.killed_by) |killed_by| {
                 alert.reportThreat(mob, if (corpse.corpse_info.killer_confirmed) .{ .Specific = killed_by } else .Unknown, .Death);
 
-                // Summon reinforcements (irregardless of whether killer is
+                // Summon reinforcements (regardless of whether killer is
                 // confirmed or not), only refraining from doing so if the
                 // killer isn't the player and has been noticed dead. This is
                 // to prevent floor from filling up with reinforcements from a
