@@ -4713,7 +4713,7 @@ const HLD_BASE_LEVELCONFIG = LevelConfig{
     .light = &surfaces.Lamp,
     .bars = "titanium_bars",
     .door = &surfaces.LabDoor,
-    .subroom_chance = 99,
+    .subroom_chance = 100,
     .allow_statues = false,
 
     .machines = &[_]*const Machine{},
