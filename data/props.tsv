@@ -217,6 +217,7 @@
 "chamber_n1w1"         	 "chamber"              	 '┘' 	                        -  	 0x999999 	 -        	 nay 	 - 	 -
 "chamber_s1w1"         	 "chamber"              	 '┐' 	                        -  	 0x999999 	 -        	 nay 	 - 	 -
 "chamber_n1e1w1"       	 "chamber"              	 '┴' 	                        -  	 0x999999 	 -        	 nay 	 - 	 -
+"chamber_p_e1w1"       	 "paralysis system"     	 '─' 	                        -  	 0x008c00 	 -        	 nay 	 - 	 -
 "chamber_p_s1w1"       	 "paralysis system"     	 '┐' 	                        -  	 0x008c00 	 -        	 nay 	 - 	 -
 "chamber_p_s1e1"       	 "paralysis system"     	 '┌' 	                        -  	 0x008c00 	 -        	 nay 	 - 	 -
 "chamber_p_n1s1e1w1"   	 "paralysis system"     	 '┼' 	                        -  	 0x008c00 	 -        	 nay 	 - 	 -
