@@ -375,7 +375,7 @@ pub const BOLT_FIERY_JAVELIN = Spell{
     .bolt_dodgeable = true,
     .bolt_missable = true,
     .bolt_multitarget = false,
-    .animation = .{ .Particle = .{ .name = "zap-bolt" } },
+    .animation = .{ .Particle = .{ .name = "zap-bolt-fiery" } },
     .noise = .Loud,
     .check_has_effect = struct {
         fn f(caster: *Mob, _: SpellOptions, target: Coord) bool {

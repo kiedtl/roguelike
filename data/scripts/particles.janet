@@ -722,6 +722,27 @@
     :lifetime 5
     :spawn-count (Emitter :SCNT-dist-to-target)
    })]
+  "zap-bolt-fiery" @[(new-emitter @{
+    :particle (new-particle @{
+      :tile (new-tile @{ :ch "+" :fg 0x9b3434 :bg-mix 1 })
+      :speed 0.9
+      :triggers @[
+        [[:COND-true] [:TRIG-set-glyph [:overall-cardinal-angle ["|" "|" "-" "-"]]]]
+        [[:COND-true] [:TRIG-create-emitter (new-emitter @{
+          :particle (new-particle @{
+            :tile (new-tile @{ :ch " " :fg 0 :bg 0xcc5233 :bg-mix 0.7 })
+            :speed 0
+            :triggers @[
+              [[:COND-true] [:TRIG-reset-lifetime-once (fn [&] (random-choose [5 5 5 6])) 0]]
+              [[:COND-true] [:TRIG-modify-color :bg "a" [:completed-lifetime 0.9]]]
+            ]
+          })
+          :lifetime 0
+        })]]
+      ]
+    })
+    :lifetime 0
+   })]
   "zap-bolt" @[(new-emitter @{
     :particle (new-particle @{
       :tile (new-tile @{ :ch "+" :fg 0x7c5353 :bg-mix 1 })
