@@ -1,5 +1,5 @@
 :g_subroom
-:g_individual_restriction 3
+:g_individual_restriction 4
 :g_restriction 99
 :g_global_restriction 99
 :priority 10
