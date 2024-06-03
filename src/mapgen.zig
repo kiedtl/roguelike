@@ -2143,7 +2143,11 @@ pub fn placeBSPRooms(grandma_rect: Rect, _min_room_width: usize, _min_room_heigh
     // This is a workaround for a bug where corridors are excavated right
     // through subrooms, destroying prisons and wreaking all sort of havoc.
     //
-    for (rooms.items) |*room| {
+    // Used to iterate over rooms.items, but that creates issues when combining
+    // with tunneling mapgen
+    //
+    for (leaves.items) |container_node| {
+        const room = &rooms.items[container_node.index];
         if (rng.percent(Configs[level].subroom_chance)) {
             _ = placeSubroom(room, &Rect{
                 .start = Coord.new(0, 0),
