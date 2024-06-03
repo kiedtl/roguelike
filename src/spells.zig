@@ -429,6 +429,28 @@ pub const BOLT_JAVELIN = Spell{
     }.f },
 };
 
+pub const BOLT_BOLT = Spell{
+    .id = "sp_bolt",
+    .name = "crossbow",
+    .cast_type = .Bolt,
+    .bolt_dodgeable = true,
+    .bolt_missable = true,
+    .bolt_multitarget = false,
+    .animation = .{ .Particle = .{ .name = "zap-bolt" } },
+    .noise = .Medium,
+    .effect_type = .{ .Custom = struct {
+        fn f(caster_c: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
+            if (state.dungeon.at(coord).mob) |victim| {
+                victim.takeDamage(.{
+                    .amount = opts.power,
+                    .source = .RangedAttack,
+                    .by_mob = state.dungeon.at(caster_c).mob,
+                }, .{ .noun = "The bolt" });
+            }
+        }
+    }.f },
+};
+
 pub const CAST_MASS_DISMISSAL = Spell{
     .id = "sp_mass_dismissal",
     .name = "mass dismissal",

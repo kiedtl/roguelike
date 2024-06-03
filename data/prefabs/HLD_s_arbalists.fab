@@ -1,0 +1,9 @@
+:g_subroom
+:g_restriction 1
+:priority 50
+
+@a Cmons skeletal_arbalist ([prm_status1]Sleeping)
+
+.a.
+a#a
+.a.

@@ -1713,6 +1713,40 @@ pub const SkeletalBlademasterTemplate = MobTemplate{
     .weapon = &items.W_MSWRD_1,
 };
 
+pub const SkeletalArbalistTemplate = MobTemplate{
+    .mob = .{
+        .id = "skeletal_arbalist",
+        .species = &HumanSpecies,
+        .tile = 'ã',
+        .ai = AI{
+            .profession_name = "skeletal arbalist",
+            .profession_description = "guarding",
+            .work_fn = ai.standStillAndGuardWork,
+            .fight_fn = ai.mageFight,
+            .spellcaster_backup_action = .Melee,
+            .is_fearless = true,
+        },
+
+        .deaf = true,
+        .life_type = .Undead,
+        .max_drainable_MP = 12,
+
+        .spells = &[_]SpellOptions{
+            .{ .MP_cost = 3, .spell = &spells.BOLT_BOLT, .power = 1 },
+        },
+        .max_MP = 3,
+
+        .max_HP = 7,
+        .memory_duration = 9,
+        .blood = null,
+        .corpse = .None,
+
+        .innate_resists = .{ .rFume = 100, .rFire = -25 },
+        .stats = .{ .Willpower = 4, .Missile = 60, .Vision = 7 },
+    },
+    .weapon = &items.W_BLUDG_1,
+};
+
 pub const TorturerNecromancerTemplate = MobTemplate{
     .mob = .{
         .id = "necromancer",
@@ -2307,6 +2341,7 @@ pub const MOBS = [_]MobTemplate{
     EmberBeastTemplate,
     SparklingTemplate,
     SkeletalBlademasterTemplate,
+    SkeletalArbalistTemplate,
     TorturerNecromancerTemplate,
     // FrozenFiendTemplate,
     BallLightningTemplate,
