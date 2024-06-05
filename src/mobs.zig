@@ -2387,6 +2387,7 @@ pub const PlaceMobOptions = struct {
     cancel_status1: ?Status = null,
     job: ?types.AIJob.Type = null,
     tag: ?u8 = null,
+    kill: bool = false,
     near_stair_opts: struct {
         specific_stair: ?usize = null,
     } = .{},
@@ -2515,6 +2516,10 @@ pub fn placeMob(
         var gen = Generator(Rect.rectIter).init(mob_ptr.areaRect());
         while (gen.next()) |mobcoord|
             state.dungeon.at(mobcoord).mob = mob_ptr;
+    }
+
+    if (opts.kill) {
+        mob_ptr.deinit();
     }
 
     return mob_ptr;

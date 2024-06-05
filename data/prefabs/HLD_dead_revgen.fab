@@ -1,0 +1,69 @@
+:g_global_restriction 1
+:g_tunneler
+:priority 20
+:notraps
+:noitems
+:noguards
+
+@@a Cmons alchemist ()
+@@4 Cmons revgenunkim ([kill]yea)
+@@p P
+$c*** LOG ***$.
+
+$b03:00$.: Experiment begun per Tol's request.
+$b03:28$.: Blue generator transported to room. Assistant needed.
+$b03:45$.: Blue generator assembly begun.
+$b09:50$.: Assembly completed. Transport to holding cell room completed.
+$b10:24$.: Generator powered. No immediate effects.
+$b10:28$.: Subject appears to be awakening. Blademaster squad requested.
+$b10:30$.: Subject has awoken. Additional blademaster squad requested.
+$b10:30$.: Floor placed on alert. Lightning mage squad requested.
+$b10:31$.: Subject appears to be severely debilitated and unaware of surroundings.
+$b10:32$.: Subject is violently vomiting a greenish slurry.
+$b10:32$.: All reinforcements have responded.
+$b10:33$.: Subject continues to be experiencing seizures. Subject continues to retch.
+$b10:35$.: Subject appears to be vomiting its internal organs.
+$b10:38$.: Retching ceased. Subject appears to be in extreme pain.
+$b10:39$.: Subject is experiencing horrific seizures.
+$b10:40$.: Subject is deceased. Generator unpowered.
+$b10:45$.: Reinforcements dismissed. Two blademasters retained.
+$b10:50$.: Experiment concluded. Detailed report in progress.
+$b10:55$.: Autopsy scheduled at $c13:00$. tomorrow.
+END POSTER
+
+% FABEDIT_REPLACE
+
+:tunneler_orientation north
+:tunneler_orientation west
+:prison 0,1 1 1
+
+@0 p generator_blue
+@1 p eldr_transmitter_1
+@2 p chamber_p_e1w1
+@3 p chamber_p_s1w1
+@5 p chamber_p_n1s1w2
+@6 p eldr_transmitter_2
+@8 M skeletal_blademaster
+
+236..
+4520.
+a.18.
+p.8..
+
+\
+:tunneler_orientation south
+:tunneler_orientation east
+:prison 4,2 1 1
+
+@0 p eldr_transmitter_1
+@1 p generator_blue
+@2 p chamber_p_e1w1
+@3 p eldr_transmitter_2
+@5 M skeletal_blademaster
+@7 p chamber_p_n1e1
+@8 p chamber_p_n1s1e2
+
+..5.p
+.50.a
+.1284
+..372
