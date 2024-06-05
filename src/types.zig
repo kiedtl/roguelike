@@ -1175,6 +1175,7 @@ pub const Status = enum {
     RingDeception, // No power field
     RingConcentration, // No power field
     RingObscuration,
+    RingDeceleration,
 
     // Item-specific effects.
     DetectHeat, // Doesn't have a power field.
@@ -3249,7 +3250,8 @@ pub const Mob = struct { // {{{
             if (weapon.reach < attacker.distance(recipient))
                 continue;
 
-            if (weapon.delay > longest_delay) longest_delay = weapon.delay;
+            if (weapon.delay > longest_delay)
+                longest_delay = weapon.delay;
             _fightWithWeapon(attacker, recipient, weapon, opts, if (weapon.martial) martial else 0);
         }
 
@@ -3258,6 +3260,9 @@ pub const Mob = struct { // {{{
 
         if (!opts.free_attack) {
             const d = attacker.coordMT(recipient.coord).closestDirectionTo(recipient.coord, state.mapgeometry);
+            if (recipient.hasStatus(.RingDeceleration)) {
+                longest_delay *= 2;
+            }
             attacker.declareAction(.{ .Attack = .{ .who = recipient, .coord = recipient.coord, .direction = d, .delay = longest_delay } });
         }
 

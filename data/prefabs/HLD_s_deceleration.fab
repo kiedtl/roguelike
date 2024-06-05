@@ -1,0 +1,27 @@
+:g_subroom
+:priority 50
+:notraps
+% Allow stairs, guards, items
+
+% TODO: which Leqhyebundib? My notebook isn't with me right now, I can't recall
+% the first name of the steward one (or was that not a Leqhyebundib?)
+
+@p P
+Another strange relic found locked in Leqhyebundib's vaults. As it bears some
+superficial similarities to the Earthen Shield's ring, it's being kept here for
+eventual examination by the High Priest as well.
+
+$g-- Zilodothrod Hubsel, Captain of the Guard$.
+END POSTER
+
+@0 p gold_c_wall_pltfrm
+@1 p gold_c_wall_left
+@2 p gold_c_wall_upper
+@3 p gold_c_wall_lower
+@4 p gold_c_wall_right
+@5 p gold_c_wall_block
+@r i =deceleration
+
+.p.
+0r0
+124

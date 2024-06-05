@@ -753,3 +753,10 @@ glowing.
 
 
 $cDuration:$. This effect lasts for $bwillpower$. turns.
+
+% deceleration
+$cEffect:$. Erects an invisible shield around you, causing attacks against you
+to take twice as long.
+
+
+$cDuration:$. This effect lasts for $bwillpower * 2$. turns.

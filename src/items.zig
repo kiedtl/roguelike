@@ -249,6 +249,7 @@ pub const ALL_ITEMS = [_]ItemTemplate{
     .{ .w = 0, .i = .{ .X = &Earthen1ShieldAux } },
     .{ .w = 0, .i = .{ .X = &Earthen2ShieldAux } },
     .{ .w = 0, .i = .{ .r = DisintegrationRing } },
+    .{ .w = 0, .i = .{ .r = DecelerationRing } },
 };
 
 pub const Key = struct {
@@ -1151,6 +1152,22 @@ pub const ObscurationRing = Ring{ // {{{
             state.player.addStatus(.RingObscuration, 0, .{ .Tmp = duration });
 
             state.message(.Info, "An ethereal cloak begins to cover you.", .{});
+
+            return true;
+        }
+    }.f,
+}; // }}}
+
+pub const DecelerationRing = Ring{ // {{{
+    .name = "deceleration",
+    .required_MP = 2,
+    .effect = struct {
+        pub fn f() bool {
+            const will = @intCast(usize, state.player.stat(.Willpower));
+            const duration = math.max(1, will) * 2;
+            state.player.addStatus(.RingDeceleration, 0, .{ .Tmp = duration });
+
+            state.message(.Info, "An invisible shield begins to surround you.", .{});
 
             return true;
         }
