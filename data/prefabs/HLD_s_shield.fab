@@ -1,0 +1,21 @@
+:g_tunneler
+:g_global_restriction 1
+:priority 10
+:noitems
+:notraps
+:noitems
+:noguards
+:nostairs
+
+@p P
+The Earthen shield will be moved here once it's been examined by the High Priest.
+END POSTER
+
+:tunneler_orientation east
+:tunneler_orientation west
+:g_material gold
+@0 i aux_shield_earthen1
+@g M skeletal_blademaster
+.###.
+.g.g.
+.#p#.
