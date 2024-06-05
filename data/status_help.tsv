@@ -5,9 +5,9 @@
 .RingDamnation     	"ring: damnation"     	 "whistling"           	 -
 .RingElectrocution 	"ring: electrocution" 	 "jumping around"      	 -
 .RingExcision      	"ring: excision"      	 "pontificating"       	 -
-.RingConjuration   	"ring: conjuration"   	 "house of pain"       	 -
-.RingAcceleration  	"ring: acceleration"  	 "is in effect"        	 -
-.RingDeception     	"ring: deception"     	 "voting for trump"    	 -
+.RingConjuration   	"ring: conjuration"   	 "playing brogue"      	 -
+.RingAcceleration  	"ring: acceleration"  	 "seatbelt testing"    	 -
+.RingDeception     	"ring: deception"     	 "learning scientology"	 -
 .RingConcentration 	"ring: concentration" 	 "using the Force"     	 -
 .RingObscuration   	"ring: obscuration"   	 "cheating on taxes"   	 -
 .RingDeceleration  	"ring: deceleration"  	 "airbag testing"      	 -
@@ -20,11 +20,11 @@
 .Riposte           	"riposte"             	 -                     	 -
 .TormentUndead     	"torment undead"      	 -                     	 -
 .Echolocation      	"echolocating"        	 -                     	 -
-.Absorbing         	"absorbing"           	 "devouring your soul" 	 "absorbing"
+.Absorbing         	"absorbing"           	 "devouring your soul" 	 "absorb"
 .Amnesia           	"amnesia"             	 -                     	 "amnesia"
 .Blind             	"blind"               	 -                     	 "blind"
 .Corruption        	"corrupted"           	 "eating cabbage"      	 "corrupt"
-.Conductive        	"conductive"          	 -                     	 "conductve"
+.Conductive        	"conductive"          	 -                     	 "conduct"
 .Corona            	"glowing"             	 -                     	 "glow"
 .Daze              	"dazed"               	 -                     	 "dazed"
 .Debil             	"debilitated"         	 -                     	 "debil"
@@ -36,8 +36,8 @@
 .Fast              	"hasted"              	 -                     	 "fast"
 .Fear              	"terrified"           	 -                     	 "fear"
 .Fire              	"burning"             	 -                     	 "burn"
-.Fireproof         	"fireproof"           	 -                     	 "fireproof"
-.Flammable         	"flammable"           	 -                     	 "flammable"
+.Fireproof         	"fireproof"           	 -                     	 "rFire+"
+.Flammable         	"flammable"           	 -                     	 "rFire-"
 .Held              	"held"                	 -                     	 "held"
 .Insane            	"insane"              	 -                     	 "insane"
 .Intimidating      	"intimidating"        	 -                     	 "intim"
@@ -47,7 +47,7 @@
 .Noisy             	"noisy"               	 -                     	 "noisy"
 .Pain              	"pain"                	 -                     	 "pain"
 .Paralysis         	"paralyzed"           	 -                     	 "para"
-.Perceptive        	"perceptive"          	 -                     	 "perceptve"
+.Perceptive        	"perceptive"          	 -                     	 "percept"
 .Recuperate        	"recuperating"        	 -                     	 "recup"
 .RingingEars       	"ringing ears"        	 "[bug] singing"       	 "ringing"
 .Sleeping          	"sleeping"            	 "dormant"             	 "sleep"
