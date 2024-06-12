@@ -1,0 +1,29 @@
+:g_subroom
+:priority 20
+:notraps
+:noitems
+
+@@n Cmons slinking_terror ([prisoner_of]Necromancer [prm_status1]Sleeping)
+@@p P
+Creature origins discussed in meeting. Meeting records are in Archives, shelf
+14, case 7. Examination scheduled for 3rd of Bagul.
+END POSTER
+
+% FABEDIT_REPLACE
+
+:prison 2,2 1 1
+
+@0 p chamber_p_n1e1
+@1 p chamber_n1w1
+@2 p chamber_s1e1
+@3 p chamber_s1w1
+@4 p chamber_n1e1w1
+@5 p chamber_e1w1
+@6 p chamber_p_s1e1w1
+@7 p chamber_p_e1w1
+@8 p titanium_bars
+
+1760
+p108
+83n8
+3452
