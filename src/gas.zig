@@ -161,7 +161,8 @@ pub const Corrosive = Gas{
                     .noun = "The caustic gas",
                     .strs = &[_]DamageStr{
                         items._dmgstr(10, "BUG", "burns", ""),
-                        items._dmgstr(30, "BUG", "eats away at", ""),
+                        items._dmgstr(20, "BUG", "eats away at", ""),
+                        items._dmgstr(30, "BUG", "melts", ""),
                         items._dmgstr(99, "BUG", "dissolves", ""),
                     },
                 });

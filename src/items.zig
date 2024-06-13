@@ -250,6 +250,9 @@ pub const ALL_ITEMS = [_]ItemTemplate{
     .{ .w = 0, .i = .{ .X = &Earthen2ShieldAux } },
     .{ .w = 0, .i = .{ .r = DisintegrationRing } },
     .{ .w = 0, .i = .{ .r = DecelerationRing } },
+    .{ .w = 0, .i = .{ .P = &CorrodePotion } },
+    .{ .w = 0, .i = .{ .A = VozgumArmor } },
+    .{ .w = 0, .i = .{ .A = RevgenArmor } },
 };
 
 pub const Key = struct {
@@ -448,7 +451,7 @@ pub const Earthen2ShieldAux = Aux{
 };
 
 // Reminder via comptime :)
-// Glory to comptime, hail zig. (hmm... zig hail?)
+// Glory to comptime, hail zig.
 // comptime {
 //     if (@hasField(types.Resistance, "rAcid"))
 //         @compileError("TODO: Add rAcid to earth shields and remove this error");
@@ -1406,6 +1409,17 @@ pub const MineKit = Consumable{
     .hated_by_nc = true,
 };
 
+pub const CorrodePotion = Consumable{
+    .id = "potion_corrode",
+    .name = "potion of corrosion",
+    .effects = &[_]Consumable.Effect{.{ .Gas = gas.Corrosive.id }},
+    .is_potion = true,
+    .color = 0xa7e234, // Same color as gas
+    .verbs_player = Consumable.VERBS_PLAYER_POTION,
+    .verbs_other = Consumable.VERBS_OTHER_POTION,
+    .throwable = true,
+};
+
 pub const DistractPotion = Consumable{
     .id = "potion_distract",
     .name = "potion of distraction",
@@ -1753,6 +1767,21 @@ pub const SpectralVestArmor = Armor{
     .name = "spectral vest",
 
     .stats = .{ .Melee = 10, .Conjuration = 1 },
+};
+
+pub const VozgumArmor = Armor{
+    .id = "vozgum_armor",
+    .name = "vozgum armor",
+
+    .stats = .{ .Melee = -5, .Martial = -1 },
+    .resists = .{ .Armor = 20, .rAcid = 20 },
+};
+
+pub const RevgenArmor = Armor{
+    .id = "revgen_armor",
+    .name = "Revgenunhelkim leather armor",
+
+    .resists = .{ .Armor = 30, .rAcid = 35, .rFire = 25 },
 };
 
 // }}}

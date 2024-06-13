@@ -1,0 +1,43 @@
+:g_tunneler
+:g_restriction 1
+:priority 50
+:notraps
+:noguards
+:noitems
+:nostairs
+
+@@a i revgen_armor
+
+% FABEDIT_REPLACE
+
+:tunneler_orientation east
+
+@0 p steel_spt_e2w2
+@1 p steel_spt_s1e2w2
+@2 p steel_spt_n1e2w2
+@3 p steel_spt_n2s2w1
+@4 p steel_spt_n2w2
+@5 p steel_spt_s2w2
+@6 M iron_spire
+@7 M armored_guard
+
+6#015
+...a3
+7#024
+
+\
+:tunneler_orientation west
+
+@0 p steel_spt_e2w2
+@1 p steel_spt_n1e2w2
+@2 p steel_spt_n2e2
+@3 p steel_spt_n2s2e1
+@4 p steel_spt_s1e2w2
+@5 p steel_spt_s2e2
+@6 M iron_spire
+@7 M armored_guard
+@a i revgen_armor
+
+540#6
+3a...
+210#7

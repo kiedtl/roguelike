@@ -126,6 +126,18 @@ The sparsely-woven fibers composing this eldritch clothing seem be absorbing all
 light and color nearby, appearing only as criss-crossing web of pitch-black
 lines.
 
+% vozgum_armor
+The nickel mail shirt serves as the backing for silver plates of some weighty
+metal that the goblins name Vozgum, and the surrounding human population
+Tantalum. Its brittleness and bulk hinders its effectiveness in repelling
+blows, though it might serve well for its intended purpose.
+
+% revgen_armor
+The scaly skin of a dead Revgenunhelkim has been stripped of fur, treated, and
+tanned into lightweight armor. Strangely, the processing does not seem to have
+hardened the leather in any way, and it remains incredibly supple and yet
+immensely strong while retaining its corrosion and heat resistant properties.
+
 % cloak_silus
 A cloak of woven silus and reflective metal threads, of the finest cave-goblin
 craft.
@@ -352,6 +364,12 @@ causes ringing ears.
 % potion_absorb
 This potion is composed of dissolved gold in some kind of solution. Drinking it
 will increase your ability to absorb the Necromancer's power.
+
+% potion_corrode
+A very heavy and thick container, with labeling indicating that it contains
+some kind of caustic sludge. The labeling, written in cursive Dremos, is
+hastily scrawled over the container's silver surface and repeatedly references
+the Revgenunhelkim. A symbol of a goblin's skull adorns the lid.
 
 % t_default
 

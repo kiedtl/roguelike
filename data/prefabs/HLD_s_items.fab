@@ -1,0 +1,23 @@
+:g_subroom
+:g_restriction 1
+:priority 30
+:noitems
+:notraps
+
+@@p i potion_corrode
+
+% FABEDIT_REPLACE
+
+@0 p alch_frame_s1e1
+@1 p alch_frame_e1w1
+@2 p alch_frame_n1w1
+@3 p steel_spt_s2w1
+@4 p chamber_s1w1
+@5 p steel_spt_n2e1
+@6 p steel_spt_n2s2
+@p i potion_corrode
+
+0113
+6pp6
+6pp6
+5112
