@@ -156,7 +156,7 @@ pub const Corrosive = Gas{
     .opacity = 0.1,
     .trigger = struct {
         pub fn f(mob: *Mob, _: usize) void {
-            if (!mob.isFullyResistant(.rAcid) and rng.onein(3)) {
+            if (!mob.isFullyResistant(.rAcid) and rng.onein(2)) {
                 mob.takeDamage(.{ .amount = 1, .kind = .Acid, .blood = false, .source = .Gas }, .{
                     .noun = "The caustic gas",
                     .strs = &[_]DamageStr{
