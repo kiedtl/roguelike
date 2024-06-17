@@ -56,7 +56,7 @@ pub const EdState = struct {
         pub fn decrBy(self: *Cursor, by: usize) void {
             switch (st.cursor) {
                 .Prop => self.Prop -|= by,
-                .Basic => |b| self.Basic = @intToEnum(BasicCursor, @enumToInt(b) -| by),
+                .Basic => self.Basic = @intToEnum(BasicCursor, @enumToInt(self.Basic) -| by),
                 .PrisonArea => self.PrisonArea -|= 1,
                 .Mob => self.Mob -|= by,
             }
@@ -156,6 +156,7 @@ pub fn applyCursorMob() void {
     } else b: {
         if (blank == null) {
             std.log.err("Fab features are full", .{});
+            return;
         }
         st.fab.features[blank.?] = mapgen.Prefab.Feature{ .Mob = selected };
         break :b blank.?;
@@ -177,6 +178,7 @@ pub fn applyCursorProp() void {
     } else b: {
         if (blank == null) {
             std.log.err("Fab features are full", .{});
+            return;
         }
         st.fab.features[blank.?] = mapgen.Prefab.Feature{ .Prop = [_:0]u8{0} ** 32 };
         mem.copy(u8, &st.fab.features[blank.?].?.Prop, selected.id);
@@ -388,9 +390,9 @@ pub fn main() anyerror!void {
                         'h' => st.x -|= 1,
                         'k' => st.y -|= 1,
                         'J' => st.cursor.incrBy(14),
-                        'K' => st.cursor.Prop -|= 14,
+                        'K' => st.cursor.decrBy(14),
                         'L' => st.cursor.incrBy(1),
-                        'H' => st.cursor.Prop -|= 1,
+                        'H' => st.cursor.decrBy(14),
                         '>' => {
                             st.hud_pane = switch (st.hud_pane) {
                                 .Basic => .Props,
