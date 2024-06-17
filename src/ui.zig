@@ -893,6 +893,10 @@ fn _getMonsSpellsDescription(self: *Console, starty: usize, mob: *Mob, _: usize)
     y += _writerMonsHostility(self, y, mob);
     y += self.drawTextAt(0, y, "\n", .{});
 
+    if (mob.spells.len > 0) {
+        y += self.drawTextAt(0, y, "$g(Click spell for info.)$.", .{});
+    }
+
     const has_willchecked_spell = for (mob.spells) |spellcfg| {
         if (spellcfg.spell.checks_will) break true;
     } else false;
@@ -909,6 +913,7 @@ fn _getMonsSpellsDescription(self: *Console, starty: usize, mob: *Mob, _: usize)
         y += self.drawTextAtf(0, y, "$c{s}$. $g($b{}$. $gmp)$.", .{
             spellcfg.spell.name, spellcfg.MP_cost,
         }, .{});
+        self.addTooltipForText("{s}", .{spellcfg.spell.name}, "{s}", .{spellcfg.spell.id});
 
         if (spellcfg.spell.cast_type == .Smite) {
             const target = @as([]const u8, switch (spellcfg.spell.smite_target_type) {
@@ -3143,20 +3148,9 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus, start_coord: ?Coord)
 
             if (tile_focus == .Mob and state.dungeon.at(coord).mob != null) {
                 const mob = state.dungeon.at(coord).mob.?;
-                if (mob_tile_focus == .Spells) {
-                    for (mob.spells) |spell| {
-                        if (state.descriptions.get(spell.spell.id)) |spelldesc| {
-                            _writerWrite(writer, "$c{s}$.: {s}", .{
-                                spell.spell.name, spelldesc,
-                            });
-                            _writerWrite(writer, "\n\n", .{});
-                        }
-                    }
-                } else {
-                    if (state.descriptions.get(mob.id)) |mobdesc| {
-                        _writerWrite(writer, "{s}", .{mobdesc});
-                        _writerWrite(writer, "\n\n", .{});
-                    }
+                if (state.descriptions.get(mob.id)) |mobdesc| {
+                    _writerWrite(writer, "{s}", .{mobdesc});
+                    _writerWrite(writer, "\n\n", .{});
                 }
             }
 
@@ -3252,8 +3246,7 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus, start_coord: ?Coord)
                         desc_scroll = 0;
                     },
                 },
-                .Void => err.wat(),
-                .Outside, .Unhandled => {},
+                .Void, .Outside, .Unhandled => {},
             },
             .Wheel => |w| switch (container.handleMouseEvent(w.c, .Wheel)) {
                 .Signal => |s| if (s == 1) {

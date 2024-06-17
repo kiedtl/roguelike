@@ -941,16 +941,6 @@ pub const BOLT_LIGHTNING = Spell{
     .name = "bolt of electricity",
     .animation = .{ .Particle = .{ .name = "lzap-electric" } },
     .cast_type = .Bolt,
-    //.animation = .{ .Type2 = .{ .chars = "EFHIKLMNTVWXYZ\\/|-=+#", .fg = 0x73c5ff } },
-    // .animation = .{
-    //     .Type2 = .{
-    //         .chars = ui.Animation.ELEC_LINE_CHARS,
-    //         .fg = ui.Animation.ELEC_LINE_FG,
-    //         .bg = ui.Animation.ELEC_LINE_BG,
-    //         .bg_mix = ui.Animation.ELEC_LINE_MIX,
-    //         .approach = 2,
-    //     },
-    // },
     .check_has_effect = struct {
         fn f(_: *Mob, _: SpellOptions, target: Coord) bool {
             const mob = state.dungeon.at(target).mob.?;
@@ -1224,17 +1214,6 @@ pub const CAST_FLAMMABLE = Spell{
     .checks_will = true,
 };
 
-const STATUE_SPELL_ANIMATION = .{
-    .Particle = .{ .name = "zap-statues" },
-    // .Type2 = .{
-    //     .chars = ".#.#.",
-    //     .fg = colors.LIGHT_GOLD,
-    //     .bg = colors.GOLD,
-    //     .bg_mix = 0.05,
-    //     .approach = 4,
-    // },
-};
-
 pub const CAST_FREEZE = Spell{
     .id = "sp_freeze",
     .name = "freeze",
@@ -1242,7 +1221,7 @@ pub const CAST_FREEZE = Spell{
     .effect_type = .{ .Status = .Paralysis },
     .needs_cardinal_direction_target = true,
     .checks_will = true,
-    .animation = STATUE_SPELL_ANIMATION,
+    .animation = .{ .Particle = .{ .name = "zap-statues" } },
 };
 pub const CAST_FAMOUS = Spell{
     .id = "sp_famous",
@@ -1251,7 +1230,7 @@ pub const CAST_FAMOUS = Spell{
     .effect_type = .{ .Status = .Corona },
     .needs_cardinal_direction_target = true,
     .checks_will = true,
-    .animation = STATUE_SPELL_ANIMATION,
+    .animation = .{ .Particle = .{ .name = "zap-statues" } },
 };
 pub const CAST_FERMENT = Spell{
     .id = "sp_ferment",
@@ -1260,7 +1239,7 @@ pub const CAST_FERMENT = Spell{
     .effect_type = .{ .Status = .Disorient },
     .needs_cardinal_direction_target = true,
     .checks_will = true,
-    .animation = STATUE_SPELL_ANIMATION,
+    .animation = .{ .Particle = .{ .name = "zap-statues" } },
 };
 
 pub const CAST_FEAR = Spell{

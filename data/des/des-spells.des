@@ -1,0 +1,127 @@
+% sp_alert_ally
+Inform a nearby ally, within FOV range (though not necessarily visible), of the
+nearest enemy.
+
+% sp_alarm
+Find the nearest alarm, and pull it as soon as the enemy is out of sight.
+
+% sp_alert_siren
+Sound the floor's emergency alarms, triggering heavy reinforcements.
+
+% sp_call_undead
+Summon an undead enemy on the floor to the caster's location. If the chosen
+undead is already investigating, they will be directly informed of the target's
+presence.
+
+% sp_sprint_engine
+This creature possesses advanced mechanics that can be engaged for higher speed
+for a short duration.
+
+% sp_regen
+Regenerate a small amount of health.
+
+% sp_enrage_bone_rat
+% sp_fireproof_dustling
+% sp_enrage_dustling
+% NO DATA
+
+% sp_awaken_construct
+Awaken a nearby construct ally.
+
+% sp_fireblast
+Vomit fire, engulfing the surrounding area in blazing flames.
+
+% sp_airblast
+Unleash a powerful gust of air, knocking the target backwards.
+
+% sp_javelin_fire
+Hurl a fiery javelin, dealing both physical and fire damage.
+
+% sp_javelin
+Hurl a javelin, dealing physical damage and causing disorientation.
+
+% sp_bolt
+Fire a crossbow bolt.
+
+% sp_mass_dismissal
+Instill a supernatural terror in all nearby enemies.
+
+% sp_pull_enemy
+Yank a enemy closer. Must have line-of-fire.
+
+% sp_summon_enemy
+Bend space, transporting a nonvisible enemy closer to the caster.
+
+% sp_dismissal_aura
+Bend space around the caster, forcing enemies farther away.
+
+% sp_conj_ss_bolt
+Spawn a volley of spectral sabres.
+
+% sp_amnesia_bolt
+Cause the targets to completely forget about the caster and its other enemies.
+
+% sp_insanity_bolt
+Cause the targets to go insane.
+
+% sp_conj_bl
+Conjure a storm of Force Li-- I mean, ball lightning.
+
+% sp_damnation
+If you're seeing this, it's probably a bug.
+
+% sp_elec_paralyse
+Damage the target, and paralyse for a duration equivalent to the damage taken
+(not counting resistance).
+
+% sp_spinning_sword
+If you're seeing this, it's probably a bug.
+
+% sp_elec_blinkbolt
+Unleash an electrical discharge, while flying overhead past the target.
+
+% sp_iron_bolt
+Hurl an iron javelin.
+
+% sp_crystal_shard
+Hurl a crystal spear.
+
+% sp_elec_bolt
+Unleash a lightning bolt, dealing electrical damage.
+
+% sp_enrage_undead
+Confer greater strength and combat skills on an allied undead.
+
+% sp_hasten_undead
+Hasten a nearby undead ally, making them twice as fast.
+
+% sp_hasten_rot
+Should've refrigerated those tomatoes. (It's a bug if you're seeing this.)
+
+% sp_burnt_offering
+Resurrect a nearby corpse as a burning thrall.
+
+% sp_raise_frozen
+Uh oh, you forgot to defrost the chicken breast. Again (Bug)
+
+% sp_polar_casing
+No, you cannot cook meat without defrosting first. (Bug)
+
+% sp_raise
+Resurrect a corpse as an undead thrall.
+
+% sp_heal_undead
+Use a nearby corpse to heal a nearby undead ally by a significant amount.
+
+% sp_discharge
+Command the air surrounding the target to discharge electricity, with
+increasing damage for more adjacent empty tiles.
+
+% sp_ferment_bartender
+% sp_flammable
+% sp_freeze
+% sp_famous
+% sp_ferment
+% sp_fear
+% sp_pain
+% No description

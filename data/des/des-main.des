@@ -643,15 +643,6 @@ If you're seeing this message, please tell kiedtl.
 % recall strange legends of it from your homeland, and the terror it wrecked on
 % impious trespassers and would-be worshippers alike.
 
-% sp_hasten_undead
-Hasten a nearby undead ally, making them twice as fast.
-
-% sp_heal_undead
-Use a nearby corpse to heal a nearby undead ally by a significant amount.
-
-% sp_fireblast
-Vomit fire, engulfing the surrounding area in blazing flames.
-
 % electrocution
 $cEffect:$. Each time your move, monsters in your four corners will be
 electrocuted. Damage and effect duration scales with electricity resistance.
