@@ -1,0 +1,6 @@
+% ex_sp_dodgeable_missable
+
+If a bolt is dodgeable, the target can evade it depending on their $bEvasion$. stat.
+
+
+If a bolt is missable, the caster can miss their target depending on their $bMissile$. stat.

@@ -67,7 +67,7 @@ fn newCorpseSpell(
         .cast_type = .Smite,
         .smite_target_type = .Corpse,
         .animation = .{ .Particle = animation },
-        .effect_type = .{
+        .effects = &[_]Effect{.{
             .Custom = struct {
                 fn f(caster_coord: Coord, _: Spell, _: SpellOptions, coord: Coord) void {
                     const caster = state.dungeon.at(caster_coord).mob.?;
@@ -111,7 +111,7 @@ fn newCorpseSpell(
                     }
                 }
             }.f,
-        },
+        }},
     };
 }
 
@@ -134,13 +134,13 @@ pub const CAST_ALERT_ALLY = Spell{
             } else false;
         }
     }.f,
-    .effect_type = .{
+    .effects = &[_]Effect{.{
         .Custom = struct {
             fn f(caster_coord: Coord, _: Spell, _: SpellOptions, _: Coord) void {
                 ai.alertAllyOfHostile(state.dungeon.at(caster_coord).mob.?);
             }
         }.f,
-    },
+    }},
 };
 
 pub const CAST_SCHEDULE_ALARM_PULL = Spell{
@@ -149,7 +149,7 @@ pub const CAST_SCHEDULE_ALARM_PULL = Spell{
     .cast_type = .Smite,
     .smite_target_type = .Self,
     .noise = .Loud,
-    .effect_type = .{
+    .effects = &[_]Effect{.{
         .Custom = struct {
             fn f(_: Coord, _: Spell, _: SpellOptions, target: Coord) void {
                 const mob = state.dungeon.at(target).mob.?;
@@ -159,14 +159,14 @@ pub const CAST_SCHEDULE_ALARM_PULL = Spell{
                 }
             }
         }.f,
-    },
+    }},
 };
 
 pub const CAST_ALERT_SIREN = Spell{
     .id = "sp_alert_siren",
     .name = "sound siren",
     .cast_type = .Smite,
-    .effect_type = .{
+    .effects = &[_]Effect{.{
         .Custom = struct {
             fn f(_: Coord, _: Spell, opts: SpellOptions, target: Coord) void {
                 state.message(.Info, "You hear an ominous alarm blaring.", .{});
@@ -176,7 +176,7 @@ pub const CAST_ALERT_SIREN = Spell{
                 } });
             }
         }.f,
-    },
+    }},
 };
 
 pub const CAST_CALL_UNDEAD = Spell{
@@ -185,7 +185,7 @@ pub const CAST_CALL_UNDEAD = Spell{
     .cast_type = .Smite,
     .checks_will = true,
     .animation = .{ .Particle = .{ .name = "beams-call-undead" } },
-    .effect_type = .{
+    .effects = &[_]Effect{.{
         .Custom = struct {
             fn f(caster_coord: Coord, _: Spell, opts: SpellOptions, target: Coord) void {
                 _ = opts;
@@ -241,7 +241,7 @@ pub const CAST_CALL_UNDEAD = Spell{
                 }
             }
         }.f,
-    },
+    }},
 };
 
 pub const CAST_ENGINE = Spell{
@@ -256,7 +256,7 @@ pub const CAST_ENGINE = Spell{
         }
     }.f,
     .noise = .Louder,
-    .effect_type = .{ .Status = .Fast },
+    .effects = &[_]Effect{.{ .Status = .Fast }},
 };
 
 // TODO: generalize into a healing spell?
@@ -277,7 +277,7 @@ pub const CAST_REGEN = Spell{
         }
     }.f,
     .noise = .Loud,
-    .effect_type = .Heal,
+    .effects = &[_]Effect{.Heal},
 };
 
 // Spells that give specific status to specific class of mobs. {{{
@@ -289,7 +289,7 @@ fn _createSpecificStatusSp(comptime id: []const u8, name: []const u8, anim: []co
         .animation = .{ .Particle = .{ .name = anim } },
         .cast_type = .Smite,
         .smite_target_type = .{ .SpecificAlly = id },
-        .effect_type = .{ .Status = s },
+        .effects = &[_]Effect{.{ .Status = s }},
     };
 }
 
@@ -311,11 +311,11 @@ pub const CAST_AWAKEN_CONSTRUCT = Spell{
         }
     }.f,
     .noise = .Silent,
-    .effect_type = .{ .Custom = struct {
+    .effects = &[_]Effect{.{ .Custom = struct {
         fn f(_: Coord, _: Spell, _: SpellOptions, target: Coord) void {
             state.dungeon.at(target).mob.?.cancelStatus(.Sleeping);
         }
-    }.f },
+    }.f }},
 };
 
 pub const CAST_FIREBLAST = Spell{
@@ -330,7 +330,7 @@ pub const CAST_FIREBLAST = Spell{
         }
     }.f,
     .noise = .Loud,
-    .effect_type = .{ .Custom = struct {
+    .effects = &[_]Effect{.{ .Custom = struct {
         fn f(caster: Coord, _: Spell, opts: SpellOptions, target: Coord) void {
             const caster_mob = state.dungeon.at(caster).mob;
             if (state.player.cansee(target)) {
@@ -339,7 +339,7 @@ pub const CAST_FIREBLAST = Spell{
             }
             explosions.fireBurst(target, opts.power, .{ .initial_damage = 0, .culprit = caster_mob });
         }
-    }.f },
+    }.f }},
 };
 
 pub const BOLT_AIRBLAST = Spell{
@@ -354,7 +354,7 @@ pub const BOLT_AIRBLAST = Spell{
         }
     }.f,
     .noise = .Loud,
-    .effect_type = .{ .Custom = struct {
+    .effects = &[_]Effect{.{ .Custom = struct {
         fn f(caster_c: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
             if (state.dungeon.at(coord).mob) |victim| {
                 state.message(.Combat, "The blast of air hits {}!", .{victim});
@@ -365,7 +365,7 @@ pub const BOLT_AIRBLAST = Spell{
                 combat.throwMob(state.dungeon.at(caster_c).mob, victim, direction, knockback);
             } else err.wat();
         }
-    }.f },
+    }.f }},
 };
 
 pub const BOLT_FIERY_JAVELIN = Spell{
@@ -382,7 +382,7 @@ pub const BOLT_FIERY_JAVELIN = Spell{
             return caster.distance2(target) >= 3;
         }
     }.f,
-    .effect_type = .{ .Custom = struct {
+    .effects = &[_]Effect{.{ .Custom = struct {
         fn f(caster_c: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
             if (state.dungeon.at(coord).mob) |victim| {
                 victim.takeDamage(.{
@@ -398,7 +398,7 @@ pub const BOLT_FIERY_JAVELIN = Spell{
                 }, .{ .noun = "The blazing javelin", .strs = &items.BURN_STRS });
             }
         }
-    }.f },
+    }.f }},
 };
 
 pub const BOLT_JAVELIN = Spell{
@@ -415,7 +415,7 @@ pub const BOLT_JAVELIN = Spell{
             return caster.distance2(target) >= 2;
         }
     }.f,
-    .effect_type = .{ .Custom = struct {
+    .effects = &[_]Effect{.{ .Custom = struct {
         fn f(caster_c: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
             if (state.dungeon.at(coord).mob) |victim| {
                 victim.addStatus(.Disorient, 0, .{ .Tmp = opts.duration });
@@ -426,7 +426,7 @@ pub const BOLT_JAVELIN = Spell{
                 }, .{ .noun = "The javelin", .strs = &items.PIERCING_STRS });
             }
         }
-    }.f },
+    }.f }},
 };
 
 pub const BOLT_BOLT = Spell{
@@ -438,7 +438,7 @@ pub const BOLT_BOLT = Spell{
     .bolt_multitarget = false,
     .animation = .{ .Particle = .{ .name = "zap-bolt" } },
     .noise = .Medium,
-    .effect_type = .{ .Custom = struct {
+    .effects = &[_]Effect{.{ .Custom = struct {
         fn f(caster_c: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
             if (state.dungeon.at(coord).mob) |victim| {
                 victim.takeDamage(.{
@@ -448,7 +448,7 @@ pub const BOLT_BOLT = Spell{
                 }, .{ .noun = "The bolt" });
             }
         }
-    }.f },
+    }.f }},
 };
 
 pub const CAST_MASS_DISMISSAL = Spell{
@@ -458,7 +458,7 @@ pub const CAST_MASS_DISMISSAL = Spell{
     .smite_target_type = .Self,
     .check_has_effect = _hasEffectMassDismissal,
     .noise = .Quiet,
-    .effect_type = .{ .Custom = _effectMassDismissal },
+    .effects = &[_]Effect{.{ .Custom = _effectMassDismissal }},
 };
 fn _hasEffectMassDismissal(caster: *Mob, _: SpellOptions, _: Coord) bool {
     for (caster.enemyList().items) |enemy_record| {
@@ -509,7 +509,7 @@ pub const BOLT_PULL_FOE = Spell{
         }
     }.f,
     .noise = .Quiet,
-    .effect_type = .{
+    .effects = &[_]Effect{.{
         .Custom = struct {
             fn f(caster_coord: Coord, _: Spell, _: SpellOptions, coord: Coord) void {
                 const target_mob = state.dungeon.at(coord).mob.?;
@@ -526,7 +526,7 @@ pub const BOLT_PULL_FOE = Spell{
                 _ = target_mob.teleportTo(dest, null, true, false);
             }
         }.f,
-    },
+    }},
 };
 
 pub const CAST_SUMMON_ENEMY = Spell{
@@ -538,7 +538,7 @@ pub const CAST_SUMMON_ENEMY = Spell{
     .needs_visible_target = false,
     .check_has_effect = _hasEffectSummonEnemy,
     .noise = .Quiet,
-    .effect_type = .{ .Custom = _effectSummonEnemy },
+    .effects = &[_]Effect{.{ .Custom = _effectSummonEnemy }},
 };
 fn _hasEffectSummonEnemy(caster: *Mob, _: SpellOptions, target: Coord) bool {
     const mob = state.dungeon.at(target).mob.?;
@@ -581,7 +581,7 @@ pub const CAST_AURA_DISPERSAL = Spell{
     .smite_target_type = .Self,
     .check_has_effect = _hasEffectAuraDispersal,
     .noise = .Quiet,
-    .effect_type = .{ .Custom = _effectAuraDispersal },
+    .effects = &[_]Effect{.{ .Custom = _effectAuraDispersal }},
 };
 fn _hasEffectAuraDispersal(caster: *Mob, _: SpellOptions, target: Coord) bool {
     for (&DIRECTIONS) |d| if (target.move(d, state.mapgeometry)) |neighbor| {
@@ -636,7 +636,7 @@ fn _effectAuraDispersal(caster: Coord, _: Spell, _: SpellOptions, _: Coord) void
 //     .cast_type = .Smite,
 //     .smite_target_type = .Self,
 //     .noise = .Silent,
-//     .effect_type = .{
+//     .effects = &[_]Effect{.{
 //         .Custom = struct {
 //             fn f(_: Coord, _: Spell, _: SpellOptions, coord: Coord) void {
 //                 for (&CARDINAL_DIRECTIONS) |d| if (coord.move(d, state.mapgeometry)) |neighbor| {
@@ -647,7 +647,7 @@ fn _effectAuraDispersal(caster: Coord, _: Spell, _: SpellOptions, _: Coord) void
 //                 };
 //             }
 //         }.f,
-//     },
+//     }},
 // };
 
 pub fn spawnSabreSingle(caster: *Mob, coord: Coord) void {
@@ -702,14 +702,14 @@ pub const BOLT_CONJURE = Spell{
     .bolt_multitarget = false,
     .animation = .{ .Particle = .{ .name = "zap-conjuration" } },
     .noise = .Silent,
-    .effect_type = .{
+    .effects = &[_]Effect{.{
         .Custom = struct {
             fn f(caster_c: Coord, _: Spell, _: SpellOptions, coord: Coord) void {
                 const caster = state.dungeon.at(caster_c).mob.?;
                 spawnSabreVolley(caster, coord);
             }
         }.f,
-    },
+    }},
 };
 
 pub const BOLT_AOE_AMNESIA = Spell{
@@ -722,7 +722,7 @@ pub const BOLT_AOE_AMNESIA = Spell{
     .bolt_aoe = 4, // XXX: Need to update particle effect if changing this
     .animation = .{ .Particle = .{ .name = "zap-mass-amnesia" } },
     .noise = .Silent,
-    .effect_type = .{ .Status = .Amnesia },
+    .effects = &[_]Effect{.{ .Status = .Amnesia }},
 };
 
 pub const BOLT_AOE_INSANITY = Spell{
@@ -740,7 +740,7 @@ pub const BOLT_AOE_INSANITY = Spell{
     }.f,
     .animation = .{ .Particle = .{ .name = "zap-mass-insanity" } },
     .noise = .Silent,
-    .effect_type = .{ .Status = .Insane },
+    .effects = &[_]Effect{.{ .Status = .Insane }},
 };
 
 pub const CAST_CONJ_BALL_LIGHTNING = Spell{
@@ -749,7 +749,7 @@ pub const CAST_CONJ_BALL_LIGHTNING = Spell{
     .cast_type = .Smite,
     .smite_target_type = .Self,
     .noise = .Quiet,
-    .effect_type = .{ .Custom = _effectConjureBL },
+    .effects = &[_]Effect{.{ .Custom = _effectConjureBL }},
 };
 fn _effectConjureBL(_: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
     for (&DIRECTIONS) |d| if (coord.move(d, state.mapgeometry)) |neighbor| {
@@ -768,7 +768,7 @@ pub const SUPER_DAMNATION = Spell{
     .cast_type = .Smite,
     .smite_target_type = .Self,
     .noise = .Loud,
-    .effect_type = .{ .Custom = struct {
+    .effects = &[_]Effect{.{ .Custom = struct {
         fn f(caster_c: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
             const SPELL = Spell{
                 .id = "_",
@@ -776,7 +776,7 @@ pub const SUPER_DAMNATION = Spell{
                 .animation = .{ .Particle = .{ .name = "lzap-fire-quick" } },
                 .cast_type = .Bolt,
                 .noise = .Medium,
-                .effect_type = .{ .Custom = struct {
+                .effects = &[_]Effect{.{ .Custom = struct {
                     fn f(_caster_c: Coord, _: Spell, _opts: SpellOptions, _coord: Coord) void {
                         const caster = state.dungeon.at(_caster_c).mob.?;
                         if (state.dungeon.at(_coord).mob) |victim| {
@@ -785,7 +785,7 @@ pub const SUPER_DAMNATION = Spell{
                             }
                         }
                     }
-                }.f },
+                }.f }},
             };
 
             const directions = [_]Direction{
@@ -797,7 +797,7 @@ pub const SUPER_DAMNATION = Spell{
                 SPELL.use(state.dungeon.at(caster_c).mob, coord, target, .{ .MP_cost = 0, .spell = &SPELL, .power = opts.power, .free = true, .no_message = true });
             }
         }
-    }.f },
+    }.f }},
 };
 
 pub const BOLT_PARALYSE = Spell{
@@ -812,7 +812,7 @@ pub const BOLT_PARALYSE = Spell{
             return !mob.isFullyResistant(.rElec);
         }
     }.f,
-    .effect_type = .{ .Custom = struct {
+    .effects = &[_]Effect{.{ .Custom = struct {
         fn f(caster_c: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
             if (state.dungeon.at(coord).mob) |victim| {
                 victim.takeDamage(.{
@@ -826,7 +826,7 @@ pub const BOLT_PARALYSE = Spell{
                 victim.addStatus(.Paralysis, 0, .{ .Tmp = dmg_taken });
             }
         }
-    }.f },
+    }.f }},
 };
 
 pub const BOLT_SPINNING_SWORD = Spell{
@@ -843,7 +843,7 @@ pub const BOLT_SPINNING_SWORD = Spell{
     //         return !mob.isFullyResistant(.Armor);
     //     }
     // }.f,
-    .effect_type = .{ .Custom = struct {
+    .effects = &[_]Effect{.{ .Custom = struct {
         fn f(caster_c: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
             const caster = state.dungeon.at(caster_c).mob.?;
             if (state.dungeon.at(coord).mob) |victim| {
@@ -852,7 +852,7 @@ pub const BOLT_SPINNING_SWORD = Spell{
                 victim.addStatus(.Held, 0, .{ .Tmp = opts.power });
             }
         }
-    }.f },
+    }.f }},
     .bolt_last_coord_effect = struct {
         pub fn f(caster_coord: Coord, _: SpellOptions, coord: Coord) void {
             if (state.is_walkable(coord, .{ .right_now = true }))
@@ -873,7 +873,7 @@ pub const BOLT_BLINKBOLT = Spell{
             return !mob.isFullyResistant(.rElec);
         }
     }.f,
-    .effect_type = .{ .Custom = struct {
+    .effects = &[_]Effect{.{ .Custom = struct {
         fn f(caster_c: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
             if (state.dungeon.at(coord).mob) |victim| {
                 victim.takeDamage(.{
@@ -885,7 +885,7 @@ pub const BOLT_BLINKBOLT = Spell{
                 }, .{ .strs = &items.SHOCK_STRS });
             }
         }
-    }.f },
+    }.f }},
     .bolt_last_coord_effect = struct {
         pub fn f(caster_coord: Coord, _: SpellOptions, coord: Coord) void {
             if (state.is_walkable(coord, .{ .right_now = true }))
@@ -902,7 +902,7 @@ pub const BOLT_IRON = Spell{
     .bolt_multitarget = false,
     .animation = .{ .Particle = .{ .name = "zap-iron-inacc" } },
     .noise = .Medium,
-    .effect_type = .{ .Custom = struct {
+    .effects = &[_]Effect{.{ .Custom = struct {
         fn f(caster_c: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
             if (state.dungeon.at(coord).mob) |victim| {
                 victim.takeDamage(.{
@@ -912,7 +912,7 @@ pub const BOLT_IRON = Spell{
                 }, .{ .noun = "The iron arrow" });
             }
         }
-    }.f },
+    }.f }},
 };
 
 pub const BOLT_CRYSTAL = Spell{
@@ -923,7 +923,7 @@ pub const BOLT_CRYSTAL = Spell{
     .bolt_dodgeable = true,
     .bolt_multitarget = false,
     .noise = .Medium,
-    .effect_type = .{ .Custom = _effectBoltCrystal },
+    .effects = &[_]Effect{.{ .Custom = _effectBoltCrystal }},
 };
 fn _effectBoltCrystal(caster_c: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
     if (state.dungeon.at(coord).mob) |victim| {
@@ -948,7 +948,7 @@ pub const BOLT_LIGHTNING = Spell{
         }
     }.f,
     .noise = .Loud,
-    .effect_type = .{ .Custom = struct {
+    .effects = &[_]Effect{.{ .Custom = struct {
         fn f(caster_c: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
             if (state.dungeon.at(coord).mob) |victim| {
                 const avg_dmg = opts.power;
@@ -962,12 +962,12 @@ pub const BOLT_LIGHTNING = Spell{
                 }, .{ .noun = "The lightning bolt" });
             }
         }
-    }.f },
+    }.f }},
 };
 
 pub const BOLT_FIREBALL = Spell{
     .id = "sp_fireball",
-    .name = "fireball",
+    .name = "firebolt",
     .animation = .{ .Particle = .{ .name = "zap-fire-messy" } },
     .cast_type = .Bolt,
     // Has effect if:
@@ -983,7 +983,7 @@ pub const BOLT_FIREBALL = Spell{
         }
     }.f,
     .noise = .Loud,
-    .effect_type = .{
+    .effects = &[_]Effect{.{
         .Custom = struct {
             fn f(caster_coord: Coord, _: Spell, opts: SpellOptions, target: Coord) void {
                 const caster = state.dungeon.at(caster_coord).mob;
@@ -994,7 +994,7 @@ pub const BOLT_FIREBALL = Spell{
                     m_targ.addStatus(.Fire, 0, .{ .Tmp = opts.duration });
             }
         }.f,
-    },
+    }},
 };
 
 pub const CAST_ENRAGE_UNDEAD = Spell{
@@ -1003,7 +1003,7 @@ pub const CAST_ENRAGE_UNDEAD = Spell{
     .animation = .{ .Particle = .{ .name = "glow-white-gray" } },
     .cast_type = .Smite,
     .smite_target_type = .UndeadAlly,
-    .effect_type = .{ .Status = .Enraged },
+    .effects = &[_]Effect{.{ .Status = .Enraged }},
     .checks_will = false,
 };
 
@@ -1014,7 +1014,7 @@ pub const CAST_HEAL_UNDEAD = Spell{
     .cast_type = .Smite,
     .smite_target_type = .UndeadAlly,
     .check_has_effect = _hasEffectHealUndead,
-    .effect_type = .{ .Custom = _effectHealUndead },
+    .effects = &[_]Effect{.{ .Custom = _effectHealUndead }},
     .checks_will = false,
 };
 fn _hasEffectHealUndead(caster: *Mob, _: SpellOptions, target: Coord) bool {
@@ -1041,7 +1041,7 @@ pub const CAST_HASTEN_ROT = Spell{
     .animation = .{ .Particle = .{ .name = "glow-purple" } },
     .cast_type = .Smite,
     .smite_target_type = .Corpse,
-    .effect_type = .{ .Custom = _effectHastenRot },
+    .effects = &[_]Effect{.{ .Custom = _effectHastenRot }},
     .checks_will = false,
 };
 fn _effectHastenRot(_: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
@@ -1062,7 +1062,7 @@ pub const CAST_RESURRECT_FIRE = Spell{
     .animation = .{ .Particle = .{ .name = "glow-orange-red" } },
     .cast_type = .Smite,
     .smite_target_type = .Corpse,
-    .effect_type = .{ .Custom = _resurrectFire },
+    .effects = &[_]Effect{.{ .Custom = _resurrectFire }},
     .checks_will = false,
 };
 fn _resurrectFire(caster_coord: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
@@ -1087,7 +1087,7 @@ pub const CAST_RESURRECT_FROZEN = Spell{
     .animation = .{ .Particle = .{ .name = "glow-blue-dblue" } },
     .cast_type = .Smite,
     .smite_target_type = .Corpse,
-    .effect_type = .{ .Custom = _resurrectFrozen },
+    .effects = &[_]Effect{.{ .Custom = _resurrectFrozen }},
     .checks_will = false,
 };
 fn _resurrectFrozen(_: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
@@ -1118,7 +1118,7 @@ pub const CAST_POLAR_LAYER = Spell{
     .cast_type = .Smite,
     .smite_target_type = .Mob,
     .check_has_effect = _hasEffectPolarLayer,
-    .effect_type = .{ .Custom = _effectPolarLayer },
+    .effects = &[_]Effect{.{ .Custom = _effectPolarLayer }},
     .checks_will = false,
 };
 fn _hasEffectPolarLayer(_: *Mob, _: SpellOptions, target: Coord) bool {
@@ -1148,7 +1148,7 @@ pub const CAST_RESURRECT_NORMAL = Spell{
     .animation = .{ .Particle = .{ .name = "pulse-twice-explosion", .target = .Origin, .coord_is_target = true } },
     .cast_type = .Smite,
     .smite_target_type = .Corpse,
-    .effect_type = .{ .Custom = _resurrectNormal },
+    .effects = &[_]Effect{.{ .Custom = _resurrectNormal }},
     .checks_will = false,
 };
 fn _resurrectNormal(_: Coord, _: Spell, _: SpellOptions, coord: Coord) void {
@@ -1173,7 +1173,7 @@ pub const CAST_DISCHARGE = Spell{
             return !mob.isFullyResistant(.rElec);
         }
     }.f,
-    .effect_type = .{ .Custom = struct {
+    .effects = &[_]Effect{.{ .Custom = struct {
         fn f(caster_c: Coord, _: Spell, _: SpellOptions, coord: Coord) void {
             if (state.dungeon.at(coord).mob) |victim| {
                 var empty_spaces: usize = 0;
@@ -1195,14 +1195,14 @@ pub const CAST_DISCHARGE = Spell{
                 }, .{ .basic = true });
             }
         }
-    }.f },
+    }.f }},
 };
 
 pub const CAST_BARTENDER_FERMENT = Spell{
     .id = "sp_ferment_bartender",
     .name = "ferment",
     .cast_type = .Smite,
-    .effect_type = .{ .Status = .Drunk },
+    .effects = &[_]Effect{.{ .Status = .Drunk }},
     //.checks_will = true,
 };
 pub const CAST_FLAMMABLE = Spell{
@@ -1210,7 +1210,7 @@ pub const CAST_FLAMMABLE = Spell{
     .name = "flammabilification",
     .animation = .{ .Particle = .{ .name = "glow-orange-red" } },
     .cast_type = .Smite,
-    .effect_type = .{ .Status = .Flammable },
+    .effects = &[_]Effect{.{ .Status = .Flammable }},
     .checks_will = true,
 };
 
@@ -1218,7 +1218,7 @@ pub const CAST_FREEZE = Spell{
     .id = "sp_freeze",
     .name = "freeze",
     .cast_type = .Smite,
-    .effect_type = .{ .Status = .Paralysis },
+    .effects = &[_]Effect{.{ .Status = .Paralysis }},
     .needs_cardinal_direction_target = true,
     .checks_will = true,
     .animation = .{ .Particle = .{ .name = "zap-statues" } },
@@ -1227,7 +1227,7 @@ pub const CAST_FAMOUS = Spell{
     .id = "sp_famous",
     .name = "famous",
     .cast_type = .Smite,
-    .effect_type = .{ .Status = .Corona },
+    .effects = &[_]Effect{.{ .Status = .Corona }},
     .needs_cardinal_direction_target = true,
     .checks_will = true,
     .animation = .{ .Particle = .{ .name = "zap-statues" } },
@@ -1236,7 +1236,7 @@ pub const CAST_FERMENT = Spell{
     .id = "sp_ferment",
     .name = "confusion",
     .cast_type = .Smite,
-    .effect_type = .{ .Status = .Disorient },
+    .effects = &[_]Effect{.{ .Status = .Disorient }},
     .needs_cardinal_direction_target = true,
     .checks_will = true,
     .animation = .{ .Particle = .{ .name = "zap-statues" } },
@@ -1247,7 +1247,7 @@ pub const CAST_FEAR = Spell{
     .name = "fear",
     .animation = .{ .Particle = .{ .name = "glow-pink" } },
     .cast_type = .Smite,
-    .effect_type = .{ .Status = .Fear },
+    .effects = &[_]Effect{.{ .Status = .Fear }},
     .checks_will = true,
 };
 pub const CAST_PAIN = Spell{
@@ -1255,7 +1255,7 @@ pub const CAST_PAIN = Spell{
     .name = "pain",
     .animation = .{ .Particle = .{ .name = "glow-pink" } },
     .cast_type = .Smite,
-    .effect_type = .{ .Status = .Pain },
+    .effects = &[_]Effect{.{ .Status = .Pain }},
     .checks_will = true,
 };
 
@@ -1288,6 +1288,12 @@ pub const SpellOptions = struct {
     no_message: bool = false,
 
     context_direction1: Direction = undefined,
+};
+
+pub const Effect = union(enum) {
+    Status: Status,
+    Heal,
+    Custom: fn (caster: Coord, spell: Spell, opts: SpellOptions, coord: Coord) void,
 };
 
 pub const Spell = struct {
@@ -1331,11 +1337,7 @@ pub const Spell = struct {
 
     noise: sound.SoundIntensity = .Silent,
 
-    effect_type: union(enum) {
-        Status: Status,
-        Heal,
-        Custom: fn (caster: Coord, spell: Spell, opts: SpellOptions, coord: Coord) void,
-    },
+    effects: []const Effect,
 
     // Options effect callback for the very last coord the bolt passed through.
     //
@@ -1528,13 +1530,13 @@ pub const Spell = struct {
                         }
                     }
 
-                    switch (self.effect_type) {
+                    for (self.effects) |effect| switch (effect) {
                         .Status => |s| if (state.dungeon.at(coord).mob) |victim| {
                             victim.addStatus(s, opts.power, .{ .Tmp = opts.duration });
                         },
                         .Heal => err.bug("Bolt of healing? really?", .{}),
                         .Custom => |cu| cu(caster_coord, self, opts, coord),
-                    }
+                    };
                 }
             },
             .Smite => {
@@ -1598,11 +1600,11 @@ pub const Spell = struct {
                             return;
                         }
 
-                        switch (self.effect_type) {
+                        for (self.effects) |effect| switch (effect) {
                             .Status => |s| mob.addStatus(s, opts.power, .{ .Tmp = opts.duration }),
                             .Heal => mob.takeHealing(opts.power),
                             .Custom => |c| c(caster_coord, self, opts, target),
-                        }
+                        };
                     },
                     .Corpse => {
                         if (state.dungeon.at(target).surface == null or
@@ -1611,11 +1613,11 @@ pub const Spell = struct {
                             err.bug("Mage used smite-targeted spell on empty target!", .{});
                         }
 
-                        switch (self.effect_type) {
+                        for (self.effects) |effect| switch (effect) {
                             .Status => err.bug("Mage tried to induce a status on a corpse!!", .{}),
                             .Heal => err.bug("Mage tried to heal a corpse!!!", .{}),
                             .Custom => |c| c(caster_coord, self, opts, target),
-                        }
+                        };
                     },
                 }
             },

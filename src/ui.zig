@@ -929,8 +929,10 @@ fn _getMonsSpellsDescription(self: *Console, starty: usize, mob: *Mob, _: usize)
             });
             y += self.drawTextAtf(0, y, "· $ctarget$.: {s}", .{target}, .{});
         } else if (spellcfg.spell.cast_type == .Bolt) {
-            const dodgeable = spellcfg.spell.bolt_dodgeable;
-            y += self.drawTextAtf(0, y, "· $cdodgeable$.: {s}", .{_formatBool(dodgeable)}, .{});
+            const dodgeable: []const u8 = if (spellcfg.spell.bolt_dodgeable) "$bdodgeable$." else "$rundodgeable$.";
+            const missable: []const u8 = if (spellcfg.spell.bolt_missable) "$bmissable$." else "$runmissable$.";
+            y += self.drawTextAtf(0, y, "· {s}$g,$. {s}", .{ dodgeable, missable }, .{});
+            self.addTooltipForText("Dodgeability and Missability", .{}, "ex_sp_dodgeable_missable", .{});
         }
 
         if (!(spellcfg.spell.cast_type == .Smite and
@@ -941,24 +943,31 @@ fn _getMonsSpellsDescription(self: *Console, starty: usize, mob: *Mob, _: usize)
                 .Smite => "smite-targeted",
                 .Bolt => "bolt",
             });
-            y += self.drawTextAtf(0, y, "· $ctype$.: {s}", .{targeting}, .{});
+            if (spellcfg.spell.bolt_aoe > 1) {
+                y += self.drawTextAtf(0, y, "· $ctype$.: {s} $g($.aoe: $b{}$g)$.", .{ targeting, spellcfg.spell.bolt_aoe }, .{});
+            } else {
+                y += self.drawTextAtf(0, y, "· $ctype$.: {s}", .{targeting}, .{});
+            }
         }
 
         if (spellcfg.spell.cast_type != .Smite or spellcfg.spell.smite_target_type == .Mob) {
             if (spellcfg.spell.checks_will) {
-                y += self.drawTextAt(0, y, "· $cwill-checked$.: $byes$.", .{});
-            } else {
-                y += self.drawTextAt(0, y, "· $cwill-checked$.: $rno$.", .{});
+                y += self.drawTextAt(0, y, "· $bwill-checked$.", .{});
+
+                // Disabled to save space. I'd prefer being explicit though
+                //y += self.drawTextAt(0, y, "· $cwill-checked$.: $byes$.", .{});
+                // } else {
+                //     y += self.drawTextAt(0, y, "· $cwill-checked$.: $rno$.", .{});
             }
         }
 
-        switch (spellcfg.spell.effect_type) {
+        for (spellcfg.spell.effects) |effect| switch (effect) {
             .Status => |s| y += self.drawTextAtf(0, y, "· $gTmp$. {s} ({})", .{
                 s.string(state.player), spellcfg.duration,
             }, .{}),
             .Heal => y += self.drawTextAtf(0, y, "· $gIns$. Heal <{}>", .{spellcfg.power}, .{}),
             .Custom => {},
-        }
+        };
 
         y += self.drawTextAt(0, y, "\n", .{});
     }

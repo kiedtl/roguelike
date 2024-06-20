@@ -1527,8 +1527,15 @@ fn _isValidTargetForSpell(caster: *Mob, spell: SpellOptions, target: *Mob) bool 
             return false;
     }
 
-    if (spell.spell.effect_type == .Status and
-        target.hasStatus(spell.spell.effect_type.Status))
+    var is_redundant = true;
+    for (spell.spell.effects) |effect|
+        switch (effect) {
+            .Status => if (!target.hasStatus(effect.Status)) {
+                is_redundant = false;
+            },
+            else => is_redundant = false,
+        };
+    if (is_redundant)
         return false;
 
     if (spell.spell.check_has_effect) |func| {
