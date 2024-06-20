@@ -1384,14 +1384,16 @@ pub const Spell = struct {
             .Ray => err.todo(),
             .Bolt => {
                 var actual_target = target;
+                var missed = false;
 
                 // If the bolt can miss and the caster's Missile% check fails,
                 // change the destination by a random angle.
                 if (self.bolt_missable and caster != null and
                     !rng.percent(combat.chanceOfMissileLanding(caster.?)))
                 {
-                    if (state.dungeon.at(target).mob) |target_mob|
-                        state.message(.CombatUnimportant, "{c} missed {}", .{ caster.?, target_mob });
+                    missed = true;
+                    if (state.dungeon.at(target).mob) |victim|
+                        state.messageAboutMob(caster.?, target, .CombatUnimportant, "missed {}.", .{victim}, "missed {}.", .{victim});
                     const dist = caster_coord.distanceEuclidean(target);
                     const diff_x = @intToFloat(f64, target.x) - @intToFloat(f64, caster_coord.x);
                     const diff_y = @intToFloat(f64, target.y) - @intToFloat(f64, caster_coord.y);
@@ -1417,11 +1419,11 @@ pub const Spell = struct {
                         const hit_mob = state.dungeon.at(c).mob;
 
                         if (hit_mob) |victim| {
-                            if (self.bolt_dodgeable) {
-                                if (rng.percent(combat.chanceOfAttackEvaded(victim, caster))) {
-                                    state.messageAboutMob(victim, caster_coord, .CombatUnimportant, "dodge the {s}.", .{self.name}, "dodges the {s}.", .{self.name});
-                                    continue;
-                                }
+                            if (missed) {
+                                continue;
+                            } else if (self.bolt_dodgeable and rng.percent(combat.chanceOfAttackEvaded(victim, caster))) {
+                                state.messageAboutMob(victim, caster_coord, .CombatUnimportant, "dodge the {s}.", .{self.name}, "dodges the {s}.", .{self.name});
+                                continue;
                             }
                         }
 

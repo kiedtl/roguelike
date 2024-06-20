@@ -1627,6 +1627,7 @@ pub const EmberBeastTemplate = MobTemplate{
         .blood = null,
         .blood_spray = gas.SmokeGas.id,
         .corpse = .None,
+        .immobile = true,
 
         .multitile = 2,
         .max_HP = 7,
