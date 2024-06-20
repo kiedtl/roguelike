@@ -691,6 +691,7 @@ pub const BOLT_AOE_INSANITY = Spell{
     .name = "mass insanity",
     .cast_type = .Bolt,
     .bolt_multitarget = false,
+    .bolt_avoids_allies = true,
     .checks_will = true,
     .bolt_aoe = 4, // XXX: Need to update particle effect if changing this
     .check_has_effect = struct {
