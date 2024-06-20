@@ -1620,7 +1620,7 @@ pub const EmberBeastTemplate = MobTemplate{
 
         .spells = &[_]SpellOptions{
             .{ .MP_cost = 3, .spell = &spells.BOLT_FIERY_JAVELIN, .power = 1 },
-            .{ .MP_cost = 20, .spell = &spells.CAST_ENGINE, .power = 10 },
+            .{ .MP_cost = 20, .spell = &spells.CAST_ENGINE, .power = 6 },
         },
         .max_MP = 30,
 
