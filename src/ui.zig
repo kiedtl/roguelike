@@ -966,14 +966,12 @@ fn _getMonsSpellsDescription(self: *Console, starty: usize, mob: *Mob, _: usize)
                 s.string(state.player), spellcfg.duration,
             }, .{}),
             .Heal => y += self.drawTextAtf(0, y, "· $gIns$. Heal <{}>", .{spellcfg.power}, .{}),
-            .Damage => |d| {
-                const dmg = switch (d.amount) {
-                    .Power => spellcfg.power,
-                    .Fixed => |n| n,
-                }; // Specified in variable because of Zig compiler bug (v0.9.1)
-                y += self.drawTextAtf(0, y, "· $gIns$. {s} <$b{}$.>", .{ d.kind.string(), dmg }, .{});
+            .Damage => |d| switch (d.amount) {
+                .Power => y += self.drawTextAtf(0, y, "· $gIns$. {s} <$b{}$.>", .{ d.kind.string(), spellcfg.power }, .{}),
+                .PowerRangeHalf => y += self.drawTextAtf(0, y, "· $gIns$. {s} <$b{}$.-$b{}$.>", .{ d.kind.string(), spellcfg.power / 2, spellcfg.power }, .{}),
+                .Fixed => |n| y += self.drawTextAtf(0, y, "· $gIns$. {s} <$b{}$.>", .{ d.kind.string(), n }, .{}),
             },
-            .Custom => {},
+            .Custom => y += self.drawTextAt(0, y, "· $g(See description)$.", .{}),
         };
 
         y += self.drawTextAt(0, y, "\n", .{});

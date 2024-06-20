@@ -694,7 +694,7 @@ pub fn movementTriggersB(direction: Direction) void {
                 const target = utils.getFarthestWalkableCoord(direction, mob.coord, .{ .only_if_breaks_lof = true, .ignore_mobs = true });
                 const weapon = state.player.inventory.equipmentConst(.Weapon).*;
                 const damage = if (weapon) |w| combat.damageOfWeapon(state.player, w.Weapon, null).total * 3 else 1;
-                spells.BOLT_SPINNING_SWORD.use(mob, mob.coord, target, .{ .MP_cost = 0, .free = true, .power = damage });
+                spells.BOLT_SPINNING_SWORD.use(mob, mob.coord, target, .{ .MP_cost = 0, .free = true, .power = damage, .duration = damage });
             };
     }
     if (state.player.hasStatus(.RingConjuration)) {
