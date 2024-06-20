@@ -29,6 +29,8 @@ const utils = @import("utils.zig");
 
 const AIJob = types.AIJob;
 const Coord = types.Coord;
+const Damage = types.Damage;
+const DamageMessage = types.DamageMessage;
 const Tile = types.Tile;
 const Item = types.Item;
 const Ring = types.Ring;
@@ -377,28 +379,27 @@ pub const BOLT_FIERY_JAVELIN = Spell{
     .bolt_multitarget = false,
     .animation = .{ .Particle = .{ .name = "zap-bolt-fiery" } },
     .noise = .Loud,
-    .check_has_effect = struct {
-        fn f(caster: *Mob, _: SpellOptions, target: Coord) bool {
-            return caster.distance2(target) >= 3;
-        }
-    }.f,
-    .effects = &[_]Effect{.{ .Custom = struct {
-        fn f(caster_c: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
-            if (state.dungeon.at(coord).mob) |victim| {
-                victim.takeDamage(.{
-                    .amount = opts.power,
-                    .source = .RangedAttack,
-                    .by_mob = state.dungeon.at(caster_c).mob,
-                }, .{ .noun = "The blazing javelin", .strs = &items.PIERCING_STRS });
-                victim.takeDamage(.{
-                    .amount = opts.power,
-                    .source = .RangedAttack,
-                    .by_mob = state.dungeon.at(caster_c).mob,
-                    .kind = .Fire,
-                }, .{ .noun = "The blazing javelin", .strs = &items.BURN_STRS });
-            }
-        }
-    }.f }},
+    .effects = &[_]Effect{
+        .{ .Damage = .{ .msg = .{ .noun = "The blazing javelin", .strs = &items.PIERCING_STRS } } },
+        .{ .Damage = .{ .kind = .Fire, .msg = .{ .noun = "The blazing javelin", .strs = &items.PIERCING_STRS } } },
+    },
+    // .effects = &[_]Effect{.{ .Custom = struct {
+    //     fn f(caster_c: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
+    //         if (state.dungeon.at(coord).mob) |victim| {
+    //             victim.takeDamage(.{
+    //                 .amount = opts.power,
+    //                 .source = .RangedAttack,
+    //                 .by_mob = state.dungeon.at(caster_c).mob,
+    //             }, .{ .noun = "The blazing javelin", .strs = &items.PIERCING_STRS });
+    //             victim.takeDamage(.{
+    //                 .amount = opts.power,
+    //                 .source = .RangedAttack,
+    //                 .by_mob = state.dungeon.at(caster_c).mob,
+    //                 .kind = .Fire,
+    //             }, .{ .noun = "The blazing javelin", .strs = &items.BURN_STRS });
+    //         }
+    //     }
+    // }.f }},
 };
 
 pub const BOLT_JAVELIN = Spell{
@@ -1293,6 +1294,11 @@ pub const SpellOptions = struct {
 pub const Effect = union(enum) {
     Status: Status,
     Heal,
+    Damage: struct {
+        kind: Damage.DamageKind = .Physical,
+        amount: union(enum) { Fixed: usize, Power } = .Power,
+        msg: DamageMessage = .{},
+    },
     Custom: fn (caster: Coord, spell: Spell, opts: SpellOptions, coord: Coord) void,
 };
 
@@ -1534,6 +1540,18 @@ pub const Spell = struct {
                         .Status => |s| if (state.dungeon.at(coord).mob) |victim| {
                             victim.addStatus(s, opts.power, .{ .Tmp = opts.duration });
                         },
+                        .Damage => |d| if (state.dungeon.at(coord).mob) |victim| {
+                            state.message(.Info, "Okay", .{});
+                            victim.takeDamage(.{
+                                .amount = switch (d.amount) {
+                                    .Power => opts.power,
+                                    .Fixed => |n| n,
+                                },
+                                .kind = d.kind,
+                                .source = .RangedAttack,
+                                .by_mob = state.dungeon.at(caster_coord).mob,
+                            }, d.msg);
+                        },
                         .Heal => err.bug("Bolt of healing? really?", .{}),
                         .Custom => |cu| cu(caster_coord, self, opts, coord),
                     };
@@ -1602,6 +1620,16 @@ pub const Spell = struct {
 
                         for (self.effects) |effect| switch (effect) {
                             .Status => |s| mob.addStatus(s, opts.power, .{ .Tmp = opts.duration }),
+                            .Damage => |d| if (state.dungeon.at(target).mob) |victim| {
+                                victim.takeDamage(.{
+                                    .amount = switch (d.amount) {
+                                        .Power => opts.power,
+                                        .Fixed => |n| n,
+                                    },
+                                    .source = .RangedAttack,
+                                    .by_mob = state.dungeon.at(caster_coord).mob,
+                                }, d.msg);
+                            },
                             .Heal => mob.takeHealing(opts.power),
                             .Custom => |c| c(caster_coord, self, opts, target),
                         };
@@ -1615,6 +1643,7 @@ pub const Spell = struct {
 
                         for (self.effects) |effect| switch (effect) {
                             .Status => err.bug("Mage tried to induce a status on a corpse!!", .{}),
+                            .Damage => err.bug("Mage tried to smack a corpse!!!", .{}),
                             .Heal => err.bug("Mage tried to heal a corpse!!!", .{}),
                             .Custom => |c| c(caster_coord, self, opts, target),
                         };

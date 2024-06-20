@@ -1063,6 +1063,22 @@ pub const Damage = struct {
         RingAOE,
     };
 };
+
+pub const DamageMessage = struct {
+    basic: bool = false,
+    noun: ?[]const u8 = null,
+    strs: []const DamageStr = &[_]DamageStr{
+        items._dmgstr(0, "hit", "hits", ""),
+    },
+    is_surprise: bool = false,
+    is_bonus: bool = false,
+    is_riposte: bool = false,
+    is_bone: bool = false,
+    is_nbone: bool = false,
+    is_copper: bool = false,
+    is_spikes: bool = false,
+};
+
 pub const Activity = union(enum) {
     Interact,
     Rest,
@@ -3474,20 +3490,7 @@ pub const Mob = struct { // {{{
         state.message(.Info, "{c} {s} {s}healed{s} $g($c{}$g HP)", .{ self, verb, fully_adj, punc, h });
     }
 
-    pub fn takeDamage(self: *Mob, d: Damage, msg: struct {
-        basic: bool = false,
-        noun: ?[]const u8 = null,
-        strs: []const DamageStr = &[_]DamageStr{
-            items._dmgstr(0, "hit", "hits", ""),
-        },
-        is_surprise: bool = false,
-        is_bonus: bool = false,
-        is_riposte: bool = false,
-        is_bone: bool = false,
-        is_nbone: bool = false,
-        is_copper: bool = false,
-        is_spikes: bool = false,
-    }) void {
+    pub fn takeDamage(self: *Mob, d: Damage, msg: DamageMessage) void {
         const was_already_dead = self.should_be_dead();
         const old_HP = self.HP;
 
