@@ -381,6 +381,11 @@ pub fn present() void {
                     const f_data = if (cell.fl.wide) font.font_w_data else font.font_data;
                     const f_width: usize = if (cell.fl.wide) font.FONT_W_WIDTH else font.FONT_WIDTH;
 
+                    if (ch < 32) { // Unprintable
+                        px += font.FONT_WIDTH;
+                        continue;
+                    }
+
                     var fy: usize = 0;
                     while (fy < font.FONT_HEIGHT) : (fy += 1) {
                         var fx: usize = 0;

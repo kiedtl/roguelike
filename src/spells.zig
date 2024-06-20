@@ -332,16 +332,9 @@ pub const CAST_FIREBLAST = Spell{
         }
     }.f,
     .noise = .Loud,
-    .effects = &[_]Effect{.{ .Custom = struct {
-        fn f(caster: Coord, opts: SpellOptions, target: Coord) void {
-            const caster_mob = state.dungeon.at(caster).mob;
-            if (state.player.cansee(target)) {
-                const caster_m = state.dungeon.at(caster).mob.?;
-                state.message(.SpellCast, "{c} belches forth flames!", .{caster_m});
-            }
-            explosions.fireBurst(target, opts.power, .{ .initial_damage = 0, .culprit = caster_mob });
-        }
-    }.f }},
+    .effects = &[_]Effect{
+        .{ .FireBlast = .{ .radius = .Power, .damage = .{ .Fixed = 0 } } },
+    },
 };
 
 pub const BOLT_AIRBLAST = Spell{
@@ -923,18 +916,10 @@ pub const BOLT_FIREBALL = Spell{
         }
     }.f,
     .noise = .Loud,
-    .effects = &[_]Effect{.{
-        .Custom = struct {
-            fn f(caster_coord: Coord, opts: SpellOptions, target: Coord) void {
-                const caster = state.dungeon.at(caster_coord).mob;
-                explosions.fireBurst(target, 1, .{ .initial_damage = opts.power, .culprit = caster });
-
-                // Target might have been destroyed in explosion
-                if (state.dungeon.at(target).mob) |m_targ|
-                    m_targ.addStatus(.Fire, 0, .{ .Tmp = opts.duration });
-            }
-        }.f,
-    }},
+    .effects = &[_]Effect{
+        .{ .FireBlast = .{ .radius = .{ .Fixed = 1 }, .damage = .Power } },
+        .{ .Status = .Fire },
+    },
 };
 
 pub const CAST_ENRAGE_UNDEAD = Spell{
@@ -1235,11 +1220,29 @@ pub const Effect = union(enum) {
     Heal,
     Damage: struct {
         kind: Damage.DamageKind = .Physical,
-        amount: union(enum) { Fixed: usize, Power, PowerRangeHalf } = .Power,
+        amount: EffectNumber = .Power,
         msg: DamageMessage = .{},
         blood: bool = true,
     },
+    FireBlast: struct {
+        radius: EffectNumber,
+        damage: EffectNumber,
+    },
     Custom: fn (caster: Coord, opts: SpellOptions, coord: Coord) void,
+
+    pub const EffectNumber = union(enum) {
+        Fixed: usize,
+        Power,
+        PowerRangeHalf,
+
+        pub fn get(self: EffectNumber, spellcfg: SpellOptions) usize {
+            return switch (self) {
+                .Power => spellcfg.power,
+                .PowerRangeHalf => rng.rangeClumping(usize, spellcfg.power / 2, spellcfg.power, 2),
+                .Fixed => |n| n,
+            };
+        }
+    };
 
     pub fn execute(self: Effect, spellcfg: SpellOptions, caster_c: Coord, target_c: Coord) void {
         switch (self) {
@@ -1247,11 +1250,7 @@ pub const Effect = union(enum) {
                 victim.addStatus(s, spellcfg.power, .{ .Tmp = spellcfg.duration }),
             .Damage => |d| if (state.dungeon.at(target_c).mob) |victim| {
                 victim.takeDamage(.{
-                    .amount = switch (d.amount) {
-                        .Power => spellcfg.power,
-                        .PowerRangeHalf => rng.rangeClumping(usize, spellcfg.power / 2, spellcfg.power, 2),
-                        .Fixed => |n| n,
-                    },
+                    .amount = d.amount.get(spellcfg),
                     .source = .RangedAttack,
                     .by_mob = state.dungeon.at(caster_c).mob,
                     .blood = d.blood,
@@ -1259,6 +1258,10 @@ pub const Effect = union(enum) {
             },
             .Heal => if (state.dungeon.at(target_c).mob) |victim|
                 victim.takeHealing(spellcfg.power),
+            .FireBlast => |b| explosions.fireBurst(target_c, b.radius.get(spellcfg), .{
+                .initial_damage = b.radius.get(spellcfg),
+                .culprit = state.dungeon.at(caster_c).mob,
+            }),
             .Custom => |c| c(caster_c, spellcfg, target_c),
         }
     }
@@ -1577,7 +1580,7 @@ pub const Spell = struct {
                             .Status => err.bug("Mage tried to induce a status on a corpse!!", .{}),
                             .Damage => err.bug("Mage tried to smack a corpse!!!", .{}),
                             .Heal => err.bug("Mage tried to heal a corpse!!!", .{}),
-                            .Custom => |c| c(caster_coord, opts, target),
+                            else => effect.execute(opts, caster_coord, target),
                         };
                     },
                 }

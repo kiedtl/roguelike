@@ -453,13 +453,29 @@ pub fn dimensions(w: DisplayWindow) Dimension {
 // XXX: Uses a static internal buffer. Buffer must be consumed before next call,
 // not thread safe, etc.
 fn _formatBool(val: bool) []const u8 {
-    var buf: [65535]u8 = undefined;
+    var buf: [3]u8 = undefined;
     var fbs = std.io.fixedBufferStream(&buf);
     var w = fbs.writer();
 
     const color: u21 = if (val) 'b' else 'r';
     const string = if (val) @as([]const u8, "yes") else "no";
     w.print("${u}{s}$.", .{ color, string }) catch err.wat();
+
+    return fbs.getWritten();
+}
+
+// XXX: Uses a static internal buffer. Buffer must be consumed before next call,
+// not thread safe, etc.
+fn _formatEffectNumber(val: spells.Effect.EffectNumber, spellcfg: spells.SpellOptions) []const u8 {
+    var buf: [24]u8 = undefined;
+    var fbs = std.io.fixedBufferStream(&buf);
+    var w = fbs.writer();
+
+    switch (val) {
+        .Power => w.print("$b{}$.", .{spellcfg.power}) catch err.wat(),
+        .PowerRangeHalf => w.print("$b{}$.-$b{}$.", .{ spellcfg.power / 2, spellcfg.power }) catch err.wat(),
+        .Fixed => |n| w.print("$b{}$.", .{n}) catch err.wat(),
+    }
 
     return fbs.getWritten();
 }
@@ -966,10 +982,14 @@ fn _getMonsSpellsDescription(self: *Console, starty: usize, mob: *Mob, _: usize)
                 s.string(state.player), spellcfg.duration,
             }, .{}),
             .Heal => y += self.drawTextAtf(0, y, "· $gIns$. Heal <{}>", .{spellcfg.power}, .{}),
-            .Damage => |d| switch (d.amount) {
-                .Power => y += self.drawTextAtf(0, y, "· $gIns$. {s} <$b{}$.>", .{ d.kind.string(), spellcfg.power }, .{}),
-                .PowerRangeHalf => y += self.drawTextAtf(0, y, "· $gIns$. {s} <$b{}$.-$b{}$.>", .{ d.kind.string(), spellcfg.power / 2, spellcfg.power }, .{}),
-                .Fixed => |n| y += self.drawTextAtf(0, y, "· $gIns$. {s} <$b{}$.>", .{ d.kind.string(), n }, .{}),
+            .Damage => |d| {
+                const dmg_str = StringBuf64.init(_formatEffectNumber(d.amount, spellcfg));
+                y += self.drawTextAtf(0, y, "· $gIns$. {s} <{s}>", .{ d.kind.string(), dmg_str.constSlice() }, .{});
+            },
+            .FireBlast => |b| {
+                const rad_str = StringBuf64.init(_formatEffectNumber(b.radius, spellcfg));
+                const dmg_str = StringBuf64.init(_formatEffectNumber(b.damage, spellcfg));
+                y += self.drawTextAtf(0, y, "· $gIns$. fireblast <rad {s}> <dmg {s}>", .{ rad_str.constSlice(), dmg_str.constSlice() }, .{});
             },
             .Custom => y += self.drawTextAt(0, y, "· $g(See description)$.", .{}),
         };
