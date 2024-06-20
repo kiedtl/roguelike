@@ -1,6 +1,38 @@
 % ex_sp_dodgeable_missable
 
-If a bolt is dodgeable, the target can evade it depending on their $bEvasion$. stat.
+If a bolt is dodgeable, the target can evade it depending on their $bEvasion$.
+stat.
 
 
-If a bolt is missable, the caster can miss their target depending on their $bMissile$. stat.
+If a bolt is missable, the caster can miss their target depending on their
+$bMissile$. stat.
+
+% ego_bone
+More damage will be dealt to living enemies, and less to undead.
+
+% ego_copper
+When standing on copper ground, $b+3$. electric damage will be dealt.
+
+% ego_nc_insane
+When both attacker and defender are in an unlit area, there is a will-checked
+chance for the defender to be driven insane.
+
+% ego_nc_masspara
+When the attacker is in an unlit area, there is a will-checked chance to
+paralyse nearby foes if they are also standing in the dark. The duration of the
+paralysis will always be less than the time needed for the attacker to reach
+them.
+
+% ego_nc_duplicate
+When both attacker and defender are in an unlit area, there is a will-checked
+chance to create a spectral copy of the defender. The spectral copy will
+$calways$. be aligned with the Night Creatures, and will last for $bwillpower *
+2$. turns.
+
+% ego_swap
+When a successful hit is landed, the attacker and defender will swap places.
+
+% ego_drain
+Attacking a $oWielder$. $g(see the creature's description)$. will drain them of
+their MP, absorbing it and preventing them from channelling the Necromancer's
+power.

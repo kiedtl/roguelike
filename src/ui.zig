@@ -1003,8 +1003,11 @@ fn _getMonsSpellsDescription(self: *Console, starty: usize, mob: *Mob, _: usize)
         y += self.drawTextAtf(0, y, "· $cdamage$.: {} $g<{s}>$.", .{
             weapon.damage, weapon.damage_kind.stringLong(),
         }, .{});
-        if (weapon.ego != .None)
-            y += self.drawTextAtf(0, y, "· $cego$.: {s}", .{weapon.ego.name().?}, .{});
+        if (weapon.ego != .None) {
+            const name = weapon.ego.name().?;
+            y += self.drawTextAtf(0, y, "· $cego$.: {s}", .{name}, .{});
+            self.addTooltipForText("{s} ego", .{name}, "{s}", .{weapon.ego.id().?});
+        }
         if (weapon.martial != false)
             y += self.drawTextAt(0, y, "· $cmartial$.: yes", .{});
         if (weapon.delay != 100)
@@ -1231,7 +1234,8 @@ fn _getItemDescription(self: *Console, starty: usize, item: Item, linewidth: usi
 
             y += _writerHeader(self, y, linewidth, "traits", .{});
 
-            const p_ego_desc = p.ego.description();
+            const p_ego_desc = if (p.ego.id()) |i| state.descriptions.get(i) else null;
+
             if (p.martial) {
                 const stat = state.player.stat(.Martial);
                 const statfmt = utils.SignedFormatter{ .v = stat };
