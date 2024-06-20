@@ -1408,34 +1408,45 @@ x Workshop enhancements
   x Construct garrisons in corridors
   x Alarm systems, improved alchemist AI
   x Additional prefabs for variety
-- Spell/ability flavor text and HUD description improvements
-  - Popups for spell description/flavor
-  - Describe custom effects properly
+x Spell/ability flavor text and HUD description improvements
+  x Popups for spell description/flavor
+  x Describe custom effects properly
 - Fire: don't destroy corpses entirely, only char them
 - Lava and Water rework
   - Rework as terrain
   - Lava -> Glowing water
 - Fix shrine-blowup particle effect (rework, simplify and speedup)
-- Ring of deceleration
-  - Workshop prefab
-- Holding map
+x Holding map
   x Tunneling + BSP mapgen
-  - Items
-    - Timekeeper's pendant
-      - Ring of deceleration
-    - Alternate earthen shield prefab (don't want to entirely remove shinies from Lab...)
-  - Skeletal arbalists, corridor prefabs
-  x Ember beast
-  - Prisoners
+  x Items
+    x Ring of deceleration
+    x Alternate earthen shield prefab (don't want to entirely remove shinies from Lab...)
+    x Potions of corrosion
+    x Acid-resistant armor
+  x Skeletal arbalists subroom
+  x Ember beast corridor prefabs
+  x Lore prefabs
+    x dead Revgen, with cloud of miasma.
+      - experiment had been carried out on Revgen with strange/modified
+        transmitter that was found in a random tinkerer's room in Lab with no
+        explanation/record. Revgen had woken up, violently vomited up acid and
+        some of its internal organs, had a series of horrific seizures, and
+        then died in agony a few hours later.
+      - A few blademasters nearby (called in a panic when it woke up)
+      - Alchemists drawing up record of incident.
+  x Prisoners
     x Revgenunhelkim
     x Burning brutes
-    - Cinder beasts
-    - Night creature (slinking terror)
-- Holding map, pt 2 (after holy temple + insurrection maps)
+    x Cinder beasts
+    x Night creature (slinking terror)
+- Holding map, pt 2 (after holy temple + insurrection maps + crypt)
   - Alvoc artifact prefabs + lore
   - Holy artifact prefabs + lore
-  - Revgenuhelkim
-    - Acid claws, acid damage and resistance
+  - Timekeeper's pendant
+  - Revgenuhelkim: acid claws, acid damage and resistance
+  - Lever room and subsequent crypt event
+- Add Vozgum armor prefab to Laboratory
+- Make potions of corrosion actually useful
 - Fix prisoner hostility issues (with Revgen)
 - Crypt floor
   x Modify level data and spawn files
@@ -1456,7 +1467,10 @@ x Workshop enhancements
   - Hall map at end
     - Win condition
 - Add "character" to game
-  - Names for all goblin/human monsters
+  - Names for goblins and humans
+    - 100 surnames
+      - Humans have no family names?
+    - 50 given names
   - Fluff prefabs
     - Washroom: zinc tiles surrounding water pool (zinc bathtub), sinks, bucket
     - Boiler room
@@ -1468,30 +1482,27 @@ x Workshop enhancements
       nearby.
     - Laboratory: boxes/chunks of slade, with crushing/analyzing machines nearby.
 - Lore prefabs
-    - Laboratory: insane & paralysed prisoners inside holding cells
+    - Laboratory: insane & paralysed Revgenunkim (single) inside holding cell
+      - Lab/3 only
+      - Pump puts healing gas inside cell, while overclocked + high-powered
+        transmitter damages Revgenunkim (only if >2 HP)
+      - Poster explaining research.
+    - Laboratory: disoriented & paralysed prisoners inside holding cells
       - "Since the bastards won't tell us what these potions are for, we'll
         just have to find out ourselves."
     x Laboratory: Prisoners being blasted with transmitters on full power.
       - They are dazed if kept for many hours, but are otherwise unharmed.
       - Some have headaches (only in record, not an actual status).
     - Laboratory: insane & paralysed Revgenunkim inside holding cells
+      - Lab/3 only
       - Poster explains that alchemists are experimenting with signal strength
         and repetition patterns to determine how to cause specific effects
       - Various other statuses: disoriented, debil, fear, enraged
-    - Laboratory: insane & paralysed Revgenunkim (single) inside holding cell
-      - Pump puts healing gas inside cell, while overclocked + high-powered
-        transmitter damages Revgenunkim (only if >2 HP)
-      - Poster explaining research.
-    - Quarantine: dead Revgen, with cloud of miasma.
-      - experiment had been carried out on Revgen with strange/modified
-        transmitter that was found in a random tinkerer's room in Lab with no
-        explanation/record. Revgen had woken up, violently vomited up acid and
-        some of its internal organs, had a series of horrific seizures, and
-        then died in agony a few hours later.
-      - A few blademasters nearby (called in a panic when it woke up)
-      - Alchemists drawing up record of incident
-      - Some barrels/potions of sludge/acid.
     - Crypt + Marble room: Death mage trying (and failing) to resurrect Revgen.
+    - Laboratory: potions of corrosion being analysed
+      - Somehow far stronger than any pure acid or pure compound
+      - Poster should mention attempts to "milk" paralysed Revgenunkim for
+	corrosion potions
 - Simplification: instead of having attack AI for stalker, have them actually
   transform into sparklings when hunter captain dies
 - Consider adding more ugrades
