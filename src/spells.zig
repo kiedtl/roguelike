@@ -1251,6 +1251,7 @@ pub const Effect = union(enum) {
                 victim.addStatus(s, spellcfg.power, .{ .Tmp = spellcfg.duration }),
             .Damage => |d| if (state.dungeon.at(target_c).mob) |victim| {
                 victim.takeDamage(.{
+                    .kind = d.kind,
                     .amount = d.amount.get(spellcfg),
                     .source = .RangedAttack,
                     .by_mob = state.dungeon.at(caster_c).mob,
@@ -1504,8 +1505,9 @@ pub const Spell = struct {
                         }
                     }
 
-                    for (self.effects) |effect|
+                    for (self.effects) |effect| {
                         effect.execute(opts, caster_coord, coord);
+                    }
                 }
             },
             .Smite => {
