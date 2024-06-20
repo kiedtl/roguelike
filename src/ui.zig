@@ -926,8 +926,8 @@ fn _getMonsSpellsDescription(self: *Console, starty: usize, mob: *Mob, _: usize)
     }
 
     for (mob.spells) |spellcfg| {
-        y += self.drawTextAtf(0, y, "$c{s}$. $g($b{}$. $gmp)$.", .{
-            spellcfg.spell.name, spellcfg.MP_cost,
+        y += self.drawTextAtf(0, y, "$c{s}$. $g($b{}$. $gmp)$. $g[{s}]$.", .{
+            spellcfg.spell.name, spellcfg.MP_cost, spellcfg.spell.noise.string(),
         }, .{});
         self.addTooltipForText("{s}", .{spellcfg.spell.name}, "{s}", .{spellcfg.spell.id});
 
