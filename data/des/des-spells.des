@@ -1,3 +1,12 @@
+% sp_call_bloat
+Bug
+
+% sp_call_emberling
+Use a corpse to create a single new emberling, using it up in the process.
+
+% sp_call_sparkling
+Use a corpse to create a single new sparkling, using it up in the process.
+
 % sp_alert_ally
 Inform a nearby ally, within FOV range (though not necessarily visible), of the
 nearest enemy.
@@ -88,6 +97,9 @@ Hurl a crystal spear.
 
 % sp_elec_bolt
 Unleash a lightning bolt, dealing electrical damage.
+
+% sp_fireball
+Hurl a bolt of fire, creating a small burst at the target.
 
 % sp_enrage_undead
 Confer greater strength and combat skills on an allied undead.
