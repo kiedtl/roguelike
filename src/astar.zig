@@ -76,6 +76,10 @@ pub fn basePenaltyFunc(coord: Coord, opts: state.IsWalkableOptions) usize {
         else => {},
     };
 
+    if (state.dungeon.terrainAt(coord).is_path_penalized) {
+        c += 50;
+    }
+
     if (opts.mob) |mob| {
         if (mob.ai.flag(.FearsDarkness)) {
             if (!state.dungeon.lightAt(coord).*)
@@ -94,7 +98,7 @@ pub fn basePenaltyFunc(coord: Coord, opts: state.IsWalkableOptions) usize {
         }
 
         if (!fire.fireIsSafeFor(mob, state.dungeon.fireAt(coord).*))
-            c += 49;
+            c += 50;
     }
 
     return c;

@@ -751,7 +751,9 @@ pub fn isRoomInvalid(
             while (x < room.rect.end().x) : (x += 1) {
                 const coord = Coord.new2(room.rect.start.z, x, y);
                 if (state.dungeon.at(coord).type == .Lava or
-                    state.dungeon.at(coord).type == .Water)
+                    state.dungeon.at(coord).type == .Water or
+                    state.dungeon.terrainAt(coord) == &surfaces.ShallowWaterTerrain or
+                    state.dungeon.terrainAt(coord) == &surfaces.WaterTerrain)
                 {
                     return true;
                 }
@@ -813,6 +815,7 @@ pub fn excavatePrefab(
             const tt: ?TileType = switch (fab.content[y][x]) {
                 .Any, .Connection => null,
                 .Window, .Wall => .Wall,
+                .Water,
                 .LevelFeature,
                 .Feature,
                 .LockedDoor,
@@ -827,7 +830,7 @@ pub fn excavatePrefab(
                 .Corpse,
                 .Ring,
                 => .Floor,
-                .Water => .Water,
+                //.Water => .Water,
                 .Lava => .Lava,
             };
             if (tt) |_tt| state.dungeon.at(rc).type = _tt;
@@ -918,6 +921,7 @@ pub fn excavatePrefab(
                 .Door => placeDoor(rc, false),
                 .Brazier => _place_machine(rc, Configs[room.rect.start.z].light),
                 .ShallowWater => state.dungeon.at(rc).terrain = &surfaces.ShallowWaterTerrain,
+                .Water => state.dungeon.at(rc).terrain = &surfaces.WaterTerrain,
                 .Bars => {
                     const p_ind = utils.findById(surfaces.props.items, Configs[room.rect.start.z].bars);
                     _ = placeProp(rc, &surfaces.props.items[p_ind.?]);

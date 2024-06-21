@@ -1394,6 +1394,11 @@ pub const Status = enum {
     // Doesn't have a power field.
     Lifespan,
 
+    // Just combat debufs for now.
+    //
+    // Doesn't have a power field.
+    Water,
+
     // }}}
 
     pub const TOTAL = @typeInfo(@This()).Enum.fields.len;

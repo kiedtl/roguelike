@@ -52,5 +52,6 @@
 .RingingEars       	"ringing ears"        	 "[bug] singing"       	 "ringing"
 .Sleeping          	"sleeping"            	 "dormant"             	 "sleep"
 .Slow              	"slowed"              	 -                     	 "slow"
+.Water             	"water"               	 -                     	 "water"
 .DayBlindness      	"day-blinded"         	 -                     	 -
 .NightBlindness    	"night-blinded"       	 -                     	 -

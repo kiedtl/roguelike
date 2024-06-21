@@ -389,8 +389,11 @@ this, you share electricity damage with nearby monsters.
 Wooden boards. Creaky and flammable, but makes you resistant to electricity.
 
 % t_water
-Someone spilled a lot of water here. It's difficult to sneak through, and will
-make you very vulnerable to electricity. You are very resistant to fire though.
+Deep water. It would be wise to avoid.
+
+% t_water_shallow
+It's difficult to sneak through, and will make you very vulnerable to
+electricity. You are very resistant to fire though.
 
 % t_f_lumi
 Some kind of bluish fungi, glowing serenely in the dim light of the Dungeon.

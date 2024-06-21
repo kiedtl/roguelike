@@ -25,6 +25,9 @@ This is supposed to be a player-only status, and is probably a bug.
 % nonplayer_Status.RingObscuration
 This is supposed to be a player-only status, and is probably a bug.
 
+% nonplayer_Status.RingDeceleration
+This is supposed to be a player-only status, and is probably a bug.
+
 % nonplayer_Status.DetectHeat
 This is supposed to be a player-only status, and is probably a bug.
 
@@ -161,6 +164,9 @@ It doesn't seem to be awake...
 
 % nonplayer_Status.Slow
 It is moving 2x more slowly.
+
+% nonplayer_Status.Water
+It is in water.
 
 % nonplayer_Status.DayBlindness
 (Bug) Seems the sun burnt it when it went outside.

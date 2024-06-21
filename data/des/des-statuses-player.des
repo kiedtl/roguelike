@@ -25,6 +25,9 @@ Refer to the ring's description.
 % player_Status.RingObscuration
 Refer to the ring's description.
 
+% player_Status.RingDeceleration
+Refer to the ring's description.
+
 % player_Status.DetectHeat
 You are detecting sources of heat, as well as enemies attuned to fire.
 
@@ -163,6 +166,9 @@ sounds.
 
 % player_Status.Slow
 You are moving 2x more slowly.
+
+% player_Status.Water
+You are in deep water, and are suitably affected.
 
 % player_Status.DayBlindness
 [BUG] So the sun burnt you when you went outside huh?

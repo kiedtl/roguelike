@@ -97,6 +97,7 @@ pub const Terrain = struct {
     effects: []const StatusDataInfo = &[_]StatusDataInfo{},
     flammability: usize = 0,
     fire_retardant: bool = false,
+    is_path_penalized: bool = false,
     repairable: bool = true,
     luminescence: usize = 0,
     opacity: usize = 0,
@@ -196,11 +197,11 @@ pub const WoodTerrain = Terrain{
 };
 
 pub const ShallowWaterTerrain = Terrain{
-    .id = "t_water",
+    .id = "t_water_shallow",
     .name = "shallow water",
     .color = 0x3c73b1, // medium blue
     .tile = '≈',
-    .resists = .{ .rFire = 50, .rElec = -50 },
+    .resists = .{ .rFire = 25, .rElec = -25 },
     .effects = &[_]StatusDataInfo{
         .{ .status = .Conductive, .duration = .{ .Ctx = null } },
     },
@@ -209,6 +210,25 @@ pub const ShallowWaterTerrain = Terrain{
     .for_levels = &[_][]const u8{"CAV"},
     .placement = .RoomBlob,
     .weight = 3,
+};
+
+pub const WaterTerrain = Terrain{
+    .id = "t_water",
+    .name = "deep water",
+    .color = 0x104381, // medium blue
+    .tile = '≈',
+    .resists = .{ .rFire = 50, .rElec = -50 },
+    .effects = &[_]StatusDataInfo{
+        .{ .status = .Conductive, .duration = .{ .Ctx = null } },
+        .{ .status = .Noisy, .duration = .{ .Ctx = null } },
+        .{ .status = .Water, .duration = .{ .Ctx = null } },
+    },
+    .fire_retardant = true,
+    .is_path_penalized = true,
+
+    .for_levels = &[_][]const u8{},
+    .placement = .RoomBlob,
+    .weight = 0,
 };
 
 pub const DeadFungiTerrain = Terrain{
@@ -261,6 +281,8 @@ pub const TERRAIN = [_]*const Terrain{
     &MetalTerrain,
     &CopperTerrain,
     &WoodTerrain,
+    &ShallowWaterTerrain,
+    &WaterTerrain,
     &DeadFungiTerrain,
     &TallFungiTerrain,
     &PillarTerrain,
