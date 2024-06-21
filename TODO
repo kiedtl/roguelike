@@ -1412,10 +1412,7 @@ x Spell/ability flavor text and HUD description improvements
   x Popups for spell description/flavor
   x Describe custom effects properly
 - Fire: don't destroy corpses entirely, only char them
-- Lava and Water rework
-  - Rework as terrain
-  - Lava -> Glowing water
-- Fix shrine-blowup particle effect (rework, simplify and speedup)
+x Water rework, Water status
 x Holding map
   x Tunneling + BSP mapgen
   x Items
@@ -1439,6 +1436,7 @@ x Holding map
     x Burning brutes
     x Cinder beasts
     x Night creature (slinking terror)
+- Fix shrine-blowup particle effect (rework, simplify and speedup)
 - Holding map, pt 2 (after holy temple + insurrection maps + crypt)
   - Alvoc artifact prefabs + lore
   - Holy artifact prefabs + lore
@@ -1529,15 +1527,17 @@ x Holding map
   - Items
     - Ring of fustigation
     - Mark ring of concentration, condemnation as holy
-    - Max HP increasing item(?) ("bread of life") (holy only, ofc) 
     - Inability to use holy items w/ evil ones equipped
       - Symbol is destroyed (since it's an item)
     - Dispel Undead
     - Bread of life: +max_HP, -Pot
+    - Ring: mark any living creature (even foe, even death mage) as "dispelling
+      undead" causing any adjacent undead (even allies) to take damage
   - Angels spells
     - Hellfire spell (irresist damage)
     - Disintegration (punch through walls, same as ring)
     - Dispelling bolt (dispell undead, will-checked)
+    - Abjure earth demon (anti-revgenunkim)
     - Rolling boulder
     - Martial, Spikes/riposte
     - Frozen fiend living ice ability (basalt themed, like basalt fiend)
@@ -1552,9 +1552,18 @@ x Holding map
     - Strength rating, tweaking
     - Simulation testing
   - Caverns rework
-    - Alchemist + dustling analyzer prefabs
-    - Dustling machines
-    - Event: dustling components brought in and assembled, new dustling squads formed
+    - Lava rework
+      - Lava -> Glowing water
+      - Glowing water mist
+    - Environment
+      - Multi-colored and scintillating lichen
+      - Water animations
+      - Water ringed with shallow water
+    - Living dungeon
+      - Alchemist + dustling analyzer prefabs
+      - Dustling production machines
+      - Event: dustling components brought in and assembled, new dustling squads formed
+    - Vapor mage throwing/blowing dustlings at enemies
 - UI
   - Escape menu
     - List of visited/unvisited floors
