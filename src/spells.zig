@@ -1250,7 +1250,7 @@ pub const Effect = union(enum) {
         }
     };
 
-    pub fn execute(self: Effect, spellcfg: SpellOptions, caster_c: Coord, target_c: Coord) void {
+    pub fn execute(self: Effect, spellcfg: SpellOptions, caster: ?*Mob, caster_c: Coord, target_c: Coord) void {
         switch (self) {
             .Status => |s| if (state.dungeon.at(target_c).mob) |victim|
                 victim.addStatus(s, spellcfg.power, .{ .Tmp = spellcfg.duration }),
@@ -1259,7 +1259,7 @@ pub const Effect = union(enum) {
                     .kind = d.kind,
                     .amount = d.amount.get(spellcfg),
                     .source = .RangedAttack,
-                    .by_mob = state.dungeon.at(caster_c).mob,
+                    .by_mob = caster,
                     .blood = d.blood,
                 }, d.msg);
             },
@@ -1267,7 +1267,7 @@ pub const Effect = union(enum) {
                 victim.takeHealing(spellcfg.power),
             .FireBlast => |b| explosions.fireBurst(target_c, b.radius.get(spellcfg), .{
                 .initial_damage = b.radius.get(spellcfg),
-                .culprit = state.dungeon.at(caster_c).mob,
+                .culprit = caster,
             }),
             .Custom => |c| c(caster_c, spellcfg, target_c),
         }
@@ -1511,7 +1511,7 @@ pub const Spell = struct {
                     }
 
                     for (self.effects) |effect| {
-                        effect.execute(opts, caster_coord, coord);
+                        effect.execute(opts, caster, caster_coord, coord);
                     }
                 }
             },
@@ -1577,7 +1577,7 @@ pub const Spell = struct {
                         }
 
                         for (self.effects) |effect|
-                            effect.execute(opts, caster_coord, target);
+                            effect.execute(opts, caster, caster_coord, target);
                     },
                     .Corpse => {
                         if (state.dungeon.at(target).surface == null or
@@ -1590,7 +1590,7 @@ pub const Spell = struct {
                             .Status => err.bug("Mage tried to induce a status on a corpse!!", .{}),
                             .Damage => err.bug("Mage tried to smack a corpse!!!", .{}),
                             .Heal => err.bug("Mage tried to heal a corpse!!!", .{}),
-                            else => effect.execute(opts, caster_coord, target),
+                            else => effect.execute(opts, caster, caster_coord, target),
                         };
                     },
                 }
