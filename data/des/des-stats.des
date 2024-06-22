@@ -81,7 +81,7 @@ or increase Vision.
 
 % stat_Willpower
 
-In a range of 0 to 10. Determines how often hostile enchantments can be
+In a range of 1 to 10. Determines how often hostile enchantments can be
 resisted, as well as the ability to inflict enchantments on others.
 
 

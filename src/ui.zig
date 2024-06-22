@@ -933,7 +933,7 @@ fn _getMonsSpellsDescription(self: *Console, starty: usize, mob: *Mob, _: usize)
         if (spellcfg.spell.checks_will) break true;
     } else false;
     if (has_willchecked_spell) {
-        const chance = spells.appxChanceOfWillOverpowered(mob, state.player);
+        const chance = spells.checkAvgWillChances(mob, state.player);
         const colorset = [_]u21{ 'g', 'b', 'b', 'p', 'p', 'r', 'r', 'r', 'r', 'r' };
         y += self.drawTextAtf(0, y, "$cChance to overpower your will$.: ${u}{}%$.", .{
             colorset[chance / 10], chance,

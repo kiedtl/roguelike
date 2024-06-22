@@ -1060,7 +1060,7 @@ pub const DetonationRing = Ring{ // {{{
             }) orelse return false).mob.?;
 
             if (!spells.willSucceedAgainstMob(state.player, target)) {
-                const chance = 100 - spells.appxChanceOfWillOverpowered(state.player, target);
+                const chance = 100 - spells.checkAvgWillChances(state.player, target);
                 state.message(.SpellCast, "{c} resisted $oDetonation$. $g($c{}%$g chance)$.", .{ target, chance });
                 return true;
             }

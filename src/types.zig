@@ -1556,7 +1556,7 @@ pub const Status = enum {
             // FIXME: reduce duplicated will-checking code between this and spells.cast()
             if (!spells.willSucceedAgainstMob(mob, othermob)) {
                 if (state.player.cansee(othermob.coord) or state.player.cansee(mob.coord)) {
-                    const chance = 100 - spells.appxChanceOfWillOverpowered(mob, othermob);
+                    const chance = 100 - spells.checkAvgWillChances(mob, othermob);
                     state.message(.SpellCast, "{c} resisted $oTorment Undead$. $g($c{}%$g chance)$.", .{ othermob, chance });
                 }
                 continue;

@@ -30,6 +30,7 @@ const rng = @import("rng.zig");
 const scores = @import("scores.zig");
 const sentry = @import("sentry.zig");
 const serializer = @import("serializer.zig");
+const spells = @import("spells.zig");
 const state = @import("state.zig");
 const surfaces = @import("surfaces.zig");
 const tasks = @import("tasks.zig");
@@ -132,6 +133,7 @@ fn initGame(no_display: bool, display_scale: f32) bool {
     mobs.spawns.readSpawnTables(state.gpa.allocator());
     mapgen.readPrefabs(state.gpa.allocator());
     readDescriptions(state.gpa.allocator());
+    spells.initAvgWillChances();
 
     initGameState();
 

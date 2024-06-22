@@ -1185,27 +1185,55 @@ pub const CAST_PAIN = Spell{
     .checks_will = true,
 };
 
+pub fn willSucceedAgainstMobStats(cw: isize, tw: isize) bool {
+    if (tw == mobs.WILL_IMMUNE or cw < tw)
+        return false;
+    if (rng.onein(10) or cw < tw)
+        return false;
+    return (rng.rangeClumping(isize, 1, 100, 2) * cw) >
+        (rng.rangeClumping(isize, 1, 150, 2) * tw);
+}
+
 pub fn willSucceedAgainstMob(caster: *const Mob, target: *const Mob) bool {
     const tw = target.stat(.Willpower);
     const cw = switch (caster.stat(.Willpower)) {
         mobs.WILL_IMMUNE => 10,
         else => |w| w,
     };
-    if (tw == mobs.WILL_IMMUNE or rng.onein(10) or cw < tw)
-        return false;
-    return (rng.rangeClumping(isize, 1, 100, 2) * cw) >
-        (rng.rangeClumping(isize, 1, 150, 2) * tw);
+    return willSucceedAgainstMobStats(cw, tw);
 }
 
-pub fn appxChanceOfWillOverpowered(caster: *const Mob, target: *const Mob) usize {
-    var defeated: usize = 0;
-    var i: usize = 10_000;
-    while (i > 0) : (i -= 1) {
-        if (willSucceedAgainstMob(caster, target)) {
-            defeated += 1;
+// Will range is 1...10, for convenience we make the table 11 so that we don't
+// have to do TABLE[will-1][other_will-1]
+//
+pub var AVG_WILL_CHANCES: [11][11]usize = undefined;
+
+pub fn initAvgWillChances() void {
+    var atk: usize = 1;
+    while (atk < AVG_WILL_CHANCES.len) : (atk += 1) {
+        var def: usize = 1;
+        while (def < AVG_WILL_CHANCES[atk].len) : (def += 1) {
+            var defeated: usize = 1;
+            var i: usize = 10_000;
+            while (i > 0) : (i -= 1) {
+                const cw = @intCast(isize, atk);
+                const tw = @intCast(isize, def);
+                if (willSucceedAgainstMobStats(cw, tw)) {
+                    defeated += 1;
+                }
+            }
+            AVG_WILL_CHANCES[atk][def] = defeated / 100;
         }
     }
-    return defeated / 100;
+}
+
+pub fn checkAvgWillChances(caster: *Mob, target: *Mob) usize {
+    const tw = target.stat(.Willpower);
+    const cw = switch (caster.stat(.Willpower)) {
+        mobs.WILL_IMMUNE => 10,
+        else => |w| w,
+    };
+    return AVG_WILL_CHANCES[@intCast(usize, cw)][@intCast(usize, tw)];
 }
 
 pub const SpellOptions = struct {
@@ -1502,7 +1530,7 @@ pub const Spell = struct {
                         }
 
                         if (self.checks_will and !willSucceedAgainstMob(caster.?, victim)) {
-                            const chance = 100 - appxChanceOfWillOverpowered(caster.?, victim);
+                            const chance = 100 - checkAvgWillChances(caster.?, victim);
                             if (state.player.cansee(victim.coord) or state.player.cansee(caster_coord)) {
                                 state.message(.SpellCast, "{c} resisted $g($c{}%$g chance)$.", .{ victim, chance });
                             }
@@ -1569,7 +1597,7 @@ pub const Spell = struct {
                         const mob = state.dungeon.at(target).mob.?;
 
                         if (self.checks_will and !willSucceedAgainstMob(caster.?, mob)) {
-                            const chance = 100 - appxChanceOfWillOverpowered(caster.?, mob);
+                            const chance = 100 - checkAvgWillChances(caster.?, mob);
                             if (state.player.cansee(mob.coord) or state.player.cansee(caster_coord)) {
                                 state.message(.SpellCast, "{c} resisted $g($c{}%$g chance)$.", .{ mob, chance });
                             }
