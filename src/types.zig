@@ -2048,6 +2048,7 @@ pub const Squad = struct {
     }
 };
 
+pub const STAT_LIST = [@typeInfo(Stat).Enum.fields.len]Stat{ .Melee, .Missile, .Martial, .Evade, .Speed, .Vision, .Willpower, .Spikes, .Conjuration, .Potential };
 pub const Stat = enum {
     Melee,
     Missile,

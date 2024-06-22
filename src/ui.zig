@@ -553,25 +553,41 @@ fn _writerMonsHostility(self: *Console, y: usize, mob: *Mob) usize {
 fn _writerMobStats(self: *Console, starty: usize, mob: *Mob) usize {
     var y = starty;
 
-    inline for (@typeInfo(Stat).Enum.fields) |statv| {
-        const stat = @intToEnum(Stat, statv.value);
+    for (types.STAT_LIST) |stat| {
         const stat_val_raw = mob.stat(stat);
         const stat_val = utils.SignedFormatter{ .v = stat_val_raw };
+
+        if (!stat.showMobStat(stat_val_raw))
+            continue;
+
         const stat_val_real = switch (stat) {
-            .Melee => combat.chanceOfMeleeLanding(mob, null),
-            .Evade => combat.chanceOfAttackEvaded(mob, null),
+            .Melee => @intCast(isize, combat.chanceOfMeleeLanding(mob, null)),
+            .Evade => @intCast(isize, combat.chanceOfAttackEvaded(mob, null)),
+            .Missile => @intCast(isize, combat.chanceOfMissileLanding(mob)),
             else => stat_val_raw,
         };
-        if (stat.showMobStat(stat_val_raw)) {
-            if (@intCast(usize, math.clamp(stat_val_raw, 0, 100)) != stat_val_real) {
-                const c = if (@intCast(isize, stat_val_real) < stat_val_raw) @as(u21, 'r') else 'b';
-                y += self.drawTextAtf(0, y, "$c{s: <9}$. {: >5}{s: >1}  $g(${u}{}{s}$g)$.", .{ stat.string(), stat_val, stat.formatAfter(), c, stat_val_real, stat.formatAfter() }, .{});
-            } else {
-                y += self.drawTextAtf(0, y, "$c{s: <9}$. {: >5}{s: >1}", .{ stat.string(), stat_val, stat.formatAfter() }, .{});
-            }
+
+        // Special cases
+        switch (stat) {
+            .Melee, .Evade, .Missile => {
+                if (@intCast(usize, math.clamp(stat_val_raw, 0, 100)) != stat_val_real) {
+                    const c = if (@intCast(isize, stat_val_real) < stat_val_raw) @as(u21, 'r') else 'b';
+                    y += self.drawTextAtf(0, y, "$c{s: <9}$. {: >5}{s: >1}  $g(${u}{}{s}$g)$.", .{ stat.string(), stat_val, stat.formatAfter(), c, stat_val_real, stat.formatAfter() }, .{});
+                    continue;
+                }
+            },
+            .Willpower => if (stat_val_raw == mobs.WILL_IMMUNE) {
+                y += self.drawTextAtf(0, y, "$c{s: <9}$. {u: >5}{s: >1}", .{ stat.string(), '∞', stat.formatAfter() }, .{});
+                continue;
+            },
+            else => {},
         }
+
+        // Regular case
+        y += self.drawTextAtf(0, y, "$c{s: <9}$. {: >5}{s: >1}", .{ stat.string(), stat_val, stat.formatAfter() }, .{});
     }
     y += self.drawTextAt(0, y, "\n", .{});
+
     inline for (@typeInfo(Resistance).Enum.fields) |resistancev| {
         const resist = @intToEnum(Resistance, resistancev.value);
         const resist_val = utils.SignedFormatter{ .v = mob.resistance(resist) };
