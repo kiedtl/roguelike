@@ -1186,10 +1186,15 @@ pub const CAST_PAIN = Spell{
 };
 
 pub fn willSucceedAgainstMob(caster: *const Mob, target: *const Mob) bool {
-    if (rng.onein(10) or caster.stat(.Willpower) < target.stat(.Willpower))
+    const tw = target.stat(.Willpower);
+    const cw = switch (caster.stat(.Willpower)) {
+        mobs.WILL_IMMUNE => 10,
+        else => |w| w,
+    };
+    if (tw == mobs.WILL_IMMUNE or rng.onein(10) or cw < tw)
         return false;
-    return (rng.rangeClumping(isize, 1, 100, 2) * caster.stat(.Willpower)) >
-        (rng.rangeClumping(isize, 1, 150, 2) * target.stat(.Willpower));
+    return (rng.rangeClumping(isize, 1, 100, 2) * cw) >
+        (rng.rangeClumping(isize, 1, 150, 2) * tw);
 }
 
 pub fn appxChanceOfWillOverpowered(caster: *const Mob, target: *const Mob) usize {

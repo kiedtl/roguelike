@@ -4350,6 +4350,10 @@ pub const Mob = struct { // {{{
 
         // Add the mob's innate stat.
         const innate = utils.getFieldByEnum(Stat, self.stats, _stat);
+
+        if (_stat == .Willpower and innate == mobs.WILL_IMMUNE)
+            return mobs.WILL_IMMUNE;
+
         val += innate;
 
         // Check terrain.
@@ -4407,6 +4411,7 @@ pub const Mob = struct { // {{{
         val = switch (_stat) {
             // Should never be below 0
             .Vision, .Spikes, .Potential => math.max(0, val),
+            .Willpower => math.clamp(val, 1, 10),
             else => val,
         };
 
