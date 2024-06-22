@@ -978,10 +978,16 @@ fn _getMonsSpellsDescription(self: *Console, starty: usize, mob: *Mob, _: usize)
         }
 
         for (spellcfg.spell.effects) |effect| switch (effect) {
-            .Status => |s| y += self.drawTextAtf(0, y, "· $gTmp$. {s} ({})", .{
-                s.string(state.player), spellcfg.duration,
-            }, .{}),
-            .Heal => y += self.drawTextAtf(0, y, "· $gIns$. Heal <{}>", .{spellcfg.power}, .{}),
+            .Status => |s| {
+                y += self.drawTextAtf(0, y, "· $gTmp$. {s} ({})", .{
+                    s.string(state.player), spellcfg.duration,
+                }, .{});
+                self.addTooltipForText("{s}", .{s.string(state.player)}, "nonplayer_{s}", .{s});
+            },
+            .Heal => {
+                y += self.drawTextAtf(0, y, "· $gIns$. Heal <{}>", .{spellcfg.power}, .{});
+                self.addTooltipForText("Heal", .{}, "ex_sp_effect_heal", .{});
+            },
             .Damage => |d| {
                 const dmg_str = StringBuf64.init(_formatEffectNumber(d.amount, spellcfg));
                 y += self.drawTextAtf(0, y, "· $gIns$. {s} <{s}>", .{ d.kind.string(), dmg_str.constSlice() }, .{});
@@ -990,6 +996,7 @@ fn _getMonsSpellsDescription(self: *Console, starty: usize, mob: *Mob, _: usize)
                 const rad_str = StringBuf64.init(_formatEffectNumber(b.radius, spellcfg));
                 const dmg_str = StringBuf64.init(_formatEffectNumber(b.damage, spellcfg));
                 y += self.drawTextAtf(0, y, "· $gIns$. fireblast <rad {s}> <dmg {s}>", .{ rad_str.constSlice(), dmg_str.constSlice() }, .{});
+                self.addTooltipForText("Fireblast", .{}, "ex_sp_effect_fireblast", .{});
             },
             .Custom => y += self.drawTextAt(0, y, "· $g(See description)$.", .{}),
         };
@@ -1077,8 +1084,10 @@ fn _getMonsDescription(self: *Console, starty: usize, mob: *Mob, linewidth: usiz
         y += self.drawTextAt(0, y, "· is non-living ($bundead$.)", .{})
     else if (mob.life_type == .Spectral)
         y += self.drawTextAt(0, y, "· is non-living ($bspectral$.)", .{});
-    if (mob.max_drainable_MP > 0)
+    if (mob.max_drainable_MP > 0) {
         y += self.drawTextAtf(0, y, "· is a $oWielder$. ($o{}$. drainable MP)", .{mob.max_drainable_MP}, .{});
+        self.addTooltipForText("Wielder", .{}, "ex_mob_wielder", .{});
+    }
     if (!combat.canMobBeSurprised(mob))
         y += self.drawTextAt(0, y, "· can't be $bsurprised$.", .{});
     if (mob.max_drainable_MP > 0 and mob.is_drained)

@@ -1,3 +1,25 @@
+% ex_mob_wielder
+A $oWielder$. has been granted permission to channel the Necromancer's power to
+cast spells. You will be able to drain this power from their corpse, if they
+leave one. The amount of MP you absorb is dependent on your $oPotential$. stat.
+
+
+If the Wielder is undead, you can only drain their power with special weapons,
+since they leave no corpse.
+
+
+Not all spellcasters are Wielders.
+
+% ex_sp_effect_heal
+Exactly what it says on the tin.
+
+% ex_sp_effect_fireblast
+Exactly what it says on the tin. A blast of fire engulfs a certain radius,
+dealing a certain amount of damage, and creating flames on all affected tiles.
+
+
+No walls, objects, etc will be destroyed in the initial blast.
+
 % ex_sp_dodgeable_missable
 
 If a bolt is dodgeable, the target can evade it depending on their $bEvasion$.
