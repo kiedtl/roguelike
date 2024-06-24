@@ -2083,10 +2083,12 @@ pub const Stat = enum {
         };
     }
 
-    pub fn showMobStat(self: Stat, value: isize) bool {
+    pub fn showMobStat(self: Stat, mob: *Mob, value: isize) bool {
         return switch (self) {
             .Melee, .Evade, .Vision, .Willpower => true,
-            .Missile => value != 40,
+            .Missile => mob == state.player or for (mob.spells) |spellcfg| {
+                if (spellcfg.spell.bolt_missable) break true;
+            } else false,
             .Speed => value != 100,
             .Martial, .Spikes, .Conjuration, .Potential => value > 0,
         };

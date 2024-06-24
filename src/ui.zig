@@ -557,7 +557,7 @@ fn _writerMobStats(self: *Console, starty: usize, mob: *Mob) usize {
         const stat_val_raw = mob.stat(stat);
         const stat_val = utils.SignedFormatter{ .v = stat_val_raw };
 
-        if (!stat.showMobStat(stat_val_raw))
+        if (!stat.showMobStat(mob, stat_val_raw))
             continue;
 
         const stat_val_real = switch (stat) {
@@ -2727,7 +2727,7 @@ pub fn drawPlayerInfoScreen() void {
                             .Evade => @intCast(isize, combat.chanceOfAttackEvaded(state.player, null)),
                             else => stat_val_raw,
                         };
-                        if (stat.showMobStat(stat_val_raw)) {
+                        if (stat.showMobStat(state.player, stat_val_raw)) {
                             if (stat.showMobStatFancy(stat_val_raw, stat_val_real)) {
                                 const c = if (@intCast(isize, stat_val_real) < stat_val_raw) @as(u21, 'r') else 'b';
                                 iy += pinfo_win.right.drawTextAtf(0, iy, "$c{s: <11}$.  {: >5}{s: >1}    $g(${u}{}{s}$g)$.\n", .{ stat.string(), stat_val, stat.formatAfter(), c, stat_val_real, stat.formatAfter() }, .{});
