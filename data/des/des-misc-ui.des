@@ -10,6 +10,31 @@ since they leave no corpse.
 
 Not all spellcasters are Wielders.
 
+% ex_sp_will
+This spell will first check the target's willpower against the caster's,
+according to the formula:
+
+
+$cgaussianRandom($.1...100$c)$. × $bcasterWill$. $o>$.
+$cgaussianRandom($.1...150$c)$. × $btargetWill$.
+
+
+Notes:
+
+$g*$. Notice that the formula gives the target a slight advantage.
+
+
+$g*$. $cgaussianRandom()$. is not a true gaussian random, but rather a
+"clumping" random formula stolen from Brogue.
+
+
+$g*$. If the target's will is $o∞$. (complete willpower immunity), no
+will-check will ever succeed against it. If the caster's will is $o∞$., it is
+treated as a $o10$..
+
+
+$g*$. If the caster's will is lower than the targets, it will never succeed.
+
 % ex_sp_effect_heal
 Exactly what it says on the tin.
 

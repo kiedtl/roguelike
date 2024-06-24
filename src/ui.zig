@@ -985,6 +985,7 @@ fn _getMonsSpellsDescription(self: *Console, starty: usize, mob: *Mob, _: usize)
         if (spellcfg.spell.cast_type != .Smite or spellcfg.spell.smite_target_type == .Mob) {
             if (spellcfg.spell.checks_will) {
                 y += self.drawTextAt(0, y, "· $bwill-checked$.", .{});
+                self.addTooltipForText("Will-checking", .{}, "ex_sp_will", .{});
 
                 // Disabled to save space. I'd prefer being explicit though
                 //y += self.drawTextAt(0, y, "· $cwill-checked$.: $byes$.", .{});
