@@ -573,7 +573,7 @@ pub const PlayerTemplate = MobTemplate{
 
         .stats = .{ .Willpower = 4, .Missile = 60, .Evade = 10, .Vision = PLAYER_VISION, .Potential = 40 },
     },
-    .weapon = &items.MorningstarWeapon,
+    .weapon = &items.DaggerWeapon,
     // .backup_weapon = &items.ShadowMaulWeapon,
     // .armor = items.FumingVestArmor,
     //.evocables = &[_]Evocable{items.EldritchLanternEvoc},

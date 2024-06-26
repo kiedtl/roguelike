@@ -115,10 +115,10 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 30, .i = .{ .W = &DaggerWeapon } },
     .{ .w = 25, .i = .{ .W = &RapierWeapon } },
     .{ .w = 25, .i = .{ .W = &GreatMaceWeapon } },
-    .{ .w = 30, .i = .{ .W = &MorningstarWeapon } },
     .{ .w = 25, .i = .{ .W = &MonkSpadeWeapon } },
     .{ .w = 10, .i = .{ .W = &WoldoWeapon } },
     .{ .w = 10, .i = .{ .W = &GoldDaggerWeapon } },
+    .{ .w = 10, .i = .{ .W = &MorningstarWeapon } },
     // Armor
     .{ .w = 20, .i = .{ .A = GambesonArmor } },
     .{ .w = 05, .i = .{ .A = SilusGambesonArmor } },
@@ -2008,11 +2008,13 @@ pub const WoldoWeapon = Weapon{
 pub const MorningstarWeapon = Weapon{
     .id = "morningstar",
     .name = "morningstar",
-    .damage = 2,
+    .damage = 3,
     .stats = .{ .Melee = 10 },
-    .effects = &[_]StatusDataInfo{
-        .{ .status = .Fear, .duration = .{ .Tmp = 1 } },
-    },
+    // Fear is just too strong.
+    //
+    // .effects = &[_]StatusDataInfo{
+    //     .{ .status = .Fear, .duration = .{ .Tmp = 1 } },
+    // },
     .strs = &CRUSHING_STRS,
 };
 
