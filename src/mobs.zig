@@ -1283,7 +1283,8 @@ pub const BrimstoneMageTemplate = MobTemplate{
         .spells = &[_]SpellOptions{
             .{ .MP_cost = 15, .spell = &spells.CAST_CREATE_EMBERLING },
             .{ .MP_cost = 1, .spell = &spells.CAST_FLAMMABLE, .power = 20 },
-            .{ .MP_cost = 7, .spell = &spells.BOLT_FIREBALL, .power = 2, .duration = 3 },
+            .{ .MP_cost = 1, .spell = &spells.CAST_FIREPROOF_EMBERLING, .power = 20 },
+            .{ .MP_cost = 6, .spell = &spells.BOLT_FIREBALL, .power = 2, .duration = 3 },
         },
         .max_MP = 15,
         .max_drainable_MP = 18,
@@ -1291,14 +1292,14 @@ pub const BrimstoneMageTemplate = MobTemplate{
         .max_HP = 7,
         .memory_duration = 8,
         .stats = .{ .Willpower = 6, .Evade = 10 },
+        .innate_resists = .{ .rFume = 100, .rFire = 50 },
     },
     .weapon = &items.W_MACES_2,
     .armor = items.HauberkArmor,
-    .cloak = &items.SilCloak,
 
     .squad = &[_][]const MobTemplate.SquadMember{
         &[_]MobTemplate.SquadMember{
-            .{ .mob = "emberling", .weight = 1, .count = minmax(usize, 2, 4) },
+            .{ .mob = "emberling", .weight = 1, .count = minmax(usize, 3, 4) },
         },
     },
 };
@@ -1576,7 +1577,7 @@ pub const EmberlingTemplate = MobTemplate{
 
         .max_HP = 2,
         .memory_duration = 4,
-        .innate_resists = .{ .rFume = 100, .rFire = 50 },
+        .innate_resists = .{ .rFume = 100, .rFire = 75 },
         .stats = .{ .Willpower = 1, .Evade = 5, .Vision = 5, .Melee = 50 },
     },
     // XXX: Emberlings are never placed alone, this determines number of

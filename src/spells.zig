@@ -296,6 +296,7 @@ fn _createSpecificStatusSp(comptime id: []const u8, name: []const u8, anim: []co
 }
 
 pub const CAST_ENRAGE_BONE_RAT = _createSpecificStatusSp("bone_rat", "bone rat", "glow-white-gray", "enrage", .Enraged);
+pub const CAST_FIREPROOF_EMBERLING = _createSpecificStatusSp("emberling", "emberling", "glow-cream", "fireproof", .Fireproof);
 pub const CAST_FIREPROOF_DUSTLING = _createSpecificStatusSp("dustling", "dustling", "glow-cream", "fireproof", .Fireproof);
 pub const CAST_ENRAGE_DUSTLING = _createSpecificStatusSp("dustling", "dustling", "glow-cream", "enrage", .Enraged);
 
