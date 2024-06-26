@@ -1912,7 +1912,7 @@ pub const SwordWeapon = Weapon{
     .name = "longsword",
     .damage = 2,
     .martial = true,
-    .stats = .{ .Evade = 10, .Martial = 2 },
+    .stats = .{ .Evade = 10, .Martial = 1 },
     .strs = &SLASHING_STRS,
 };
 pub const BoneSwordWeapon = Weapon.createBoneWeapon(&SwordWeapon, .{});
@@ -1923,7 +1923,7 @@ pub const ShadowSwordWeapon = Weapon{
     .name = "shadow sword",
     .damage = 1,
     .martial = true,
-    .stats = .{ .Evade = 10, .Martial = 2, .Potential = -5 },
+    .stats = .{ .Evade = 10, .Martial = 2, .Potential = -10 },
     .ego = .NC_Insane,
     .strs = &SLASHING_STRS,
 };
@@ -2011,7 +2011,7 @@ pub const MorningstarWeapon = Weapon{
     .damage = 2,
     .stats = .{ .Melee = 10 },
     .effects = &[_]StatusDataInfo{
-        .{ .status = .Fear, .duration = .{ .Tmp = 2 } },
+        .{ .status = .Fear, .duration = .{ .Tmp = 1 } },
     },
     .strs = &CRUSHING_STRS,
 };
@@ -2022,7 +2022,6 @@ pub const MaceWeapon = Weapon{
     .id = "mace",
     .name = "mace",
     .damage = 2,
-    //.stats = .{ .Melee = 10 }, // Not for player, no reason to entice them to use it. Plus spoils balance
     .strs = &CRUSHING_STRS,
 };
 pub const BoneMaceWeapon = Weapon.createBoneWeapon(&MaceWeapon, .{});
@@ -2043,7 +2042,7 @@ pub const ShadowMaceWeapon = Weapon{
     .id = "shadow_mace",
     .name = "shadow mace",
     .damage = 1,
-    .stats = .{ .Potential = -5 },
+    .stats = .{ .Potential = -10 },
     .ego = .NC_MassPara,
     .strs = &CRUSHING_STRS,
 };
@@ -2052,7 +2051,7 @@ pub const ShadowMaulWeapon = Weapon{
     .id = "shadow_maul",
     .name = "shadow maul",
     .damage = 2,
-    .stats = .{ .Potential = -5 },
+    .stats = .{ .Potential = -10 },
     .ego = .NC_Duplicate,
     .strs = &CRUSHING_STRS,
 };
