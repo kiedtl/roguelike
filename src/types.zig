@@ -4715,6 +4715,7 @@ pub const Machine = struct {
             .powered_tile = '^',
             .unpowered_tile = '^',
             .evoke_confirm = "Really trigger the " ++ gstr ++ " trap?",
+            .show_on_hud = true,
             .on_power = struct {
                 fn f(machine: *Machine) void {
                     if (machine.last_interaction) |mob| {
