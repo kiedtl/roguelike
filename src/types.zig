@@ -2373,9 +2373,6 @@ pub const Mob = struct { // {{{
     // Change morale over time to be close to target morale, to avoid sudden
     // flee-flight shifts as allies come in and out of view
     //
-    // If target morale is lower, change is accomplished instantly; otherwise,
-    // over a few turns.
-    //
     pub fn tickMorale(self: *Mob) void {
         const m = ai.calculateMorale(self);
         if (m == self.morale) return;
@@ -4528,6 +4525,13 @@ pub const Mob = struct { // {{{
         if (self.squad == null) return true;
         if (self.squad.?.leader == self) return true;
         return false;
+    }
+
+    pub fn selfOrLeader(self: *Mob) *Mob {
+        if (self.squad != null)
+            if (self.squad.?.leader) |leader|
+                return leader;
+        return self;
     }
 }; // }}}
 

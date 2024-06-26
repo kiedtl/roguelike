@@ -858,14 +858,15 @@ fn _getMonsInfoSet(mob: *Mob) MobInfoLine.ArrayList {
             const Awareness = union(enum) { Seeing, Remember: usize, None };
             const awareness: Awareness = for (mob.enemyList().items) |enemyrec| {
                 if (enemyrec.mob == state.player) {
-                    // Zig, why the fuck do I need to cast the below as Awareness?
-                    // Wouldn't I like to fucking chop your fucking type checker into
-                    // tiny shreds with a +9 halberd of flaming.
+                    // Zig, why the fuck do I need to cast the below as
+                    // Awareness? Wouldn't I like to chop your type checker
+                    // into tiny shreds with a +9 halberd of flaming.
                     //
                     // 2023-08-28: no idea why I was this angry, I do this all
                     // the time now without having an aneurysm. caffeine famine
                     // maybe?
-                    break if (enemyrec.last_seen != null and enemyrec.last_seen.?.eq(state.player.coord))
+
+                    break if (enemyrec.last_seen != null and enemyrec.last_seen.?.eq(state.player.coord) and mob.canSeeMob(state.player))
                         @as(Awareness, .Seeing)
                     else
                         Awareness{ .Remember = enemyrec.counter };

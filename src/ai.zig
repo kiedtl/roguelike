@@ -141,6 +141,7 @@ pub fn calculateMorale(self: *Mob) isize {
         if (enemy.hasStatus(.Blind)) base += 2;
         if (enemy.hasStatus(.Debil)) base += 2;
 
+        // If enemy is disoriented and we can surround, good
         if (enemy.hasStatus(.Disorient) and
             (self.squad != null and self.squad.?.members.len >= 4))
         {
@@ -183,9 +184,12 @@ pub fn calculateMorale(self: *Mob) isize {
     }
     // }}}
 
-    // Bonuses/neg bonuses depending on enemy's condition {{{
+    // Bonuses/neg bonuses depending on ally's condition {{{
     for (self.allies.items) |ally| {
-        if (!ally.ai.flag(.NoRaiseAllyMorale)) base += 1;
+        if (ally.ai.flag(.NoRaiseAllyMorale))
+            continue;
+
+        base += 1;
 
         if (ally.hasStatus(.Enraged)) base += 4;
         if (ally.hasStatus(.Fast)) base += 4;
@@ -215,6 +219,7 @@ pub fn calculateMorale(self: *Mob) isize {
         // "Ohno what have they done to my friend ?!??"
         if (ally.hasStatus(.Insane)) base -= 4;
 
+        // Should be higher for realism, but then causes morale cascades easily
         if (ally.ai.phase == .Flee) base -= 2;
     }
     // }}}
@@ -258,13 +263,39 @@ pub fn shouldCallForReinforcements(mob: *Mob) bool {
         }
     }
 
-    return fleeing_allies >= 5;
+    return fleeing_allies >= 4;
 }
 
 pub fn isEnemyKnown(mob: *const Mob, enemy: *const Mob) bool {
     return for (mob.enemyListConst().items) |enemyrecord| {
         if (enemyrecord.mob == enemy) break true;
     } else false;
+}
+
+pub fn beginFlee(mob: *Mob) void {
+    assert(mob.ai.phase != .Flee);
+    mob.ai.phase = .Flee;
+    for (mob.enemyList().items) |*enemy| {
+        enemy.counter = mob.memory_duration * 2;
+        enemy.last_seen = null;
+    }
+    mob.bflee_flag = false;
+
+    if (mob.isUnderStatus(.Exhausted) == null) {
+        if (mob.ai.flee_effect) |s| {
+            if (mob.isUnderStatus(s.status) == null) {
+                mob.applyStatus(s, .{});
+            }
+        }
+    }
+}
+
+pub fn endFlee(mob: *Mob) void {
+    assert(mob.ai.phase == .Flee);
+    mob.ai.phase = .Hunt;
+    for (mob.enemyList().items) |*enemy| {
+        enemy.counter = mob.memory_duration;
+    }
 }
 
 pub fn tryRest(mob: *Mob) void {
@@ -360,10 +391,10 @@ pub fn runAwayFromEnemies(mob: *Mob, min_dist: usize) bool {
 
 // Same as updateEnemyRecord, just better interface
 pub fn updateEnemyKnowledge(mob: *Mob, enemy: *Mob, last_seen: ?Coord) void {
-    const memory = if (mob.squad != null and mob.squad.?.leader != null)
-        mob.squad.?.leader.?.memory_duration
-    else
-        mob.memory_duration;
+    const mob_or_leader = mob.selfOrLeader();
+    var memory = mob_or_leader.memory_duration;
+    if (mob_or_leader.ai.phase == .Flee)
+        memory *= 2;
 
     updateEnemyRecord(mob, .{
         .mob = enemy,
@@ -387,7 +418,7 @@ pub fn updateEnemyRecord(mob: *Mob, new: EnemyRecord) void {
     // Search for an existing record.
     for (mob.enemyList().items) |*enemyrec| {
         if (enemyrec.mob == new.mob) {
-            enemyrec.counter = mob.memory_duration;
+            enemyrec.counter = new.counter;
             enemyrec.last_seen = new.mob.coord;
             return;
         }
@@ -476,11 +507,7 @@ pub fn checkForHostiles(mob: *Mob) void {
                 (!mob.ai.flag(.IgnoresEnemiesUnknownToLeader) or mob.squad.?.leader.?.cansee(othermob.coord)) and
                 !(othermob.hasStatus(.RingDeception) and !has_nonundead_ally))
             {
-                updateEnemyRecord(mob, .{
-                    .mob = othermob,
-                    .counter = mob.memory_duration,
-                    .last_seen = othermob.coord,
-                });
+                updateEnemyKnowledge(mob, othermob, othermob.coord);
             }
         };
     };
@@ -518,8 +545,8 @@ pub fn checkForHostiles(mob: *Mob) void {
             const e = mob.enemyList().orderedRemove(i);
             e.reportMajorThreat(mob);
         } else {
-            if ((mob.ai.phase != .Flee or enemy.alerted_allies > 0) and
-                mob.isAloneOrLeader() and enemy.last_seen == null and
+            if (mob.isAloneOrLeader() and
+                (enemy.last_seen == null or mob.ai.phase == .Flee) and
                 (mob.life_type != .Undead or !enemy.mob.hasStatus(.Corruption)))
             {
                 enemy.counter -= 1;
@@ -1364,12 +1391,12 @@ pub fn workerFight(mob: *Mob, _: mem.Allocator) void {
 }
 
 pub fn meleeFight(mob: *Mob, _: mem.Allocator) void {
-    const target = closestEnemy(mob).mob;
+    const target = closestEnemy(mob);
 
-    if (mob.canMelee(target)) {
-        _ = mob.fight(target, .{});
+    if (mob.canMelee(target.mob)) {
+        _ = mob.fight(target.mob, .{});
     } else if (!mob.immobile) {
-        mob.tryMoveTo(target.coord);
+        mob.tryMoveTo(target.last_seen orelse target.mob.coord);
     } else {
         tryRest(mob);
     }
@@ -1689,18 +1716,6 @@ pub fn flee(mob: *Mob, alloc: mem.Allocator) void {
     if (dist <= mob.stat(.Vision)) {
         // Don't forget about him!
         mob.facing = mob.coord.closestDirectionTo(target.mob.coord, state.mapgeometry);
-    } else if (dist >= FLEE_GOAL) {
-        // Forget about him
-        target.counter = 0;
-    }
-
-    // Don't flee forever
-    //
-    // Note, I have no idea how effective this is. Probably test later on and
-    // remove if not useful.
-    //
-    if (!mob.hasStatus(.Fear) and !mob.canSeeMob(target.mob)) {
-        mob.morale += 1;
     }
 }
 
@@ -2186,18 +2201,9 @@ pub fn main(mob: *Mob, alloc: mem.Allocator) void {
 
     // Should I flee (or stop fleeing?)
     if (mob.ai.phase == .Hunt and shouldFlee(mob)) {
-        mob.ai.phase = .Flee;
-        mob.bflee_flag = false;
-
-        if (mob.isUnderStatus(.Exhausted) == null) {
-            if (mob.ai.flee_effect) |s| {
-                if (mob.isUnderStatus(s.status) == null) {
-                    mob.applyStatus(s, .{});
-                }
-            }
-        }
+        beginFlee(mob);
     } else if (mob.ai.phase == .Flee and !shouldFlee(mob)) {
-        mob.ai.phase = .Hunt;
+        endFlee(mob);
     }
 
     if (mob.ai.phase == .Work) {
