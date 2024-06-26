@@ -16,6 +16,7 @@
 
 @0 Cstair ([stairtype](Access) [locked]yea)
 @s Cmons siren_spire ()
+@g Cmons guard ()
 @p P
 This staircase has been barred after the attempted prison break on Oct 12;
 please use entrance from 0/Dining in the interim until a more permanent
@@ -28,9 +29,9 @@ END POSTER
 
 •####*####•
 #.........#
-#....#....#
+#g...#...g#
 #s...0...s#
-#....#....#
+#g...#...g#
 #.........#
 •####*####•
 
