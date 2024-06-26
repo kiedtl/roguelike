@@ -60,7 +60,6 @@ pub const WILL_IMMUNE = 1000;
 
 pub const HumanSpecies = Species{ .name = "human" };
 pub const GoblinSpecies = Species{ .name = "goblin" };
-pub const ImpSpecies = Species{ .name = "imp" };
 
 pub const MobTemplate = struct {
     ignore_conflicting_tiles: bool = false,
@@ -253,7 +252,7 @@ pub const ExecutionerTemplate = MobTemplate{
 pub const WatcherTemplate = MobTemplate{
     .mob = .{
         .id = "watcher",
-        .species = &ImpSpecies,
+        .species = &GoblinSpecies,
         .tile = 'w',
         .ai = AI{
             .profession_name = "watcher",
