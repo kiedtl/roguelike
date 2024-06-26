@@ -1272,8 +1272,6 @@ pub const BrimstoneMageTemplate = MobTemplate{
         .ai = AI{
             .profession_name = "brimstone mage",
             .profession_description = "watching",
-            // Stand still and don't be curious; don't want emberling followers
-            // to burn the world down
             .work_fn = ai.standStillAndGuardWork,
             .fight_fn = ai.mageFight,
             .spellcaster_backup_action = .KeepDistance,

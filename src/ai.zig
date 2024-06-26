@@ -1436,8 +1436,11 @@ pub fn watcherFight(mob: *Mob, alloc: mem.Allocator) void {
     if (!mob.cansee(target.coord)) {
         mob.tryMoveTo(target.coord);
     } else {
-        if (!runAwayFromEnemies(mob, 8))
+        if (runAwayFromEnemies(mob, 8)) {
+            mob.facing = mob.coord.closestDirectionTo(target.coord, state.mapgeometry);
+        } else {
             meleeFight(mob, alloc);
+        }
     }
 }
 
@@ -1607,6 +1610,9 @@ pub fn alchemistFight(mob: *Mob, alloc: mem.Allocator) void {
 }
 
 pub fn mageFight(mob: *Mob, alloc: mem.Allocator) void {
+    const target = closestEnemy(mob);
+    mob.facing = mob.coord.closestDirectionTo(target.mob.coord, state.mapgeometry);
+
     if (mob.ai.flag(.SocialFighter) or mob.ai.flag(.SocialFighter2)) {
         // Check if there's an ally that satisfies the following conditions
         //      - Isn't the current mob
@@ -1621,7 +1627,6 @@ pub fn mageFight(mob: *Mob, alloc: mem.Allocator) void {
         } else false;
 
         if (!found_ally) {
-            mob.facing = mob.coord.closestDirectionTo(closestEnemy(mob).mob.coord, state.mapgeometry);
             tryRest(mob);
             return;
         }
@@ -1638,9 +1643,10 @@ pub fn mageFight(mob: *Mob, alloc: mem.Allocator) void {
     switch (mob.ai.spellcaster_backup_action) {
         .Melee => meleeFight(mob, alloc),
         .KeepDistance => if (!mob.immobile) {
-            const dist = @intCast(usize, mob.stat(.Vision) -| 1);
+            const dist = @intCast(usize, mob.stat(.Vision) -| 2);
             const moved = runAwayFromEnemies(mob, dist);
             if (!moved) meleeFight(mob, alloc);
+            mob.facing = mob.coord.closestDirectionTo(target.mob.coord, state.mapgeometry);
         } else {
             tryRest(mob);
         },
