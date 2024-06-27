@@ -121,9 +121,10 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 10, .i = .{ .W = &MorningstarWeapon } },
     // Armor
     .{ .w = 20, .i = .{ .A = GambesonArmor } },
-    .{ .w = 05, .i = .{ .A = SilusGambesonArmor } },
     .{ .w = 20, .i = .{ .A = HauberkArmor } },
     .{ .w = 20, .i = .{ .A = CuirassArmor } },
+    .{ .w = 10, .i = .{ .A = BlueVestArmor } },
+    .{ .w = 10, .i = .{ .A = SilusGambesonArmor } },
     .{ .w = 10, .i = .{ .A = SpikedLeatherArmor } },
     .{ .w = 10, .i = .{ .A = GoldArmor } },
     .{ .w = 05, .i = .{ .A = BrigandineArmor } },
@@ -1683,7 +1684,13 @@ pub const GambesonArmor = Armor{
 pub const SilusGambesonArmor = Armor{
     .id = "silus_gambeson_armor",
     .name = "silus gambeson",
-    .resists = .{ .Armor = 15, .rFire = 25 },
+    .resists = .{ .Armor = 10, .rFire = 25 },
+};
+
+pub const BlueVestArmor = Armor{
+    .id = "blue_vest_armor",
+    .name = "blue vest",
+    .resists = .{ .Armor = 5, .rElec = 25 },
 };
 
 pub const SilusArmor = Armor{
