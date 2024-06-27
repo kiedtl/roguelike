@@ -641,9 +641,18 @@ fn viewerMain() void {
     // std.log.info("Average% open space: {}", .{avg});
     // std.log.info("Min open space: {}", .{open_space_min});
     // std.log.info("Max open space: {}", .{open_space_max});
-    // std.log.info("Deviation: ±{}", .{math.max(open_space_max - avg, avg - open_space_min)});
+    // std.log.info("Deviation: ±{}", .{dev});
 
     // if (true) return;
+    //
+    // if (true) {
+    //     var i: usize = 100000;
+    //     while (i > 0) : (i -= 1) {
+    //         const ring = items.createItemFromTemplate(mapgen.chooseRing(true));
+    //         std.log.info("Chose ring {s}", .{ring.Ring.name});
+    //     }
+    //     return;
+    // }
 
     // Wrap whole thing in comptime if condition to ensure no linker errors
     if (build_options.use_sdl) {

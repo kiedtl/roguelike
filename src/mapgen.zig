@@ -435,7 +435,7 @@ fn choosePoster(level: usize) ?*const Poster {
     return null;
 }
 
-fn chooseRing(night: bool) ItemTemplate {
+pub fn chooseRing(night: bool) ItemTemplate {
     const drop_list = if (night) &items.NIGHT_RINGS else &items.RINGS;
     return _chooseLootItem(drop_list, minmax(usize, 1, 999), null);
 }

@@ -235,8 +235,8 @@ pub const RINGS = [_]ItemTemplate{
     .{ .w = 9, .i = .{ .r = ObscurationRing } },
 };
 pub const NIGHT_RINGS = [_]ItemTemplate{
-    .{ .w = 9, .i = .{ .r = ExcisionRing } },
     .{ .w = 9, .i = .{ .r = ConjurationRing } },
+    .{ .w = 9, .i = .{ .r = ExcisionRing } },
 };
 pub const ALL_ITEMS = [_]ItemTemplate{
     .{ .w = 0, .i = .{ .List = &ITEM_DROPS } },

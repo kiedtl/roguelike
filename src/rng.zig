@@ -118,8 +118,8 @@ pub fn choose2(comptime T: type, arr: []const T, comptime weight_field: []const 
     var weight_total: usize = 0;
     var selected = arr[0];
 
-    for (arr) |item, index| {
-        const weight = @field(arr[index], weight_field);
+    for (arr) |item| {
+        const weight = @field(item, weight_field);
         if (weight == 0) continue;
 
         const rnd = rng.random().int(usize) % (weight_total + weight);
