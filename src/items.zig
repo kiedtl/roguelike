@@ -213,7 +213,7 @@ pub const NIGHT_ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 10, .i = .{ .A = SpectralVestArmor } },
     .{ .w = 10, .i = .{ .C = &SpectralCloak } },
     // Spectral orb
-    .{ .w = 10, .i = .{ .c = &SpectralOrbConsumable } },
+    .{ .w = 20, .i = .{ .c = &SpectralOrbConsumable } },
     // Auxes
     .{ .w = 20, .i = .{ .X = &ShadowShieldAux } },
     .{ .w = 05, .i = .{ .X = &EtherealShieldAux } },
@@ -235,8 +235,8 @@ pub const RINGS = [_]ItemTemplate{
     .{ .w = 9, .i = .{ .r = ObscurationRing } },
 };
 pub const NIGHT_RINGS = [_]ItemTemplate{
-    .{ .w = 9, .i = .{ .r = ConjurationRing } },
     .{ .w = 9, .i = .{ .r = ExcisionRing } },
+    .{ .w = 9, .i = .{ .r = ConjurationRing } },
 };
 pub const ALL_ITEMS = [_]ItemTemplate{
     .{ .w = 0, .i = .{ .List = &ITEM_DROPS } },

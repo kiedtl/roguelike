@@ -1,0 +1,14 @@
+:g_subroom
+:g_restriction 1
+:priority 10
+
+@@r i =conjuration
+@@o i cons_spectral_orb
+
+o
+r
+o
+
+\
+
+oro
