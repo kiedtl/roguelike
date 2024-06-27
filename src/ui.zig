@@ -1108,10 +1108,14 @@ fn _getMonsDescription(self: *Console, starty: usize, mob: *Mob, linewidth: usiz
     }
     if (!combat.canMobBeSurprised(mob))
         y += self.drawTextAt(0, y, "· can't be $bsurprised$.", .{});
+    if (mob.ai.is_fearless)
+        y += self.drawTextAt(0, y, "· is $pfearless$.", .{});
     if (mob.max_drainable_MP > 0 and mob.is_drained)
         y += self.drawTextAt(0, y, "· is $odrained$.", .{});
     if (mob.ai.is_curious and !mob.deaf)
         y += self.drawTextAt(0, y, "· investigates noises", .{})
+    else if (mob.deaf)
+        y += self.drawTextAt(0, y, "· is deaf", .{})
     else
         y += self.drawTextAt(0, y, "· won't check noises outside FOV", .{});
     if (mob.ai.flag(.SocialFighter) or mob.ai.flag(.SocialFighter2))

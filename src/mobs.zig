@@ -1042,7 +1042,6 @@ pub const AncientMageTemplate = MobTemplate{
         .max_drainable_MP = 50,
         .base_night_vision = true,
 
-        .deaf = false,
         .life_type = .Undead,
 
         .max_HP = 20,
@@ -1202,6 +1201,7 @@ pub const DeathMageTemplate = MobTemplate{
             .work_fn = ai.standStillAndGuardWork,
             .fight_fn = ai.mageFight,
             .spellcaster_backup_action = .KeepDistance,
+            .is_fearless = true,
             .flags = &[_]AI.Flag{ .CalledWithUndead, .ScansForCorpses },
         },
 
@@ -1393,7 +1393,7 @@ pub const BloatTemplate = MobTemplate{
         .memory_duration = 8,
         .max_drainable_MP = 8,
 
-        //.deaf = true,
+        .deaf = true,
         .life_type = .Undead,
         .blood = null,
         .blood_spray = gas.Miasma.id,
@@ -1456,6 +1456,7 @@ pub const SkeletonTemplate = MobTemplate{
             .work_fn = ai.standStillAndGuardWork,
             .fight_fn = ai.meleeFight,
             .is_fearless = true,
+            .is_curious = false,
             .flags = &[_]AI.Flag{.CalledWithUndead},
         },
 
@@ -1463,7 +1464,6 @@ pub const SkeletonTemplate = MobTemplate{
         .memory_duration = 6,
         .max_drainable_MP = 8,
 
-        .deaf = true,
         .life_type = .Undead,
         .blood = null,
         .corpse = .None,
@@ -1529,10 +1529,10 @@ pub const BoneRatTemplate = MobTemplate{
             .profession_description = "watching",
             .work_fn = ai.standStillAndGuardWork,
             .fight_fn = ai.meleeFight,
+            .is_curious = false,
             .is_fearless = true,
         },
 
-        .deaf = true,
         .life_type = .Undead,
         .max_drainable_MP = 5,
 
@@ -1695,9 +1695,9 @@ pub const SkeletalBlademasterTemplate = MobTemplate{
             .work_fn = ai.standStillAndGuardWork,
             .fight_fn = ai.meleeFight,
             .is_fearless = true,
+            .is_curious = false,
         },
 
-        .deaf = true,
         .life_type = .Undead,
         .max_drainable_MP = 10,
 
