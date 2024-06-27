@@ -38,7 +38,7 @@ pub const UNKNOWN_THREAT_DEPLOY_WATCHERS_2 = 300;
 pub const UNKNOWN_THREAT_DEPLOY_WATCHERS_3 = 500;
 pub const UNKNOWN_THREAT_DEPLOY_WATCHERS_4 = 700;
 
-pub const TURNS_BETWEEN_ASSAULT = 50;
+pub const TURNS_BETWEEN_ASSAULT = 40;
 
 pub const Threat = union(enum) { General, Unknown, Specific: *Mob };
 
