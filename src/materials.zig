@@ -14,6 +14,7 @@ pub const MATERIALS = [_]*const Material{
     &Slade,
     &Basalt,
     &Rust,
+    &Dobalene,
     &PlatedDobalene,
 };
 

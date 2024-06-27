@@ -1,0 +1,32 @@
+:g_global_restriction 1
+:g_whitelist 5/Prison
+:g_whitelist 7/Prison
+:g_material dobalene
+:priority 99
+
+:notraps
+:noitems
+:nostairs
+
+@@g M guard
+@@r Cmons bone_rat ([no_squads]yea)
+@@c i =conjuration
+@@s i cons_spectral_orb
+
+#*#•###
+*.....*
+#g....#
+##±#..•
+#r.#..#
+#cs#g.*
+#####*#
+
+\
+
+#*#####
+*.g#sc#
+#..#.r#
+•..#±##
+#....g#
+*.....*
+###•#*#
