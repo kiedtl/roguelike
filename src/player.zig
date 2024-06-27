@@ -98,8 +98,8 @@ pub const ConjAugment = enum(usize) {
     pub fn description(self: ConjAugment) []const u8 {
         return switch (self) {
             // .Survival => "Opposing spectral sabres will not always destroy your own. (TODO: update)",
-            .WallDisintegrate1 => "A single nearby wall disintegrates into a new sabre when there are other sabres in your vision.",
-            .WallDisintegrate2 => "Two nearby walls disintegrate into new sabres when there are other sabres in your vision.",
+            .WallDisintegrate1 => "50% chance for an adjacent wall to disintegrate into a new sabre when there are other sabres in your vision.",
+            .WallDisintegrate2 => "10% chance for two adjacent walls to disintegrate into new sabres when there are other sabres in your vision.",
             .rFire_25 => "Your sabres possess +25% rFire.",
             .rFire_50 => "Your sabres possess +50% rFire.",
             .rElec_25 => "Your sabres possess +25% rElec.",

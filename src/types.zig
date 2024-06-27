@@ -1161,7 +1161,7 @@ pub const SuspiciousTileRecord = struct {
 };
 
 pub const Message = struct {
-    msg: [128:0]u8,
+    msg: [256:0]u8,
     type: MessageType,
     turn: usize,
     dups: usize = 0,
@@ -2530,19 +2530,28 @@ pub const Mob = struct { // {{{
 
         // Player conjuration augments
         if (self == state.player and player.hasSabresInSight()) {
-            var spawn_ctr = 0 +
-                (if (player.hasAugment(.WallDisintegrate1)) @as(usize, 1) else 0) +
-                (if (player.hasAugment(.WallDisintegrate2)) @as(usize, 2) else 0);
-            for (&DIRECTIONS) |d| {
-                if (spawn_ctr == 0)
-                    break;
-                if (state.player.coord.move(d, state.mapgeometry)) |neighbor| {
-                    if (state.dungeon.at(neighbor).type == .Wall) {
-                        state.dungeon.at(neighbor).type = .Floor;
-                        spells.spawnSabreSingle(state.player, neighbor);
-                        state.message(.Info, "A nearby wall disintegrates into a spectral sabre.", .{});
-                        spawn_ctr -= 1;
+            const _spawnSabreFromWall = struct {
+                pub fn f() void {
+                    for (&DIRECTIONS) |d| {
+                        if (state.player.coord.move(d, state.mapgeometry)) |neighbor| {
+                            if (state.dungeon.at(neighbor).type == .Wall) {
+                                state.dungeon.at(neighbor).type = .Floor;
+                                spells.spawnSabreSingle(state.player, neighbor);
+                                state.message(.Info, "A nearby wall disintegrates into a spectral sabre.", .{});
+                                break;
+                            }
+                        }
                     }
+                }
+            }.f;
+            if (player.hasAugment(.WallDisintegrate1)) {
+                if (rng.percent(@as(usize, 50)))
+                    _spawnSabreFromWall();
+            }
+            if (player.hasAugment(.WallDisintegrate2)) {
+                if (rng.percent(@as(usize, 10))) {
+                    _spawnSabreFromWall();
+                    _spawnSabreFromWall();
                 }
             }
         }

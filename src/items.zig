@@ -1202,7 +1202,7 @@ pub const ExcisionRing = Ring{ // {{{
 
 pub const ConjurationRing = Ring{ // {{{
     .name = "conjuration",
-    .required_MP = 2,
+    .required_MP = 3,
     .stats = .{ .Conjuration = 2 },
     .effect = struct {
         pub fn f() bool {
