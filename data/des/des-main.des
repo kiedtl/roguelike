@@ -292,8 +292,13 @@ rivets adorn both sides.
 % cons_spectral_orb
 An ethereal orb, a web of shimmering patterns glowing eerily within.
 
-When consumed, it will grant a new Conjuration augment, unless there are no more
-to give. Only useful if you possess the Ring of Conjuration.
+
+When consumed, there is a 50% chance to recieve a new $oConjuration$. augment,
+unless there are no more to give, or a 50% chance of increasing the
+$oConjuration$. stat.
+
+
+Only useful if you possess the Ring of Conjuration.
 
 % kit_mine
 You can evoke it to build a small mine where you are standing.

@@ -189,7 +189,6 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 20, .i = .{ .H = &BlackHood } },
     .{ .w = 10, .i = .{ .H = &FumeHood } },
     .{ .w = 20, .i = .{ .H = &WeldingHood } },
-    .{ .w = 20, .i = .{ .H = &SpectralCrown } },
     .{ .w = 20, .i = .{ .H = &GoldHeadband } },
     .{ .w = 10, .i = .{ .H = &GoldTiara } },
     .{ .w = 10, .i = .{ .H = &SilusMask } },
@@ -197,11 +196,11 @@ pub const ITEM_DROPS = [_]ItemTemplate{
 };
 pub const NIGHT_ITEM_DROPS = [_]ItemTemplate{
     // Fluff
-    .{ .w = 200, .i = .{ .P = &DisorientPotion } },
-    .{ .w = 200, .i = .{ .P = &IntimidatePotion } },
-    .{ .w = 170, .i = .{ .P = &BlindPotion } },
-    .{ .w = 170, .i = .{ .P = &SmokePotion } },
-    .{ .w = 170, .i = .{ .P = &ParalysisPotion } },
+    .{ .w = 50, .i = .{ .P = &DisorientPotion } },
+    .{ .w = 50, .i = .{ .P = &IntimidatePotion } },
+    .{ .w = 50, .i = .{ .P = &BlindPotion } },
+    .{ .w = 50, .i = .{ .P = &SmokePotion } },
+    .{ .w = 50, .i = .{ .P = &ParalysisPotion } },
     // Weapons
     .{ .w = 30, .i = .{ .W = &ShadowSwordWeapon } },
     .{ .w = 30, .i = .{ .W = &ShadowMaulWeapon } },
@@ -211,6 +210,7 @@ pub const NIGHT_ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 30, .i = .{ .A = ShadowBrigandineArmor } },
     .{ .w = 30, .i = .{ .A = ShadowHauberkArmor } },
     .{ .w = 20, .i = .{ .A = FumingVestArmor } },
+    .{ .w = 10, .i = .{ .H = &SpectralCrown } },
     .{ .w = 10, .i = .{ .A = SpectralVestArmor } },
     .{ .w = 10, .i = .{ .C = &SpectralCloak } },
     // Spectral orb
@@ -1203,7 +1203,7 @@ pub const ExcisionRing = Ring{ // {{{
 pub const ConjurationRing = Ring{ // {{{
     .name = "conjuration",
     .required_MP = 3,
-    .stats = .{ .Conjuration = 2 },
+    .stats = .{ .Conjuration = 1 },
     .effect = struct {
         pub fn f() bool {
             const will = @intCast(usize, state.player.stat(.Willpower));
@@ -1341,15 +1341,20 @@ pub const SpectralOrbConsumable = Consumable{
         .{ .Custom = struct {
             pub fn f(mob: ?*Mob, _: Coord) void {
                 assert(mob.? == state.player);
-                const next_aug = for (state.player_conj_augments) |aug, i| {
-                    if (!aug.received)
-                        break i;
+                if (rng.onein(2)) {
+                    state.player.stats.Conjuration += 1;
+                    state.message(.Info, "[$oConjuration$.] Your Conjuration stat increases.", .{});
                 } else {
-                    state.message(.Info, "Nothing happens. You feel a dryness within...", .{});
-                    return;
-                };
-                state.player_conj_augments[next_aug].received = true;
-                state.message(.Info, "[$oConjuration augment$.] {s}", .{state.player_conj_augments[next_aug].a.description()});
+                    const next_aug = for (state.player_conj_augments) |aug, i| {
+                        if (!aug.received)
+                            break i;
+                    } else {
+                        state.message(.Info, "Nothing happens. You feel a dryness within...", .{});
+                        return;
+                    };
+                    state.player_conj_augments[next_aug].received = true;
+                    state.message(.Info, "[$oConjuration augment$.] {s}", .{state.player_conj_augments[next_aug].a.description()});
+                }
             }
         }.f },
     },
@@ -1774,6 +1779,7 @@ pub const SpectralVestArmor = Armor{
     .name = "spectral vest",
 
     .stats = .{ .Melee = 10, .Conjuration = 1 },
+    .night_stats = .{ .Melee = 10, .Evade = 10, .Conjuration = 1 },
 };
 
 pub const VozgumArmor = Armor{
