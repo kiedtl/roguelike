@@ -571,14 +571,18 @@ maps
   - maps of machine locations (recharging stations/drains)
   - maps of possible stair locations
 manuals
-  - extremely rare, found in golden rooms
   - provides boost to a stat the player may or may not be able to take
     advantage of, depending on build type.
-  - stats: missile%, evade%, martial combo, sneak, missile%
+  - missile%
+  - beginner's manual: lowest stat boosted by 10%; cannot boost beyond 20%
+  - fencing manual: melee%/evade%
+  - combat manual: martial combo
+  - defence manual: evade%
+  - armor manual: armor% (small bonus, percent based? e.g. +10% of current arm%)
   - idea: ability to attack more quickly (decreased weapon delay)
-  - idea: mp * 1.5, mp * 2, mp * 2.5
   - idea: permanent riposte effect
-  - idea: open melee effect (book teaches you melee methods that only work in the open)
+  - idea: open melee effect (book teaches you melee methods that only work in
+    the open)
   - idea: closed melee effect (book teaches how to fight effectively in corridors)
   - idea: book of torment -> 25% bloodlust
 
@@ -1440,7 +1444,10 @@ x Holding map
     x Burning brutes
     x Cinder beasts
     x Night creature (slinking terror)
-- Fix shrine-blowup particle effect (rework, simplify and speedup)
+- Fix particle effects
+  - Shrine-blowup effect (rework, simplify and speedup)
+  - Lightning mage static discharge (speedup/rework)
+  - Lightning mage lightning bolt (make more distinctive)
 - Holding map, pt 2 (after holy temple + insurrection maps + crypt)
   - Alvoc artifact prefabs + lore
   - Holy artifact prefabs + lore
@@ -1520,7 +1527,8 @@ x Holding map
   - Items
     - Ornate gold armor
     - Golden orbs
-    - Unnamed: +max_MP
+    - Golden cakes: +max_MP
+      - "The golden crust on these cakes
     - Sceptre
       - Dijkstra vision
   - Workshop/2 and Workshop/3
@@ -1529,7 +1537,7 @@ x Holding map
     - Enh. Emberling event
 - Holy temple map + faction
   - Items
-    - Ring of fustigation
+    - Ring of fustigation, abjuration
     - Mark ring of concentration, condemnation as holy
     - Inability to use holy items w/ evil ones equipped
       - Symbol is destroyed (since it's an item)
