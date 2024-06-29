@@ -123,13 +123,13 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 10, .i = .{ .W = &MorningstarWeapon } },
     .{ .w = 10, .i = .{ .W = &DaggerWeapon } },
     // Armor
-    .{ .w = 20, .i = .{ .A = GambesonArmor } },
+    .{ .w = 30, .i = .{ .A = GambesonArmor } },
     .{ .w = 20, .i = .{ .A = BlueVestArmor } },
     .{ .w = 20, .i = .{ .A = SilusGambesonArmor } },
     .{ .w = 15, .i = .{ .A = HauberkArmor } },
-    .{ .w = 10, .i = .{ .A = CuirassArmor } },
     .{ .w = 10, .i = .{ .A = SpikedLeatherArmor } },
-    .{ .w = 10, .i = .{ .A = GoldArmor } },
+    .{ .w = 05, .i = .{ .A = GoldArmor } },
+    .{ .w = 05, .i = .{ .A = CuirassArmor } },
     .{ .w = 05, .i = .{ .A = BrigandineArmor } },
     // Aux items
     .{ .w = 20, .i = .{ .X = &BucklerAux } },
