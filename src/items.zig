@@ -112,13 +112,16 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 1, .i = .{ .List = &RARE_ITEM_DROPS } },
     // Weapons
     .{ .w = 30, .i = .{ .W = &SwordWeapon } },
-    .{ .w = 30, .i = .{ .W = &DaggerWeapon } },
     .{ .w = 25, .i = .{ .W = &RapierWeapon } },
     .{ .w = 25, .i = .{ .W = &GreatMaceWeapon } },
     .{ .w = 25, .i = .{ .W = &MonkSpadeWeapon } },
+    .{ .w = 20, .i = .{ .W = &BalancedSwordWeapon } },
+    .{ .w = 10, .i = .{ .W = &MasterSwordWeapon } },
+    .{ .w = 10, .i = .{ .W = &MartialSwordWeapon } },
     .{ .w = 10, .i = .{ .W = &WoldoWeapon } },
     .{ .w = 10, .i = .{ .W = &GoldDaggerWeapon } },
     .{ .w = 10, .i = .{ .W = &MorningstarWeapon } },
+    .{ .w = 10, .i = .{ .W = &DaggerWeapon } },
     // Armor
     .{ .w = 20, .i = .{ .A = GambesonArmor } },
     .{ .w = 20, .i = .{ .A = BlueVestArmor } },
@@ -195,28 +198,30 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 5, .i = .{ .H = &SilusHood } },
 };
 pub const NIGHT_ITEM_DROPS = [_]ItemTemplate{
+    // NOTE: 60 is min weight for "common" item
+    //
     // Fluff
-    .{ .w = 50, .i = .{ .P = &DisorientPotion } },
-    .{ .w = 50, .i = .{ .P = &IntimidatePotion } },
-    .{ .w = 50, .i = .{ .P = &BlindPotion } },
-    .{ .w = 50, .i = .{ .P = &SmokePotion } },
-    .{ .w = 50, .i = .{ .P = &ParalysisPotion } },
+    .{ .w = 65, .i = .{ .P = &DisorientPotion } },
+    .{ .w = 65, .i = .{ .P = &IntimidatePotion } },
+    .{ .w = 65, .i = .{ .P = &BlindPotion } },
+    .{ .w = 65, .i = .{ .P = &SmokePotion } },
+    .{ .w = 65, .i = .{ .P = &ParalysisPotion } },
     // Weapons
-    .{ .w = 30, .i = .{ .W = &ShadowSwordWeapon } },
-    .{ .w = 30, .i = .{ .W = &ShadowMaulWeapon } },
-    .{ .w = 30, .i = .{ .W = &ShadowMaceWeapon } },
+    .{ .w = 40, .i = .{ .W = &ShadowSwordWeapon } },
+    .{ .w = 40, .i = .{ .W = &ShadowMaulWeapon } },
+    .{ .w = 40, .i = .{ .W = &ShadowMaceWeapon } },
     // Armors and cloaks
-    .{ .w = 30, .i = .{ .A = ShadowMailArmor } },
-    .{ .w = 30, .i = .{ .A = ShadowBrigandineArmor } },
-    .{ .w = 30, .i = .{ .A = ShadowHauberkArmor } },
-    .{ .w = 20, .i = .{ .A = FumingVestArmor } },
-    .{ .w = 10, .i = .{ .H = &SpectralCrown } },
-    .{ .w = 10, .i = .{ .A = SpectralVestArmor } },
-    .{ .w = 10, .i = .{ .C = &SpectralCloak } },
+    .{ .w = 40, .i = .{ .A = ShadowMailArmor } },
+    .{ .w = 40, .i = .{ .A = ShadowBrigandineArmor } },
+    .{ .w = 40, .i = .{ .A = ShadowHauberkArmor } },
+    .{ .w = 30, .i = .{ .A = FumingVestArmor } },
+    .{ .w = 15, .i = .{ .H = &SpectralCrown } },
+    .{ .w = 15, .i = .{ .A = SpectralVestArmor } },
+    .{ .w = 15, .i = .{ .C = &SpectralCloak } },
     // Spectral orb
     .{ .w = 20, .i = .{ .c = &SpectralOrbConsumable } },
     // Auxes
-    .{ .w = 20, .i = .{ .X = &ShadowShieldAux } },
+    .{ .w = 10, .i = .{ .X = &ShadowShieldAux } },
     .{ .w = 05, .i = .{ .X = &EtherealShieldAux } },
 };
 pub const RINGS = [_]ItemTemplate{
@@ -1924,12 +1929,35 @@ pub const SwordWeapon = Weapon{
     .id = "sword",
     .name = "longsword",
     .damage = 2,
-    .martial = true,
-    .stats = .{ .Evade = 10, .Martial = 1 },
     .strs = &SLASHING_STRS,
 };
 pub const BoneSwordWeapon = Weapon.createBoneWeapon(&SwordWeapon, .{});
 pub const CopperSwordWeapon = Weapon.createCopperWeapon(&SwordWeapon, .{});
+
+pub const BalancedSwordWeapon = Weapon{
+    .id = "sword_balanced",
+    .name = "longsword",
+    .damage = 2,
+    .stats = .{ .Melee = 10 },
+    .strs = &SLASHING_STRS,
+};
+
+pub const MasterSwordWeapon = Weapon{
+    .id = "sword_master",
+    .name = "longsword",
+    .damage = 2,
+    .stats = .{ .Melee = 15, .Evade = 10 },
+    .strs = &SLASHING_STRS,
+};
+
+pub const MartialSwordWeapon = Weapon{
+    .id = "sword_martial",
+    .name = "longsword",
+    .damage = 2,
+    .martial = true,
+    .stats = .{ .Melee = 10 },
+    .strs = &SLASHING_STRS,
+};
 
 pub const ShadowSwordWeapon = Weapon{
     .id = "shadow_sword",
