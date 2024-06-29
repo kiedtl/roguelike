@@ -2273,13 +2273,13 @@ pub const Mob = struct { // {{{
             Weapon = 1,
             Backup = 2,
             Aux = 3,
-            Ring1 = 4,
-            Ring2 = 5,
-            Ring3 = 6,
-            Ring4 = 7,
-            Ring5 = 8,
-            Armor = 9,
-            Cloak = 10,
+            Armor = 4,
+            Cloak = 5,
+            Ring1 = 6,
+            Ring2 = 7,
+            Ring3 = 8,
+            Ring4 = 9,
+            Ring5 = 10,
 
             pub fn slotFor(item: Item) EquSlot {
                 return switch (item) {
