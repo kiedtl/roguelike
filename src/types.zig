@@ -1844,8 +1844,9 @@ pub const AI = struct {
         ForceNormalWork, // Continue normal work even when in squad with leader.
         WallLover, // Considers areas without adjacent walls to be unwalkable.
         NoRaiseAllyMorale, // What it says on the tin. Won't make allies happy in fights.
+        Coward, // Heavy morale penalty if enemy has attacked.
         ScansForJobs, // Reports jobs in FOV
-        ScansForCorpses, // Reports jobs in FOV
+        ScansForCorpses, // Reports corpses in FOV
     };
 
     pub fn flag(self: *const AI, f: Flag) bool {
@@ -3307,6 +3308,10 @@ pub const Mob = struct { // {{{
         // (Do this after actually attacking to avoid blinking the '!'
         // animation, then immediately the '∞' animation for stabs.)
         ai.updateEnemyKnowledge(recipient, attacker, null);
+        for (recipient.enemyList().items) |*enemyrec|
+            if (enemyrec.mob == attacker) {
+                enemyrec.attacked_me = true;
+            };
     }
 
     fn _fightWithWeapon(

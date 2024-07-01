@@ -131,6 +131,8 @@ pub fn calculateMorale(self: *Mob) isize {
     for (self.enemyList().items) |enemy_record| {
         const enemy = enemy_record.mob;
 
+        if (self.ai.flag(.Coward) and enemy_record.attacked_me) base -= 10;
+
         if (enemy.hasStatus(.Intimidating)) base -= 10;
 
         if (enemy.hasStatus(.Enraged)) base -= 3;

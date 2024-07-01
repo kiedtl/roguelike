@@ -260,7 +260,12 @@ pub const WatcherTemplate = MobTemplate{
             .work_fn = ai.watcherWork,
             .fight_fn = ai.watcherFight,
             .is_curious = false,
-            .flags = &[_]AI.Flag{ .FearsDarkness, .NoRaiseAllyMorale },
+            .flags = &[_]AI.Flag{
+                .FearsDarkness,
+                .NoRaiseAllyMorale,
+                .ScansForCorpses,
+                .Coward,
+            },
         },
         .max_HP = 4,
         .memory_duration = 10,
