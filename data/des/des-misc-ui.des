@@ -1,3 +1,7 @@
+% ex_mob_coward
+This creature will immediately flee once attacked, and attempt to find
+reinforcements.
+
 % ex_mob_unsurprised
 This creature cannot be surprised, and will thus not take bonus damage from
 surprise attacks.

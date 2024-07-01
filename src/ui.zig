@@ -1118,6 +1118,10 @@ fn _getMonsDescription(self: *Console, starty: usize, mob: *Mob, linewidth: usiz
         y += self.drawTextAt(0, y, "· is $pfearless$.", .{});
     if (mob.max_drainable_MP > 0 and mob.is_drained)
         y += self.drawTextAt(0, y, "· is $odrained$.", .{});
+    if (mob.ai.flag(.Coward)) {
+        y += self.drawTextAt(0, y, "· is cowardly", .{});
+        self.addTooltipForText("Coward", .{}, "ex_mob_coward", .{});
+    }
     if (mob.ai.is_curious and !mob.deaf)
         y += self.drawTextAt(0, y, "· investigates noises", .{})
     else if (mob.deaf)
