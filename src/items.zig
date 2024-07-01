@@ -1643,7 +1643,7 @@ pub const DecimatePotion = Consumable{
 // Potion effects {{{
 
 fn triggerDistractPotion(_: ?*Mob, coord: Coord) void {
-    sound.makeNoise(coord, .Explosion, .Medium);
+    sound.makeNoise(coord, .Explosion, .Loud);
     ui.Animation.apply(.{ .Particle = .{ .name = "chargeover-noise", .coord = coord, .target = .{ .C = coord } } });
 }
 
