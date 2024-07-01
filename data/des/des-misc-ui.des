@@ -1,3 +1,29 @@
+% ex_mob_unsurprised
+This creature cannot be surprised, and will thus not take bonus damage from
+surprise attacks.
+
+% ex_mob_nonliving_undead
+This creature is undead.
+
+
+Non-living creatures are immune to pain, nausea, fear, and certain other status
+effects.
+
+% ex_mob_nonliving_spectral
+This creature is spectral, an image of the unseen world intruding on the
+profane. It is immune to insanity.
+
+
+Non-living creatures are immune to pain, nausea, fear, and certain other status
+effects.
+
+% ex_mob_nonliving_construct
+This creature is a mechanical construct.
+
+
+Non-living creatures are immune to pain, nausea, fear, and certain other status
+effects.
+
 % ex_mob_wielder
 A $oWielder$. has been granted permission to channel the Necromancer's power to
 cast spells. You will be able to drain this power from their corpse, if they

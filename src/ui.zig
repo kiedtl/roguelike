@@ -1096,18 +1096,24 @@ fn _getMonsDescription(self: *Console, starty: usize, mob: *Mob, linewidth: usiz
     y += self.drawTextAtf(0, y, "\n", .{}, .{});
 
     y += _writerHeader(self, y, linewidth, "info", .{});
-    if (mob.life_type == .Construct)
-        y += self.drawTextAt(0, y, "· is non-living ($bconstruct$.)", .{})
-    else if (mob.life_type == .Undead)
-        y += self.drawTextAt(0, y, "· is non-living ($bundead$.)", .{})
-    else if (mob.life_type == .Spectral)
+    if (mob.life_type == .Construct) {
+        y += self.drawTextAt(0, y, "· is non-living ($bconstruct$.)", .{});
+        self.addTooltipForText("Construct", .{}, "ex_mob_nonliving_construct", .{});
+    } else if (mob.life_type == .Undead) {
+        y += self.drawTextAt(0, y, "· is non-living ($bundead$.)", .{});
+        self.addTooltipForText("Undead", .{}, "ex_mob_nonliving_undead", .{});
+    } else if (mob.life_type == .Spectral) {
         y += self.drawTextAt(0, y, "· is non-living ($bspectral$.)", .{});
+        self.addTooltipForText("Spectral", .{}, "ex_mob_nonliving_spectral", .{});
+    }
     if (mob.max_drainable_MP > 0) {
         y += self.drawTextAtf(0, y, "· is a $oWielder$. ($o{}$. drainable MP)", .{mob.max_drainable_MP}, .{});
         self.addTooltipForText("Wielder", .{}, "ex_mob_wielder", .{});
     }
-    if (!combat.canMobBeSurprised(mob))
+    if (!combat.canMobBeSurprised(mob)) {
         y += self.drawTextAt(0, y, "· can't be $bsurprised$.", .{});
+        self.addTooltipForText("Unsurprisable", .{}, "ex_mob_unsurprised", .{});
+    }
     if (mob.ai.is_fearless)
         y += self.drawTextAt(0, y, "· is $pfearless$.", .{});
     if (mob.max_drainable_MP > 0 and mob.is_drained)

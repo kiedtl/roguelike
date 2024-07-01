@@ -1430,7 +1430,6 @@ pub const Status = enum {
             .Nausea,
             .Recuperate,
             .Daze,
-            .Paralysis,
             .Debil,
             .Corruption,
             .Blind,
