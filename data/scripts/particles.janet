@@ -546,7 +546,8 @@
                           (let [angle  (/ (* (math/random) 360 math/pi) 180)
                                 dist1  (+ mindist (* (math/random) (- maxdist mindist)))
                                 dist2  (+ mindist (* (math/random) (- maxdist mindist)))
-                                coord  (case which :target target :origin origin)]
+                                coord  (case which :target target :origin origin)
+                                noncoord (case which :target origin :origin target)]
                             (case direction
                               :out [coord (:move-angle coord dist1 angle)]
                               :in  [(:move-angle coord dist2 angle) (:move-angle coord 1 angle)])))
@@ -1273,6 +1274,10 @@
   "chargeover-lines"        @[ (template-chargeover   "|_-=\\/"   0xcacbca 0xffffff                 :speed 0.3             ) ]
   "chargeover-blue-out"     @[ (template-chargeover SYMB1_CHARS   0x11ddff 0x001e85 :direction :out :speed 0.5 :lifetime 12) ]
   "chargeover-noise"        @[ (template-chargeover ["♫" "♩"]     0x00d610 0x00d610 :direction :out :speed 0.5 :lifetime  4 :style :nobg :maxdist 2) ]
+  "chargeover-doublegold-candles" @[
+    (template-chargeover SYMB1_CHARS 0x3333ff GOLD :direction :out :speed 0.3 :lifetime 7)
+    (template-chargeover SYMB1_CHARS LIGHT_GOLD GOLD :direction :in :speed 0.6 :lifetime 10 :which :origin)
+  ]
   "beams-ring-amnesia" @[
     (new-emitter @{
       :particle (new-particle @{

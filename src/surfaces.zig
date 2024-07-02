@@ -1152,7 +1152,8 @@ pub const Candle = Machine{
                     } else |_| {}
                 };
 
-                ui.Animation.apply(.{ .Particle = .{ .name = "beams-candle-extinguish", .coord = self.coord, .target = .{ .Z = 0 } } });
+                //ui.Animation.apply(.{ .Particle = .{ .name = "beams-candle-extinguish", .coord = self.coord, .target = .{ .Z = 0 } } });
+                ui.Animation.apply(.{ .Particle = .{ .name = "chargeover-doublegold-candles", .coord = self.coord, .target = .{ .Z = 0 } } });
                 state.message(.Info, "You extinguish the candle.", .{});
                 scores.recordUsize(.CandlesDestroyed, 1);
 
