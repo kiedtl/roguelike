@@ -104,6 +104,7 @@ pub const Dijkstra = struct {
             .open = NodeArrayList.init(allocator),
         };
         s.nodes[start.y][start.x] = n;
+        // FIXME Just append n
         s.open.append(s.nodes[start.y][start.x].?) catch unreachable;
         return s;
     }
@@ -125,9 +126,11 @@ pub const Dijkstra = struct {
 
                 if (self.nodes[coord.y][coord.x]) |oldnode|
                     if (oldnode.state == .Closed) continue;
+                // FIXME move to outside loop
                 if (new.n > self.max) continue;
                 if (!self.is_valid(coord, self.is_valid_opts)) continue;
 
+                // FIXME: just append `new` directly, then no need for idiotic in_ol variable
                 var in_ol = if (self.nodes[coord.y][coord.x]) |_| true else false;
                 self.nodes[coord.y][coord.x] = new;
                 if (!in_ol)
