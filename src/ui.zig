@@ -1061,6 +1061,14 @@ fn _getMonsDescription(self: *Console, starty: usize, mob: *Mob, linewidth: usiz
     y += _writerMonsHostility(self, y, mob);
     y += self.drawTextAt(0, y, "\n", .{});
 
+    if (mob.name_given != null or mob.name_family != null) {
+        const g = mob.name_given orelse "";
+        const f = mob.name_family orelse "";
+        const s = if (mob.name_given != null and mob.name_family != null) " " else "";
+        y += self.drawTextAtf(0, y, "$a\"{s}{s}{s}\"", .{ f, s, g }, .{});
+        y += self.drawTextAt(0, y, "\n", .{});
+    }
+
     const infoset = _getMonsInfoSet(mob);
     defer MobInfoLine.deinitList(infoset);
     for (infoset.items) |info| {

@@ -13,7 +13,9 @@ const spells = @import("spells.zig");
 const err = @import("err.zig");
 const types = @import("types.zig");
 const utils = @import("utils.zig");
+const literature = @import("literature.zig");
 
+const NFlag = literature.Name.Flag;
 const MinMax = types.MinMax;
 const minmax = types.minmax;
 const Coord = types.Coord;
@@ -63,6 +65,10 @@ pub const GoblinSpecies = Species{ .name = "goblin" };
 
 pub const MobTemplate = struct {
     ignore_conflicting_tiles: bool = false,
+
+    name_flags: []const NFlag = &[_]NFlag{},
+    skip_family_name: bool = false,
+    allow_noble_names: bool = false,
 
     mob: Mob,
     weapon: ?*const Weapon = null,
@@ -230,6 +236,7 @@ pub const ThrashingHulkTemplate = MobTemplate{
 };
 
 pub const ExecutionerTemplate = MobTemplate{
+    .name_flags = &[_]NFlag{.Hg},
     .mob = .{
         .id = "executioner",
         .species = &GoblinSpecies,
@@ -250,6 +257,7 @@ pub const ExecutionerTemplate = MobTemplate{
 };
 
 pub const WatcherTemplate = MobTemplate{
+    .name_flags = &[_]NFlag{.Hg},
     .mob = .{
         .id = "watcher",
         .species = &GoblinSpecies,
@@ -274,6 +282,7 @@ pub const WatcherTemplate = MobTemplate{
 };
 
 pub const GuardTemplate = MobTemplate{
+    .name_flags = &[_]NFlag{.Hg},
     .mob = .{
         .id = "guard",
         .species = &GoblinSpecies,
@@ -295,6 +304,7 @@ pub const GuardTemplate = MobTemplate{
 };
 
 pub const ArmoredGuardTemplate = MobTemplate{
+    .name_flags = &[_]NFlag{.Hg},
     .mob = .{
         .id = "armored_guard",
         .species = &GoblinSpecies,
@@ -318,9 +328,11 @@ pub const ArmoredGuardTemplate = MobTemplate{
 
 pub fn createEnforcerTemplate(comptime minion: []const u8) MobTemplate {
     return MobTemplate{
+        .name_flags = &[_]NFlag{.H},
+        .skip_family_name = true,
         .mob = .{
             .id = "enforcer_" ++ minion,
-            .species = &GoblinSpecies,
+            .species = &HumanSpecies,
             .tile = 'E',
             .ai = AI{
                 .profession_name = "enforcer",
@@ -355,6 +367,7 @@ pub const EnforcerGTemplate = createEnforcerTemplate("guard");
 pub const EnforcerAGTemplate = createEnforcerTemplate("armored_guard");
 
 pub const JavelineerTemplate = MobTemplate{
+    .name_flags = &[_]NFlag{.Hg},
     .mob = .{
         .id = "javelineer",
         .species = &GoblinSpecies,
@@ -386,6 +399,8 @@ pub const JavelineerTemplate = MobTemplate{
 };
 
 pub const DefenderTemplate = MobTemplate{
+    .name_flags = &[_]NFlag{.H},
+    .skip_family_name = true,
     .mob = .{
         .id = "defender",
         .species = &HumanSpecies,
@@ -526,6 +541,7 @@ pub const CopperHornetTemplate = MobTemplate{
 };
 
 pub const PatrolTemplate = MobTemplate{
+    .name_flags = &[_]NFlag{.Hg},
     .mob = .{
         .id = "patrol",
         .species = &GoblinSpecies,
@@ -586,6 +602,7 @@ pub const PlayerTemplate = MobTemplate{
 };
 
 pub const GoblinTemplate = MobTemplate{
+    .name_flags = &[_]NFlag{.Cg},
     .mob = .{
         .id = "goblin",
         .species = &GoblinSpecies,
@@ -605,6 +622,8 @@ pub const GoblinTemplate = MobTemplate{
 };
 
 pub const ConvultTemplate = MobTemplate{
+    .name_flags = &[_]NFlag{.H},
+    .skip_family_name = true,
     .mob = .{
         .id = "convult",
         .species = &HumanSpecies,
@@ -633,6 +652,8 @@ pub const ConvultTemplate = MobTemplate{
 };
 
 pub const VapourMageTemplate = MobTemplate{
+    .name_flags = &[_]NFlag{.H},
+    .skip_family_name = true,
     .mob = .{
         .id = "vapour_mage",
         .species = &HumanSpecies,
@@ -905,9 +926,10 @@ pub const CrystalStatueTemplate = MobTemplate{
 };
 
 pub const AlchemistTemplate = MobTemplate{
+    .name_flags = &[_]NFlag{.Hg},
     .mob = .{
         .id = "alchemist",
-        .species = &HumanSpecies,
+        .species = &GoblinSpecies,
         .tile = 'a',
         .ai = AI{
             .profession_name = "alchemist",
@@ -933,6 +955,7 @@ pub const AlchemistTemplate = MobTemplate{
 };
 
 pub const CoronerTemplate = MobTemplate{
+    .name_flags = &[_]NFlag{.Hg},
     .mob = .{
         .id = "coroner",
         .species = &GoblinSpecies,
@@ -954,6 +977,7 @@ pub const CoronerTemplate = MobTemplate{
 };
 
 pub const CleanerTemplate = MobTemplate{
+    .name_flags = &[_]NFlag{.Hg},
     .mob = .{
         .id = "cleaner",
         .species = &GoblinSpecies,
@@ -974,6 +998,7 @@ pub const CleanerTemplate = MobTemplate{
 };
 
 pub const EngineerTemplate = MobTemplate{
+    .name_flags = &[_]NFlag{.Hg},
     .mob = .{
         .id = "engineer",
         .species = &GoblinSpecies,
@@ -994,6 +1019,7 @@ pub const EngineerTemplate = MobTemplate{
 };
 
 pub const HaulerTemplate = MobTemplate{
+    .name_flags = &[_]NFlag{.Hg},
     .mob = .{
         .id = "hauler",
         .species = &GoblinSpecies,
@@ -1062,6 +1088,7 @@ pub const AncientMageTemplate = MobTemplate{
 };
 
 pub const RecruitTemplate = MobTemplate{
+    .name_flags = &[_]NFlag{.Hg},
     .mob = .{
         .id = "recruit",
         .species = &GoblinSpecies,
@@ -1084,6 +1111,7 @@ pub const RecruitTemplate = MobTemplate{
 };
 
 pub const WarriorTemplate = MobTemplate{
+    .name_flags = &[_]NFlag{.Hg},
     .mob = .{
         .id = "warrior",
         .species = &GoblinSpecies,
@@ -1106,6 +1134,7 @@ pub const WarriorTemplate = MobTemplate{
 };
 
 pub const HunterTemplate = MobTemplate{
+    .name_flags = &[_]NFlag{.Hg},
     .mob = .{
         .id = "hunter",
         .species = &GoblinSpecies,
@@ -1135,6 +1164,8 @@ pub const HunterTemplate = MobTemplate{
 };
 
 pub const BoneMageTemplate = MobTemplate{
+    .name_flags = &[_]NFlag{.H},
+    .skip_family_name = true,
     .mob = .{
         .id = "bone_mage",
         .species = &HumanSpecies,
@@ -1168,6 +1199,8 @@ pub const BoneMageTemplate = MobTemplate{
 };
 
 pub const DeathKnightTemplate = MobTemplate{
+    .name_flags = &[_]NFlag{.H},
+    .skip_family_name = true,
     .mob = .{
         .id = "death_knight",
         .species = &HumanSpecies,
@@ -1196,6 +1229,8 @@ pub const DeathKnightTemplate = MobTemplate{
 };
 
 pub const DeathMageTemplate = MobTemplate{
+    .name_flags = &[_]NFlag{.H},
+    .skip_family_name = true,
     .mob = .{
         .id = "death_mage",
         .species = &HumanSpecies,
@@ -1232,9 +1267,10 @@ pub const DeathMageTemplate = MobTemplate{
 };
 
 pub const EmberMageTemplate = MobTemplate{
+    .name_flags = &[_]NFlag{.Hg},
     .mob = .{
         .id = "ember_mage",
-        .species = &HumanSpecies,
+        .species = &GoblinSpecies,
         .tile = 'È',
         .ai = AI{
             .profession_name = "ember mage",
@@ -1270,6 +1306,8 @@ pub const EmberMageTemplate = MobTemplate{
 };
 
 pub const BrimstoneMageTemplate = MobTemplate{
+    .name_flags = &[_]NFlag{.H},
+    .skip_family_name = true,
     .mob = .{
         .id = "brimstone_mage",
         .species = &HumanSpecies,
@@ -1308,6 +1346,7 @@ pub const BrimstoneMageTemplate = MobTemplate{
 };
 
 pub const SparkMageTemplate = MobTemplate{
+    .name_flags = &[_]NFlag{.Hg},
     .mob = .{
         .id = "spark_mage",
         .species = &GoblinSpecies,
@@ -1343,9 +1382,11 @@ pub const SparkMageTemplate = MobTemplate{
 };
 
 pub const LightningMageTemplate = MobTemplate{
+    .name_flags = &[_]NFlag{.H},
+    .skip_family_name = true,
     .mob = .{
         .id = "lightning_mage",
-        .species = &GoblinSpecies,
+        .species = &HumanSpecies,
         .tile = 'L',
         .ai = AI{
             .profession_name = "lightning mage",
@@ -1752,6 +1793,8 @@ pub const SkeletalArbalistTemplate = MobTemplate{
 };
 
 pub const TorturerNecromancerTemplate = MobTemplate{
+    .name_flags = &[_]NFlag{.H},
+    .skip_family_name = true,
     .mob = .{
         .id = "necromancer",
         .species = &HumanSpecies,
@@ -2463,6 +2506,8 @@ pub fn placeMob(
     // ---
     // -------------- `mob` mustn't be modified after this point! -------------
     // ---
+
+    literature.assignName(template, mob_ptr);
 
     if (!opts.no_squads and template.squad.len > 0) {
         // TODO: allow placing squads next to multitile creatures.

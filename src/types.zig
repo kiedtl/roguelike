@@ -2151,6 +2151,9 @@ pub const Mob = struct { // {{{
     tile: u21,
     faction: Faction = .Necromancer,
 
+    name_given: ?[]const u8 = null,
+    name_family: ?[]const u8 = null,
+
     squad: ?*Squad = null,
     prisoner_status: ?Prisoner = null,
     linked_fovs: StackBuffer(*Mob, 16) = StackBuffer(*Mob, 16).init(null),

@@ -130,6 +130,7 @@ fn initGame(no_display: bool, display_scale: f32) bool {
     state.loadLevelInfo();
     surfaces.readProps(state.gpa.allocator());
     literature.readPosters(state.gpa.allocator());
+    literature.readNames(state.gpa.allocator());
     mobs.spawns.readSpawnTables(state.gpa.allocator());
     mapgen.readPrefabs(state.gpa.allocator());
     readDescriptions(state.gpa.allocator());
@@ -230,6 +231,7 @@ fn deinitGame() void {
     surfaces.freeProps(state.gpa.allocator());
     mobs.spawns.freeSpawnTables(state.gpa.allocator());
     freeDescriptions(state.gpa.allocator());
+    literature.freeNames(state.gpa.allocator());
 
     _ = state.gpa.deinit();
 }
