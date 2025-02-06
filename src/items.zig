@@ -96,32 +96,37 @@ pub const ItemTemplate = struct {
 };
 pub const RARE_ITEM_DROPS = [_]ItemTemplate{
     // Dilute this list by adding a few more common weapon
-    .{ .w = 90, .i = .{ .W = &SwordWeapon } },
+    // Actually nevermind
+    //.{ .w = 90, .i = .{ .P = &BlindPotion } },
+
     // Armor and cloaks
-    .{ .w = 50, .i = .{ .C = &PureGoldCloak } },
-    // Bone weapons
+    .{ .w = 10, .i = .{ .C = &PureGoldCloak } },
+    // Weapons
+    .{ .w = 10, .i = .{ .W = &GoldDaggerWeapon } },
     .{ .w = 10, .i = .{ .W = &BoneSwordWeapon } },
     .{ .w = 10, .i = .{ .W = &BoneDaggerWeapon } },
     .{ .w = 10, .i = .{ .W = &BoneMaceWeapon } },
     .{ .w = 10, .i = .{ .W = &BoneGreatMaceWeapon } },
-    // Copper weapons
     .{ .w = 10, .i = .{ .W = &CopperSwordWeapon } },
     .{ .w = 10, .i = .{ .W = &CopperRapierWeapon } },
+    .{ .w = 10, .i = .{ .W = &MasterSwordWeapon } },
+};
+pub const WEAP_ITEM_DROPS = [_]ItemTemplate{
+    .{ .w = 40, .i = .{ .W = &SwordWeapon } },
+    .{ .w = 30, .i = .{ .W = &RapierWeapon } },
+    .{ .w = 30, .i = .{ .W = &GreatMaceWeapon } },
+    .{ .w = 30, .i = .{ .W = &MonkSpadeWeapon } },
+    .{ .w = 20, .i = .{ .W = &BalancedSwordWeapon } },
+    .{ .w = 20, .i = .{ .W = &MartialSwordWeapon } },
+    .{ .w = 10, .i = .{ .W = &WoldoWeapon } },
+    .{ .w = 10, .i = .{ .W = &MorningstarWeapon } },
+    // Make it really rare since it's the starting weapon
+    .{ .w = 01, .i = .{ .W = &DaggerWeapon } },
 };
 pub const ITEM_DROPS = [_]ItemTemplate{
-    .{ .w = 1, .i = .{ .List = &RARE_ITEM_DROPS } },
+    .{ .w = 05, .i = .{ .List = &RARE_ITEM_DROPS } },
     // Weapons
-    .{ .w = 30, .i = .{ .W = &SwordWeapon } },
-    .{ .w = 25, .i = .{ .W = &RapierWeapon } },
-    .{ .w = 25, .i = .{ .W = &GreatMaceWeapon } },
-    .{ .w = 25, .i = .{ .W = &MonkSpadeWeapon } },
-    .{ .w = 20, .i = .{ .W = &BalancedSwordWeapon } },
-    .{ .w = 10, .i = .{ .W = &MasterSwordWeapon } },
-    .{ .w = 10, .i = .{ .W = &MartialSwordWeapon } },
-    .{ .w = 10, .i = .{ .W = &WoldoWeapon } },
-    .{ .w = 10, .i = .{ .W = &GoldDaggerWeapon } },
-    .{ .w = 10, .i = .{ .W = &MorningstarWeapon } },
-    .{ .w = 10, .i = .{ .W = &DaggerWeapon } },
+    .{ .w = 20, .i = .{ .List = &WEAP_ITEM_DROPS } },
     // Armor
     .{ .w = 30, .i = .{ .A = GambesonArmor } },
     .{ .w = 20, .i = .{ .A = BlueVestArmor } },

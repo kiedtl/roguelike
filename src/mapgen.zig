@@ -2213,7 +2213,10 @@ pub fn fillLootContainer(container: *Container, max_items: usize) void {
 
     while (items_placed < max_items and !container.isFull()) : (items_placed += 1) {
         const chosen_item_class = rng.chooseUnweighted(ItemTemplate.Type, item_class);
-        const t = _chooseLootItem(&items.ITEM_DROPS, minmax(usize, 0, 200), chosen_item_class);
+        // Special-case weapons, otherwise they take forever to fill up due to
+        // rarity
+        const list = if (chosen_item_class == .W) &items.WEAP_ITEM_DROPS else &items.ITEM_DROPS;
+        const t = _chooseLootItem(list, minmax(usize, 0, 200), chosen_item_class);
         const item = items.createItemFromTemplate(t);
         container.items.append(item) catch err.wat();
     }
