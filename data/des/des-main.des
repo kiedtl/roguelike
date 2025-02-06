@@ -240,7 +240,7 @@ disintegrate.
 % aux_shield_tower
 A very large and unwieldy rectangular shield, carved out of lightweight wood.
 Given its purpose as a showpiece, only morons or those truly desperate would
-bother with it.
+bother trying to use it.
 
 
 Engraved on the front is the likeness of a dying Revgenunkim. The Revgenunkim,
@@ -466,6 +466,11 @@ One of your countrymen, a pale-skinned and rather inexperienced human mercenary
 hired from the villages surrounding the hill-goblin's central forest city. He's
 been outfitted with the cave-goblin's shock prods and enforcer chains.
 
+% enforcer_armored_guard
+One of your countrymen, a pale-skinned and rather inexperienced human mercenary
+hired from the villages surrounding the hill-goblin's central forest city. He's
+been outfitted with the cave-goblin's shock prods and enforcer chains.
+
 % lead_turtle
 A monstrous contraption of mechanical drums, gears, and copper wires. Its heavy
 shell shines dully in the dim light.
@@ -525,8 +530,7 @@ A learned hill-goblin tasked with studying, manipulating, and duplicating the
 arcane cave-goblin arts that fill this city.
 
 % cleaner
-This inexperienced hill-goblin is tasked with keeping the floor of the Dungeon
-spotless.
+This whippersnapper is tasked with keeping the city's storage areas spotless.
 
 % hauler
 A very ordinary goblin, doing very ordinary hauling work.
@@ -573,8 +577,8 @@ A construct of gleaming metal, with red-hot pincers attached to its polished
 limbs.
 
 % sparkling
-An flying mechanical construct of cave-goblin creation. It's trying to
-electrocute you!
+An flying mechanical construct, originally of cave-goblin creation. It's trying
+to electrocute you!
 
 % recruit
 An inexperienced goblin warrior, still in training.
@@ -583,7 +587,7 @@ An inexperienced goblin warrior, still in training.
 A competent and highly trained infantry-goblin wearing a battle cuirass.
 
 % hunter
-He is tasked with liquidating escaped prisoners, like you.
+He is tasked with liquidating escaped prisoners. Like you, for example.
 
 % bone_mage
 Although not as experienced as the feared Death Mages they are apprenticed to,
@@ -653,8 +657,8 @@ An invisible Presence that stalks the dungeon, clothed in unapproachable
 darkness.
 
 % slinking_terror
-It was awake, lord of the most desolate and hidden parts of the earth, even
-before the first primordial silence was shattered by ancient sapients.
+It has been awake for eternities, lord of the desolate and hidden parts of the
+earth, even before the primordial silence was shattered by the first sapients.
 
 % creeping_death
 If you're seeing this message, please tell kiedtl.
