@@ -1,7 +1,7 @@
 # <name>                <type>   <nobility?> <species>...
-# Note: 
-"Hetbegel"      	.Family 	yea 	.Hg	  -	 -
 "Heteld"        	.Family 	  - 	.Hg	  -	 -
+# Aristocratic: reserved for future use
+"Hetbegel"      	.Family 	yea 	.Hg	  -	 -
 "Myalbaren"     	.Family 	  - 	  -	.Cg	 -
 "Mig-pradan"    	.Family 	  - 	.Hg	  -	 -
 "Pradanmig"     	.Family 	  - 	.Hg	.Cg	 -
@@ -9,13 +9,15 @@
 "Ep-pradan"     	.Family 	  - 	.Hg	  -	 -
 "Pradanep"      	.Family 	  - 	.Hg	.Cg	 -
 "Epruren"       	.Family 	  - 	.Hg	  -	 -
-"Zilodothrod"   	.Family 	  - 	.Hg	.Cg	 -
+# Aristocratic: name of the Captain of the Guard, and Zilodothrod Berujdib
+"Zilodothrod"   	.Family 	yea 	.Hg	.Cg	 -
 "Hub-Thrododo"  	.Family 	  - 	.Hg	.Cg	 -
 "Hubodothrod"   	.Family 	  - 	.Hg	.Cg	 -
 "Hub-Selodo"    	.Family 	  - 	.Hg	.Cg	 -
 "Hubodosel"     	.Family 	  - 	.Hg	.Cg	 -
 "Mirdruin"      	.Family 	  - 	.Hg	.Cg	 -
 "Mirdrenold"    	.Family 	  - 	.Hg	.Cg	 -
+# Aristocratic: ancient house of the Hill and Cave Goblins
 "Leqhyebundib"  	.Family 	  - 	.Hg	.Cg	 -
 "Tharnsthem"    	.Family 	  - 	.Hg	  -	 -
 "Kyermpunbyor"  	.Family 	  - 	.Hg	.Cg	 -
@@ -30,22 +32,22 @@
 "Leqyarbald"    	.Family 	  - 	.Hg	  -	 -
 "Dalgyebin"     	.Family 	  - 	.Hg	  -	 -
 "Irgyilbehl"    	.Family 	  - 	.Hg	.Cg	 -
-"Urkdal"        	.Family 	yea 	.Hg	.Cg	 -
+"Urkdal"        	.Family 	  - 	.Hg	.Cg	 -
 "Limdurlbehl"   	.Family 	  - 	.Hg	.Cg	 -
 "Tyalirbehl"    	.Family 	  - 	.Hg	.Cg	 -
 "Incargald"     	.Family 	  - 	.Hg	.Cg	 -
 "Nalgcagren"    	.Family 	  - 	  -	.Cg	 -
 "Elhegohel"     	.Family 	  - 	.Hg	  -	 -
 "Lepcagren"     	.Family 	  - 	.Hg	.Cg	 -
-"Gemshcagren"   	.Family 	  - 	.Hg	.Cg	 -
+"Gemshcagren"   	.Family 	  - 	  -	.Cg	 -
 "Greshuren"     	.Family 	  - 	.Hg	.Cg	 -
 "Beruren"       	.Either 	  - 	  -	.Cg	 -
 "Nabdruin"      	.Given  	  - 	.Hg	  -	 -
 "Obnabram"      	.Given  	  - 	  -	.Cg	 -
 "Baraldzyl"     	.Given  	  - 	.Hg	  -	 -
-"Hubsel"        	.Given  	  - 	  -	.Cg	 -
-"Korhub"        	.Given  	  - 	.Hg	.Cg	 -
-"Lestngol"      	.Given  	  - 	.Hg	.Cg	 -
+"Hubsel"        	.Given  	  - 	.Hg	.Cg	 -
+"Korhub"        	.Given  	  - 	  -	.Cg	 -
+"Lestngol"      	.Given  	  - 	  -	.Cg	 -
 "Neyl"          	.Given  	  - 	.Hg	.Cg	 -
 "Druinojstil"   	.Given  	  - 	  -	.Cg	 -
 "Thob"          	.Given  	  - 	.Hg	.Cg	 -
@@ -64,11 +66,12 @@
 "Kulbin"        	.Given  	  - 	.Hg	.Cg	 -
 "Zilold"        	.Given  	  - 	.Hg	.Cg	 -
 "Zilpradald"    	.Given  	  - 	.Hg	.Cg	 -
-"Pradaldzin"    	.Given  	yea 	.Hg	.Cg	 -
+"Pradaldzin"    	.Given  	  - 	.Hg	.Cg	 -
 "Obthol"        	.Given  	  - 	.Hg	  -	.H
 "Dyemuramtold"  	.Given  	  - 	.Hg	.Cg	 -
 "Kasdruin"      	.Given  	  - 	.Hg	.Cg	 -
 "Arbald"        	.Given  	  - 	.Hg	  -	.H
+# Aristocratic: reserved for future use.
 "Arbaldnak"     	.Given  	yea 	  -	.Cg	 -
 "Serbuld"       	.Given  	  - 	.Hg	  -	.H
 "Zylram"        	.Given  	  - 	  -	.Cg	 -
@@ -76,6 +79,7 @@
 "Aknimb"        	.Given  	  - 	.Hg	  -	.H
 "Nimbak"        	.Given  	  - 	  -	.Cg	 -
 "Lyehuld"       	.Given  	  - 	  -	.Cg	 -
+# Aristocratic: reserved for future use.
 "Zagnold"       	.Given  	yea 	.Hg	.Cg	 -
 "Prakkul"       	.Given  	  - 	.Hg	.Cg	 -
 "Elheguren"     	.Given  	  - 	  -	.Cg	 -

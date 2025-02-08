@@ -168,8 +168,12 @@ pub fn readNames(alloc: mem.Allocator) void {
 // TODO: forbidden names:
 // - Tyeburenet Kulbin
 // - Zilodothrod Berujdib
+// - Zilodothrod Hubsel
 // - Ubetalrego Lyehuld
-// - Rulers of Irthimgilnaz, somewhere in my notes
+// - Rulers of Irthimgilnaz
+//   - Leqhyebudib Nath: Lord Magistrate
+//   - Myalbaren Dremuldkor: Steward
+//   - Leqhyebudib Hubsel: Captain of the Guard
 //
 pub fn assignName(template: *const MobTemplate, mob: *Mob) void {
     if (template.name_flags.len == 0)
