@@ -284,7 +284,7 @@ pub const SpectralCloak = Cloak{ .id = "cloak_spectral", .name = "spectres", .st
 pub const SilCloak = Cloak{ .id = "cloak_silus", .name = "silus", .resists = .{ .rFire = 25 } };
 pub const FurCloak = Cloak{ .id = "cloak_fur", .name = "fur", .resists = .{ .rElec = 25 } };
 pub const GoldCloak = Cloak{ .id = "cloak_gold", .name = "gold", .stats = .{ .Potential = 10 } };
-pub const PureGoldCloak = Cloak{ .id = "cloak_gold_pure", .name = "pure gold", .stats = .{ .Potential = 25, .Willpower = 1 }, .resists = .{ .rElec = -25 } };
+pub const PureGoldCloak = Cloak{ .id = "cloak_gold_pure", .name = "pure gold", .stats = .{ .Potential = 25, .Willpower = -1 }, .resists = .{ .rElec = -25 } };
 pub const ThornyCloak = Cloak{ .id = "cloak_thorny", .name = "thorns", .stats = .{ .Spikes = 1 } };
 pub const AgilityCloak = Cloak{ .id = "cloak_agility", .name = "agility", .stats = .{ .Martial = 2 } };
 pub const WarringCloak = Cloak{ .id = "cloak_warring", .name = "warring", .stats = .{ .Melee = 20 } };
@@ -1342,7 +1342,7 @@ pub const GoldOrbConsumable = Consumable{
         .{ .Stat = .{ .s = .Potential, .change = 25 } },
     },
     .color = 0xffd700,
-    .verbs_player = &[_][]const u8{ "choke down", "swallow" },
+    .verbs_player = &[_][]const u8{"swallow"},
     .verbs_other = &[_][]const u8{"chokes down"},
 };
 
@@ -1748,7 +1748,7 @@ pub const OrnateGoldArmor = Armor{
     .id = "ornate_gold_armor",
     .name = "ornate golden armor",
     .resists = .{ .Armor = 10 },
-    .stats = .{ .Potential = 25, .Willpower = 2, .Melee = 10 },
+    .stats = .{ .Potential = 25, .Willpower = -1, .Melee = 10 },
 };
 
 pub const ShadowMailArmor = Armor{
