@@ -2772,6 +2772,7 @@ pub const Mob = struct { // {{{
                 state.machines.append(mach) catch err.wat();
                 state.dungeon.at(self.coord).surface = SurfaceItem{ .Machine = state.machines.last().? };
             },
+            .MaxMP => |change| self.max_MP = @intCast(usize, math.max(0, @intCast(isize, self.max_MP) + change)),
             .Custom => |c| c(self, self.coord),
         };
     }

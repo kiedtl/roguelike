@@ -256,6 +256,7 @@ pub const ALL_ITEMS = [_]ItemTemplate{
     .{ .w = 0, .i = .{ .List = &NIGHT_RINGS } },
     .{ .w = 0, .i = .{ .E = SymbolEvoc } },
     .{ .w = 0, .i = .{ .A = OrnateGoldArmor } },
+    .{ .w = 0, .i = .{ .c = &GoldCakeConsumable } },
     .{ .w = 0, .i = .{ .A = SilusArmor } },
     .{ .w = 0, .i = .{ .X = &Earthen1ShieldAux } },
     .{ .w = 0, .i = .{ .X = &Earthen2ShieldAux } },
@@ -1246,6 +1247,7 @@ pub const Consumable = struct {
         Heal: usize,
         Resist: struct { r: Resistance, change: isize },
         Stat: struct { s: Stat, change: isize },
+        MaxMP: isize,
         Custom: fn (?*Mob, Coord) void,
     };
 
@@ -1342,6 +1344,19 @@ pub const GoldOrbConsumable = Consumable{
     .color = 0xffd700,
     .verbs_player = &[_][]const u8{ "choke down", "swallow" },
     .verbs_other = &[_][]const u8{"chokes down"},
+};
+
+pub const GoldCakeConsumable = Consumable{
+    .id = "cons_gold_cake",
+    .name = "golden cake",
+    .effects = &[_]Consumable.Effect{
+        .{ .Stat = .{ .s = .Potential, .change = 25 } },
+        .{ .Stat = .{ .s = .Willpower, .change = -1 } },
+        .{ .MaxMP = 5 },
+    },
+    .color = 0xffd700,
+    .verbs_player = &[_][]const u8{ "choke down", "swallow" },
+    .verbs_other = &[_][]const u8{"chokes down (bug)"},
 };
 
 pub const SpectralOrbConsumable = Consumable{

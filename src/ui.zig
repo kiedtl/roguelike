@@ -1196,10 +1196,11 @@ fn _getItemDescription(self: *Console, starty: usize, item: Item, linewidth: usi
                 .Kit => |m| y += self.drawTextAtf(0, y, "· $gMachine$. {s}", .{m.name}, .{}),
                 .Damage => |d| y += self.drawTextAtf(0, y, "· $gIns$. {s} <$b{}$.>", .{ d.kind.string(), d.amount }, .{}),
                 .Heal => |h| y += self.drawTextAtf(0, y, "· $gIns$. heal <$b{}$.>", .{h}, .{}),
-                .Resist => |r| y += self.drawTextAtf(0, y, "· $gPrm$. {s: <7} $b{:>4}$.", .{ r.r.string(), r.change }, .{}),
-                .Stat => |s| y += self.drawTextAtf(0, y, "· $gPrm$. {s: <7} $b{:>4}$.", .{ s.s.string(), s.change }, .{}),
+                .Resist => |r| y += self.drawTextAtf(0, y, "· $gPrm$. {s: <9} $b{:>4}$.", .{ r.r.string(), r.change }, .{}),
+                .Stat => |s| y += self.drawTextAtf(0, y, "· $gPrm$. {s: <9} $b{:>4}$.", .{ s.s.string(), s.change }, .{}),
                 .Gas => |g| y += self.drawTextAtf(0, y, "· $gGas$. {s}", .{gas.Gases[g].name}, .{}),
                 .Status => |s| y += self.drawTextAtf(0, y, "· $gTmp$. {s}", .{s.string(state.player)}, .{}),
+                .MaxMP => |chg| y += self.drawTextAtf(0, y, "· $gPrm$. {s: <9} $b{:>4}$.", .{ "max MP", chg }, .{}),
                 .Custom => y += self.drawTextAt(0, y, "· $G(See description)$.", .{}),
             };
             y += self.drawTextAt(0, y, "\n", .{});
