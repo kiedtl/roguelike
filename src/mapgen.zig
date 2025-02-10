@@ -120,8 +120,9 @@ pub const VAULT_LEVELS = [LEVELS][]const VaultType{
     // &.{                          }, // -5/Caverns/2
     &.{                          }, // -5/Caverns
     &.{        .Marble,          }, // -5/Prison
-    // &.{ .Iron, .Marble,          }, // -6/Workshop/3
-    // &.{ .Iron,                   }, // -6/Workshop/2
+    &.{                          }, // -6/Necropolis
+    &.{ .Iron, .Marble,          }, // -6/Workshop/3
+    &.{ .Iron,                   }, // -6/Workshop/2
     &.{                          }, // -6/Shrine
     &.{                          }, // -6/Workshop
     &.{                          }, // -7/Prison
@@ -1185,7 +1186,7 @@ pub fn validateLevel(level: usize, alloc: mem.Allocator) !void {
                 var x: usize = room.rect.start.x;
                 while (x < room.rect.end().x) : (x += 1) {
                     const point = Coord.new2(room.rect.start.z, x, y);
-                    if (state.is_walkable(point, .{})) {
+                    if (state.is_walkable(point, .{ .ignore_mobs = true })) {
                         return point;
                     }
                 }
@@ -4859,6 +4860,30 @@ pub fn createLevelConfig_CRY() LevelConfig {
     };
 }
 
+const NEC_BASE_LEVELCONFIG = LevelConfig{
+    .prefabs = &[_][]const u8{},
+    .prefab_chance = 70,
+    .mapgen_iters = 2048,
+    .mapgen_func = placeRandomRooms,
+    .lair_max = 0,
+
+    .min_room_width = 7,
+    .min_room_height = 7,
+    .max_room_width = 8,
+    .max_room_height = 8,
+
+    .level_features = [_]?LevelConfig.LevelFeatureFunc{ null, null, null, null },
+
+    .material = &materials.Marble,
+    .no_windows = true,
+    .door = &surfaces.VaultDoor,
+    .light = &surfaces.Lamp,
+    .subroom_chance = 100,
+    .allow_statues = false,
+
+    .machines = &[_]*const Machine{},
+};
+
 pub fn createLevelConfig_WRK(crowd: usize, comptime prefabs: []const []const u8) LevelConfig {
     return LevelConfig{
         .prefabs = prefabs,
@@ -5012,8 +5037,9 @@ pub var Configs = [LEVELS]LevelConfig{
     // CAV_BASE_LEVELCONFIG,
     CAV_BASE_LEVELCONFIG,
     createLevelConfig_PRI(2, &[_][]const u8{}),
-    // createLevelConfig_WRK(2, &[_][]const u8{}),
-    // createLevelConfig_WRK(2, &[_][]const u8{}),
+    NEC_BASE_LEVELCONFIG,
+    createLevelConfig_WRK(2, &[_][]const u8{}),
+    createLevelConfig_WRK(2, &[_][]const u8{}),
     createLevelConfig_SIN(4),
     createLevelConfig_WRK(1, &[_][]const u8{"WRK_s_SIN_stair_1"}),
     createLevelConfig_PRI(1, &[_][]const u8{"PRI_NC"}),

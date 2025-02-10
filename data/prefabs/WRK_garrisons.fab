@@ -4,6 +4,7 @@
 :priority 20
 :noitems
 :noguards
+:nostairs
 
 @@p Cmons sparkling     ([prm_status1]Sleeping [no_squads]yea)
 @@e Cmons emberling     ([prm_status1]Sleeping [no_squads]yea)
