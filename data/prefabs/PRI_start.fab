@@ -26,7 +26,7 @@
 @0 i potion_smoke
 @1 i potion_paralysis
 @2 i potion_blind
-@3 i cons_gold_cake
+@3 i potion_distract
 
 #####****#####
 #............#
