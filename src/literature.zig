@@ -170,6 +170,7 @@ pub fn readNames(alloc: mem.Allocator) void {
 // - Zilodothrod Berujdib
 // - Zilodothrod Hubsel
 // - Ubetalrego Lyehuld
+// - Hubodothrod Beruren
 // - Rulers of Irthimgilnaz
 //   - Leqhyebudib Nath: Lord Magistrate
 //   - Myalbaren Dremuldkor: Steward

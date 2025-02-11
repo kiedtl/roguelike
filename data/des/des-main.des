@@ -8,6 +8,14 @@ crushed, as if set in a press. The chest is marked with burns and lacerations.
 A large trophy mace, emblazoned with an inscription in Dremos, has been jammed
 into the corpse's mouth.
 
+% corpse_myalbaren
+It is the embalmed remains of the cave-goblin Myalbaren Dremuldkor, former
+Steward of Irthimgilnaz. The face and chest is scorched, and the tattered
+clothing still clinging to parts of the body are completely charred. A terrible
+wound marks the forehead, probably inflicted by a heavy riveted mace. Heavy
+golden manacles adors both wrists, and a heavy golden spike has been driven
+into the abdomen, attaching it to the white post behind.
+
 % head_mining
 A cave-goblin mining helmet, with an electric lamp affixed to the front.
 
@@ -86,6 +94,11 @@ damage on the living, but less on the undead.
 % dagger_gold
 A ceremonial dagger of pure gold, layered in blue and black metal in intricate
 patterns. Its weight makes it highly impractical in combat.
+
+% sceptre
+An ornate staff of some light-colored wood, covered in inlaid gold. It was left
+here as a token of the Necromancer's continued support for the hill-goblin
+conquerors.
 
 % rapier
 A very long needle-like dagger, ending in an incredibly sharp edge, but with

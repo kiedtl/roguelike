@@ -1199,6 +1199,7 @@ pub const Status = enum {
     EtherealShield, // Doesn't have a power field.
     EarthenShield,
     FumesVest, // Doesn't have a power field.
+    Sceptre, // Doesn't have a power field.
 
     // Disrupts the player's hearing
     //

@@ -398,9 +398,19 @@ pub fn executeWizardFun(w: WizardFun) void {
             state.player.MP = state.player.max_MP;
         },
         .Up => {
-            const stairlocs = state.dungeon.stairs[state.player.coord.z];
-            const stairloc = rng.chooseUnweighted(Coord, stairlocs.constSlice());
-            _ = state.player.teleportTo(stairloc, null, true, false);
+            const stairlocs = &state.dungeon.stairs[state.player.coord.z];
+            if (stairlocs.len == 0)
+                return;
+            var closest_floor_z: usize = 0;
+            var closest_floor_stair = Coord.new2(6, 6, 6);
+            for (stairlocs.constSlice()) |stairloc| {
+                const stair = state.dungeon.at(stairloc).surface.?.Stair;
+                if (stair.stairtype == .Up and stair.stairtype.Up > closest_floor_z) {
+                    closest_floor_z = stair.stairtype.Up;
+                    closest_floor_stair = stairloc;
+                }
+            }
+            _ = state.player.teleportTo(closest_floor_stair, null, true, false);
         },
         .Misc => {
             //state.player.innate_resists.rElec += 25;

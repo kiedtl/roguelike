@@ -1210,7 +1210,7 @@ pub fn validateLevel(level: usize, alloc: mem.Allocator) !void {
     }
 
     // Ensure that all required prefabs were used.
-    for (Configs[level].prefabs) |required_fab| {
+    for (Configs[level].required_prefabs) |required_fab| {
         const fab = Prefab.findPrefabByName(required_fab, &n_fabs) orelse
             Prefab.findPrefabByName(required_fab, &s_fabs).?;
 
@@ -1782,6 +1782,15 @@ pub fn placeTunnelsThenRandomRooms(level: usize, alloc: mem.Allocator) void {
     placeRandomRooms(level, alloc);
 }
 
+const RandomRoomOpts = struct {
+    starting_fabs: []const StartingFab = &[0]StartingFab{},
+
+    pub const StartingFab = struct {
+        n: []const u8,
+        y: ?MinMax(usize) = null,
+    };
+};
+
 pub fn placeRandomRooms(
     level: usize,
     allocator: mem.Allocator,
@@ -1789,22 +1798,13 @@ pub fn placeRandomRooms(
     var first: ?Room = null;
     const rooms = &state.rooms[level];
 
-    var required = Configs[level].prefabs;
+    var required = Configs[level].randroom_opts.starting_fabs;
     var reqctr: usize = 0;
 
     while (reqctr < required.len) {
-        const fab_name = required[reqctr];
-        const fab = Prefab.findPrefabByName(fab_name, &n_fabs) orelse {
-            // Do nothing, it might be a required subroom.
-            //
-            // FIXME: we still should handle this error
-            //
-            //
-            //std.log.err("Cannot find required prefab {}", .{fab_name});
-            //return;
-            reqctr += 1;
-            continue;
-        };
+        const fab_name = required[reqctr].n;
+        const fab = Prefab.findPrefabByName(fab_name, &n_fabs) orelse
+            err.bug("Cannot find required starting prefab {s}", .{fab_name});
 
         const x = rng.rangeClumping(
             usize,
@@ -1814,8 +1814,15 @@ pub fn placeRandomRooms(
         );
         const y = rng.rangeClumping(
             usize,
-            math.min(fab.height, state.HEIGHT - fab.height - 1),
-            math.max(fab.height, state.HEIGHT - fab.height - 1),
+            if (required[reqctr].y) |y| y.min else 1,
+            if (required[reqctr].y) |y|
+                y.max
+            else
+                // 2025-02-10: I don't like this line of code. It looks Wrong,
+                // like the previous line of code that I removed above (for
+                // future me: see git blame please). Too lazy to investigate
+                // right now though.
+                math.max(fab.height, state.HEIGHT - fab.height - 1),
             2,
         );
 
@@ -3381,6 +3388,11 @@ pub fn generateLayoutMap(level: usize) void {
     }
 }
 
+fn levelFeatureUnholyDrops(_: usize, coord: Coord, _: *const Room, _: *const Prefab, _: mem.Allocator) void {
+    const loot = _chooseLootItem(&items.UNHOLY_ITEM_DROPS, minmax(usize, 0, 999), null);
+    state.dungeon.itemsAt(coord).append(items.createItemFromTemplate(loot)) catch err.wat();
+}
+
 fn levelFeatureDormantConstruct(_: usize, coord: Coord, _: *const Room, _: *const Prefab, alloc: mem.Allocator) void {
     while (true) {
         const mob = mobs.spawns.chooseMob(.Main, coord.z, null) catch err.wat();
@@ -4396,6 +4408,8 @@ pub const Prefab = struct {
                                 }
                                 if (poster_line.len == 0) {
                                     try buf.appendSlice("\n\n");
+                                } else if (mem.eql(u8, poster_line, "\\")) {
+                                    try buf.appendSlice("\n");
                                 } else {
                                     try buf.appendSlice(poster_line);
                                 }
@@ -4590,7 +4604,7 @@ pub fn readPrefabs(alloc: mem.Allocator) void {
 pub const LevelConfig = struct {
     stairs_to: []const usize = &[_]usize{},
 
-    prefabs: []const []const u8 = &[_][]const u8{},
+    required_prefabs: []const []const u8 = &[_][]const u8{},
     distances: [2][10]usize = [2][10]usize{
         .{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
         .{ 7, 4, 4, 3, 2, 1, 1, 0, 0, 0 },
@@ -4601,6 +4615,7 @@ pub const LevelConfig = struct {
     mapgen_func: fn (usize, mem.Allocator) void = placeTunnelsThenRandomRooms,
 
     tunneler_opts: tunneler.TunnelerOptions = .{},
+    randroom_opts: RandomRoomOpts = .{},
 
     // If true, will not place rooms on top of lava/water.
     require_dry_rooms: bool = false,
@@ -4670,12 +4685,23 @@ pub const LevelConfig = struct {
 
 // -----------------------------------------------------------------------------
 
+pub fn _buildRandomRoomOpts(comptime prefabs: []const []const u8) RandomRoomOpts {
+    comptime var fabs: [prefabs.len]RandomRoomOpts.StartingFab = undefined;
+    inline for (prefabs) |fab, i| {
+        fabs[i] = .{ .n = fab };
+    }
+    return RandomRoomOpts{
+        .starting_fabs = &fabs,
+    };
+}
+
 pub fn createLevelConfig_PRI(crowd: usize, comptime prefabs: []const []const u8) LevelConfig {
     return LevelConfig{
-        .prefabs = prefabs,
+        .required_prefabs = prefabs,
         .prefab_chance = 20,
         .mapgen_iters = 2048,
         .mapgen_func = placeRandomRooms,
+        .randroom_opts = _buildRandomRoomOpts(prefabs),
         .level_features = [_]?LevelConfig.LevelFeatureFunc{
             levelFeaturePrisoners,
             levelFeaturePrisonersMaybe,
@@ -4690,7 +4716,7 @@ pub fn createLevelConfig_PRI(crowd: usize, comptime prefabs: []const []const u8)
 }
 
 const HLD_BASE_LEVELCONFIG = LevelConfig{
-    .prefabs = &[_][]const u8{"HLD_first_aid"},
+    .required_prefabs = &[_][]const u8{"HLD_first_aid"},
     .tunneler_opts = .{
         .max_iters = 450,
         .max_length = math.max(WIDTH, HEIGHT),
@@ -4733,7 +4759,7 @@ const HLD_BASE_LEVELCONFIG = LevelConfig{
 
 pub fn createLevelConfig_LAB(comptime prefabs: []const []const u8) LevelConfig {
     return LevelConfig{
-        .prefabs = prefabs,
+        .required_prefabs = prefabs,
         .tunneler_opts = .{
             .max_iters = 450,
             .max_length = math.max(WIDTH, HEIGHT),
@@ -4782,7 +4808,7 @@ pub fn createLevelConfig_LAB(comptime prefabs: []const []const u8) LevelConfig {
 
 pub fn createLevelConfig_SIN(comptime width: usize) LevelConfig {
     return LevelConfig{
-        .prefabs = &[_][]const u8{"SIN_candle"},
+        .required_prefabs = &[_][]const u8{"SIN_candle"},
         .tunneler_opts = .{
             .min_tunneler_distance = 0,
             .turn_chance = 7,
@@ -4860,25 +4886,38 @@ pub fn createLevelConfig_CRY() LevelConfig {
     };
 }
 
+const NEC_MAIN_FAB_H = 17; // I'm definitely going to forget about this
 const NEC_BASE_LEVELCONFIG = LevelConfig{
-    .prefabs = &[_][]const u8{},
-    .prefab_chance = 70,
-    .mapgen_iters = 2048,
+    .required_prefabs = &[_][]const u8{ "NEC_circles", "NEC_main" },
+    .prefab_chance = 100,
+    .mapgen_iters = 4096,
     .mapgen_func = placeRandomRooms,
+    .randroom_opts = .{
+        .starting_fabs = &[_]RandomRoomOpts.StartingFab{
+            // .{
+            //     .n = "NEC_circles",
+            //     .y = MinMax(usize){ .min = 2, .max = 2 },
+            // },
+            .{
+                .n = "NEC_main",
+                .y = MinMax(usize){ .min = HEIGHT - NEC_MAIN_FAB_H - 1, .max = HEIGHT - NEC_MAIN_FAB_H - 1 },
+            },
+        },
+    },
     .lair_max = 0,
 
     .min_room_width = 7,
     .min_room_height = 7,
-    .max_room_width = 8,
-    .max_room_height = 8,
+    .max_room_width = 12,
+    .max_room_height = 12,
 
-    .level_features = [_]?LevelConfig.LevelFeatureFunc{ null, null, null, null },
+    .level_features = [_]?LevelConfig.LevelFeatureFunc{ levelFeatureUnholyDrops, null, null, null },
 
     .material = &materials.Marble,
     .no_windows = true,
     .door = &surfaces.VaultDoor,
     .light = &surfaces.Lamp,
-    .subroom_chance = 100,
+    .subroom_chance = 0,
     .allow_statues = false,
 
     .machines = &[_]*const Machine{},
@@ -4886,7 +4925,7 @@ const NEC_BASE_LEVELCONFIG = LevelConfig{
 
 pub fn createLevelConfig_WRK(crowd: usize, comptime prefabs: []const []const u8) LevelConfig {
     return LevelConfig{
-        .prefabs = prefabs,
+        .required_prefabs = prefabs,
         .tunneler_opts = .{
             .max_length = math.max(WIDTH, HEIGHT),
             .turn_chance = 0,
@@ -4939,7 +4978,6 @@ pub fn createLevelConfig_WRK(crowd: usize, comptime prefabs: []const []const u8)
 }
 
 pub const CAV_BASE_LEVELCONFIG = LevelConfig{
-    .prefabs = &[_][]const u8{},
     .distances = [2][10]usize{
         .{ 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 },
         .{ 1, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
@@ -5014,7 +5052,7 @@ pub const CAV_BASE_LEVELCONFIG = LevelConfig{
 };
 
 pub const TUT_BASE_LEVELCONFIG = LevelConfig{
-    .prefabs = &[_][]const u8{"TUT_basic"},
+    .required_prefabs = &[_][]const u8{"TUT_basic"},
     .mapgen_func = placeRandomRooms,
     .prefab_chance = 100,
     .mapgen_iters = 0,

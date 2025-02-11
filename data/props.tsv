@@ -446,6 +446,7 @@
 "garbage"              	 "pile of garbage"      	 '%' 	                        -  	 0xaaaa88 	 -        	 -  
 
 "corpse_ubetalrego"    	 "Ubetalrego Lyehuld (corpse)" 	 '%' 	                        -  	 0x8888aa 	 -        	 -  
+"corpse_myalbaren"     	 "Myalbaren Dremuldkor (corpse)" 	'%' 	                -  	 0x8888aa 	 -        	 -  
 
 # temporary, shouldn't be used
 "tmp_first_aid"        	 "fake aid station"     	 'F' 	                        -  	 0x000000 	0x008c00  	nay  	 - 	10

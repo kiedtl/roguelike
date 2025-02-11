@@ -98,11 +98,7 @@ pub const RARE_ITEM_DROPS = [_]ItemTemplate{
     // Dilute this list by adding a few more common weapon
     // Actually nevermind
     //.{ .w = 90, .i = .{ .P = &BlindPotion } },
-
-    // Armor and cloaks
-    .{ .w = 10, .i = .{ .C = &PureGoldCloak } },
     // Weapons
-    .{ .w = 10, .i = .{ .W = &GoldDaggerWeapon } },
     .{ .w = 10, .i = .{ .W = &BoneSwordWeapon } },
     .{ .w = 10, .i = .{ .W = &BoneDaggerWeapon } },
     .{ .w = 10, .i = .{ .W = &BoneMaceWeapon } },
@@ -110,6 +106,9 @@ pub const RARE_ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 10, .i = .{ .W = &CopperSwordWeapon } },
     .{ .w = 10, .i = .{ .W = &CopperRapierWeapon } },
     .{ .w = 10, .i = .{ .W = &MasterSwordWeapon } },
+    // Overlap with Unholy temple's loot, so even rarer
+    .{ .w = 05, .i = .{ .C = &PureGoldCloak } },
+    .{ .w = 05, .i = .{ .W = &GoldDaggerWeapon } },
 };
 pub const WEAP_ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 40, .i = .{ .W = &SwordWeapon } },
@@ -229,6 +228,18 @@ pub const NIGHT_ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 10, .i = .{ .X = &ShadowShieldAux } },
     .{ .w = 05, .i = .{ .X = &EtherealShieldAux } },
 };
+pub const UNHOLY_ITEM_DROPS = [_]ItemTemplate{
+    .{ .w = 80, .i = .{ .c = &GoldOrbConsumable } },
+    .{ .w = 80, .i = .{ .c = &GoldCakeConsumable } },
+    .{ .w = 10, .i = .{ .C = &PureGoldCloak } },
+    .{ .w = 10, .i = .{ .W = &GoldDaggerWeapon } },
+    .{ .w = 10, .i = .{ .X = &GoldPendantAux } },
+    .{ .w = 10, .i = .{ .H = &GoldTiara } },
+    .{ .w = 10, .i = .{ .W = &BoneSwordWeapon } },
+    .{ .w = 10, .i = .{ .W = &BoneDaggerWeapon } },
+    .{ .w = 10, .i = .{ .W = &BoneMaceWeapon } },
+    .{ .w = 10, .i = .{ .W = &BoneGreatMaceWeapon } },
+};
 pub const RINGS = [_]ItemTemplate{
     .{ .w = 9, .i = .{ .r = LightningRing } },
     .{ .w = 9, .i = .{ .r = CremationRing } },
@@ -252,11 +263,12 @@ pub const NIGHT_RINGS = [_]ItemTemplate{
 pub const ALL_ITEMS = [_]ItemTemplate{
     .{ .w = 0, .i = .{ .List = &ITEM_DROPS } },
     .{ .w = 0, .i = .{ .List = &NIGHT_ITEM_DROPS } },
+    .{ .w = 0, .i = .{ .List = &UNHOLY_ITEM_DROPS } },
     .{ .w = 0, .i = .{ .List = &RINGS } },
     .{ .w = 0, .i = .{ .List = &NIGHT_RINGS } },
     .{ .w = 0, .i = .{ .E = SymbolEvoc } },
     .{ .w = 0, .i = .{ .A = OrnateGoldArmor } },
-    .{ .w = 0, .i = .{ .c = &GoldCakeConsumable } },
+    .{ .w = 0, .i = .{ .W = &SceptreWeapon } },
     .{ .w = 0, .i = .{ .A = SilusArmor } },
     .{ .w = 0, .i = .{ .X = &Earthen1ShieldAux } },
     .{ .w = 0, .i = .{ .X = &Earthen2ShieldAux } },
@@ -2007,6 +2019,18 @@ pub const GoldDaggerWeapon = Weapon{
     .stats = .{ .Melee = -25, .Potential = 25 },
     .ego = .Drain,
     .strs = &PIERCING_STRS,
+};
+
+pub const SceptreWeapon = Weapon{
+    .id = "sceptre",
+    .name = "Ambassador's Sceptre",
+    .damage = 1,
+    .stats = .{ .Melee = 25, .Potential = 30 },
+    .ego = .Drain,
+    .equip_effects = &[_]StatusDataInfo{
+        .{ .status = .Sceptre, .duration = .Equ },
+    },
+    .strs = &CRUSHING_STRS,
 };
 
 pub const RapierWeapon = Weapon{

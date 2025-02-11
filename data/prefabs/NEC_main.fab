@@ -1,0 +1,102 @@
+% NOTE: Make sure to keep mapgen.NEC_MAIN_FAB_H constant in sync with this
+% file.
+
+:g_restriction 1
+:invisible
+:noguards
+:noitems
+:nostairs
+
+@u P
+      Death to the Earth Demons.
+\
+          Death to traitors.
+\
+Death to the Thol and all who serve him.
+\
+   A curse on those cowards who fled
+\
+ at the coming of the Northern heralds.
+
+     Glory to the Necromancer.
+\
+   Vengeance swiftly seeks those
+\
+ who overcame the Citadel of Kornalg.
+
+               ***
+
+   Gyil gambourto Revgenunhelkim.
+\
+      Gyil gambourto vesneild.
+\
+ Gyil gambourto Thol agh tamdalduk.
+\
+  Moul kyanpatamdbolg asg branaso
+\
+       ord sharldreldbinnahl.
+
+        Tholgyil shyegumor.
+\
+      Nalk thrakouredru-kabst
+\
+     asg kazgasoren Ir-Kornalg.
+END POSTER
+@v p corpse_myalbaren
+@w P
+          Here lies
+
+     $cMYALBAREN DREMULDKOR$.
+\
+   Steward of  Irthimgilnaz
+\
+\
+  Captured by the company of
+\
+     $cHUBODOTHROD BERUREN$.
+\
+    Third Captain of ______
+
+       Put to death by
+\
+   $r-*- LORD HRITHOLLAN -*-$.
+\
+Ambassador of the Necromancer
+END POSTER
+@x i sceptre
+@y i ornate_gold_armor
+
+% FABEDIT_REPLACE
+
+@0 p gold_c_wall_upper
+@1 p iron_bars_broken
+@2 p undead_ash
+@3 M bloat
+@4 M skeleton
+@5 M bone_rat
+@6 M calcite_spire
+@7 p garbage
+@8 p gold_c_wall_lower
+@9 p gold_c_wall_right
+@a p gold_c_wall_left
+@b p gold_c_wall_full
+@c p gold_c_wall_pltfrm
+@z m shrine
+
+??????#***********#??????
+?7575##...........##5744?
+?755##......6......##775?
+?535#...6.......6...#777?
+?737##8c8.......8c8##454?
+##577##z9.......az##474##
+*###5.####.....####27###*
+*..##.7.a##...##9...##..*
+*....αααab#...#b9ααα....*
+*....αααcz#...#zcααα....*
+*..##...a##.y.##9...##..*
+*###5.####.....####.5###*
+##575##bα0..u..0αb##577##
+?475##0.4.......4.0##555?
+?474143CC..vxw..CC431775?
+?455##8α8..888..8α8##557?
+?????###############?????

@@ -47,6 +47,13 @@ Refer to the vests' description.
 You are standing on copper-plated ground and will deal 1 extra damage if you
 use a copper weapon.
 
+% player_Status.Sceptre
+You are unlawfully carrying the unholy Ambassador's Sceptre, and can channel a
+small portion of its power.
+
+Be warned: the Sceptre detests your presence, and will seek to betray and kill
+you at the first opportunity.
+
 % player_Status.Riposte
 You can retaliate when you block an attack, executing a free counterattack.
 
