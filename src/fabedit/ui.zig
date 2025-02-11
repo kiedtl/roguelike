@@ -223,7 +223,7 @@ pub fn displayAs(st: *fabedit.EdState, ftile: mapgen.Prefab.FabTile) display.Cel
         &materials.Dobalene
     else if (mem.eql(u8, prefix, "HLD"))
         &materials.PlatedDobalene
-    else if (mem.eql(u8, prefix, "CRY") or mem.eql(u8, prefix, "SIN"))
+    else if (mem.eql(u8, prefix, "CRY") or mem.eql(u8, prefix, "SIN") or mem.eql(u8, prefix, "NEC"))
         &materials.Marble
     else
         &materials.Concrete;

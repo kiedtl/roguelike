@@ -4848,7 +4848,7 @@ pub fn createLevelConfig_SIN(comptime width: usize) LevelConfig {
     };
 }
 
-pub fn createLevelConfig_CRY() LevelConfig {
+pub fn createLevelConfig_NEC() LevelConfig {
     return LevelConfig{
         .tunneler_opts = .{
             .max_iters = 350,
@@ -4868,7 +4868,7 @@ pub fn createLevelConfig_CRY() LevelConfig {
                 .{ .start = Coord.new(WIDTH / 4, HEIGHT - 10), .width = 0, .height = 1, .direction = .East },
             },
         },
-        .prefab_chance = 0, // No prefabs for CRY
+        .prefab_chance = 0, // No prefabs for NEC
         .mapgen_func = tunneler.placeTunneledRooms,
 
         .min_room_width = 6,
@@ -4886,21 +4886,21 @@ pub fn createLevelConfig_CRY() LevelConfig {
     };
 }
 
-const NEC_MAIN_FAB_H = 17; // I'm definitely going to forget about this
-const NEC_BASE_LEVELCONFIG = LevelConfig{
-    .required_prefabs = &[_][]const u8{ "NEC_circles", "NEC_main" },
+const CRY_MAIN_FAB_H = 17; // I'm definitely going to forget about this
+const CRY_BASE_LEVELCONFIG = LevelConfig{
+    .required_prefabs = &[_][]const u8{ "CRY_circles", "CRY_main" },
     .prefab_chance = 100,
     .mapgen_iters = 4096,
     .mapgen_func = placeRandomRooms,
     .randroom_opts = .{
         .starting_fabs = &[_]RandomRoomOpts.StartingFab{
             // .{
-            //     .n = "NEC_circles",
+            //     .n = "CRY_circles",
             //     .y = MinMax(usize){ .min = 2, .max = 2 },
             // },
             .{
-                .n = "NEC_main",
-                .y = MinMax(usize){ .min = HEIGHT - NEC_MAIN_FAB_H - 1, .max = HEIGHT - NEC_MAIN_FAB_H - 1 },
+                .n = "CRY_main",
+                .y = MinMax(usize){ .min = HEIGHT - CRY_MAIN_FAB_H - 1, .max = HEIGHT - CRY_MAIN_FAB_H - 1 },
             },
         },
     },
@@ -5060,9 +5060,9 @@ pub const TUT_BASE_LEVELCONFIG = LevelConfig{
 };
 
 pub var Configs = [LEVELS]LevelConfig{
-    createLevelConfig_CRY(),
-    createLevelConfig_CRY(),
-    createLevelConfig_CRY(),
+    createLevelConfig_NEC(),
+    createLevelConfig_NEC(),
+    createLevelConfig_NEC(),
     createLevelConfig_PRI(2, &[_][]const u8{ "PRI_main_exit", "PRI_main_exit_key" }),
     createLevelConfig_PRI(2, &[_][]const u8{}),
     HLD_BASE_LEVELCONFIG,
@@ -5075,7 +5075,7 @@ pub var Configs = [LEVELS]LevelConfig{
     // CAV_BASE_LEVELCONFIG,
     CAV_BASE_LEVELCONFIG,
     createLevelConfig_PRI(2, &[_][]const u8{}),
-    NEC_BASE_LEVELCONFIG,
+    CRY_BASE_LEVELCONFIG,
     createLevelConfig_WRK(2, &[_][]const u8{}),
     createLevelConfig_WRK(2, &[_][]const u8{}),
     createLevelConfig_SIN(4),

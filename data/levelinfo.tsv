@@ -5,9 +5,9 @@
 
 #
 # id     depth   short name                 level name   upgrade?       optional?              stairs[0]                 stairs[1]
-"CRY" 	     1 	     "Cry3" 	           "1/Crypt/3" 	 nay    	    nay 	               - 	                 -
-"CRY" 	     1 	     "Cry2" 	           "1/Crypt/2" 	 nay    	    nay 	     "1/Crypt/3" 	                 -
-"CRY" 	     1 	      "Cry" 	             "1/Crypt" 	 nay    	    yea 	     "1/Crypt/2" 	                 -
+"NEC" 	     1 	     "Nec3" 	      "1/Necropolis/3" 	 nay    	    nay 	               - 	                 -
+"NEC" 	     1 	     "Nec2" 	      "1/Necropolis/2" 	 nay    	    nay 	"1/Necropolis/3" 	                 -
+"NEC" 	     1 	      "Nec" 	        "1/Necropolis" 	 nay    	    yea 	"1/Necropolis/2" 	                 -
 "PRI" 	     1 	      "Pri" 	            "1/Prison" 	 nay    	    nay 	               - 	                 -
 "PRI" 	     2 	      "Pri" 	            "2/Prison" 	 nay    	    nay 	      "1/Prison" 	                 -
 "HLD" 	     3 	      "Hld" 	           "3/Holding" 	 nay    	    yea 	               - 	        "2/Prison"
@@ -20,8 +20,8 @@
 #"CAV" 	     5 	     "Cav2" 	         "5/Caverns/2" 	 nay    	    yea 	               - 	     "5/Caverns/3"
 "CAV" 	     5 	      "Cav" 	           "5/Caverns" 	 nay    	    yea 	               - 	                 -
 "PRI" 	     5 	      "Pri" 	            "5/Prison" 	 yea    	    nay 	      "4/Prison" 	                 -
-"NEC" 	     6 	      "Nec" 	        "6/Necropolis" 	 nay    	    yea 	      "5/Prison" 	                 -
-"WRK" 	     6 	     "Wrk3" 	        "6/Workshop/3" 	 nay    	    yea 	      "5/Prison" 	    "6/Necropolis"
+"CRY" 	     6 	      "Cry" 	             "6/Crypt" 	 nay    	    yea 	      "5/Prison" 	                 -
+"WRK" 	     6 	     "Wrk3" 	        "6/Workshop/3" 	 nay    	    yea 	      "5/Prison" 	         "6/Crypt"
 "WRK" 	     6 	     "Wrk2" 	        "6/Workshop/2" 	 nay    	    yea 	               - 	    "6/Workshop/3"
 "SIN" 	     6 	      "Sin" 	            "6/Shrine" 	 nay    	    yea 	      "5/Prison" 	                 -
 "WRK" 	     6 	      "Wrk" 	          "6/Workshop" 	 yea    	    nay 	      "5/Prison" 	    "6/Workshop/2"
