@@ -451,6 +451,13 @@ x ring of condemnation: [holy] instakill undead, at cost of 10 turns held.
 x ring of deceleration: Adjacent mobs have their attack speeds slowed
   significantly.
 
+- ring of observation: Keep enemy in sight.
+  - Utility
+  - Useful for firewings
+  - What else?
+
+- ring of retaliation: +Spike and -10% Melee for each adjacent enemy.
+
 - ring of protection: shielding, more effective with increased willpower
   - also has +Armor% that lasts a bit longer than the shielding
 
@@ -477,6 +484,10 @@ x ring of transformation: turns all fire into electricity. "Heals" the burning
 
 x ring of detonation: make enemy explosive+noisy+insane+immobile
 
+x ring of insurrection: [anti-Holy] raise 3-7 nearby corpses to fight a
+  specific mob, for 14-28 turns. Zombies are completely blind and won't fight any
+  other monster unless attacked.
+
 x ring of deception: [anti-Holy] undead mistake you for ally unless non-undead
   allies are nearby
 
@@ -484,6 +495,15 @@ x ring of deception: [anti-Holy] undead mistake you for ally unless non-undead
   the end of the pattern to fight, giving it impressive tankiness and stat
   boosts. Zombie will be immobile however, and will die if player moves more
   than 4 tiles away.
+
+- ring of determination: [anti-Holy] regenerates significant amount of MP, and
+  massive boost to willpower
+  - Massive MP requirement
+  - Significant drop in willpower afterwards (say, set to 0 or 1) for 20 turns.
+
+- ring of suggestion: "suggest" a place to investigate to a mob that isn't aware of you
+  - After one use, the mob acquires the "suspicious" status for 20 turns (or
+    permanently?) and cannot be affected.
 
 - ring of deconstruction: rolling boulder
 
@@ -496,10 +516,6 @@ x ring of magnetization: cause knockback of all nearby foes onto a single foe.
   Like Gell's Gravitas in DCSS. Knockbacked foes could possibly hit player, so
   player must plan accordingly.
   - Attack foe and move behind it.
-
-x ring of insurrection: raise 3-7 nearby corpses to fight a specific mob, for
-  14-28 turns. Zombies are completely blind and won't fight any other monster
-  unless attacked.
 
 x ring of electrification: Electrocute all mobs on one side.
   - Attack mob, move one tile backwards into corridor (ie with walls on the
@@ -1445,7 +1461,7 @@ x Holding map
     x Cinder beasts
     x Night creature (slinking terror)
 - Fix particle effects
-  - Shrine-blowup effect (rework, simplify and speedup)
+  x Shrine-blowup effect (rework, simplify and speedup)
   - Lightning mage static discharge (speedup/rework)
   - Lightning mage lightning bolt (make more distinctive)
 - Holding map, pt 2 (after holy temple + insurrection maps + crypt)
@@ -1454,8 +1470,8 @@ x Holding map
   - Timekeeper's pendant
   - Revgenuhelkim: acid claws, acid damage and resistance
   - Lever room and subsequent crypt event
-- Add Vozgum armor prefab to Laboratory
-- Make potions of corrosion actually useful
+  - Make potions of corrosion actually useful
+  - Add Vozgum armor prefab to Laboratory
 - Fix prisoner hostility issues (with Revgen)
 - Crypt floor
   x Modify level data and spawn files
@@ -1476,10 +1492,9 @@ x Holding map
   - Hall map at end
     - Win condition
 - Add "character" to game
-  - Names for goblins and humans
-    - 100 surnames
-      - Humans have no family names?
-    - 50 given names
+  x Names for goblins and humans
+    x Surnames (Humans have no family names)
+    x Given names
   - Fluff prefabs
     - Washroom: zinc tiles surrounding water pool (zinc bathtub), sinks, bucket
     - Boiler room
@@ -1523,26 +1538,34 @@ x Holding map
   - Paralysing zap (directional bolt only)
   - Fry (Cardinal directional bolt only)
 - Change statue's FOV method
+- Ring of suggestion
 - Unholy temple map + faction
   - Items
-    - Ornate gold armor
-    - Golden orbs
+    - Ring of determination
+    - Mark rings of insurrection + deception as unholy
+    - Ornate gold armor, golden orbs
     - Golden cakes: +max_MP
-      - "The golden crust on these cakes
     - Sceptre
       - Dijkstra vision
   - Workshop/2 and Workshop/3
     - Additional fluff prefabs (see REXPaint sketch, rooms marked w/ '*')
+      - Note 2025-02-08: I'm not seeing any such rooms :P
     - Enh. Emberling
     - Enh. Emberling event
+      - Note 2025-02-08: No clue what this was supposed to be!
 - Holy temple map + faction
+  - Shrine mechanics
+    - Holy-themed shrine in temple map ("altar")
+    - Shrines exploding in normal maps
   - Items
     - Ring of fustigation, abjuration
+    - Ring of fortification: +Will
     - Mark ring of concentration, condemnation as holy
     - Inability to use holy items w/ evil ones equipped
       - Symbol is destroyed (since it's an item)
     - Dispel Undead
     - Bread of life: +max_HP, -Pot
+    - Living water: +Will
   - Angels spells
     - Hellfire spell (irresist damage)
     - Disintegration (punch through walls, same as ring)
