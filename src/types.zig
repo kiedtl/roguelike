@@ -81,6 +81,7 @@ pub const PropArrayList = std.ArrayList(Prop);
 pub const MachineList = LinkedList(Machine);
 pub const ContainerList = LinkedList(Container);
 
+pub const SCEPTRE_VISION = 16;
 pub const MOB_CORRUPTION_CHANCE = 33;
 pub const TORMENT_UNDEAD_DAMAGE = 2;
 pub const DETECT_HEAT_RADIUS = math.min(ui.MAP_HEIGHT_R, ui.MAP_WIDTH_R);
@@ -1578,6 +1579,50 @@ pub const Status = enum {
         } else |_| {};
     }
 
+    pub fn tickSceptre(should_be_player: *Mob) void {
+        assert(should_be_player == state.player);
+
+        var chance: usize = 2;
+        if (state.player.HP <= state.player.HP / 4)
+            chance += 2;
+
+        if (rng.percent(chance)) {
+            var possible_tiles = CoordArrayList.init(state.gpa.allocator());
+
+            const dist = SCEPTRE_VISION + 4;
+            var dijk = dijkstra.Dijkstra.init(state.player.coord, state.mapgeometry, dist, struct {
+                pub fn f(c: Coord, _: state.IsWalkableOptions) bool {
+                    return !Dungeon.isTileOpaque(c);
+                }
+            }.f, .{}, state.gpa.allocator());
+            defer dijk.deinit();
+
+            while (dijk.next()) |child| {
+                if (!state.player.cansee(child) and
+                    state.dungeon.at(child).mob == null and
+                    state.is_walkable(child, .{}))
+                {
+                    possible_tiles.append(child) catch err.wat();
+                }
+            }
+
+            if (possible_tiles.items.len == 0)
+                return;
+
+            const chosen = rng.chooseUnweighted(Coord, possible_tiles.items);
+            const rat = mobs.placeMob(state.gpa.allocator(), &mobs.BoneRatTemplate, chosen, .{
+                .no_squads = true,
+            });
+            ai.updateEnemyKnowledge(rat, state.player, null);
+
+            if (rng.onein(2)) {
+                state.message(.Info, "You feel uneasy.", .{});
+            } else {
+                state.message(.Info, "The Sceptre feels slightly heavier.", .{});
+            }
+        }
+    }
+
     pub fn tickNoisy(mob: *Mob) void {
         if (mob.isUnderStatus(.Sleeping) == null)
             mob.makeNoise(.Movement, .Medium);
@@ -2466,6 +2511,21 @@ pub const Mob = struct { // {{{
         };
         self.fov[self.coord.y][self.coord.x] = 100;
 
+        // Special-case: Player has sceptre and Dijkstra vision
+        if (self.hasStatus(.Sceptre)) {
+            assert(self == state.player);
+            var dijk = dijkstra.Dijkstra.init(state.player.coord, state.mapgeometry, SCEPTRE_VISION, struct {
+                pub fn f(c: Coord, _: state.IsWalkableOptions) bool {
+                    return !Dungeon.isTileOpaque(c);
+                }
+            }.f, .{}, state.gpa.allocator());
+            defer dijk.deinit();
+
+            while (dijk.next()) |child| {
+                self.fov[child.y][child.x] = 100;
+            }
+        }
+
         // Clear out linked-fovs list of dead/non-z-level mobs
         if (self.linked_fovs.len > 0) {
             var new_linked_fovs = @TypeOf(self.linked_fovs).init(null);
@@ -2516,6 +2576,12 @@ pub const Mob = struct { // {{{
 
             if (adjacent_undead) |hostile| {
                 self.corruption_ctr += 1;
+
+                if (self == state.player and self.hasStatus(.Sceptre) and rng.onein(10)) {
+                    self.corruption_ctr = @intCast(usize, self.stat(.Willpower));
+                    state.message(.Info, "The Sceptre feels slightly heavier.", .{});
+                }
+
                 if (self.corruption_ctr >= self.stat(.Willpower)) {
                     if (self == state.player) {
                         scores.recordTaggedUsize(.TimesCorrupted, .{ .M = hostile }, 1);
@@ -2607,6 +2673,7 @@ pub const Mob = struct { // {{{
                     .DetectHeat => Status.tickDetectHeat(self),
                     .DetectElec => Status.tickDetectElec(self),
                     .TormentUndead => Status.tickTormentUndead(self),
+                    .Sceptre => Status.tickSceptre(self),
                     .Noisy => Status.tickNoisy(self),
                     .Echolocation => Status.tickEcholocation(self),
                     .Recuperate => Status.tickRecuperate(self),
@@ -2622,6 +2689,13 @@ pub const Mob = struct { // {{{
     pub fn swapWeapons(self: *Mob) void {
         const weapon = self.inventory.equipment(.Weapon).*;
         const backup = self.inventory.equipment(.Backup).*;
+
+        if (weapon) |w| {
+            if (self == state.player and w.Weapon.is_cursed) {
+                state.message(.Info, "You cannot bring yourself to let go of the {s}.", .{w.Weapon.name});
+                return;
+            }
+        }
 
         if (weapon) |_| self.dequipItem(.Weapon, null);
         if (backup) |_| self.dequipItem(.Backup, null);
@@ -4925,6 +4999,7 @@ pub const Weapon = struct {
     delay: usize = 100,
     knockback: usize = 0,
     martial: bool = false,
+    is_cursed: bool = false,
     ego: Ego = .None,
 
     stats: enums.EnumFieldStruct(Stat, isize, 0) = .{},
