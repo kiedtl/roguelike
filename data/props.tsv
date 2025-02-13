@@ -140,6 +140,7 @@
 "crate_c"              	 "crate"                	 'æ' 	              .S_O_CrateC  	 0xdaa520 	 -        	 nay 	 - 	10
 "crate_d"              	 "crate"                	 'æ' 	              .S_O_CrateD  	 0xdaa520 	 -        	 nay 	 - 	10
 "pot"                  	 "pot"                  	 'æ' 	                 .S_O_Pot  	 0xb0c4de 	 -        	 nay 	 -
+"desecrated_coffin"    	 "desecrated coffin"    	 'æ' 	            .S_O_P_Coffin  	 0xffffff 	 -        	 nay 	 -
 
 "sink"                 	 "sink"                 	 '⊺' 	              .S_O_P_Sink  	 0xb0c4de 	 -        	 nay 	 - 	30
 "stove"                	 "stove"                	 '⊺' 	             .S_O_P_Stove  	 0xb0c4de 	 -        	 nay 	 - 	30

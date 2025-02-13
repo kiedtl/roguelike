@@ -183,6 +183,7 @@ pub const LevelInfo = struct {
     name: []u8,
     upgr: bool,
     optional: bool,
+    ecosystem: bool,
     stairs: [Dungeon.MAX_STAIRS]?[]u8,
 };
 pub var levelinfo: [LEVELS]LevelInfo = undefined; // data/levelinfo.tsv
@@ -502,6 +503,7 @@ pub fn loadLevelInfo() void {
         .{ .field_name = "depth", .parse_to = usize, .parse_fn = tsv.parsePrimitive },
         .{ .field_name = "shortname", .parse_to = []u8, .parse_fn = tsv.parseUtf8String },
         .{ .field_name = "name", .parse_to = []u8, .parse_fn = tsv.parseUtf8String },
+        .{ .field_name = "ecosystem", .parse_to = bool, .parse_fn = tsv.parsePrimitive },
         .{ .field_name = "upgr", .parse_to = bool, .parse_fn = tsv.parsePrimitive },
         .{ .field_name = "optional", .parse_to = bool, .parse_fn = tsv.parsePrimitive },
         .{ .field_name = "stairs", .parse_to = ?[]u8, .is_array = Dungeon.MAX_STAIRS, .parse_fn = tsv.parseOptionalUtf8String, .optional = true, .default_val = null },
@@ -510,6 +512,7 @@ pub fn loadLevelInfo() void {
         .depth = undefined,
         .shortname = undefined,
         .name = undefined,
+        .ecosystem = undefined,
         .upgr = undefined,
         .optional = undefined,
         .stairs = undefined,

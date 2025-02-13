@@ -16,6 +16,10 @@ wound marks the forehead, probably inflicted by a heavy riveted mace. Heavy
 golden manacles adors both wrists, and a heavy golden spike has been driven
 into the abdomen, attaching it to the white post behind.
 
+% desecrated_coffin
+This is a small child-sized coffin, its marble lid shattered and lying in
+pieces nearby. It is empty. It appears to be quite old.
+
 % head_mining
 A cave-goblin mining helmet, with an electric lamp affixed to the front.
 
@@ -589,6 +593,10 @@ The necromancy experiment of some apprentice bone mage.
 
 % bloat
 A bloated, rotting corpse.
+
+% skeleton_child
+This disturbing sight is apparently the animated skeleton of a tiny cave-goblin
+child.
 
 % skeleton
 A mouldering skeleton, imbued with a parody of life.

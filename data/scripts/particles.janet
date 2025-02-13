@@ -660,7 +660,8 @@
   (new-emitter @{
     :particle (new-particle @{
       :tile (new-tile @{ :ch "O" :fg 0xffffff :bg 0xffffff :bg-mix 1 })
-      :speed 0 :lifetime 1 :require-los 0 :require-nonwall 0
+      # require-los not originally set, set to nerf particle spawns
+      :speed 0 :lifetime 1 :require-los 1 :require-nonwall 0
       :triggers @[
         [[:COND-true]
           [:TRIG-lerp-color :bg 0x77776f "rgb"
@@ -668,11 +669,12 @@
         [[:COND-true] [:TRIG-scramble-glyph ".,;:'~*-=_+"]]
       ]
     })
-    :lifetime 21
-    :spawn-count (fn [self ticks ctx] (* (max ((ctx :bounds) :width) ((ctx :bounds) :height)) 2)) 
+    :lifetime 11
+    # nerfed to ×1 from ×2 due to particle engine being really slow
+    :spawn-count (fn [self ticks ctx] (* (max ((ctx :bounds) :width) ((ctx :bounds) :height)) 1)) 
     :get-spawn-params (fn [self ticks ctx coord target]
                         (let [dist  (max ((ctx :bounds) :width) ((ctx :bounds) :height))
-                              angle (rad (func (* 4 (/ (self :total-spawned) dist))))
+                              angle (rad (func (* 8 (/ (self :total-spawned) dist))))
                               n     (+ (% (self :total-spawned) dist) 1)]
                           [(:move-angle coord n angle) target]))
   }))

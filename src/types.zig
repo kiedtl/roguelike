@@ -1878,6 +1878,7 @@ pub const AI = struct {
         SocialFighter, // Won't fight unless there are aware allies around.
         SocialFighter2, // Like above, but doesn't need allies to be aware.
         CalledWithUndead, // Can be called by CAST_CALL_UNDEAD, even if not undead.
+        NotCalledWithUndead, // Ignored by CAST_CALL_UNDEAD.
         FearsDarkness, // Tries very hard to stay in light areas (pathfinding).
         FearsLight, // Opposite of FearsDarkness (pathfinding).
         MovesDiagonally, // Usually tries to move diagonally.

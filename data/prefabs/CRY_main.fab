@@ -70,6 +70,7 @@ END POSTER
 
 @0 p gold_c_wall_upper
 @1 p iron_bars_broken
+@d p iron_bars
 @2 p undead_ash
 @3 M bloat
 @4 M skeleton
@@ -83,9 +84,9 @@ END POSTER
 @c p gold_c_wall_pltfrm
 @z m shrine
 
-??????#***********#??????
-?7575##...........##5744?
-?755##......6......##775?
+??????#****###****#??????
+?7575##....d5d....##5744?
+?755##.....ddd.....##775?
 ?535#...6.......6...#777?
 ?737##8c8.......8c8##454?
 ##577##z9.......az##474##

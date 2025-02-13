@@ -52,6 +52,7 @@ pub const Sprite = enum(u21) {
     S_O_P_SofaA = 0x27B9,
     S_O_P_SofaB = 0x27BA,
     S_O_P_SofaC = 0x27BB,
+    S_O_P_Coffin = 0x27BC,
     S_G_M_Machine = 0x27BF,
 
     S_G_M_DoorShut = 0x27C0,

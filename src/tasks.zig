@@ -96,6 +96,9 @@ pub fn getJobTypesForWorker(mob: *Mob) struct { tasktype: meta.Tag(TaskType), ai
 
 // Scan for tasks
 pub fn tickTasks(level: usize) void {
+    if (!state.levelinfo[level].ecosystem)
+        return;
+
     // Clear out tasks assigned to dead mobs and tasks on other levels
     for (state.tasks.items) |*task| {
         if (task.completed) continue;

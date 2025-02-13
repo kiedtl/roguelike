@@ -815,7 +815,7 @@ fn createSpireTemplate(
 
 pub const IronSpireTemplate = createSpireTemplate("iron", '1', .{ .MP_cost = 4, .spell = &spells.BOLT_IRON, .power = 2 }, .{});
 pub const LightningSpireTemplate = createSpireTemplate("lightning", '2', .{ .MP_cost = 4, .spell = &spells.BOLT_LIGHTNING, .power = 2 }, .{});
-pub const CalciteSpireTemplate = createSpireTemplate("calcite", '3', .{ .MP_cost = 4, .spell = &spells.CAST_CALL_UNDEAD }, .{ .willpower = 8 });
+pub const CalciteSpireTemplate = createSpireTemplate("calcite", '3', .{ .MP_cost = 6, .spell = &spells.CAST_CALL_UNDEAD }, .{ .willpower = 8 });
 pub const SentrySpireTemplate = createSpireTemplate("sentry", '4', .{ .MP_cost = 4, .spell = &spells.CAST_ALERT_ALLY }, .{});
 pub const SirenSpireTemplate = createSpireTemplate("siren", '5', .{ .MP_cost = 99, .spell = &spells.CAST_ALERT_SIREN }, .{});
 // }}}
@@ -1516,6 +1516,44 @@ pub const SkeletonTemplate = MobTemplate{
 
         .innate_resists = .{ .rFume = 100, .rFire = -25 },
         .stats = .{ .Willpower = 3, .Vision = 5 },
+    },
+};
+
+pub const ChildSkeletonTemplate = MobTemplate{
+    .mob = .{
+        .id = "skeleton_child",
+        .species = &Species{
+            .name = "tiny skeleton",
+            .default_attack = &Weapon{ .name = "teeth", .damage = 1, .strs = &items.BITING_STRS },
+        },
+        .tile = 'ř',
+        .ai = AI{
+            .profession_description = "watching",
+            .work_fn = ai.standStillAndGuardWork,
+            .fight_fn = ai.meleeFight,
+            .flags = &[_]AI.Flag{.NotCalledWithUndead},
+            .is_curious = false,
+            .is_fearless = true,
+        },
+
+        .life_type = .Undead,
+        .max_drainable_MP = 1,
+
+        .max_HP = 1,
+        .memory_duration = 2,
+        .blood = null,
+        .corpse = .None,
+
+        .innate_resists = .{ .rFume = 100, .rFire = -50, .Armor = -50 },
+        .stats = .{ .Willpower = 0, .Melee = 33, .Evade = 0, .Vision = 3 },
+    },
+    .squad = &[_][]const MobTemplate.SquadMember{
+        &[_]MobTemplate.SquadMember{
+            .{ .mob = "skeleton_child", .count = minmax(usize, 2, 3) },
+        },
+    },
+    .statuses = &[_]StatusDataInfo{
+        .{ .status = .Sleeping, .duration = .Prm },
     },
 };
 
@@ -2381,6 +2419,7 @@ pub const MOBS = [_]MobTemplate{
     LightningMageTemplate,
     BloatTemplate,
     // ThrashingSculptorTemplate,
+    ChildSkeletonTemplate,
     SkeletonTemplate,
     StalkerTemplate,
     BoneRatTemplate,

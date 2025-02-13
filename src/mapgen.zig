@@ -4906,6 +4906,10 @@ const CRY_BASE_LEVELCONFIG = LevelConfig{
     },
     .lair_max = 0,
 
+    .room_crowd_max = 8,
+    // ~50 mobs in main prefab, + 8 mobs and 8 rooms = 114
+    .level_crowd_max = 114,
+
     .min_room_width = 7,
     .min_room_height = 7,
     .max_room_width = 12,
@@ -4917,7 +4921,7 @@ const CRY_BASE_LEVELCONFIG = LevelConfig{
     .no_windows = true,
     .door = &surfaces.VaultDoor,
     .light = &surfaces.Lamp,
-    .subroom_chance = 0,
+    .subroom_chance = 100,
     .allow_statues = false,
 
     .machines = &[_]*const Machine{},

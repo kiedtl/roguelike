@@ -1,0 +1,39 @@
+:priority 100
+:g_restriction 999
+:g_global_restriction 999
+:g_transform .Turn1
+:g_transform .Turn2
+:g_transform .Turn3
+:g_subroom
+
+@@c p desecrated_coffin
+
+c.c
+.cc
+
+\
+
+c.
+.c
+
+\
+
+c.
+cc
+
+\
+
+c.cc
+c..c
+
+\
+
+c.c.
+.c.c
+.cc.
+
+\
+
+.c.
+c.c
+.cc
