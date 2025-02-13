@@ -826,9 +826,14 @@ pub const SladeDoor = Machine{
                         return false;
                     machine.disabled = true;
                     state.dungeon.at(machine.coord).surface = null;
-                    state.message(.Info, "You break down the slade door. ($b-2 rep$.)", .{});
                     scores.recordUsize(.RaidedLairs, 1);
-                    player.repPtr().* -= 2;
+                    if (player.hasStatus(.Sceptre)) {
+                        state.message(.Info, "You shatter the slade door with the Sceptre. ($b-8 rep$.)", .{});
+                        player.repPtr().* -= 8;
+                    } else {
+                        state.message(.Info, "You break down the slade door. ($b-2 rep$.)", .{});
+                        player.repPtr().* -= 2;
+                    }
                 } else {
                     assert(machine.addPower(by));
                 }
