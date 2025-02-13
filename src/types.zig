@@ -5013,6 +5013,7 @@ pub const Weapon = struct {
     knockback: usize = 0,
     martial: bool = false,
     is_cursed: bool = false,
+    is_hated_by_nc: bool = false,
     ego: Ego = .None,
 
     stats: enums.EnumFieldStruct(Stat, isize, 0) = .{},
