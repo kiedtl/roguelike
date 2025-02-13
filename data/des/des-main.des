@@ -828,3 +828,12 @@ to take twice as long.
 
 
 $cDuration:$. This effect lasts for $bwillpower * 2$. turns.
+
+% determination
+$cEffect:$. Requires a large amount of MP, and then regenerates a decent chunk
+of it. Your willpower is first artificially strengthened ($b+3$.) with the
+Necromancer's power; afterward, it decreases ($b-3$.).
+
+
+$cDuration:$. This effect lasts for $b10$. turns. The hangover lasts for $b20$.
+turns.

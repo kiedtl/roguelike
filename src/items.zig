@@ -229,8 +229,11 @@ pub const NIGHT_ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 05, .i = .{ .X = &EtherealShieldAux } },
 };
 pub const UNHOLY_ITEM_DROPS = [_]ItemTemplate{
-    .{ .w = 80, .i = .{ .c = &GoldOrbConsumable } },
-    .{ .w = 80, .i = .{ .c = &GoldCakeConsumable } },
+    .{ .w = 99, .i = .{ .c = &GoldOrbConsumable } },
+    .{ .w = 99, .i = .{ .c = &GoldCakeConsumable } },
+    .{ .w = 15, .i = .{ .r = InsurrectionRing } },
+    .{ .w = 15, .i = .{ .r = DeterminationRing } },
+    .{ .w = 15, .i = .{ .r = DeceptionRing } },
     .{ .w = 10, .i = .{ .C = &PureGoldCloak } },
     .{ .w = 10, .i = .{ .W = &GoldDaggerWeapon } },
     .{ .w = 10, .i = .{ .X = &GoldPendantAux } },
@@ -246,15 +249,17 @@ pub const RINGS = [_]ItemTemplate{
     .{ .w = 9, .i = .{ .r = DistractionRing } },
     .{ .w = 9, .i = .{ .r = DamnationRing } },
     .{ .w = 9, .i = .{ .r = TeleportationRing } },
-    .{ .w = 9, .i = .{ .r = InsurrectionRing } },
     .{ .w = 9, .i = .{ .r = MagnetizationRing } },
     .{ .w = 9, .i = .{ .r = AccelerationRing } },
     .{ .w = 9, .i = .{ .r = TransformationRing } },
     .{ .w = 9, .i = .{ .r = DetonationRing } },
-    .{ .w = 9, .i = .{ .r = DeceptionRing } },
     .{ .w = 9, .i = .{ .r = CondemnationRing } },
     .{ .w = 2, .i = .{ .r = ConcentrationRing } },
     .{ .w = 9, .i = .{ .r = ObscurationRing } },
+    // Unholy rings appearing in Crypt, higher rarity
+    .{ .w = 3, .i = .{ .r = InsurrectionRing } },
+    .{ .w = 3, .i = .{ .r = DeterminationRing } },
+    .{ .w = 3, .i = .{ .r = DeceptionRing } },
 };
 pub const NIGHT_RINGS = [_]ItemTemplate{
     .{ .w = 9, .i = .{ .r = ExcisionRing } },
@@ -843,6 +848,7 @@ pub const InsurrectionRing = Ring{ // {{{
     .name = "insurrection",
     .required_MP = 3,
     .hated_by_nc = true,
+    .hated_by_holy = true,
     .effect = struct {
         pub fn f() bool {
             const lifetime = 14;
@@ -1104,6 +1110,7 @@ pub const DeceptionRing = Ring{ // {{{
     .name = "deception",
     .required_MP = 2,
     .stats = .{ .Willpower = 1 },
+    .hated_by_holy = true,
     .requires_uncorrupt = true,
     .effect = struct {
         pub fn f() bool {
@@ -1196,6 +1203,20 @@ pub const DecelerationRing = Ring{ // {{{
 
             state.message(.Info, "An invisible shield begins to surround you.", .{});
 
+            return true;
+        }
+    }.f,
+}; // }}}
+
+pub const DeterminationRing = Ring{ // {{{
+    .name = "determination",
+    .required_MP = mobs.PLAYER_MAX_MP + 1,
+    .hated_by_holy = true,
+    .effect = struct {
+        pub fn f() bool {
+            state.player.MP += mobs.PLAYER_MAX_MP / 3 * 2;
+            state.player.addStatus(.RingDeterm, 0, .{ .Tmp = 10 });
+            state.message(.Info, "You feel a foreign Power surround you.", .{});
             return true;
         }
     }.f,

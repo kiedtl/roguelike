@@ -56,6 +56,7 @@ pub const templates_test = @import("mobs/templates_test.zig");
 
 // -----------------------------------------------------------------------------
 
+pub const PLAYER_MAX_MP = 20;
 pub const PLAYER_VISION = 12; // See also: types.SCEPTRE_VISION
 pub const RESIST_IMMUNE = 1000;
 pub const WILL_IMMUNE = 1000;
@@ -590,7 +591,7 @@ pub const PlayerTemplate = MobTemplate{
         .max_HP = 12,
         .memory_duration = 10,
 
-        .max_MP = 20,
+        .max_MP = PLAYER_MAX_MP,
 
         .stats = .{ .Willpower = 4, .Missile = 60, .Evade = 10, .Vision = PLAYER_VISION, .Potential = 40 },
     },

@@ -11,6 +11,8 @@
 .RingConcentration 	"ring: concentration" 	 "using the Force"     	 -
 .RingObscuration   	"ring: obscuration"   	 "cheating on taxes"   	 -
 .RingDeceleration  	"ring: deceleration"  	 "airbag testing"      	 -
+.RingDeterm        	"ring: determination" 	 "nuh uh"              	 -
+.RingDetermEnd     	"ring: -determination"	 "nuh uh"              	 -
 .DetectHeat        	"detect heat"         	 -                     	 -
 .DetectElec        	"detect electricity"  	 -                     	 -
 .EtherealShield    	"ethereal shield"     	 -                     	 -

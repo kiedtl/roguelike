@@ -1193,6 +1193,8 @@ pub const Status = enum {
     RingConcentration, // No power field
     RingObscuration,
     RingDeceleration,
+    RingDeterm, // No power field
+    RingDetermEnd, // No power field
 
     // Item-specific effects.
     DetectHeat, // Doesn't have a power field.
@@ -4241,6 +4243,10 @@ pub const Mob = struct { // {{{
 
             switch (p_se.status) {
                 .Lifespan => self.HP = 0,
+                .RingDeterm => {
+                    assert(self == state.player);
+                    state.player.addStatus(.RingDetermEnd, 0, .{ .Tmp = 20 });
+                },
                 .RingExcision => {
                     assert(self == state.player);
                     state.player.squad.?.trimMembers();
@@ -4464,6 +4470,12 @@ pub const Mob = struct { // {{{
                     if (utils.adjacentHostiles(self) == 0) {
                         val = @divTrunc(val * 50, 100);
                     };
+            },
+            .Willpower => {
+                if (self.hasStatus(.RingDeterm))
+                    val += 3;
+                if (self.hasStatus(.RingDetermEnd))
+                    val -= 3;
             },
             .Potential => {
                 if (self.hasStatus(.Absorbing))
@@ -5145,6 +5157,7 @@ pub const Ring = struct {
     required_MP: usize,
     stats: enums.EnumFieldStruct(Stat, isize, 0) = .{},
     hated_by_nc: bool = false,
+    hated_by_holy: bool = false,
     requires_uncorrupt: bool = false,
     requires_nopain: bool = false,
     requires_noglow: bool = false,
