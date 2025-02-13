@@ -1539,19 +1539,22 @@ x Holding map
   - Fry (Cardinal directional bolt only)
 - Change statue's FOV method
 - Ring of suggestion
-- Unholy temple map + faction
-  - Items
-    - Ring of determination
-    - Mark rings of insurrection + deception as unholy
-    - Ornate gold armor, golden orbs
-    - Golden cakes: +max_MP
-    - Sceptre
-      - Dijkstra vision
-  - Workshop/2 and Workshop/3
-    - Additional fluff prefabs (see REXPaint sketch, rooms marked w/ '*')
+x Unholy temple map + faction
+  x Items
+    x Ring of determination
+    x Mark rings of insurrection + deception as unholy
+    x Ornate gold armor, golden orbs
+    x Golden cakes: +max_MP
+    x Sceptre
+      x Dijkstra vision
+      x Bone rat mechanics
+      x Inability to swap
+  ~ Workshop/2 and Workshop/3
+    ~ Additional fluff prefabs (see REXPaint sketch, rooms marked w/ '*')
       - Note 2025-02-08: I'm not seeing any such rooms :P
-    - Enh. Emberling
-    - Enh. Emberling event
+    ~ Enh. Emberling
+      - Note 2025-02-08: ???
+    ~ Enh. Emberling event
       - Note 2025-02-08: No clue what this was supposed to be!
 - Holy temple map + faction
   - Shrine mechanics
@@ -1566,6 +1569,9 @@ x Holding map
     - Dispel Undead
     - Bread of life: +max_HP, -Pot
     - Living water: +Will
+    - Potion of regeneration
+      - +2 max_MP (permanent), -25% Potential (permanent)
+      - Fully replenishes MP, regardless of Potential stat
   - Angels spells
     - Hellfire spell (irresist damage)
     - Disintegration (punch through walls, same as ring)

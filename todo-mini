@@ -1,15 +1,14 @@
+- Differentiate searching for player and remembers
+  - Tooltip
+
 - bug: attacking unaware enemy standing in locked door
 
-- "coffins" (find word from old-english etc) near rings?
 - don't store state in prefab list, everything should be in fab_records
   - usage data
   - for serialization
 - serialization optimizations
   - optimize fov
-  - don't serialize path_cache
-
-- item: paras when elec damage is resisted, +50% rElec
-- restr prefab
+  - don't serialize path_cache... or maybe we must :(
 
 Done
 ----
