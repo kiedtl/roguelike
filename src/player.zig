@@ -1202,7 +1202,12 @@ pub fn beginUsingRing(index: usize) void {
     }
 
     if (ring.effect()) {
-        state.player.MP -= ring.required_MP;
+        if (state.player.hasStatus(.Sceptre) and rng.onein(10)) {
+            // No mana used
+            state.message(.SpellCast, "The Sceptre feels unexpectedly heavy.", .{});
+        } else {
+            state.player.MP -= ring.required_MP;
+        }
     }
 
     scores.recordTaggedUsize(.RingsUsed, .{ .s = ring.name }, 1);

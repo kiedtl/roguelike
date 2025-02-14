@@ -827,7 +827,7 @@ pub const SladeDoor = Machine{
                     machine.disabled = true;
                     state.dungeon.at(machine.coord).surface = null;
                     scores.recordUsize(.RaidedLairs, 1);
-                    if (player.hasStatus(.Sceptre)) {
+                    if (state.player.hasStatus(.Sceptre)) {
                         state.message(.Info, "You shatter the slade door with the Sceptre. ($b-8 rep$.)", .{});
                         player.repPtr().* -= 8;
                     } else {

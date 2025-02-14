@@ -2046,7 +2046,7 @@ pub const SceptreWeapon = Weapon{
     .id = "sceptre",
     .name = "Ambassador's Sceptre",
     .damage = 1,
-    .stats = .{ .Melee = 25, .Potential = 30 },
+    .stats = .{ .Melee = 25, .Evade = 10, .Martial = 1, .Potential = 45 },
     .ego = .Drain,
     .is_cursed = true,
     .is_hated_by_nc = true,
