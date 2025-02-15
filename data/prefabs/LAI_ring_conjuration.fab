@@ -1,4 +1,5 @@
 :g_subroom
+:g_global_restriction 2
 :g_restriction 1
 :priority 10
 

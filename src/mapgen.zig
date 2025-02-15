@@ -1343,6 +1343,16 @@ pub fn modifyRoomToLair(room: *Room) void {
 }
 
 pub fn selectLevelLairs(level: usize) void {
+    const LAIR_WIDTH_MIN = 7;
+    const LAIR_HEIGHT_MIN = 7;
+
+    if (Configs[level].max_room_height < LAIR_HEIGHT_MIN or
+        Configs[level].max_room_width < LAIR_WIDTH_MIN)
+    {
+        // This should be a comptime check...
+        err.bug("Lairs are impossible to generate on this level.", .{});
+    }
+
     if (Configs[level].lair_max == 0)
         return;
 
@@ -1352,7 +1362,7 @@ pub fn selectLevelLairs(level: usize) void {
     for (state.rooms[level].items) |room, i| {
         if (room.connections.len == 1 and
             !room.is_extension_room and !room.has_subroom and room.prefab == null and
-            room.rect.width >= 8 and room.rect.height >= 8)
+            room.rect.width >= LAIR_WIDTH_MIN and room.rect.height >= LAIR_HEIGHT_MIN)
         {
             candidates.append(i) catch err.wat();
         }
@@ -2637,7 +2647,8 @@ pub fn setLairFeatures(room: *Room) void {
         room.rect.width - 1,
         room.rect.height - 1,
     );
-    var tries: usize = 300;
+    var tries: usize = 400;
+    var count: usize = if (rng.onein(3)) 1 else 2;
     while (tries > 0) : (tries -= 1) {
         const coord = subroom_area.randomCoord();
         if (state.dungeon.at(coord).type == .Floor) {
@@ -2646,7 +2657,9 @@ pub fn setLairFeatures(room: *Room) void {
                 .width = room.rect.end().x - coord.x,
                 .height = room.rect.end().y - coord.y,
             }, state.gpa.allocator(), .{ .for_lair = true })) {
-                break;
+                count -= 1;
+                if (count == 0)
+                    break;
             }
         }
     }
@@ -4993,8 +5006,8 @@ pub const CAV_BASE_LEVELCONFIG = LevelConfig{
 
     .min_room_width = 4,
     .min_room_height = 4,
-    .max_room_width = 7,
-    .max_room_height = 7,
+    .max_room_width = 9, // Min lair dimensions
+    .max_room_height = 9, // Min lair dimensions
 
     .required_mobs = &[_]LevelConfig.RequiredMob{
         .{ .count = 3, .template = &mobs.MellaentTemplate },

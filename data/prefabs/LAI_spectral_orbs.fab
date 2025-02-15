@@ -1,0 +1,23 @@
+:g_subroom
+:g_restriction 1
+:g_transform .Turn1
+:g_transform .Turn2
+:g_transform .Turn3
+
+@@o i cons_spectral_orb
+
+.o
+.o
+
+\
+
+.oo
+
+\
+
+o
+
+\
+
+oo
+o.
