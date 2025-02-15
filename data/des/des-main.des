@@ -388,6 +388,10 @@ duration.
 % potion_invigorate
 Gives a damage/melee and evasion bonus for a period of time.
 
+% potion_ignite
+This will light a tile on fire, for a minimum of 25 turns. (Beware: the fire
+will usually spread to its immediate surroundings.)
+
 % potion_incinerate
 This will set you and your surroundings on fire in a 8-tile radius.
 

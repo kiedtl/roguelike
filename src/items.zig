@@ -155,13 +155,14 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 160, .i = .{ .P = &SmokePotion } },
     .{ .w = 160, .i = .{ .P = &ParalysisPotion } },
     .{ .w = 160, .i = .{ .P = &RecuperatePotion } },
+    .{ .w = 160, .i = .{ .P = &IgnitePotion } },
     .{ .w = 150, .i = .{ .P = &LeavenPotion } },
     .{ .w = 150, .i = .{ .P = &InvigoratePotion } },
     .{ .w = 150, .i = .{ .P = &FastPotion } },
-    .{ .w = 150, .i = .{ .P = &IncineratePotion } },
     .{ .w = 140, .i = .{ .P = &AbsorbPotion } },
-    .{ .w = 60, .i = .{ .P = &GlowPotion } },
+    .{ .w = 130, .i = .{ .P = &IncineratePotion } },
     .{ .w = 40, .i = .{ .P = &PerceptionPotion } },
+    .{ .w = 30, .i = .{ .P = &GlowPotion } },
     .{ .w = 20, .i = .{ .P = &RemediatePotion } },
     .{ .w = 20, .i = .{ .P = &DecimatePotion } },
     .{ .w = 20, .i = .{ .P = &VisionPotion } },
@@ -1669,6 +1670,18 @@ pub const InvigoratePotion = Consumable{
     .verbs_other = Consumable.VERBS_OTHER_POTION,
 };
 
+pub const IgnitePotion = Consumable{
+    .id = "potion_ignite",
+    .name = "potion of ignition",
+    .effects = &[_]Consumable.Effect{.{ .Custom = triggerIgnitePotion }},
+    .is_potion = true,
+    .color = 0xff3434, // TODO: unique color
+    .verbs_player = Consumable.VERBS_PLAYER_POTION,
+    .verbs_other = Consumable.VERBS_OTHER_POTION,
+    .throwable = true,
+    .hated_by_nc = true,
+};
+
 pub const IncineratePotion = Consumable{
     .id = "potion_incinerate",
     .name = "potion of incineration",
@@ -1698,6 +1711,10 @@ pub const DecimatePotion = Consumable{
 fn triggerDistractPotion(_: ?*Mob, coord: Coord) void {
     sound.makeNoise(coord, .Explosion, .Loud);
     ui.Animation.apply(.{ .Particle = .{ .name = "chargeover-noise", .coord = coord, .target = .{ .C = coord } } });
+}
+
+fn triggerIgnitePotion(_: ?*Mob, coord: Coord) void {
+    fire.setTileOnFire(coord, math.max(25, fire.tileFlammability(coord)));
 }
 
 fn triggerIncineratePotion(_: ?*Mob, coord: Coord) void {
