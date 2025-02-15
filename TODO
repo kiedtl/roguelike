@@ -505,12 +505,28 @@ x ring of deception: [anti-Holy] undead mistake you for ally unless non-undead
   - After one use, the mob acquires the "suspicious" status for 20 turns (or
     permanently?) and cannot be affected.
 
+- ring of execution: instantly kill a single living creature. Will-checked. If
+  it succeeds, it "spreads" to adjacent living creatures, also will-checked.
+  - Noisy.
+
+- ring of constriction: choke a living creature, preventing it from shouting.
+  - Unbreathing mobs (angelic, night creatures, undead) should be immune.
+  - Medium-high MP cost, and themed as a continuing action on part of the player.
+  - Player gets to-hit debugg, target gets evasion/to-hit/martial debuff.
+    - Target has 1/3 chance to spend a turn "gurgling"/"flails around in a panic"
+
+- ring of excavation: break open the floor, sending a mob careening down
+  - Task created for mob to reappear from staircase, wounded & w/ engineer
+    - Engineers remove pit and check room, mob goes back to whatever it was doing
+  - "Pit" is a new machine type.
+    - Unwalkable.
+    - "Why would you want to do that?" message when player tries to power it
+
 - ring of deconstruction: rolling boulder
 
 - ring of provocation: (Alvoc) Tear apart a nearby (standing on/adjacent)
   corpse in a crazed animal rage, causing all visible enemies to either flee or
   become enraged (50/50 chance). Target corpse must be "named".
-
 
 x ring of magnetization: cause knockback of all nearby foes onto a single foe.
   Like Gell's Gravitas in DCSS. Knockbacked foes could possibly hit player, so
@@ -1460,85 +1476,6 @@ x Holding map
     x Burning brutes
     x Cinder beasts
     x Night creature (slinking terror)
-- Fix particle effects
-  x Shrine-blowup effect (rework, simplify and speedup)
-  - Lightning mage static discharge (speedup/rework)
-  - Lightning mage lightning bolt (make more distinctive)
-- Holding map, pt 2 (after holy temple + insurrection maps + crypt)
-  - Alvoc artifact prefabs + lore
-  - Holy artifact prefabs + lore
-  - Timekeeper's pendant
-  - Revgenuhelkim: acid claws, acid damage and resistance
-  - Lever room and subsequent crypt event
-  - Make potions of corrosion actually useful
-  - Add Vozgum armor prefab to Laboratory
-- Fix prisoner hostility issues (with Revgen)
-- Crypt floor
-  x Modify level data and spawn files
-  - New monsters:
-    - Vile protector
-    - Hornblende statues
-    - Schalenblende statues(?)
-    - Pitchblende statues
-    - Skeletal arbalists
-  - Garrison inset prefabs
-  - 1/Crypt/3 prefab(?)
-  - Ability to gain MP/HP
-  - Prefabs:
-    - Paralysed+dormant arbalists/blademasters behind bars
-    - Arbalists shooting at targets (DM observing)
-    - Blademasters practicing formations (DM observing)
-    - DM failing to resurrect dead revgen, cinder brute
-  - Hall map at end
-    - Win condition
-- Add "character" to game
-  x Names for goblins and humans
-    x Surnames (Humans have no family names)
-    x Given names
-  - Fluff prefabs
-    - Washroom: zinc tiles surrounding water pool (zinc bathtub), sinks, bucket
-    - Boiler room
-    - Trophy room: cave-goblin armor, weapons, ...
-    - Bathroom
-    - Caverns: dustling workshop (paralyzed dustlings inside scanning machine)
-    - Laboratory: alchemist bending over workbench, with barrels of glycerin,
-      nitric acid, and sulfuric acid and a pile of potions of decimation
-      nearby.
-    - Laboratory: boxes/chunks of slade, with crushing/analyzing machines nearby.
-- Lore prefabs
-    - Laboratory: insane & paralysed Revgenunkim (single) inside holding cell
-      - Lab/3 only
-      - Pump puts healing gas inside cell, while overclocked + high-powered
-        transmitter damages Revgenunkim (only if >2 HP)
-      - Poster explaining research.
-    - Laboratory: disoriented & paralysed prisoners inside holding cells
-      - "Since the bastards won't tell us what these potions are for, we'll
-        just have to find out ourselves."
-    x Laboratory: Prisoners being blasted with transmitters on full power.
-      - They are dazed if kept for many hours, but are otherwise unharmed.
-      - Some have headaches (only in record, not an actual status).
-    - Laboratory: insane & paralysed Revgenunkim inside holding cells
-      - Lab/3 only
-      - Poster explains that alchemists are experimenting with signal strength
-        and repetition patterns to determine how to cause specific effects
-      - Various other statuses: disoriented, debil, fear, enraged
-    - Crypt + Marble room: Death mage trying (and failing) to resurrect Revgen.
-    - Laboratory: potions of corrosion being analysed
-      - Somehow far stronger than any pure acid or pure compound
-      - Poster should mention attempts to "milk" paralysed Revgenunkim for
-	corrosion potions
-- Simplification: instead of having attack AI for stalker, have them actually
-  transform into sparklings when hunter captain dies
-- Consider adding more ugrades
-  - Hit% bonus, martial bonus (is that infringing on books too much?)
-- Warn when next to spreading gas and resting
-- Rework monster spells to be more positional in nature
-  - Pain (range-limited AoE effect?)
-  - Various resurrection spells (limited range?)
-  - Paralysing zap (directional bolt only)
-  - Fry (Cardinal directional bolt only)
-- Change statue's FOV method
-- Ring of suggestion
 x Unholy temple map + faction
   x Items
     x Ring of determination
@@ -1570,7 +1507,7 @@ x Unholy temple map + faction
     - Bread of life: +max_HP, -Pot
     - Living water: +Will
     - Potion of regeneration
-      - +2 max_MP (permanent), -25% Potential (permanent)
+      - +2 max_MP (permanent), -10% Potential (permanent)
       - Fully replenishes MP, regardless of Potential stat
   - Angels spells
     - Hellfire spell (irresist damage)
@@ -1603,7 +1540,87 @@ x Unholy temple map + faction
       - Dustling production machines
       - Event: dustling components brought in and assembled, new dustling squads formed
     - Vapor mage throwing/blowing dustlings at enemies
-- UI
+- Fix particle effects
+  x Shrine-blowup effect (rework, simplify and speedup)
+  - Lightning mage static discharge (speedup/rework)
+  - Lightning mage lightning bolt (make more distinctive)
+- Holding map, pt 2 (after holy temple + insurrection maps + necropolis)
+  - Alvoc artifact prefabs + lore
+  - Holy artifact prefabs + lore
+  - Timekeeper's pendant
+  - Revgenuhelkim: acid claws, acid damage and resistance
+  - Lever room and subsequent crypt event
+  - Make potions of corrosion actually useful
+  - Add Vozgum armor prefab to Laboratory
+- Fix prisoner hostility issues (with Revgen)
+- Necropolis floor
+  x Modify level data and spawn files
+  - New monsters:
+    - Vile protector
+    - Hornblende statues
+    - Schalenblende statues(?)
+    - Pitchblende statues
+    - Skeletal arbalists
+  - Garrison inset prefabs
+  - 1/Crypt/3 prefab(?)
+  - Ability to gain MP/HP
+  - Prefabs:
+    - Paralysed+dormant arbalists/blademasters behind bars
+    - Arbalists shooting at targets (DM observing)
+    - Blademasters practicing formations (DM observing)
+    - DM failing to resurrect dead revgen, cinder brute
+  - Hall map at end
+    - Win condition
+- More rings
+  - Ring of suggestion
+- Add "character" to game
+  x Names for goblins and humans
+    x Surnames (Humans have no family names)
+    x Given names
+  - Fluff prefabs
+    - Washroom: zinc tiles surrounding water pool (zinc bathtub), sinks, bucket
+    - Boiler room
+    - Trophy room: cave-goblin armor, weapons, ...
+    - Bathroom
+    - Caverns: dustling workshop (paralyzed dustlings inside scanning machine)
+    - Laboratory: alchemist bending over workbench, with barrels of glycerin,
+      nitric acid, and sulfuric acid and a pile of potions of decimation
+      nearby.
+    - Laboratory: boxes/chunks of slade, with crushing/analyzing machines nearby.
+- Lore prefabs
+  - Laboratory: insane & paralysed Revgenunkim (single) inside holding cell
+    - Lab/3 only
+    - Pump puts healing gas inside cell, while overclocked + high-powered
+      transmitter damages Revgenunkim (only if >2 HP)
+    - Poster explaining research.
+  - Laboratory: disoriented & paralysed prisoners inside holding cells
+    - "Since the bastards won't tell us what these potions are for, we'll
+      just have to find out ourselves."
+  x Laboratory: Prisoners being blasted with transmitters on full power.
+    - They are dazed if kept for many hours, but are otherwise unharmed.
+    - Some have headaches (only in record, not an actual status).
+  - Laboratory: insane & paralysed Revgenunkim inside holding cells
+    - Lab/3 only
+    - Poster explains that alchemists are experimenting with signal strength
+      and repetition patterns to determine how to cause specific effects
+    - Various other statuses: disoriented, debil, fear, enraged
+  - Necropolis + Marble room: Death mage trying (and failing) to resurrect Revgen.
+  - Laboratory: potions of corrosion being analysed
+    - Somehow far stronger than any pure acid or pure compound
+    - Poster should mention attempts to "milk" paralysed Revgenunkim for
+      corrosion potions
+- Simplification: instead of having attack AI for stalker, have them actually
+  transform into sparklings when hunter captain dies
+- Consider adding more ugrades
+  - Hit% bonus, martial bonus (is that infringing on books too much?)
+- Rework monster spells to be more positional in nature
+  - Pain (range-limited AoE effect?)
+  - Various resurrection spells (limited range?)
+  - Paralysing zap (directional bolt only)
+  - Fry (Cardinal directional bolt only)
+- Change statue's FOV method
+- UI/QoL
+  - Warn when next to spreading gas and resting
   - Escape menu
     - List of visited/unvisited floors
   - Examine mode
