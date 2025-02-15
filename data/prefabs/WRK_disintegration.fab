@@ -25,11 +25,11 @@ END POSTER
 @a p gold_c_wall_right
 @b p gold_c_wall_lower
 @c p gold_c_wall_upper
-2......#
-γ.....ba
-......0a
-γ.....ca
-2.....1#
+2....#
+γ...ba
+....0a
+γ...ca
+2...1#
 
 \
 
@@ -39,8 +39,8 @@ END POSTER
 @a p gold_c_wall_left
 @b p gold_c_wall_lower
 @c p gold_c_wall_upper
-#1.....2
-ab.....γ
-a0......
-ac.....γ
-#......2
+#1...2
+ab...γ
+a0....
+ac...γ
+#....2

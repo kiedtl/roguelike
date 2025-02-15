@@ -26,6 +26,7 @@ pub const CHANCE_FOR_DIP_EFFECT = 33;
 const ATTACKER_ENRAGED_BONUS: isize = 20;
 const ATTACKER_INVIGORATED_BONUS: isize = 10;
 const ATTACKER_CORRUPT_BONUS: isize = 10;
+const ATTACKER_HIT_IMMOBILE_BONUS: isize = 10;
 const ATTACKER_WATER_NBONUS: isize = 10;
 const ATTACKER_FEAR_NBONUS: isize = 10;
 const ATTACKER_HELD_NBONUS: isize = 20;
@@ -119,6 +120,7 @@ pub fn chanceOfMeleeLanding(attacker: *const Mob, defender: ?*const Mob) usize {
 
     chance += if (corrupt_b1) ATTACKER_CORRUPT_BONUS else 0;
     chance += if (corrupt_b2) ATTACKER_CORRUPT_BONUS else 0;
+    chance += if (defender) |d| if (d.immobile) ATTACKER_HIT_IMMOBILE_BONUS else 0 else 0;
     chance += if (attacker.hasStatus(.Enraged)) ATTACKER_ENRAGED_BONUS else 0;
     chance += if (attacker.hasStatus(.Invigorate)) ATTACKER_INVIGORATED_BONUS else 0;
     chance -= if (attacker.hasStatus(.Fear)) ATTACKER_FEAR_NBONUS else 0;
