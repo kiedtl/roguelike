@@ -2318,7 +2318,7 @@ pub const Mob = struct { // {{{
         pack: PackBuffer = PackBuffer.init(&[_]Item{}),
         equ_slots: [EQU_SLOT_SIZE]?Item = [_]?Item{null} ** EQU_SLOT_SIZE,
 
-        pub const RING_SLOTS = [_]EquSlot{ .Ring1, .Ring2, .Ring3, .Ring4, .Ring5 };
+        pub const RING_SLOTS = [_]EquSlot{ .Ring1, .Ring2, .Ring3, .Ring4, .Ring5, .Ring6 };
 
         pub const EquSlot = enum(usize) {
             Head = 0,
@@ -2332,6 +2332,7 @@ pub const Mob = struct { // {{{
             Ring3 = 8,
             Ring4 = 9,
             Ring5 = 10,
+            Ring6 = 11,
 
             pub fn slotFor(item: Item) EquSlot {
                 return switch (item) {
@@ -2351,7 +2352,7 @@ pub const Mob = struct { // {{{
                     .Weapon => "weapon",
                     .Backup => "backup",
                     .Aux => "aux",
-                    .Ring1, .Ring2, .Ring3, .Ring4, .Ring5 => "ring",
+                    .Ring1, .Ring2, .Ring3, .Ring4, .Ring5, .Ring6 => "ring",
                     .Armor => "armor",
                     .Cloak => "cloak",
                 };
@@ -2359,7 +2360,7 @@ pub const Mob = struct { // {{{
         };
 
         pub const EQU_SLOT_SIZE = utils.directEnumArrayLen(EquSlot);
-        pub const PACK_SIZE: usize = 10;
+        pub const PACK_SIZE: usize = 15;
         pub const PackBuffer = StackBuffer(Item, PACK_SIZE);
 
         pub fn equipment(self: *Inventory, eq: EquSlot) *?Item {

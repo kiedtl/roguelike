@@ -785,6 +785,7 @@ pub fn equipItem(item: Item) bool {
                         state.player.inventory.equipment(.Ring3).*.?.Ring.name,
                         state.player.inventory.equipment(.Ring4).*.?.Ring.name,
                         state.player.inventory.equipment(.Ring5).*.?.Ring.name,
+                        state.player.inventory.equipment(.Ring6).*.?.Ring.name,
                     },
                 ) orelse return false;
                 empty_slot = Inventory.RING_SLOTS[index];
