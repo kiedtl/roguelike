@@ -2187,17 +2187,32 @@ pub fn main(mob: *Mob, alloc: mem.Allocator) void {
 
     // Should I wake up?
     if (mob.isUnderStatus(.Sleeping)) |_| {
+        var wakeywakey = false;
+
         switch (mob.ai.phase) {
-            .Hunt, .Investigate => mob.cancelStatus(.Sleeping),
+            .Hunt, .Investigate => wakeywakey = true,
             .Work => {
                 if ((mob.ai.flag(.AwakesNearAllies) and mob.allies.items.len > 0)) {
-                    mob.cancelStatus(.Sleeping);
-                } else {
-                    tryRest(mob);
-                    return;
+                    wakeywakey = true;
                 }
             },
             .Flee => err.bug("Fleeing mob was put to sleep...?", .{}),
+        }
+
+        const WAKING_STATUSES = [_]Status{
+            .Pain, .Daze, .Enraged, .Fire, .Fear, .Water,
+        };
+        for (WAKING_STATUSES) |st|
+            if (mob.hasStatus(st)) {
+                wakeywakey = true;
+                break;
+            };
+
+        if (wakeywakey) {
+            mob.cancelStatus(.Sleeping);
+        } else {
+            tryRest(mob);
+            return;
         }
     }
 
