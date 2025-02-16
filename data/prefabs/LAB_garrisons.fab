@@ -8,12 +8,17 @@
 :notraps
 :nostairs
 
+@@e M emberling
+@@p P
+-- GARRISON --
+In case of emergency, break glass.
+END POSTER
+
+% FABEDIT_REPLACE
+
 :tunneler_orientation north
-@e M emberling
-@p P
--- GARRISON --
-In case of emergency, break glass.
-END POSTER
+:prison 0,0 3 6
+
 eeeeee
 eeeeee
 eeeeee
@@ -22,13 +27,9 @@ p.....
 ......
 
 \
-
 :tunneler_orientation south
-@e M emberling
-@p P
--- GARRISON --
-In case of emergency, break glass.
-END POSTER
+:prison 0,3 3 6
+
 ......
 p.....
 &&&&&&
@@ -37,13 +38,9 @@ eeeeee
 eeeeee
 
 \
-
 :tunneler_orientation east
-@e M emberling
-@p P
--- GARRISON --
-In case of emergency, break glass.
-END POSTER
+:prison 3,0 5 4
+
 .p&eeee
 ..&eeee
 ..&eeee
@@ -51,13 +48,9 @@ END POSTER
 ..&eeee
 
 \
-
 :tunneler_orientation west
-@e M emberling
-@p P
--- GARRISON --
-In case of emergency, break glass.
-END POSTER
+:prison 0,0 5 4
+
 eeee&p.
 eeee&..
 eeee&..

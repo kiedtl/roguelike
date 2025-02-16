@@ -1186,7 +1186,9 @@ pub fn validateLevel(level: usize, alloc: mem.Allocator) !void {
                 var x: usize = room.rect.start.x;
                 while (x < room.rect.end().x) : (x += 1) {
                     const point = Coord.new2(room.rect.start.z, x, y);
-                    if (state.is_walkable(point, .{ .ignore_mobs = true })) {
+                    if (state.is_walkable(point, .{ .ignore_mobs = true }) and
+                        !state.dungeon.at(point).prison)
+                    {
                         return point;
                     }
                 }
