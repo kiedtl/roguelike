@@ -28,5 +28,6 @@ jobs:
       - uses: goto-bus-stop/setup-zig@v2
         with:
           version: 0.9.1
+      - run: sudo apt-get install libpng-dev zlib1g-dev
       - run: zig build
       - run: RL_NO_SENTRY=1 RL_SEED=0xdefaced_cafe RL_MODE=tester zig-out/bin/rl
