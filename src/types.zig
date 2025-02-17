@@ -1685,7 +1685,7 @@ pub const Status = enum {
     }
 
     pub fn tickEcholocation(mob: *Mob) void {
-        if (!mob.coord.eq(state.player.coord)) return;
+        assert(mob == state.player);
 
         // TODO: do some tests and figure out what's the practical limit to memory
         // usage, and reduce the buffer's size to that.
@@ -1734,6 +1734,7 @@ pub const Status = enum {
                     }
 
                     tile.tile.ch = if (state.dungeon.at(item).type == .Wall) '#' else '·';
+                    tile.tile.sch = if (state.dungeon.at(item).type == .Wall) .S_G_Wall_Rough else null;
                     _ = state.memory.getOrPutValue(item, tile) catch err.wat();
                 }
             }
