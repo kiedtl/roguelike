@@ -58,6 +58,9 @@ shrine, allowing the wearer to channel the power of the unseen world.
 Unfortunately, wearing all that gold close to your head sharply curtails your
 ability to resist hostile enchantments.
 
+% head_mask_insulated
+A heavy mask made of thick, rubbery fabric.
+
 % head_mask_silus
 A mask made of green silus.
 
@@ -172,6 +175,9 @@ immensely strong while retaining its corrosion and heat resistant properties.
 % cloak_silus
 A cloak of woven silus and reflective metal threads, of the finest cave-goblin
 craft.
+
+% cloak_black
+A cloak of incredibly dark cloth, so black it almost disappears in the dim light.
 
 % cloak_gold
 A wool cloak with intricate gold embroidery, usually worn by those channeling

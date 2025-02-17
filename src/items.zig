@@ -188,8 +188,9 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 20, .i = .{ .C = &SilCloak } },
     .{ .w = 20, .i = .{ .C = &FurCloak } },
     .{ .w = 20, .i = .{ .C = &GoldCloak } },
+    .{ .w = 15, .i = .{ .C = &BlackCloak } },
+    .{ .w = 15, .i = .{ .C = &WarringCloak } },
     .{ .w = 10, .i = .{ .C = &AgilityCloak } },
-    .{ .w = 10, .i = .{ .C = &WarringCloak } },
     .{ .w = 10, .i = .{ .C = &ThornyCloak } },
     // Headgear
     .{ .w = 20, .i = .{ .H = &MiningHelmet } },
@@ -199,6 +200,7 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 20, .i = .{ .H = &WeldingHood } },
     .{ .w = 20, .i = .{ .H = &GoldHeadband } },
     .{ .w = 10, .i = .{ .H = &GoldTiara } },
+    .{ .w = 10, .i = .{ .H = &InsulatedMask } },
     .{ .w = 10, .i = .{ .H = &SilusMask } },
     .{ .w = 5, .i = .{ .H = &SilusHood } },
 };
@@ -306,6 +308,7 @@ pub const PureGoldCloak = Cloak{ .id = "cloak_gold_pure", .name = "pure gold", .
 pub const ThornyCloak = Cloak{ .id = "cloak_thorny", .name = "thorns", .stats = .{ .Spikes = 1 } };
 pub const AgilityCloak = Cloak{ .id = "cloak_agility", .name = "agility", .stats = .{ .Martial = 2 } };
 pub const WarringCloak = Cloak{ .id = "cloak_warring", .name = "warring", .stats = .{ .Melee = 20 } };
+pub const BlackCloak = Cloak{ .id = "cloak_black", .name = "darkness", .stats = .{ .Evade = 10 } };
 // }}}
 
 // Headgear {{{
@@ -367,6 +370,12 @@ pub const GoldTiara = Headgear{
     .name = "gold tiara",
     .stats = .{ .Potential = 20, .Willpower = -2 },
     .resists = .{ .rElec = -25 },
+};
+
+pub const InsulatedMask = Headgear{
+    .id = "head_mask_insulated",
+    .name = "insulated mask",
+    .resists = .{ .rElec = 10 },
 };
 
 pub const SilusMask = Headgear{
