@@ -871,7 +871,7 @@ pub fn excavatePrefab(
                             .CCont => |container_info| {
                                 fillLootContainer(
                                     placeContainer(rc, container_info.t),
-                                    rng.range(usize, 0, 1),
+                                    if (rng.onein(3)) 0 else 1,
                                 );
                             },
                             .Cpitem => |prop_info| {
