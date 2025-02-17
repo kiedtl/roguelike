@@ -1134,7 +1134,10 @@ pub const EnemyRecord = struct {
 
     // Report threats, and maybe call for reinforcements
     pub fn reportMajorThreat(enemy: EnemyRecord, mob: *Mob) void {
-        if (mob.faction != .Necromancer) return;
+        if (mob.faction != .Necromancer)
+            return;
+        if (mob.hasStatus(.Insane))
+            return;
 
         const confrontation: alert.ThreatIncrease =
             if (enemy.attacked_me) .ArmedConfrontation else .Confrontation;
@@ -4374,6 +4377,14 @@ pub const Mob = struct { // {{{
         {
             hostile = false;
         }
+
+        const attacked_me = for (self.enemyListConst().items) |*enemyrec| {
+            if (enemyrec.mob == othermob and enemyrec.attacked_me)
+                break true;
+        } else false;
+
+        if (attacked_me)
+            hostile = true;
 
         return hostile;
     }
