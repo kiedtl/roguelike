@@ -2502,7 +2502,7 @@ fn placeLights(room: *const Room) void {
     if (Configs[room.rect.start.z].no_lights) return;
     if (room.prefab) |rfb| if (rfb.nolights) return;
 
-    const lights_needed = if (rng.onein(3)) 2 else 1;
+    const lights_needed: usize = if (rng.onein(3)) 2 else 1;
 
     var lights: usize = 0;
     var light_tries: usize = 400;
