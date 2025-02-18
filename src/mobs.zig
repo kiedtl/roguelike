@@ -22,6 +22,7 @@ const Coord = types.Coord;
 const Rect = types.Rect;
 const Item = types.Item;
 const Ring = types.Ring;
+const Shoe = items.Shoe;
 const DamageStr = types.DamageStr;
 const Weapon = types.Weapon;
 const Resistance = types.Resistance;
@@ -76,6 +77,7 @@ pub const MobTemplate = struct {
     backup_weapon: ?*const Weapon = null,
     armor: ?Armor = null,
     cloak: ?*const Cloak = null,
+    shoes: ?*const Shoe = null,
     statuses: []const StatusDataInfo = &[_]StatusDataInfo{},
     projectile: ?*const Projectile = null,
     evocables: []const Evocable = &[_]Evocable{},
@@ -596,6 +598,7 @@ pub const PlayerTemplate = MobTemplate{
         .stats = .{ .Willpower = 4, .Missile = 60, .Evade = 10, .Vision = PLAYER_VISION, .Potential = 40 },
     },
     .weapon = &items.DaggerWeapon,
+    .shoes = &items.SandalShoe,
     // .backup_weapon = &items.ShadowMaulWeapon,
     // .armor = items.FumingVestArmor,
     //.evocables = &[_]Evocable{items.EldritchLanternEvoc},
@@ -2517,6 +2520,7 @@ pub fn placeMob(
     if (template.backup_weapon) |w| mob.equipItem(.Backup, Item{ .Weapon = w });
     if (template.armor) |a| mob.equipItem(.Armor, Item{ .Armor = items.createItem(Armor, a) });
     if (template.cloak) |c| mob.equipItem(.Cloak, Item{ .Cloak = c });
+    if (template.shoes) |s| mob.equipItem(.Shoe, Item{ .Shoe = s });
 
     if (opts.facing) |dir| mob.facing = dir;
     mob.ai.work_area.append(opts.work_area orelse coord) catch err.wat();

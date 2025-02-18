@@ -70,6 +70,7 @@ pub const ItemTemplate = struct {
         A: Armor,
         C: *const Cloak,
         H: *const Headgear,
+        S: *const Shoe,
         X: *const Aux,
         P: *const Consumable,
         c: *const Consumable,
@@ -83,6 +84,7 @@ pub const ItemTemplate = struct {
                 .A => |i| i.id,
                 .C => |i| i.id,
                 .H => |i| i.id,
+                .S => |i| i.id,
                 .X => |i| i.id,
                 .P => |i| i.id,
                 .c => |i| i.id,
@@ -202,7 +204,15 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 10, .i = .{ .H = &GoldTiara } },
     .{ .w = 10, .i = .{ .H = &InsulatedMask } },
     .{ .w = 10, .i = .{ .H = &SilusMask } },
-    .{ .w = 5, .i = .{ .H = &SilusHood } },
+    .{ .w = 05, .i = .{ .H = &SilusHood } },
+    // Shoes
+    .{ .w = 10, .i = .{ .S = &SabatonsShoe } },
+    .{ .w = 10, .i = .{ .S = &MartialShoe } },
+    .{ .w = 10, .i = .{ .S = &CombatShoe } },
+    .{ .w = 10, .i = .{ .S = &BlackShoe } },
+    .{ .w = 10, .i = .{ .S = &SilusShoe } },
+    .{ .w = 10, .i = .{ .S = &InsulatedShoe } },
+    .{ .w = 05, .i = .{ .S = &GoldShoe } },
 };
 pub const NIGHT_ITEM_DROPS = [_]ItemTemplate{
     // NOTE: 60 is min weight for "common" item
@@ -237,6 +247,7 @@ pub const UNHOLY_ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 15, .i = .{ .r = InsurrectionRing } },
     .{ .w = 15, .i = .{ .r = DeterminationRing } },
     .{ .w = 15, .i = .{ .r = DeceptionRing } },
+    .{ .w = 10, .i = .{ .S = &OrnateGoldShoe } },
     .{ .w = 10, .i = .{ .C = &PureGoldCloak } },
     .{ .w = 10, .i = .{ .W = &GoldDaggerWeapon } },
     .{ .w = 10, .i = .{ .X = &GoldPendantAux } },
@@ -309,6 +320,35 @@ pub const ThornyCloak = Cloak{ .id = "cloak_thorny", .name = "thorns", .stats = 
 pub const AgilityCloak = Cloak{ .id = "cloak_agility", .name = "agility", .stats = .{ .Martial = 2 } };
 pub const WarringCloak = Cloak{ .id = "cloak_warring", .name = "warring", .stats = .{ .Melee = 20 } };
 pub const BlackCloak = Cloak{ .id = "cloak_black", .name = "darkness", .stats = .{ .Evade = 10 } };
+// }}}
+
+// Shoes {{{
+pub const Shoe = struct {
+    id: []const u8,
+    name: []const u8,
+    stats: enums.EnumFieldStruct(Stat, isize, 0) = .{},
+    resists: enums.EnumFieldStruct(Resistance, isize, 0) = .{},
+};
+
+fn _mkShoe(
+    i: []const u8,
+    n: []const u8,
+    stats: enums.EnumFieldStruct(Stat, isize, 0),
+    resists: enums.EnumFieldStruct(Resistance, isize, 0),
+) Shoe {
+    return .{ .id = i, .name = n, .stats = stats, .resists = resists };
+}
+
+pub const SandalShoe = _mkShoe("shoe_sandal", "sandals", .{}, .{});
+pub const SabatonsShoe = _mkShoe("shoe_sabaton", "sabatons", .{}, .{ .Armor = 15 });
+pub const MartialShoe = _mkShoe("shoe_martial", "martial shoes", .{ .Martial = 1 }, .{ .Armor = 5 });
+pub const CombatShoe = _mkShoe("shoe_combat", "combat boots", .{ .Melee = 10 }, .{ .Armor = 5 });
+pub const BlackShoe = _mkShoe("shoe_black", "black boots", .{ .Evade = 10, .Melee = 5 }, .{ .Armor = 5 });
+pub const SilusShoe = _mkShoe("shoe_silus", "silus shoes", .{}, .{ .rFire = 10 });
+pub const InsulatedShoe = _mkShoe("shoe_insulated", "insulated boots", .{}, .{ .rElec = 10 });
+pub const GoldShoe = _mkShoe("shoe_gold", "golden shoes", .{ .Potential = 5 }, .{ .Armor = 10 });
+pub const OrnateGoldShoe = _mkShoe("shoe_gold_ornate", "golden shoes", .{ .Potential = 15, .Willpower = -1 }, .{});
+
 // }}}
 
 // Headgear {{{
@@ -2217,6 +2257,7 @@ pub fn createItemFromTemplate(template: ItemTemplate) Item {
         .E => |i| Item{ .Evocable = createItem(Evocable, i) },
         .C => |i| Item{ .Cloak = i },
         .H => |i| Item{ .Head = i },
+        .S => |i| Item{ .Shoe = i },
         .X => |i| Item{ .Aux = i },
         .List => unreachable,
         //else => err.todo(),

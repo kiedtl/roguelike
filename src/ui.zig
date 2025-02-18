@@ -1171,6 +1171,7 @@ fn _getItemDescription(self: *Console, starty: usize, item: Item, linewidth: usi
         .Armor => "armor",
         .Cloak => "cloak",
         .Head => "headgear",
+        .Shoe => "shoe",
         .Aux => "auxiliary item",
         .Weapon => |wp| if (wp.martial) "martial weapon" else "weapon",
         .Boulder => "misc",
@@ -1220,6 +1221,10 @@ fn _getItemDescription(self: *Console, starty: usize, item: Item, linewidth: usi
             y += _writerSobStats(self, y, linewidth, c.stats, c.resists);
         },
         .Head => |c| {
+            y += _writerHeader(self, y, linewidth, "stats", .{});
+            y += _writerSobStats(self, y, linewidth, c.stats, c.resists);
+        },
+        .Shoe => |c| {
             y += _writerHeader(self, y, linewidth, "stats", .{});
             y += _writerSobStats(self, y, linewidth, c.stats, c.resists);
         },

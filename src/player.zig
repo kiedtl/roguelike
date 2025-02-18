@@ -962,7 +962,7 @@ pub fn useItem(index: usize) bool {
 
     const item = state.player.inventory.pack.slice()[index];
     switch (item) {
-        .Ring, .Armor, .Cloak, .Head, .Aux => return equipItem(item),
+        .Shoe, .Ring, .Armor, .Cloak, .Head, .Aux => return equipItem(item),
         .Weapon => |w| {
             if (w.is_hated_by_nc) {
                 ui.drawAlertThenLog("You can't equip that (hated by the Night)!", .{});

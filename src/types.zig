@@ -52,6 +52,7 @@ const Projectile = items.Projectile;
 const Consumable = items.Consumable;
 const Cloak = items.Cloak;
 const Headgear = items.Headgear;
+const Shoe = items.Shoe;
 const Aux = items.Aux;
 
 const Sound = @import("sound.zig").Sound;
@@ -2331,12 +2332,13 @@ pub const Mob = struct { // {{{
             Aux = 3,
             Armor = 4,
             Cloak = 5,
-            Ring1 = 6,
-            Ring2 = 7,
-            Ring3 = 8,
-            Ring4 = 9,
-            Ring5 = 10,
-            Ring6 = 11,
+            Shoe = 6,
+            Ring1 = 7,
+            Ring2 = 8,
+            Ring3 = 9,
+            Ring4 = 10,
+            Ring5 = 11,
+            Ring6 = 12,
 
             pub fn slotFor(item: Item) EquSlot {
                 return switch (item) {
@@ -2346,6 +2348,7 @@ pub const Mob = struct { // {{{
                     .Armor => .Armor,
                     .Cloak => .Cloak,
                     .Aux => .Aux,
+                    .Shoe => .Shoe,
                     else => err.wat(),
                 };
             }
@@ -2359,6 +2362,7 @@ pub const Mob = struct { // {{{
                     .Ring1, .Ring2, .Ring3, .Ring4, .Ring5, .Ring6 => "ring",
                     .Armor => "armor",
                     .Cloak => "cloak",
+                    .Shoe => "shoe",
                 };
             }
         };
@@ -4504,6 +4508,8 @@ pub const Mob = struct { // {{{
             val += utils.getFieldByEnum(Stat, clk.Cloak.stats, _stat);
         if (self.inventory.equipmentConst(.Head).*) |hd|
             val += utils.getFieldByEnum(Stat, hd.Head.stats, _stat);
+        if (self.inventory.equipmentConst(.Shoe).*) |hd|
+            val += utils.getFieldByEnum(Stat, hd.Shoe.stats, _stat);
         if (self.inventory.equipmentConst(.Armor).*) |arm| {
             if (arm.Armor.night and !self.isLit()) {
                 val += utils.getFieldByEnum(Stat, arm.Armor.night_stats, _stat);
@@ -4569,6 +4575,8 @@ pub const Mob = struct { // {{{
             r += utils.getFieldByEnum(Resistance, clk.Cloak.resists, resist);
         if (self.inventory.equipmentConst(.Head).*) |hd|
             r += utils.getFieldByEnum(Resistance, hd.Head.resists, resist);
+        if (self.inventory.equipmentConst(.Shoe).*) |sh|
+            r += utils.getFieldByEnum(Resistance, sh.Shoe.resists, resist);
         if (self.inventory.equipmentConst(.Armor).*) |arm| {
             if (arm.Armor.night and !self.isLit()) {
                 r += utils.getFieldByEnum(Resistance, arm.Armor.night_resists, resist);
@@ -4938,7 +4946,7 @@ pub const Container = struct {
             return switch (self) {
                 .Smackables => &[_]items.ItemTemplate.Type{.W},
                 .Drinkables => &[_]items.ItemTemplate.Type{.P},
-                .Wearables => &[_]items.ItemTemplate.Type{ .A, .C, .H },
+                .Wearables => &[_]items.ItemTemplate.Type{ .A, .C, .H, .S },
                 .Evocables => &[_]items.ItemTemplate.Type{ .c, .E, .X },
                 else => null,
             };
@@ -5179,7 +5187,7 @@ pub const Ring = struct {
     effect: fn () bool,
 };
 
-pub const ItemType = enum { Ring, Consumable, Vial, Projectile, Armor, Cloak, Head, Aux, Weapon, Boulder, Prop, Evocable, Key };
+pub const ItemType = enum { Ring, Consumable, Vial, Projectile, Armor, Cloak, Head, Shoe, Aux, Weapon, Boulder, Prop, Evocable, Key };
 
 pub const Item = union(ItemType) {
     Weapon: *const Weapon,
@@ -5188,6 +5196,7 @@ pub const Item = union(ItemType) {
     Ring: *Ring,
     Cloak: *const Cloak,
     Head: *const Headgear,
+    Shoe: *const Shoe,
     Evocable: *Evocable,
     Consumable: *const Consumable,
     Projectile: *const Projectile,
@@ -5199,7 +5208,7 @@ pub const Item = union(ItemType) {
     pub fn isUseful(self: Item) bool {
         return switch (self) {
             .Vial, .Boulder, .Prop => false,
-            .Key, .Projectile, .Cloak, .Head, .Aux, .Ring, .Consumable, .Armor, .Weapon, .Evocable => true,
+            .Key, .Projectile, .Cloak, .Head, .Shoe, .Aux, .Ring, .Consumable, .Armor, .Weapon, .Evocable => true,
         };
     }
 
@@ -5238,7 +5247,7 @@ pub const Item = union(ItemType) {
             .Aux => |_| {
                 cell.ch = ']';
             },
-            .Head, .Cloak, .Armor => {
+            .Shoe, .Head, .Cloak, .Armor => {
                 cell.ch = '[';
             },
             .Boulder => |b| {
@@ -5270,6 +5279,7 @@ pub const Item = union(ItemType) {
             .Armor => |a| try fmt.format(fbs.writer(), "]{s}", .{a.name}),
             .Cloak => |c| try fmt.format(fbs.writer(), "clk of {s}", .{c.name}),
             .Head => |c| try fmt.format(fbs.writer(), "{s}", .{c.name}),
+            .Shoe => |c| try fmt.format(fbs.writer(), "{s}", .{c.name}),
             .Aux => |c| try fmt.format(fbs.writer(), "[{s}", .{c.name}),
             .Weapon => |w| try fmt.format(fbs.writer(), "){s}", .{w.name}),
             .Boulder => |b| try fmt.format(fbs.writer(), "•{s} of {s}", .{ b.chunkName(), b.name }),
@@ -5295,6 +5305,7 @@ pub const Item = union(ItemType) {
             .Armor => |a| try fmt.format(fbs.writer(), "{s}", .{a.name}),
             .Cloak => |c| try fmt.format(fbs.writer(), "cloak of {s}", .{c.name}),
             .Head => |c| try fmt.format(fbs.writer(), "{s}", .{c.name}),
+            .Shoe => |c| try fmt.format(fbs.writer(), "{s}", .{c.name}),
             .Aux => |c| try fmt.format(fbs.writer(), "{s}", .{c.name}),
             .Weapon => |w| try fmt.format(fbs.writer(), "{s}", .{w.name}),
             .Boulder => |b| try fmt.format(fbs.writer(), "{s} of {s}", .{ b.chunkName(), b.name }),
@@ -5312,6 +5323,7 @@ pub const Item = union(ItemType) {
             .Armor => |a| a.id,
             .Cloak => |c| c.id,
             .Head => |h| h.id,
+            .Shoe => |h| h.id,
             .Aux => |a| a.id,
             .Weapon => |w| w.id,
             .Prop => |p| p.id,
