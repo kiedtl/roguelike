@@ -242,6 +242,9 @@ pub fn tickGasEmitters(level: usize) void {
     }
 }
 
+// Minimum gas needed to spread to adjacent tiles.
+pub const MIN_GAS_SPREAD = 10;
+
 pub fn spreadGas(matrix: anytype, z: usize, cur_gas: usize, deterministic: bool) void {
     const is_conglomerate = @TypeOf(matrix) == *[HEIGHT][WIDTH][GAS_NUM]usize;
     if (!is_conglomerate and @TypeOf(matrix) != *[HEIGHT][WIDTH]usize)
@@ -268,7 +271,7 @@ pub fn spreadGas(matrix: anytype, z: usize, cur_gas: usize, deterministic: bool)
             for (&DIRECTIONS) |d| {
                 if (coord.move(d, state.mapgeometry)) |n| {
                     const n_gas = if (is_conglomerate) matrix[n.y][n.x][cur_gas] else matrix[n.y][n.x];
-                    if (n_gas < 10) continue;
+                    if (n_gas < MIN_GAS_SPREAD) continue;
 
                     avg += n_gas;
                     neighbors += 1;

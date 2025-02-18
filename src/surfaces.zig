@@ -335,6 +335,7 @@ pub const MACHINES = [_]Machine{
     Drain,
     FirstAidStation,
     // WaterBarrel,
+    EtherealBarrier,
 };
 
 pub const SteamVent = Machine{
@@ -1258,7 +1259,7 @@ pub const Alarm = Machine{
                 state.message(.Info, "You hear an ominous alarm blaring.", .{});
             }
 
-            const target = if (mob.hasJob(.ALM_PullAlarm)) |j| j.getCtxOrNone(*Mob, AIJob.CTX_ALARM_TARGET) else null;
+            const target = if (mob.hasJob(.ALM_PullAlarm)) |j| j.ctx.getOrNone(*Mob, AIJob.CTX_ALARM_TARGET) else null;
 
             alert.reportThreat(mob, if (target) |t| .{ .Specific = t } else .Unknown, .Alarm);
 
@@ -1415,6 +1416,57 @@ pub const FirstAidStation = Machine{
 //         }
 //     }.f,
 // };
+
+pub const EtherealBarrier = Machine{
+    .id = "sigil_exclusion",
+    .name = "sigil of exclusion",
+    .powered_tile = ':',
+    .unpowered_tile = ' ',
+    .powered_fg = colors.AQUAMARINE,
+    .power = 100, // Always powered
+    .power_drain = 0,
+    .powered_walkable = false,
+
+    // Not applicable, always powered.
+    .unpowered_walkable = true,
+    .unpowered_fg = colors.GOLD,
+
+    // This could be cleaned up by just having an on_unpower callback lol
+    // Totally ridiculous
+    .on_power = struct {
+        fn f(machine: *Machine) void {
+            // Reset
+            machine.powered_walkable = false;
+            machine.powered_fg = colors.AQUAMARINE;
+
+            const owner = machine.ctx.get(*Mob, Machine.CTX_ETH_BARRIER_OWNER, state.player);
+            const age = machine.ctx.getPtr(usize, Machine.CTX_ETH_BARRIER_AGE, 0);
+            const max_age = owner.stat(.Willpower) * 2;
+            if (age.* >= max_age) {
+                if (state.player.cansee(machine.coord))
+                    state.message(.Info, "The sigil of exclusion vanishes.", .{});
+                machine.disabled = true;
+                state.dungeon.atGas(machine.coord)[gas.SmokeGas.id] += gas.MIN_GAS_SPREAD - 1;
+                state.dungeon.at(machine.coord).surface = null;
+                return;
+            }
+            age.* += 1;
+
+            if (machine.last_interaction) |mob| {
+                if (owner != mob and !spells.willSucceedAgainstMob(owner, mob)) {
+                    ui.Animation.blinkMob(&.{mob}, '%', colors.AQUAMARINE, .{});
+                } else {
+                    // Whoops, they got through lol
+                    if (state.player.cansee(machine.coord))
+                        state.message(.Info, "The sigil of exclusion fails.", .{});
+                    machine.last_interaction = null;
+                    machine.powered_walkable = true;
+                    machine.powered_fg = colors.PALE_VIOLET_RED;
+                }
+            }
+        }
+    }.f,
+};
 
 fn powerNone(_: *Machine) void {}
 

@@ -285,7 +285,7 @@ pub fn scanForCorpses(mob: *Mob) void {
                 }
 
                 mob.newJob(.WRK_ScanCorpse);
-                mob.newestJob().?.setCtx(Coord, AIJob.CTX_CORPSE_LOCATION, corpse.coord);
+                mob.newestJob().?.ctx.set(Coord, AIJob.CTX_CORPSE_LOCATION, corpse.coord);
             }
             corpse.corpse_info.is_noticed = true;
         };

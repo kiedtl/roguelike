@@ -157,7 +157,7 @@ pub const CAST_SCHEDULE_ALARM_PULL = Spell{
                 const mob = state.dungeon.at(target).mob.?;
                 if (mob.hasJob(.ALM_PullAlarm) == null) {
                     mob.newJob(.ALM_PullAlarm);
-                    mob.newestJob().?.setCtx(*Mob, AIJob.CTX_ALARM_TARGET, ai.closestEnemy(mob).mob);
+                    mob.newestJob().?.ctx.set(*Mob, AIJob.CTX_ALARM_TARGET, ai.closestEnemy(mob).mob);
                 }
             }
         }.f,

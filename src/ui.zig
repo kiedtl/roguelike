@@ -2103,6 +2103,7 @@ pub const ChooseCellOpts = struct {
     pub const Targeter = union(enum) {
         Single,
         Trajectory: struct { require_lof: bool = true },
+        Exclusion: struct {},
         AoE1: struct { dist: usize, opts: state.IsWalkableOptions },
         Gas: struct { gas: usize },
         Duo: [2]*const Targeter,
@@ -2146,6 +2147,42 @@ pub const ChooseCellOpts = struct {
 
                         if (!lof_is_ok or trajectory_is_unseen) {
                             return error.BrokenLOF;
+                        }
+                    }
+                }.f,
+                .Exclusion => struct {
+                    // XXX: Lots of duplicated code btween here and Exclusion Ring code
+                    pub fn f(t: Targeter, require_seen: bool, coord: Coord, buf: *Result.AList) Error!void {
+                        _ = t;
+
+                        if (require_seen and !state.player.cansee(coord))
+                            return error.OutOfLOS;
+
+                        buf.append(.{ .coord = coord, .color = 100 }) catch unreachable;
+
+                        const direct = coord.closestCardinalDirectionTo(state.player.coord, state.mapgeometry);
+                        const dir1 = direct.turnleft();
+                        const dir2 = direct.turnright();
+                        var c = coord.move(dir1, state.mapgeometry);
+                        while (c != null and state.is_walkable(c.?, .{})) {
+                            buf.append(.{ .coord = c.?, .color = 50 }) catch unreachable;
+                            c = c.?.move(dir1, state.mapgeometry);
+                        }
+                        c = coord.move(dir2, state.mapgeometry);
+                        while (c != null and state.is_walkable(c.?, .{})) {
+                            buf.append(.{ .coord = c.?, .color = 50 }) catch unreachable;
+                            c = c.?.move(dir2, state.mapgeometry);
+                        }
+
+                        if (require_seen) {
+                            var i: usize = 0;
+                            while (i < buf.items.len) {
+                                if (!state.player.cansee(buf.items[i].coord)) {
+                                    _ = buf.swapRemove(i);
+                                } else {
+                                    i += 1;
+                                }
+                            }
                         }
                     }
                 }.f,

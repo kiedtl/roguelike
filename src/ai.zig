@@ -816,7 +816,7 @@ pub fn patrolWork(mob: *Mob, _: mem.Allocator) void {
             !state.rooms[mob.coord.z].items[new_room.?].is_extension_room)
         {
             mob.newJob(.GRD_SweepRoom);
-            mob.newestJob().?.setCtx(usize, AIJob.CTX_ROOM_ID, new_room.?);
+            mob.newestJob().?.ctx.set(usize, AIJob.CTX_ROOM_ID, new_room.?);
         } else if (genthreat > alert.GENERAL_THREAT_LOOK_CAREFULLY) {
             mob.newJob(.GRD_LookAround);
             // crashes, idk
@@ -1734,7 +1734,7 @@ pub fn _Job_WRK_LeaveFloor(mob: *Mob, job: *AIJob) AIJob.JStatus {
     // choosing the stair, then its ignored
     var random_stair = if (state.dungeon.stairs[mob.coord.z].len > 0) rng.chooseUnweighted(Coord, state.dungeon.stairs[mob.coord.z].constSlice()) else state.dungeon.entries[mob.coord.z];
 
-    const stair = job.getCtx(Coord, CTX_STAIR_LOCATION, random_stair);
+    const stair = job.ctx.get(Coord, CTX_STAIR_LOCATION, random_stair);
 
     if (mob.distance2(stair) == 1) {
         for (mob.enemyList().items) |enemy|
@@ -1752,7 +1752,7 @@ pub fn _Job_WRK_LeaveFloor(mob: *Mob, job: *AIJob) AIJob.JStatus {
 //
 pub fn _Job_WRK_ScanJobs(mob: *Mob, job: *AIJob) AIJob.JStatus {
     const CTX_TURNS_LEFT_SCANNING = "ctx_turns_left_scanning";
-    const turns_left = job.getCtx(usize, CTX_TURNS_LEFT_SCANNING, rng.range(usize, 4, 7));
+    const turns_left = job.ctx.get(usize, CTX_TURNS_LEFT_SCANNING, rng.range(usize, 4, 7));
 
     const jobtypes = tasks.getJobTypesForWorker(mob);
 
@@ -1780,7 +1780,7 @@ pub fn _Job_WRK_ScanJobs(mob: *Mob, job: *AIJob) AIJob.JStatus {
     if (turns_left == 0) {
         return .Complete;
     } else {
-        job.setCtx(usize, CTX_TURNS_LEFT_SCANNING, turns_left - 1);
+        job.ctx.set(usize, CTX_TURNS_LEFT_SCANNING, turns_left - 1);
         return .Ongoing;
     }
 }
@@ -1818,7 +1818,7 @@ pub fn _Job_WRK_Clean(mob: *Mob, _: *AIJob) AIJob.JStatus {
 }
 
 pub fn _Job_WRK_ScanCorpse(mob: *Mob, job: *AIJob) AIJob.JStatus {
-    const coord = job.getCtx(Coord, AIJob.CTX_CORPSE_LOCATION, undefined);
+    const coord = job.ctx.get(Coord, AIJob.CTX_CORPSE_LOCATION, undefined);
 
     if (mob.distance2(coord) > 1) {
         mob.tryMoveTo(coord);
@@ -1832,14 +1832,14 @@ pub fn _Job_WRK_ScanCorpse(mob: *Mob, job: *AIJob) AIJob.JStatus {
     };
 
     mob.newJob(.WRK_ReportCorpse);
-    mob.newestJob().?.setCtx(Coord, AIJob.CTX_CORPSE_LOCATION, coord);
+    mob.newestJob().?.ctx.set(Coord, AIJob.CTX_CORPSE_LOCATION, coord);
 
     tryRest(mob);
     return .Complete;
 }
 
 pub fn _Job_WRK_ReportCorpse(mob: *Mob, job: *AIJob) AIJob.JStatus {
-    const coord = job.getCtx(Coord, AIJob.CTX_CORPSE_LOCATION, undefined);
+    const coord = job.ctx.get(Coord, AIJob.CTX_CORPSE_LOCATION, undefined);
     const corpse = (state.dungeon.at(coord).surface orelse return .Complete).Corpse;
 
     if (mob.distance2(coord) > 1) {
@@ -1858,7 +1858,7 @@ pub fn _Job_WRK_ReportCorpse(mob: *Mob, job: *AIJob) AIJob.JStatus {
 //
 pub fn _Job_WRK_ExamineCorpse(mob: *Mob, job: *AIJob) AIJob.JStatus {
     const CTX_TURNS_LEFT_EXAMINING = "ctx_turns_left_examining";
-    const turns_left = job.getCtx(usize, CTX_TURNS_LEFT_EXAMINING, rng.range(usize, 8, 16));
+    const turns_left = job.ctx.get(usize, CTX_TURNS_LEFT_EXAMINING, rng.range(usize, 8, 16));
 
     const task = &state.tasks.items[mob.ai.task_id.?];
     const corpse = task.type.ExamineCorpse;
@@ -1914,7 +1914,7 @@ pub fn _Job_WRK_ExamineCorpse(mob: *Mob, job: *AIJob) AIJob.JStatus {
             task.completed = true;
             return .Complete;
         } else {
-            job.setCtx(usize, CTX_TURNS_LEFT_EXAMINING, turns_left - 1);
+            job.ctx.set(usize, CTX_TURNS_LEFT_EXAMINING, turns_left - 1);
             return .Ongoing;
         }
     }
@@ -1980,7 +1980,7 @@ pub fn _Job_WRK_WrkstationBusyWork(mob: *Mob, j: *AIJob) AIJob.JStatus {
 
 pub fn _Job_GRD_LookAround(mob: *Mob, job: *AIJob) AIJob.JStatus {
     const CTX_TURNS_LEFT_LOOKING = "ctx_turns_left_examining";
-    const turns_left = job.getCtx(usize, CTX_TURNS_LEFT_LOOKING, rng.range(usize, 2, 4));
+    const turns_left = job.ctx.get(usize, CTX_TURNS_LEFT_LOOKING, rng.range(usize, 2, 4));
 
     if (rng.onein(3)) {
         const dirs = if (mob.hasStatus(.Disorient)) &DIAGONAL_DIRECTIONS else &DIRECTIONS;
@@ -1992,7 +1992,7 @@ pub fn _Job_GRD_LookAround(mob: *Mob, job: *AIJob) AIJob.JStatus {
     if (turns_left == 0) {
         return .Complete;
     } else {
-        job.setCtx(usize, CTX_TURNS_LEFT_LOOKING, turns_left - 1);
+        job.ctx.set(usize, CTX_TURNS_LEFT_LOOKING, turns_left - 1);
         return .Ongoing;
     }
 }
@@ -2001,10 +2001,10 @@ pub fn _Job_GRD_SweepRoom(mob: *Mob, job: *AIJob) AIJob.JStatus {
     const CTX_ROOM_MAP = "ctx_room_map";
     const CTX_ROOM_SWEEP_DEST = "ctx_room_sweep_dest";
 
-    const room_id = job.getCtx(usize, AIJob.CTX_ROOM_ID, getCurrentRoom(mob) orelse undefined);
+    const room_id = job.ctx.get(usize, AIJob.CTX_ROOM_ID, getCurrentRoom(mob) orelse undefined);
     const room = state.rooms[mob.coord.z].items[room_id];
-    const room_map = job.getCtxPtr(CoordArrayList, CTX_ROOM_MAP, CoordArrayList.init(state.gpa.allocator()));
-    const room_dst = job.getCtx(Coord, CTX_ROOM_SWEEP_DEST, room.rect.middle());
+    const room_map = job.ctx.getPtr(CoordArrayList, CTX_ROOM_MAP, CoordArrayList.init(state.gpa.allocator()));
+    const room_dst = job.ctx.get(Coord, CTX_ROOM_SWEEP_DEST, room.rect.middle());
 
     for (mob.fov) |row, y| for (row) |cell, x| {
         if (cell == 0) continue;
@@ -2023,7 +2023,7 @@ pub fn _Job_GRD_SweepRoom(mob: *Mob, job: *AIJob) AIJob.JStatus {
                 mob.nextDirectionTo(ctry) != null)
             {
                 tryRest(mob);
-                job.setCtx(Coord, CTX_ROOM_SWEEP_DEST, ctry);
+                job.ctx.set(Coord, CTX_ROOM_SWEEP_DEST, ctry);
                 return .Ongoing;
             }
         }
@@ -2042,7 +2042,7 @@ pub fn _Job_ALM_PullAlarm(mob: *Mob, job: *AIJob) AIJob.JStatus {
     if (state.alarm_locations[mob.coord.z].len == 0)
         return .Complete;
 
-    if (job.getCtxOrNone(Coord, AIJob.CTX_ALARM_COORD) == null) {
+    if (job.ctx.getOrNone(Coord, AIJob.CTX_ALARM_COORD) == null) {
         var closest: ?Coord = null;
         var closest_dist: usize = 0xFFFF;
         for (state.alarm_locations[mob.coord.z].constSlice()) |alarm_loc| {
@@ -2054,10 +2054,10 @@ pub fn _Job_ALM_PullAlarm(mob: *Mob, job: *AIJob) AIJob.JStatus {
             }
         }
 
-        job.setCtx(Coord, AIJob.CTX_ALARM_COORD, closest orelse return .Complete);
+        job.ctx.set(Coord, AIJob.CTX_ALARM_COORD, closest orelse return .Complete);
     }
 
-    const alarm = job.getCtxOrNone(Coord, AIJob.CTX_ALARM_COORD).?;
+    const alarm = job.ctx.getOrNone(Coord, AIJob.CTX_ALARM_COORD).?;
 
     if (mob.distance2(alarm) == 1) {
         // Repeatedly try to move into machine to power it
@@ -2105,11 +2105,11 @@ pub fn _Job_SPC_NCAlignment(mob: *Mob, job: *AIJob) AIJob.JStatus {
 
     if (path != null) {
         if (mob.canSeeMob(state.player) and state.player.canSeeMob(mob) and
-            !job.getCtx(bool, CTX_DIALOG2_GIVEN, false))
+            !job.ctx.get(bool, CTX_DIALOG2_GIVEN, false))
         {
             //state.dialog(mob, "I appreciate it.");
-            job.setCtx(bool, CTX_DIALOG1_GIVEN, true);
-            job.setCtx(bool, CTX_DIALOG2_GIVEN, true);
+            job.ctx.set(bool, CTX_DIALOG1_GIVEN, true);
+            job.ctx.set(bool, CTX_DIALOG2_GIVEN, true);
         }
         mob.ai.work_area.clearRetainingCapacity();
         mob.ai.work_area.append(path.?) catch err.wat();
@@ -2119,10 +2119,10 @@ pub fn _Job_SPC_NCAlignment(mob: *Mob, job: *AIJob) AIJob.JStatus {
         state.night_rep[@enumToInt(state.player.faction)] = 1;
         return .Complete;
     } else if (mob.canSeeMob(state.player) and state.player.canSeeMob(mob) and
-        !job.getCtx(bool, CTX_DIALOG1_GIVEN, false))
+        !job.ctx.get(bool, CTX_DIALOG1_GIVEN, false))
     {
         state.dialog(mob, "You, human. Let me out of this cage, please?");
-        job.setCtx(bool, CTX_DIALOG1_GIVEN, true);
+        job.ctx.set(bool, CTX_DIALOG1_GIVEN, true);
         tryRest(mob);
         return .Ongoing;
     } else {

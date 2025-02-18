@@ -189,6 +189,10 @@ pub const Direction = enum { // {{{
             .South => .East,
             .East => .North,
             .West => .South,
+            // .NorthEast => .NorthWest,
+            // .NorthWest => .SouthWest,
+            // .SouthWest => .SouthEast,
+            // .SouthEast => .NorthEast,
             else => err.wat(),
         };
     }
@@ -403,11 +407,11 @@ pub const Coord = struct { // {{{
         }
     }
 
-    pub fn closestDirectionTo(self: Coord, to: Coord, limit: Coord) Direction {
+    fn _closestDirectionTo(self: Coord, to: Coord, dirs: []const Direction, limit: Coord) Direction {
         var closest_distance: usize = @as(usize, 0) -% 1;
         var closest_direction: Direction = .North;
 
-        for (&DIRECTIONS) |direction| if (self.move(direction, limit)) |neighbor| {
+        for (dirs) |direction| if (self.move(direction, limit)) |neighbor| {
             const dist = neighbor.distanceManhattan(to);
 
             if (dist < closest_distance) {
@@ -417,6 +421,14 @@ pub const Coord = struct { // {{{
         };
 
         return closest_direction;
+    }
+
+    pub fn closestDirectionTo(self: Coord, to: Coord, limit: Coord) Direction {
+        return self._closestDirectionTo(to, &DIRECTIONS, limit);
+    }
+
+    pub fn closestCardinalDirectionTo(self: Coord, to: Coord, limit: Coord) Direction {
+        return self._closestDirectionTo(to, &CARDINAL_DIRECTIONS, limit);
     }
 
     fn insert_if_valid(z: usize, x: isize, y: isize, buf: *StackBuffer(Coord, 2048), limit: Coord) void {
@@ -1924,21 +1936,12 @@ pub const AIJob = struct {
     job: Type,
     ctx: Ctx,
 
-    pub const Ctx = std.StringHashMap(Value);
     pub const JStatus = enum { Defer, Ongoing, Complete };
 
     pub const CTX_CORPSE_LOCATION = "ctx_corpse_location";
     pub const CTX_ROOM_ID = "ctx_room_id";
     pub const CTX_ALARM_TARGET = "ctx_alarm_target";
     pub const CTX_ALARM_COORD = "ctx_alarm_coord";
-
-    pub const Value = union(enum) {
-        usize: usize,
-        bool: bool,
-        Coord: Coord,
-        @"*types.Mob": *Mob,
-        @"std.array_list.ArrayListAligned(types.Coord,null)": CoordArrayList,
-    };
 
     pub const Type = enum {
         Dummy,
@@ -1975,32 +1978,7 @@ pub const AIJob = struct {
     };
 
     pub fn deinit(self: *@This()) void {
-        var iter = self.ctx.iterator();
-        while (iter.next()) |entry| switch (entry.value_ptr.*) {
-            .@"std.array_list.ArrayListAligned(types.Coord,null)" => |c| c.deinit(),
-            else => {},
-        };
         self.ctx.deinit();
-    }
-
-    pub fn getCtxOrNone(self: *@This(), comptime T: type, key: []const u8) ?T {
-        const val = self.ctx.get(key) orelse return null;
-        return @field(val, @typeName(T));
-    }
-
-    pub fn getCtx(self: *@This(), comptime T: type, key: []const u8, default: T) T {
-        return getCtxPtr(self, T, key, default).*;
-    }
-
-    pub fn getCtxPtr(self: *@This(), comptime T: type, key: []const u8, default: T) *T {
-        const default_v = @unionInit(Value, @typeName(T), default);
-        const entry = self.ctx.getOrPutValue(key, default_v) catch err.wat();
-        return &@field(entry.value_ptr, @typeName(T));
-    }
-
-    pub fn setCtx(self: *@This(), comptime T: type, key: []const u8, val: T) void {
-        const val_v = @unionInit(Value, @typeName(T), val);
-        self.ctx.put(key, val_v) catch err.wat();
     }
 
     pub fn clone(self: *@This()) @This() {
@@ -2009,10 +1987,59 @@ pub const AIJob = struct {
 
     pub fn checkTurnsLeft(self: *@This(), initial_val: usize) JStatus {
         const CTX_TURNS_LEFT = "ctx_turns_left";
-        const turns_left = self.getCtx(usize, CTX_TURNS_LEFT, initial_val);
+        const turns_left = self.ctx.get(usize, CTX_TURNS_LEFT, initial_val);
 
-        self.setCtx(usize, CTX_TURNS_LEFT, turns_left -| 1);
+        self.ctx.set(usize, CTX_TURNS_LEFT, turns_left -| 1);
         return if (turns_left == 0) .Complete else .Ongoing;
+    }
+};
+
+pub const Ctx = struct {
+    inner: std.StringHashMap(Value),
+
+    pub const Value = union(enum) {
+        usize: usize,
+        bool: bool,
+        Coord: Coord,
+        @"*types.Mob": *Mob,
+        @"std.array_list.ArrayListAligned(types.Coord,null)": CoordArrayList,
+    };
+
+    pub fn init() @This() {
+        return .{ .inner = std.StringHashMap(Value).init(state.gpa.allocator()) };
+    }
+
+    pub fn deinit(self: *@This()) void {
+        var iter = self.inner.iterator();
+        while (iter.next()) |entry| switch (entry.value_ptr.*) {
+            .@"std.array_list.ArrayListAligned(types.Coord,null)" => |c| c.deinit(),
+            else => {},
+        };
+        self.inner.deinit();
+    }
+
+    pub fn clone(self: *const @This()) @This() {
+        return self.inner.clone();
+    }
+
+    pub fn getOrNone(self: *@This(), comptime T: type, key: []const u8) ?T {
+        const val = self.inner.get(key) orelse return null;
+        return @field(val, @typeName(T));
+    }
+
+    pub fn get(self: *@This(), comptime T: type, key: []const u8, default: T) T {
+        return getPtr(self, T, key, default).*;
+    }
+
+    pub fn getPtr(self: *@This(), comptime T: type, key: []const u8, default: T) *T {
+        const default_v = @unionInit(Value, @typeName(T), default);
+        const entry = self.inner.getOrPutValue(key, default_v) catch err.wat();
+        return &@field(entry.value_ptr, @typeName(T));
+    }
+
+    pub fn set(self: *@This(), comptime T: type, key: []const u8, val: T) void {
+        const val_v = @unionInit(Value, @typeName(T), val);
+        self.inner.put(key, val_v) catch err.wat();
     }
 };
 
@@ -2772,7 +2799,7 @@ pub const Mob = struct { // {{{
             self.jobs.clear();
         };
 
-        const job = AIJob{ .job = jtype, .ctx = AIJob.Ctx.init(state.gpa.allocator()) };
+        const job = AIJob{ .job = jtype, .ctx = Ctx.init() };
         self.jobs.append(job) catch err.wat();
     }
 
@@ -2857,6 +2884,7 @@ pub const Mob = struct { // {{{
 
                 var mach = template.*;
                 mach.coord = self.coord;
+                mach.ctx = Ctx.init();
                 state.machines.append(mach) catch err.wat();
                 state.dungeon.at(self.coord).surface = SurfaceItem{ .Machine = state.machines.last().? };
             },
@@ -4747,6 +4775,7 @@ pub const Machine = struct {
     on_place: ?fn (*Machine) void = null, // Called when placed by mapgen
     power: usize = 0, // percentage (0..100)
     last_interaction: ?*Mob = null,
+    ctx: Ctx = undefined,
 
     disabled: bool = false,
 
@@ -4765,6 +4794,9 @@ pub const Machine = struct {
     // E.g., a blast furnace will heat up the first area, and search
     // for fuel in the second area.
     areas: StackBuffer(Coord, 16) = StackBuffer(Coord, 16).init(null),
+
+    pub const CTX_ETH_BARRIER_OWNER = "ctx_eth_barrier_owner";
+    pub const CTX_ETH_BARRIER_AGE = "ctx_eth_barrier_age";
 
     // chance: each turn, effect has ten in $chance to trigger.
     pub const MalfunctionEffect = union(enum) {

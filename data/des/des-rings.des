@@ -139,3 +139,17 @@ hostile.
 
 
 $cDuration:$. This effect lasts for $b5$. turns.
+
+% exclusion
+$cEffect:$. Creates a line of exclusion sigils, which enforce your
+$bWillpower$. against creatures (both hostile and allied) which try to traverse
+it.
+
+
+* If the sigil fails, it will become temporarily traversible.
+
+
+* If your Willpower changes in the meantime, it propagate to the sigils as well.
+
+
+$cDuration:$. The sigils will last for $bWillpower * 2$. turns.

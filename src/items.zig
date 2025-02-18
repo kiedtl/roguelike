@@ -28,6 +28,7 @@ const utils = @import("utils.zig");
 
 const Activity = types.Activity;
 const Coord = types.Coord;
+const CoordArrayList = types.CoordArrayList;
 const Item = types.Item;
 const Ring = types.Ring;
 const DamageStr = types.DamageStr;
@@ -271,6 +272,7 @@ pub const RINGS = [_]ItemTemplate{
     .{ .w = 2, .i = .{ .r = ConcentrationRing } },
     .{ .w = 9, .i = .{ .r = ObscurationRing } },
     .{ .w = 9, .i = .{ .r = RetaliationRing } },
+    .{ .w = 9, .i = .{ .r = ExclusionRing } },
     // Unholy rings appearing in Crypt, higher rarity
     .{ .w = 3, .i = .{ .r = InsurrectionRing } },
     .{ .w = 3, .i = .{ .r = DeterminationRing } },
@@ -1281,6 +1283,64 @@ pub const RetaliationRing = Ring{ // {{{
             const DURATION = 5;
             state.player.addStatus(.RingRetaliation, 0, .{ .Tmp = DURATION });
             state.message(.Info, "You sense a foreign power surrounding you.", .{});
+            return true;
+        }
+    }.f,
+}; // }}}
+
+pub const ExclusionRing = Ring{ // {{{
+    .name = "exclusion",
+    .required_MP = 4,
+    .effect = struct {
+        pub fn f() bool {
+            const chosen = ui.chooseCell(.{
+                .require_seen = true,
+                .targeter = .{ .Exclusion = .{} },
+            }) orelse return false;
+            assert(state.player.cansee(chosen));
+
+            var coords = CoordArrayList.init(state.gpa.allocator());
+            coords.append(chosen) catch unreachable;
+
+            // XXX Duplicated from UI Exclusion targeter code
+            const direct = chosen.closestCardinalDirectionTo(state.player.coord, state.mapgeometry);
+            const dir1 = direct.turnleft();
+            const dir2 = direct.turnright();
+            var c = chosen.move(dir1, state.mapgeometry);
+            while (c != null and state.is_walkable(c.?, .{})) {
+                coords.append(c.?) catch unreachable;
+                c = c.?.move(dir1, state.mapgeometry);
+            }
+            c = chosen.move(dir2, state.mapgeometry);
+            while (c != null and state.is_walkable(c.?, .{})) {
+                coords.append(c.?) catch unreachable;
+                c = c.?.move(dir2, state.mapgeometry);
+            }
+
+            for (coords.items) |coord| {
+                if (!state.player.cansee(c.?) or state.dungeon.at(coord).surface != null)
+                    continue;
+
+                var machine = surfaces.EtherealBarrier;
+                machine.coord = coord;
+                machine.ctx = types.Ctx.init();
+                machine.ctx.set(*Mob, Machine.CTX_ETH_BARRIER_OWNER, state.player);
+                state.machines.append(machine) catch err.wat();
+                const machineptr = state.machines.last().?;
+                state.dungeon.at(coord).surface = SurfaceItem{ .Machine = machineptr };
+
+                const items = state.dungeon.itemsAt(coord);
+                var i: usize = 0;
+                while (i < items.len) {
+                    if (state.nextAvailableSpaceForItem(coord, state.gpa.allocator())) |new| {
+                        const item = items.orderedRemove(i) catch unreachable;
+                        state.dungeon.itemsAt(new).append(item) catch unreachable;
+                    } else {
+                        i += 1;
+                    }
+                }
+            }
+
             return true;
         }
     }.f,

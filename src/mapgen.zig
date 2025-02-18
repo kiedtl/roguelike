@@ -536,6 +536,7 @@ fn placeContainer(coord: Coord, template: *const Container) *Container {
 fn _place_machine(coord: Coord, machine_template: *const Machine) void {
     var machine = machine_template.*;
     machine.coord = coord;
+    machine.ctx = types.Ctx.init();
     state.machines.append(machine) catch err.wat();
     const machineptr = state.machines.last().?;
     state.dungeon.at(coord).surface = SurfaceItem{ .Machine = machineptr };
