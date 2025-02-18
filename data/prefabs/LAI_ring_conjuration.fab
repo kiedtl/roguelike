@@ -1,7 +1,6 @@
 :g_subroom
-:g_global_restriction 2
+:g_global_restriction 1
 :g_restriction 1
-:priority 10
 
 @@r i =conjuration
 @@o i cons_spectral_orb
