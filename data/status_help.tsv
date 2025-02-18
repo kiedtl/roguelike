@@ -13,6 +13,7 @@
 .RingDeceleration  	"ring: deceleration"  	 "airbag testing"      	 -
 .RingDeterm        	"ring: determination" 	 "nuh uh"              	 -
 .RingDetermEnd     	"ring: -determination"	 "nuh uh"              	 -
+.RingRetaliation   	"ring: retaliation"   	 "nuh uh"              	 -
 .DetectHeat        	"detect heat"         	 -                     	 -
 .DetectElec        	"detect electricity"  	 -                     	 -
 .EtherealShield    	"ethereal shield"     	 -                     	 -

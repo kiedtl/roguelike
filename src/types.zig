@@ -1199,6 +1199,7 @@ pub const Status = enum {
     RingDeceleration,
     RingDeterm, // No power field
     RingDetermEnd, // No power field
+    RingRetaliation, // No power field
 
     // Item-specific effects.
     DetectHeat, // Doesn't have a power field.
@@ -4478,6 +4479,16 @@ pub const Mob = struct { // {{{
 
         // Check statuses.
         switch (_stat) {
+            .Melee => {
+                if (self.hasStatus(.RingRetaliation)) {
+                    val -= 10 * @intCast(isize, utils.adjacentHostiles(self));
+                }
+            },
+            .Spikes => {
+                if (self.hasStatus(.RingRetaliation)) {
+                    val += @intCast(isize, utils.adjacentHostiles(self));
+                }
+            },
             .Speed => {
                 if (self.isUnderStatus(.Fast)) |_|
                     val = @divTrunc(val * 50, 100);

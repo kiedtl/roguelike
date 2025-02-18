@@ -270,6 +270,7 @@ pub const RINGS = [_]ItemTemplate{
     .{ .w = 9, .i = .{ .r = CondemnationRing } },
     .{ .w = 2, .i = .{ .r = ConcentrationRing } },
     .{ .w = 9, .i = .{ .r = ObscurationRing } },
+    .{ .w = 9, .i = .{ .r = RetaliationRing } },
     // Unholy rings appearing in Crypt, higher rarity
     .{ .w = 3, .i = .{ .r = InsurrectionRing } },
     .{ .w = 3, .i = .{ .r = DeterminationRing } },
@@ -1267,6 +1268,19 @@ pub const DeterminationRing = Ring{ // {{{
             state.player.MP += mobs.PLAYER_MAX_MP / 3 * 2;
             state.player.addStatus(.RingDeterm, 0, .{ .Tmp = 10 });
             state.message(.Info, "You feel a foreign Power surround you.", .{});
+            return true;
+        }
+    }.f,
+}; // }}}
+
+pub const RetaliationRing = Ring{ // {{{
+    .name = "retaliation",
+    .required_MP = 2,
+    .effect = struct {
+        pub fn f() bool {
+            const DURATION = 5;
+            state.player.addStatus(.RingRetaliation, 0, .{ .Tmp = DURATION });
+            state.message(.Info, "You sense a foreign power surrounding you.", .{});
             return true;
         }
     }.f,

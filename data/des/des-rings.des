@@ -132,3 +132,10 @@ Necromancer's power; afterward, it decreases ($b-3$.).
 
 $cDuration:$. This effect lasts for $b10$. turns. The hangover lasts for $b20$.
 turns.
+
+% retaliation
+$cEffect:$. Grants you $b-10%$. Melee and $b+1$. Spike for every adjacent
+hostile.
+
+
+$cDuration:$. This effect lasts for $b5$. turns.
