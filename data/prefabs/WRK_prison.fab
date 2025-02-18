@@ -1,4 +1,5 @@
 :g_tunneler
+:g_global_restriction 1
 :noguards
 :noitems
 :notraps

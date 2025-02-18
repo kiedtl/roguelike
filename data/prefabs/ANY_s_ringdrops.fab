@@ -2,6 +2,14 @@
 
 :g_subroom
 :priority 100
+:g_whitelist 1/Prison
+:g_whitelist 2/Prison
+:g_whitelist 3/Laboratory
+:g_whitelist 4/Prison
+:g_whitelist 5/Prison
+:g_whitelist 6/Workshop
+:g_whitelist 7/Prison
+:g_whitelist 8/Prison
 :g_restriction 1
 :g_transform .Turn1
 :g_transform .Turn2
