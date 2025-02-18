@@ -689,8 +689,8 @@ pub const LockedDoor = Machine{
         .func = struct {
             fn f(machine: *Machine, by: *Mob) bool {
                 assert(by == state.player);
-
                 machine.disabled = true;
+                state.player.makeNoise(.Crash, .Loud);
                 state.dungeon.at(machine.coord).surface = null;
                 return true;
             }
@@ -761,6 +761,7 @@ pub const SladeDoor = Machine{
                     if (!ui.drawYesNoPrompt("Trespass on the Lair?", .{}))
                         return false;
                     machine.disabled = true;
+                    state.player.makeNoise(.Crash, .Loud);
                     state.dungeon.at(machine.coord).surface = null;
                     scores.recordUsize(.RaidedLairs, 1);
                     if (state.player.hasStatus(.Sceptre)) {
