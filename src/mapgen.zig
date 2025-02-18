@@ -3670,6 +3670,7 @@ pub fn analyzeLevel(level: usize, alloc: mem.Allocator) !LevelAnalysis {
                 if (item == .Ring) {
                     assert(state.dungeon.itemsAt(coord).len == 1);
                     a.ring = try alloc.dupe(u8, item.Ring.name);
+                    try a.incrItem(item, item.Ring.name);
                 } else if (item != .Prop and item != .Vial and item != .Boulder) {
                     if (item.id()) |id|
                         try a.incrItem(item, id);
