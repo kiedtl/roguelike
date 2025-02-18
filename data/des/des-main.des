@@ -508,29 +508,29 @@ A long, curved blade, hovering mid-air. The tip and handle seem to constantly
 dissolve and reform themselves, emitting an eerie blue light as it does so.
 
 % executioner
-A guard carrying a giant spiked flail that, luckily, is good for little else
-besides its gruesome hobby.
+A hill-goblin guard carrying a giant spiked flail that, luckily, is good for
+little else besides its gruesome hobby.
 
 % watcher
-A unarmed guard.
+An unarmed hill-goblin guard.
 
 % guard
-He seems to fear no danger, or he would be wielding something better than his
-bludgeon.
+This hill-goblin seems to fear no danger, or he would be wielding something
+better than his bludgeon.
 
 % defender
-A lone guard, standing motionless in the stagnant air of the Dungeon.
+A lone human mercenary, standing motionless in the stagnant air.
 
 % javelineer
-A warrior clad in light armor, able to throw poisoned javelins with surprising
-accuracy.
+A competent hill-goblin warrior clad in light armor, able to throw poisoned
+javelins with surprising accuracy.
 
 % armored_guard
 A highly-trained and better armed guard. It seems that they've taken note of
 your exploits here...
 
 % enforcer_guard
-One of your countrymen, a pale-skinned and rather inexperienced human mercenary
+One of your countrymen, a pale-skinned and rather inexperienced human mercenary,
 hired from the villages surrounding the hill-goblin's central forest city. He's
 been outfitted with the cave-goblin's shock prods and enforcer chains.
 
@@ -562,7 +562,7 @@ Always remember that you are completely unique. Just like everyone else.
 A cave-goblin prisoner.
 
 % convult
-An strange mage newly come from far in the North, specializing in the
+An strange human mage newly come from far in the North, specializing in the
 manipulation of emotions. His craft, however, has caused him to lose control
 over his own, and now his features writhe and contort with irrepressible
 hatred.
@@ -575,7 +575,7 @@ A humanoid construct, currently being designed and tested in these deep caves
 away from the city's bustle.
 
 % war_olg
-Also known as the plains-troll to the swarthy men, the olg is a naturally
+Also known as the plains-troll to the Southern men, the olg is a naturally
 peaceful grazing animal, equipped with three pairs of legs and a protective coat
 of shaggy fur. It makes a competent fighter when trained for war, however.
 
@@ -598,10 +598,11 @@ A learned hill-goblin tasked with studying, manipulating, and duplicating the
 arcane cave-goblin arts that fill this city.
 
 % cleaner
-This whippersnapper is tasked with keeping the city's storage areas spotless.
+This young hill-goblin whippersnapper is tasked with keeping the city's storage
+areas spotless.
 
 % hauler
-A very ordinary goblin, doing very ordinary hauling work.
+A very ordinary hill-goblin, doing very ordinary hauling work.
 
 % ancient_mage
 Even the most powerful of human mages cannot hope to wield the full might of the
@@ -609,15 +610,15 @@ Necromancer. Instead, it is invested in this undead mage, an immeasurably
 ancient skeleton resurrected for that purpose.
 
 % spark_mage
-An arrogant goblin mage with thick spectacles. He has been tasked with leading
-a band of sparklings, and might create more if provoked by seeing a fallen
-friend's corpse.
+An arrogant hill-goblin mage with thick spectacles. He has been tasked with
+leading a band of sparklings, and might create more if provoked by seeing a
+fallen friend's corpse.
 
 % lightning_mage
 One of the feared lightning mages who assisted with the initial storming of
-Irthimgilnaz. Wielding unparalleled power over the atmosphere, they can call on
-the surrounding air to discharge a powerful lightning bolt into unsuspecting
-foes.
+Irthimgilnaz. Wielding unparalleled power over the atmosphere, this human can
+call on the surrounding air to discharge a powerful lightning bolt into
+unsuspecting foes.
 
 % ember_mage
 A rather stocky hill-goblin, wearing a maroon tunic. He is tasked with leading
