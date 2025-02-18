@@ -121,7 +121,7 @@ pub const WEAP_ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 20, .i = .{ .W = &BalancedSwordWeapon } },
     .{ .w = 20, .i = .{ .W = &MartialSwordWeapon } },
     .{ .w = 10, .i = .{ .W = &WoldoWeapon } },
-    .{ .w = 10, .i = .{ .W = &MorningstarWeapon } },
+    .{ .w = 05, .i = .{ .W = &MorningstarWeapon } },
     // Make it really rare since it's the starting weapon
     .{ .w = 01, .i = .{ .W = &DaggerWeapon } },
 };
@@ -2129,7 +2129,7 @@ pub const CopperSwordWeapon = Weapon.createCopperWeapon(&SwordWeapon, .{});
 
 pub const BalancedSwordWeapon = Weapon{
     .id = "sword_balanced",
-    .name = "longsword",
+    .name = "balanced sword",
     .damage = 2,
     .stats = .{ .Melee = 10 },
     .strs = &SLASHING_STRS,
@@ -2137,7 +2137,7 @@ pub const BalancedSwordWeapon = Weapon{
 
 pub const MasterSwordWeapon = Weapon{
     .id = "sword_master",
-    .name = "longsword",
+    .name = "master sword",
     .damage = 2,
     .stats = .{ .Melee = 15, .Evade = 10 },
     .strs = &SLASHING_STRS,
@@ -2145,10 +2145,10 @@ pub const MasterSwordWeapon = Weapon{
 
 pub const MartialSwordWeapon = Weapon{
     .id = "sword_martial",
-    .name = "longsword",
+    .name = "martial sword",
     .damage = 2,
     .martial = true,
-    .stats = .{ .Melee = 10 },
+    .stats = .{ .Melee = 10, .Martial = 1 },
     .strs = &SLASHING_STRS,
 };
 
