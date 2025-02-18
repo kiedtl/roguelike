@@ -537,7 +537,9 @@ pub const LightPressurePlate = Machine{
         pub fn f(machine: *Machine) void {
             for (&DIRECTIONS) |d| if (machine.coord.move(d, state.mapgeometry)) |neighbor| {
                 if (state.dungeon.machineAt(neighbor)) |mach| {
-                    if (mach.power == 0 and machine.power == 100) {
+                    if (mem.eql(u8, mach.id, machine.id) and
+                        mach.power == 0 and machine.power == 100)
+                    {
                         mach.power = machine.power;
                     }
                 }
