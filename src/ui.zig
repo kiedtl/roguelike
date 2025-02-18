@@ -3764,9 +3764,15 @@ pub fn drawInventoryScreen() bool {
             .Char => |c| switch (c) {
                 'd' => if (chosen_itemlist == .Pack) {
                     if (itemlist_len > 0)
-                        if (player.dropItem(chosen, true)) return true;
+                        switch (player.dropItem(chosen, true)) {
+                            .Success => return true,
+                            .Failure => |e| drawTextModal("{s}", .{e}),
+                        };
                 } else if (chosen_item != null) {
-                    if (player.dropItem(chosen, false)) return true;
+                    switch (player.dropItem(chosen, false)) {
+                        .Success => return true,
+                        .Failure => |e| drawTextModal("{s}", .{e}),
+                    }
                 },
                 't' => if (chosen_itemlist == .Pack) {
                     if (itemlist_len > 0)

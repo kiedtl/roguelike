@@ -1071,11 +1071,19 @@ pub fn upgradeAux(index: usize, ring_slot: Inventory.EquSlot) void {
     state.player.equipItem(slot, dst);
 }
 
+pub const UserActionResult = union(enum) {
+    Success,
+    Failure: []const u8,
+};
+
 // if is_inventory, index=pack index; otherwise, equipment id
 //
-pub fn dropItem(index: usize, is_inventory: bool) bool {
+pub fn dropItem(index: usize, is_inventory: bool) UserActionResult {
     if (is_inventory)
         assert(state.player.inventory.pack.len > index);
+
+    if (!is_inventory and @intToEnum(Inventory.EquSlot, index) == .Shoe)
+        return .{ .Failure = "Sorry, you need shoes." };
 
     if (state.nextAvailableSpaceForItem(state.player.coord, state.gpa.allocator())) |coord| {
         const item = if (is_inventory) b: {
@@ -1093,10 +1101,9 @@ pub fn dropItem(index: usize, is_inventory: bool) bool {
         state.message(.Inventory, "Dropped: {s}.", .{
             (item.shortName() catch err.wat()).constSlice(),
         });
-        return true;
+        return .Success;
     } else {
-        ui.drawAlertThenLog("There's no nearby space to drop items.", .{});
-        return false;
+        return .{ .Failure = "No nearby space to drop the item." };
     }
 }
 
