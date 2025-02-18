@@ -907,7 +907,11 @@
         :speed 1
         :triggers @[
           [[:COND-reached-target? false] [:TRIG-create-emitter (new-emitter @{
-            :particle (new-particle @{ :tile (new-tile @{ :ch "×" :fg 0x777777 :bg-mix 0 }) :speed 0 })
+            :particle (new-particle @{
+                                      :tile (new-tile @{ :ch "×" :fg 0x777777 :bg-mix 0 })
+                                      :lifetime 10
+                                      :speed 0
+                                      })
             :lifetime 0
           })]]
           [[:COND-reached-target? true] [:TRIG-create-emitter (new-emitter @{
