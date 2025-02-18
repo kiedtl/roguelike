@@ -753,7 +753,7 @@ pub fn rummageContainer(coord: Coord) bool {
 
 pub fn equipItem(item: Item) bool {
     switch (item) {
-        .Weapon, .Head, .Armor, .Cloak, .Aux => {
+        .Shoe, .Weapon, .Head, .Armor, .Cloak, .Aux => {
             const slot = Mob.Inventory.EquSlot.slotFor(item);
             if (state.player.inventory.equipment(slot).*) |old_item| {
                 state.player.dequipItem(slot, state.player.coord);
@@ -824,7 +824,7 @@ pub fn grabItem() bool {
     const item_index = state.dungeon.itemsAt(state.player.coord).len - 1;
 
     switch (item) {
-        .Ring, .Armor, .Cloak, .Head, .Aux, .Weapon => {
+        .Shoe, .Ring, .Armor, .Cloak, .Head, .Aux, .Weapon => {
             if (equipItem(item)) {
                 // Delete item on the ground
                 _ = state.dungeon.itemsAt(state.player.coord).orderedRemove(item_index) catch err.wat();
