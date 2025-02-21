@@ -15,7 +15,6 @@ const GimmePrefabIter = struct {
     i: usize = 0,
     s_fabs: bool = true,
 
-    // CHECK
     pub fn next(self: *@This()) ?*mapgen.Prefab {
         if (self.s_fabs) {
             while (self.i < mapgen.s_fabs.items.len) {

@@ -1834,35 +1834,22 @@ pub const StatusDataInfo = struct {
         Ctx: ?*const surfaces.Terrain,
 
         pub fn jsonStringify(val: Duration, stream: anytype) !void {
-            // MIGRATE
-
             try stream.beginObject();
-            //try stream.writeByte('{');
-
             try stream.objectField("duration_type");
-            // try stream.writeAll("\"duration_type\":");
-            // try stream.writeByte('"');
             try stream.write(@tagName(val));
-            //try stream.writeAll(@tagName(val));
-            //try stream.writeByte('"');
 
             // val.Ctx should never be null, in theory, but it is an optional
             // for some reason... Just putting a check here to be safe...
             //
             if (val == .Tmp or (val == .Ctx and val.Ctx != null)) {
                 try stream.objectField("duration_arg");
-                //try stream.writeByte(',');
-                //try stream.writeAll("\"duration_arg\":");
                 if (val == .Tmp) {
                     try stream.write(val.Tmp);
-                    //try std.json.stringify(val.Tmp, opts, stream);
                 } else {
                     try stream.write(val.Ctx.?.id);
-                    //try std.json.stringify(val.Ctx.?.id, opts, stream);
                 }
             }
 
-            //try stream.writeByte('}');
             try stream.endObject();
         }
     };
