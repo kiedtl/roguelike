@@ -188,7 +188,7 @@ pub const Info = struct {
             while (i <= msgcount) : (i += 1) {
                 const msg = state.messages.items[i];
                 s.messages.append(.{
-                    .text = BStr(128).init(utils.used(msg.msg)),
+                    .text = BStr(128).init(msg.msg.constSlice()),
                     .dups = msg.dups,
                 }) catch err.wat();
             }

@@ -2492,8 +2492,10 @@ pub fn placeMob(
     {
         var gen = template.mobAreaRect(coord).iter();
         while (gen.next()) |mobcoord| {
-            if (state.dungeon.at(mobcoord).mob) |other|
-                err.bug("Attempting to place {s} in tile occupied by {f}", .{ template.mob.id, other });
+            if (state.dungeon.at(mobcoord).mob) |other| {
+                //std.log.info("initial coord: {},{}; mobcoord: {},{}; other.coord: {},{}", .{ coord.x, coord.y, mobcoord.x, mobcoord.y, other.coord.x, other.coord.y });
+                err.bug("Attempting to place {s} in tile occupied by {s}", .{ template.mob.id, other.id });
+            }
         }
     }
 

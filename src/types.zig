@@ -14,6 +14,7 @@ const LinkedList = @import("list.zig").LinkedList;
 const RingBuffer = @import("ringbuffer.zig").RingBuffer;
 const StackBuffer = @import("buffer.zig").StackBuffer;
 const StringBuf64 = @import("buffer.zig").StringBuf64;
+const StringBuf256 = @import("buffer.zig").StringBuf256;
 
 const ai = @import("ai.zig");
 const alert = @import("alert.zig");
@@ -769,17 +770,17 @@ pub const Rect = struct {
             if (self.y >= self.rect.end().y) return null;
             defer {
                 self.x += 1;
-                if (self.x > self.rect.end().x) {
+                if (self.x >= self.rect.end().x) {
                     self.x = 0;
                     self.y += 1;
                 }
             }
-            return Coord.new2(self.rect.start.z, self.y, self.x);
+            return Coord.new2(self.rect.start.z, self.x, self.y);
         }
     };
 
     pub fn iter(rect: Rect) IterPoints {
-        return .{ .rect = rect, .x = 0, .y = 0 };
+        return .{ .rect = rect, .x = rect.start.x, .y = rect.start.y };
     }
 };
 
@@ -791,7 +792,7 @@ test "Rect.iterPoints" {
     var matrix = [_][width]usize{[_]usize{0} ** width} ** height;
     const matrix_rect = Rect{ .start = Coord.new(0, 0), .width = width, .height = height };
 
-    var gen = matrix_rect.iterPoints();
+    var gen = matrix_rect.iter();
     while (gen.next()) |coord| {
         matrix[coord.y][coord.x] += 1;
     }
@@ -1201,7 +1202,7 @@ pub const SuspiciousTileRecord = struct {
 };
 
 pub const Message = struct {
-    msg: [256:0]u8,
+    msg: StringBuf256,
     type: MessageType,
     turn: usize,
     dups: usize = 0,

@@ -94,7 +94,7 @@ When standing on copper ground, $b+3$. electric damage will be dealt.
 When both attacker and defender are in an unlit area, there is a will-checked
 chance for the defender to be driven insane.
 
-% ego_nc_masspara
+% ego_nc_mass_para
 When the attacker is in an unlit area, there is a will-checked chance to
 paralyse nearby foes if they are also standing in the dark. The duration of the
 paralysis will always be less than the time needed for the attacker to reach

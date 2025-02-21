@@ -494,7 +494,7 @@ test "parsing" {
     var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
 
     const T = struct {
-        foo: usize = 0,
+        foo: usize = 2,
         bar: BarT = .Fear,
         baz: f64 = 1.2121,
         bap: []u8 = undefined,
@@ -504,7 +504,7 @@ test "parsing" {
 
     const schema = [_]TSVSchemaItem{
         .{ .field_name = "bar", .parse_to = T.BarT, .parse_fn = parsePrimitive },
-        .{ .field_name = "foo", .parse_to = usize, .parse_fn = parsePrimitive, .optional = true, .default_val = 2 },
+        .{ .field_name = "foo", .parse_to = usize, .parse_fn = parsePrimitive, .optional = true },
         .{ .field_name = "bap", .parse_to = []u8, .parse_fn = parseUtf8String },
         .{ .field_name = "baz", .parse_to = f64, .parse_fn = parsePrimitive },
     };
@@ -534,12 +534,12 @@ test "parsing" {
 test "array parsing" {
     const T = struct {
         name: []u8 = undefined,
-        array: [3]usize = undefined,
+        array: [3]usize = [_]usize{ 0, 0, 0 },
     };
 
     const schema = [_]TSVSchemaItem{
         .{ .field_name = "name", .parse_to = []u8, .parse_fn = parseUtf8String },
-        .{ .field_name = "array", .parse_to = usize, .is_array = 3, .parse_fn = parsePrimitive, .optional = true, .default_val = 0 },
+        .{ .field_name = "array", .parse_to = usize, .is_array = 3, .parse_fn = parsePrimitive, .optional = true },
     };
 
     {

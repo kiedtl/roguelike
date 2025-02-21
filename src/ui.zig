@@ -31,6 +31,7 @@ const scores = @import("scores.zig");
 // const GeneratorCtx = @import("generators.zig").GeneratorCtx;
 const StackBuffer = @import("buffer.zig").StackBuffer;
 const StringBuf64 = @import("buffer.zig").StringBuf64;
+const StringBuf256 = @import("buffer.zig").StringBuf256;
 
 const Mob = types.Mob;
 const StatusDataInfo = types.StatusDataInfo;
@@ -359,6 +360,7 @@ pub fn deinit() !void {
     map_win.deinit();
     hud_win.deinit();
     log_win.deinit();
+    wiz_win.deinit();
     for (labels.labels.items) |label|
         label.deinit();
     labels.labels.deinit();
@@ -1826,16 +1828,17 @@ fn drawLog() void {
 
         const noisetext: []const u8 = if (message.noise) "$c─$a♫$. " else "$c─$.  ";
 
-        var str: []const u8 = undefined;
-        defer state.gpa.allocator().free(str);
+        var str: StringBuf256 = undefined;
+        str.clear();
+
         if (message.dups == 0) {
-            str = std.fmt.allocPrint(state.gpa.allocator(), "$G{u}$.{s}{s}", .{ line, noisetext, utils.used(message.msg) }) catch err.oom();
+            str.fmt("$G{u}$.{s}{s}", .{ line, noisetext, message.msg.constSlice() });
         } else {
-            str = std.fmt.allocPrint(state.gpa.allocator(), "$G{u}$.{s}{s} (×{})", .{ line, noisetext, utils.used(message.msg), message.dups + 1 }) catch err.oom();
+            str.fmt("$G{u}$.{s}{s} (×{})", .{ line, noisetext, message.msg.constSlice(), message.dups + 1 });
         }
 
         var fibuf = StackBuffer(u8, 4096).init(null);
-        var fold_iter = utils.FoldedTextIterator.init(str, linewidth + 1);
+        var fold_iter = utils.FoldedTextIterator.init(str.constSlice(), linewidth + 1);
         while (fold_iter.next(&fibuf)) |text_line| : (y += 1) {
             var console = Console.initHeap(state.gpa.allocator(), linewidth, 1);
             _ = console.drawTextAt(0, 0, text_line, .{ .fg = col });
@@ -4557,10 +4560,10 @@ pub const AnimationReveal = struct {
         var y: usize = 0;
         while (y < args.anim_layer.height) : (y += 1) {
             if (self.revealctrs[y] == 0)
-                return {};
+                continue;
             self.did_anything = true;
             if (args.opts.rvtype != .All and 1 + (self.i / args.opts.idelay) < y + args.opts.ydelay)
-                return {};
+                continue;
             var x: usize = 0;
             while (x < args.anim_layer.width) : (x += 1) {
                 if (args.opts.reverse) {

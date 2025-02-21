@@ -57,6 +57,7 @@ const EvocableList = @import("items.zig").EvocableList;
 // const Generator = @import("generators.zig").Generator;
 // const GeneratorCtx = @import("generators.zig").GeneratorCtx;
 const StackBuffer = @import("buffer.zig").StackBuffer;
+const StringBuf256 = @import("buffer.zig").StringBuf256;
 
 pub const GameState = union(enum) { Game, Win, Lose, Quit, Viewer };
 pub const Layout = union(enum) { Unknown, Room: usize };
@@ -594,23 +595,17 @@ pub fn messageAboutMob(
 }
 
 pub fn message(mtype: MessageType, comptime fmt: []const u8, args: anytype) void {
-    var buf: [256]u8 = undefined;
-    for (&buf) |*i| i.* = 0;
-    var fbs = std.io.fixedBufferStream(&buf);
-    @call(.always_inline, std.fmt.format, .{ fbs.writer(), fmt, args }) catch err.bug("format error (buffer overflow?)", .{});
-
-    var msg: Message = .{
-        .msg = undefined,
+    const msg = Message{
+        .msg = StringBuf256.initFmt(fmt, args),
         .type = mtype,
         .turn = player_turns,
     };
-    utils.copyZ(&msg.msg, fbs.getWritten());
 
     // If the message isn't a prompt, check if the message is a duplicate
     if (mtype != .Prompt and messages.items.len > 0 and mem.eql(
         u8,
-        utils.used(messages.items[messages.items.len - 1].msg),
-        utils.used(msg.msg),
+        messages.items[messages.items.len - 1].msg.constSlice(),
+        msg.msg.constSlice(),
     )) {
         messages.items[messages.items.len - 1].dups += 1;
     } else {

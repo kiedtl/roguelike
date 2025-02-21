@@ -132,6 +132,7 @@ pub fn getRoomFromCoord(level: usize, coord: Coord) ?usize {
 }
 
 // Bounded string
+// CLEANUP: merge this type with StringBuf<size>
 pub fn BStr(comptime sz: usize) type {
     return StackBuffer(u8, sz);
 }
@@ -171,13 +172,13 @@ pub const IterCircle = struct {
             if (self.y >= HEIGHT) return null;
             defer {
                 self.x += 1;
-                if (self.x > WIDTH) {
+                if (self.x >= WIDTH) {
                     self.x = 0;
                     self.y += 1;
                 }
             }
             if (self.buf[self.y][self.x])
-                return Coord.new2(self.z, self.y, self.x);
+                return Coord.new2(self.z, self.x, self.y);
         }
     }
 };
@@ -440,6 +441,7 @@ pub fn percentOf(comptime T: type, x: T, percent: T) T {
     return x * percent / 100;
 }
 
+// This function is broken for some reason on Zig 0.14.0
 pub fn used(slice: anytype) rt: {
     const SliceType = @TypeOf(slice);
     const ChildType = std.meta.Elem(SliceType);

@@ -884,31 +884,19 @@ pub fn excavatePrefab(
                             .Poster => |poster| {
                                 state.dungeon.at(rc).surface = SurfaceItem{ .Poster = poster };
                             },
-                            .Prop => |pid| {
-                                if (utils.findById(surfaces.props.items, pid)) |prop| {
-                                    _ = placeProp(rc, &surfaces.props.items[prop]);
-                                } else std.log.err(
-                                    "{s}: Couldn't load prop {s}, skipping.",
-                                    .{ fab.name.constSlice(), utils.used(pid) },
-                                );
+                            .Prop => |prop| {
+                                _ = placeProp(rc, prop);
                             },
-                            .Machine => |mid| {
-                                if (utils.findById(&surfaces.MACHINES, mid.id)) |mach| {
-                                    _place_machine(rc, &surfaces.MACHINES[mach]);
-                                    const machine = state.dungeon.at(rc).surface.?.Machine;
-                                    for (mid.points.constSlice()) |point| {
-                                        const adj_point = Coord.new2(
-                                            room.rect.start.z,
-                                            point.x + room.rect.start.x + startx,
-                                            point.y + room.rect.start.y + starty,
-                                        );
-                                        machine.areas.append(adj_point) catch err.wat();
-                                    }
-                                } else {
-                                    std.log.err(
-                                        "{s}: Couldn't load machine {s}, skipping.",
-                                        .{ fab.name.constSlice(), utils.used(mid.id) },
+                            .Machine => |def| {
+                                _place_machine(rc, def.mach);
+                                const machine = state.dungeon.at(rc).surface.?.Machine;
+                                for (def.points.constSlice()) |point| {
+                                    const adj_point = Coord.new2(
+                                        room.rect.start.z,
+                                        point.x + room.rect.start.x + startx,
+                                        point.y + room.rect.start.y + starty,
                                     );
+                                    machine.areas.append(adj_point) catch err.wat();
                                 }
                             },
                         }
@@ -1836,6 +1824,10 @@ pub fn placeRandomRooms(
                 // like the previous line of code that I removed above (for
                 // future me: see git blame please). Too lazy to investigate
                 // right now though.
+                //
+                // 2025-02-21: I think I was trying to make sure initial
+                // prefabs go roughly in the center of the map. In which case,
+                // I shouldn't have removed the earlier line of code...
                 @max(fab.height, state.HEIGHT - fab.height - 1),
             2,
         );
@@ -3795,7 +3787,7 @@ pub const Prefab = struct {
     features: [128]?Feature = [_]?Feature{null} ** 128,
     features_global: [128]bool = [_]bool{false} ** 128,
     mobs: [16]?FeatureMob = [_]?FeatureMob{null} ** 16,
-    prisons: StackBuffer(Rect, 6) = StackBuffer(Rect, 6).init(null),
+    prisons: StackBuffer(Rect, 16) = StackBuffer(Rect, 16).init(null),
     subroom_areas: StackBuffer(SubroomArea, 4) = StackBuffer(SubroomArea, 4).init(null),
     whitelist: StackBuffer(usize, LEVELS) = StackBuffer(usize, LEVELS).init(null),
     stockpile: ?Rect = null,
@@ -3869,12 +3861,11 @@ pub const Prefab = struct {
             we: StackBuffer(usize, 4),
         },
         Poster: *const Poster,
-        // CLEANUP: use ids
         Machine: struct {
-            id: [24:0]u8,
+            mach: *const Machine,
             points: StackBuffer(Coord, 4),
         },
-        Prop: [24:0]u8,
+        Prop: *const Prop,
         Stair: surfaces.Stair,
         Key: surfaces.Stair.Type,
     };
@@ -4440,18 +4431,31 @@ pub const Prefab = struct {
                             }
                             const poster_ptr = try literature.posters.appendAndReturn(.{
                                 .level = try state.gpa.allocator().dupe(u8, "NUL"),
-                                .text = buf.items,
+                                .text = buf.toOwnedSlice() catch err.oom(),
                                 .placement_counter = 0,
                             });
                             f.features[identifier] = Feature{ .Poster = poster_ptr };
                             f.features_global[identifier] = is_global;
                         },
                         'p' => {
-                            f.features[identifier] = Feature{ .Prop = [_:0]u8{0} ** 24 };
-                            f.features_global[identifier] = is_global;
-                            mem.copyForwards(u8, &f.features[identifier].?.Prop, id orelse return error.MalformedFeatureDefinition);
+                            const _id = id orelse return error.MalformedFeatureDefinition;
+                            if (utils.findById(surfaces.props.items, _id)) |ind| {
+                                f.features[identifier] = Feature{ .Prop = &surfaces.props.items[ind] };
+                                f.features_global[identifier] = is_global;
+                            } else {
+                                std.log.err("{s}: Couldn't load prop {s}.", .{ f.name.constSlice(), utils.used(_id) });
+                                return error.InvalidMetadataValue;
+                            }
                         },
                         'm' => {
+                            const _id = id orelse return error.MalformedFeatureDefinition;
+                            const machine = if (utils.findById(&surfaces.MACHINES, _id)) |ind| b: {
+                                break :b &surfaces.MACHINES[ind];
+                            } else {
+                                std.log.err("{s}: Couldn't load machine {s}.", .{ f.name.constSlice(), utils.used(_id) });
+                                return error.InvalidMetadataValue;
+                            };
+
                             var points = StackBuffer(Coord, 4).init(null);
                             while (words.next()) |word| {
                                 var coord = Coord.new2(0, 0, 0);
@@ -4462,13 +4466,8 @@ pub const Prefab = struct {
                                 coord.y = std.fmt.parseInt(usize, coord_str_b, 0) catch return error.InvalidMetadataValue;
                                 points.append(coord) catch err.wat();
                             }
-                            f.features[identifier] = Feature{
-                                .Machine = .{
-                                    .id = [_:0]u8{0} ** 24,
-                                    .points = points,
-                                },
-                            };
-                            mem.copyForwards(u8, &f.features[identifier].?.Machine.id, id orelse return error.MalformedFeatureDefinition);
+
+                            f.features[identifier] = Feature{ .Machine = .{ .mach = machine, .points = points } };
                             f.features_global[identifier] = is_global;
                         },
                         'i' => {
@@ -4619,11 +4618,8 @@ pub fn readPrefabs(alloc: mem.Allocator) void {
         }
     }
 
-    std.log.info("shuffle", .{});
     rng.shuffle(Prefab, s_fabs.items);
-    std.log.info("sort", .{});
     std.sort.insertion(Prefab, s_fabs.items, {}, Prefab.lesserThan);
-    std.log.info("done", .{});
 
     std.log.info("Loaded {} prefabs.", .{n_fabs.items.len + s_fabs.items.len});
 }
