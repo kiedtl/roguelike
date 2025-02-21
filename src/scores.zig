@@ -104,7 +104,7 @@ pub const Info = struct {
                         // } else if (by.faction == .Revgenunkim) {
                         //     break :b "Overcome by an ancient Power";
                         // } else if (by.faction == .Holy) {
-                        //     break :b "Overcome by Hellfire";
+                        //     break :b "Cast into the Abyss";
                     } else {
                         break :b "Died on the journey";
                     }
@@ -121,11 +121,10 @@ pub const Info = struct {
 
         if (state.state == .Lose and state.player.killed_by != null) {
             const ldp = state.player.lastDamagePercentage();
-            s.slain_str = "killed";
-            if (ldp > 30) s.slain_str = "slain";
-            if (ldp > 60) s.slain_str = "executed";
-            if (ldp > 90) s.slain_str = "demolished";
-            if (ldp > 120) s.slain_str = "miserably destroyed";
+            s.slain_str = "slain";
+            if (ldp > 10) s.slain_str = "executed";
+            if (ldp > 20) s.slain_str = "demolished";
+            if (ldp > 30) s.slain_str = "miserably destroyed";
 
             const killer = state.player.killed_by.?;
             s.slain_by_id = killer.id;
