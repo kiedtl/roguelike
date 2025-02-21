@@ -8,9 +8,6 @@ const assert = std.debug.assert;
 const rng = @import("rng.zig");
 const serializer = @import("serializer.zig");
 
-pub const StringBuf64 = StackBuffer(u8, 64);
-pub const StringBuf256 = StackBuffer(u8, 256);
-
 pub fn StackBuffer(comptime T: type, comptime capacity: usize) type {
     return struct {
         len: usize = 0,

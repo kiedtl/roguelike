@@ -30,8 +30,7 @@ const scores = @import("scores.zig");
 // const Generator = @import("generators.zig").Generator;
 // const GeneratorCtx = @import("generators.zig").GeneratorCtx;
 const StackBuffer = @import("buffer.zig").StackBuffer;
-const StringBuf64 = @import("buffer.zig").StringBuf64;
-const StringBuf256 = @import("buffer.zig").StringBuf256;
+const BStr = utils.BStr;
 
 const Mob = types.Mob;
 const StatusDataInfo = types.StatusDataInfo;
@@ -1007,12 +1006,12 @@ fn _getMonsSpellsDescription(self: *Console, starty: usize, mob: *Mob, _: usize)
                 self.addTooltipForText("Heal", .{}, "ex_sp_effect_heal", .{});
             },
             .Damage => |d| {
-                const dmg_str = StringBuf64.init(_formatEffectNumber(d.amount, spellcfg));
+                const dmg_str = BStr(32).init(_formatEffectNumber(d.amount, spellcfg));
                 y += self.drawTextAtf(0, y, "· $gIns$. {s} <{s}>", .{ d.kind.string(), dmg_str.constSlice() }, .{});
             },
             .FireBlast => |b| {
-                const rad_str = StringBuf64.init(_formatEffectNumber(b.radius, spellcfg));
-                const dmg_str = StringBuf64.init(_formatEffectNumber(b.damage, spellcfg));
+                const rad_str = BStr(32).init(_formatEffectNumber(b.radius, spellcfg));
+                const dmg_str = BStr(32).init(_formatEffectNumber(b.damage, spellcfg));
                 y += self.drawTextAtf(0, y, "· $gIns$. fireblast <rad {s}> <dmg {s}>", .{ rad_str.constSlice(), dmg_str.constSlice() }, .{});
                 self.addTooltipForText("Fireblast", .{}, "ex_sp_effect_fireblast", .{});
             },
@@ -1629,7 +1628,7 @@ fn drawHUD(moblist: []const *Mob) void {
 
     {
         const FeatureInfo = struct {
-            name: StringBuf64,
+            name: BStr(32),
             tile: display.Cell,
             coord: Coord,
             ex_focus: ExamineTileFocus,
@@ -1651,7 +1650,7 @@ fn drawHUD(moblist: []const *Mob) void {
         defer dijk.deinit();
 
         while (dijk.next()) |coord| if (state.player.cansee(coord)) {
-            var name = StringBuf64.init(null);
+            var name = BStr(32).init(null);
             var priority: usize = 0;
             var focus: ExamineTileFocus = .Item;
 
@@ -1694,7 +1693,7 @@ fn drawHUD(moblist: []const *Mob) void {
 
             if (name.len > 0) {
                 const existing = utils.findFirstNeedlePtr(features.items, name, struct {
-                    pub fn func(f: *const FeatureInfo, n: StringBuf64) bool {
+                    pub fn func(f: *const FeatureInfo, n: BStr(32)) bool {
                         return mem.eql(u8, n.constSlice(), f.name.constSlice());
                     }
                 }.func);
@@ -1828,7 +1827,7 @@ fn drawLog() void {
 
         const noisetext: []const u8 = if (message.noise) "$c─$a♫$. " else "$c─$.  ";
 
-        var str: StringBuf256 = undefined;
+        var str: BStr(256) = undefined;
         str.clear();
 
         if (message.dups == 0) {

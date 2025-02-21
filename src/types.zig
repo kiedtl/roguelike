@@ -13,8 +13,7 @@ const testing = std.testing;
 const LinkedList = @import("list.zig").LinkedList;
 const RingBuffer = @import("ringbuffer.zig").RingBuffer;
 const StackBuffer = @import("buffer.zig").StackBuffer;
-const StringBuf64 = @import("buffer.zig").StringBuf64;
-const StringBuf256 = @import("buffer.zig").StringBuf256;
+const BStr = @import("utils.zig").BStr;
 
 const ai = @import("ai.zig");
 const alert = @import("alert.zig");
@@ -1202,7 +1201,7 @@ pub const SuspiciousTileRecord = struct {
 };
 
 pub const Message = struct {
-    msg: StringBuf256,
+    msg: BStr(256),
     type: MessageType,
     turn: usize,
     dups: usize = 0,
@@ -2997,7 +2996,7 @@ pub const Mob = struct { // {{{
                     const mob = state.dungeon.at(landed.?).mob.?;
                     if (proj.damage) |max_damage| {
                         const damage = rng.range(usize, max_damage / 2, max_damage);
-                        const msg_noun = StringBuf64.initFmt("The {s}", .{proj.name});
+                        const msg_noun = BStr(24).initFmt("The {s}", .{proj.name});
                         mob.takeDamage(.{ .amount = damage, .source = .RangedAttack, .by_mob = self }, .{ .noun = msg_noun.constSlice() });
                     }
                     switch (proj.effect) {

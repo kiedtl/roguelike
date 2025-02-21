@@ -57,7 +57,7 @@ const EvocableList = @import("items.zig").EvocableList;
 // const Generator = @import("generators.zig").Generator;
 // const GeneratorCtx = @import("generators.zig").GeneratorCtx;
 const StackBuffer = @import("buffer.zig").StackBuffer;
-const StringBuf256 = @import("buffer.zig").StringBuf256;
+const BStr = utils.BStr;
 
 pub const GameState = union(enum) { Game, Win, Lose, Quit, Viewer };
 pub const Layout = union(enum) { Unknown, Room: usize };
@@ -596,7 +596,7 @@ pub fn messageAboutMob(
 
 pub fn message(mtype: MessageType, comptime fmt: []const u8, args: anytype) void {
     const msg = Message{
-        .msg = StringBuf256.initFmt(fmt, args),
+        .msg = BStr(256).initFmt(fmt, args),
         .type = mtype,
         .turn = player_turns,
     };
