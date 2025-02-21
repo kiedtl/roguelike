@@ -10,6 +10,7 @@ const sentry = @import("sentry.zig");
 
 pub fn ensure(expr: bool, comptime err_message: []const u8, args: anytype) !void {
     if (!expr) {
+        state.message(.Info, "[Error] A bug occurred, send the game log to kiedtl.", .{});
         std.log.err("[non-fatal] " ++ err_message, args);
         return error.OhNoes;
     }

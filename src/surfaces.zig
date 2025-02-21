@@ -1389,31 +1389,22 @@ fn interact1RechargingStation(_: *Machine, by: *Mob) bool {
 fn interact1Drain(machine: *Machine, mob: *Mob) bool {
     assert(mob == state.player);
 
-    // FIXME: CLEANUP
-    var drains = StackBuffer(*Machine, 32).init(null);
-    for (&state.dungeon.map[state.player.coord.z]) |*row| {
-        for (row) |*tile| {
-            if (tile.surface) |s|
-                if (meta.activeTag(s) == .Machine and
-                    s.Machine != machine and
-                    mem.eql(u8, s.Machine.id, "drain"))
-                {
-                    drains.append(s.Machine) catch err.wat();
-                };
-        }
-    }
+    var drains = StackBuffer(Coord, 4).init(null);
+    var iter = state.mapRect(machine.coord.z).iter();
+    while (iter.next()) |coord|
+        if (state.dungeon.machineAt(coord)) |s|
+            if (s != machine and mem.eql(u8, s.id, "drain"))
+                drains.append(coord) catch break;
 
-    if (drains.len == 0) {
+    if (drains.len == 0)
         return false;
-    }
-    const drain = rng.chooseUnweighted(*Machine, drains.constSlice());
 
-    const succeeded = mob.teleportTo(drain.coord, null, true, false);
-    assert(succeeded);
+    const drain = rng.chooseUnweighted(Coord, drains.constSlice());
+    const succeeded = mob.teleportTo(drain, null, true, false);
+    err.ensure(succeeded, "Couldn't teleport mob to drain {},{}.", .{ drain.x, drain.y }) catch return false;
 
-    if (rng.onein(3)) {
+    if (rng.onein(3))
         mob.addStatus(.Nausea, 0, .{ .Tmp = 10 });
-    }
 
     return true;
 }
