@@ -16,8 +16,8 @@ const Coord = types.Coord;
 const Rect = types.Rect;
 const Direction = types.Direction;
 
-const Generator = @import("../generators.zig").Generator;
-const GeneratorCtx = @import("../generators.zig").GeneratorCtx;
+// const Generator = @import("../generators.zig").Generator;
+// const GeneratorCtx = @import("../generators.zig").GeneratorCtx;
 const StackBuffer = @import("../buffer.zig").StackBuffer;
 
 pub const Self = @This();
@@ -42,7 +42,7 @@ rendered_offset_x: usize = 0,
 rendered_offset_y: usize = 0,
 
 recorded_mouse_area: ?Rect = null,
-_reveal_animation: ?*Generator(ui.animationReveal) = null,
+_reveal_animation: ?ui.AnimationReveal = null,
 _reveal_animation_layer: ?*Self = null,
 
 pub const AList = std.ArrayList(Self);
@@ -87,7 +87,7 @@ pub const Subconsole = struct {
 };
 
 pub fn init(alloc: mem.Allocator, width: usize, height: usize) Self {
-    const self = .{
+    const self = Self{
         .alloc = alloc,
         .grid = alloc.alloc(display.Cell, width * height) catch err.wat(),
         .width = width,
@@ -95,7 +95,7 @@ pub fn init(alloc: mem.Allocator, width: usize, height: usize) Self {
         .subconsoles = Subconsole.AList.init(alloc),
         .mouse_triggers = MouseTrigger.AList.init(alloc),
     };
-    mem.set(display.Cell, self.grid, .{ .ch = ' ', .fg = 0, .bg = colors.BG });
+    @memset(self.grid, .{ .ch = ' ', .fg = 0, .bg = colors.BG });
     return self;
 }
 
@@ -113,8 +113,8 @@ pub fn deinit(self: *Self) void {
         subconsole.console.deinit();
     self.subconsoles.deinit();
     self.mouse_triggers.deinit();
-    if (self._reveal_animation) |a|
-        self.alloc.destroy(a);
+    // if (self._reveal_animation) |a|
+    //     self.alloc.destroy(a);
     if (self.heap_inited)
         self.alloc.destroy(self);
 }
@@ -139,7 +139,7 @@ pub fn centerX(self: *const Self, subwidth: usize) usize {
 
 pub fn changeHeight(self: *Self, new_height: usize) void {
     const new_grid = self.alloc.alloc(display.Cell, self.width * new_height) catch err.wat();
-    mem.set(display.Cell, new_grid, .{ .ch = ' ', .fg = 0, .bg = colors.BG });
+    @memset(new_grid, .{ .ch = ' ', .fg = 0, .bg = colors.BG });
 
     // Copy old grid to new grid
     var y: usize = 0;
@@ -250,7 +250,7 @@ pub fn clearMouseTriggers(self: *Self) void {
 }
 
 pub fn clearTo(self: *const Self, to: display.Cell) void {
-    mem.set(display.Cell, self.grid, to);
+    @memset(self.grid, to);
 }
 
 pub fn clearColumnTo(self: *const Self, starty: usize, endy: usize, x: usize, cell: display.Cell) void {
@@ -369,12 +369,13 @@ pub fn addRevealAnimation(self: *Self, opts: ui.RevealAnimationOpts) void {
         self._reveal_animation_layer.?.clear();
     }
 
-    if (self._reveal_animation) |oldanim| {
-        state.gpa.allocator().destroy(oldanim);
-    }
+    // if (self._reveal_animation) |oldanim| {
+    //     state.gpa.allocator().destroy(oldanim);
+    // }
 
-    self._reveal_animation = self.alloc.create(Generator(ui.animationReveal)) catch err.oom();
-    self._reveal_animation.?.* = Generator(ui.animationReveal).init(.{ .main_layer = self, .anim_layer = self._reveal_animation_layer.?, .opts = opts });
+    //self._reveal_animation = self.alloc.create(Generator(ui.animationReveal)) catch err.oom();
+    //self._reveal_animation.?.* = Generator(ui.animationReveal).init(.{ .main_layer = self, .anim_layer = self._reveal_animation_layer.?, .opts = opts });
+    self._reveal_animation = ui.animationReveal(.{ .main_layer = self, .anim_layer = self._reveal_animation_layer.?, .opts = opts });
 }
 
 pub fn stepRevealAnimation(self: *Self) void {
@@ -398,10 +399,10 @@ pub fn drawOutlineAround(self: *const Self, coord: Coord, style: display.Cell) v
     for (c) |i| {
         var cell = style;
         cell.ch = i.ch;
-        const dx = @intCast(isize, coord.x) + i.x;
-        const dy = @intCast(isize, coord.y) + i.y;
+        const dx = @as(isize, @intCast(coord.x)) + i.x;
+        const dy = @as(isize, @intCast(coord.y)) + i.y;
         if (dx < 0 or dy < 0) continue;
-        self.setCell(@intCast(usize, dx), @intCast(usize, dy), cell);
+        self.setCell(@intCast(dx), @intCast(dy), cell);
     }
 }
 
@@ -595,11 +596,11 @@ pub fn drawBarAt(self: *Self, x: usize, endx: usize, y: usize, current: usize, m
 
     if (opts.detail) switch (opts.detail_type) {
         .Percent => {
-            const info_width = @intCast(usize, std.fmt.count("{}%", .{percent}));
+            const info_width: usize = @intCast(std.fmt.count("{}%", .{percent}));
             _ = self.drawTextAtf(endx - info_width - 1, y, "{}%", .{percent}, .{ .fg = fg, .bg = null });
         },
         .Specific => {
-            const info_width = @intCast(usize, std.fmt.count("{} / {}", .{ current, max }));
+            const info_width: usize = @intCast(std.fmt.count("{} / {}", .{ current, max }));
             _ = self.drawTextAtf(endx - info_width - 1, y, "{} / {}", .{ current, max }, .{ .fg = fg, .bg = null });
         },
     };

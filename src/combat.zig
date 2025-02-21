@@ -1,5 +1,6 @@
 const std = @import("std");
 const math = std.math;
+const sort = std.sort;
 const assert = std.debug.assert;
 
 const ai = @import("ai.zig");
@@ -85,8 +86,8 @@ pub fn damageOfWeapon(attacker: ?*const Mob, weapon: *const Weapon, recipient: ?
 
 pub fn damageOfMeleeAttack(attacker: *const Mob, w_damage: usize, is_stab: bool) usize {
     var damage: usize = w_damage;
-    damage += if (attacker.isUnderStatus(.Enraged) != null) math.min(1, damage / 2) else 0;
-    damage += if (attacker.isUnderStatus(.Invigorate) != null) math.min(1, damage / 2) else 0;
+    damage += if (attacker.isUnderStatus(.Enraged) != null) @min(1, damage / 2) else 0;
+    damage += if (attacker.isUnderStatus(.Invigorate) != null) @min(1, damage / 2) else 0;
 
     if (is_stab) {
         damage *= 10;
@@ -101,7 +102,7 @@ pub fn chanceOfMissileLanding(attacker: *const Mob) usize {
     chance -= if (attacker.isUnderStatus(.Debil)) |_| ATTACKER_STUN_NBONUS else 0;
     chance -= if (attacker.isUnderStatus(.Water)) |_| ATTACKER_WATER_NBONUS else 0;
 
-    return @intCast(usize, math.clamp(chance, 0, 100));
+    return @intCast(math.clamp(chance, 0, 100));
 }
 
 pub fn chanceOfMeleeLanding(attacker: *const Mob, defender: ?*const Mob) usize {
@@ -129,14 +130,14 @@ pub fn chanceOfMeleeLanding(attacker: *const Mob, defender: ?*const Mob) usize {
     chance -= if (attacker.hasStatus(.Water)) ATTACKER_WATER_NBONUS else 0;
     chance -= if (attacker.hasStatus(.RingConcentration)) ATTACKER_CONCENTRATE_NBONUS else 0;
 
-    return @intCast(usize, math.clamp(chance, 0, 100));
+    return @intCast(math.clamp(chance, 0, 100));
 }
 
 pub fn chanceOfAttackEvaded(defender: *const Mob, attacker: ?*const Mob) usize {
     if (attacker) |a| if (isAttackStab(a, defender)) return 0;
     if (defender.immobile) return 0;
 
-    const walls = @intCast(isize, state.dungeon.neighboringWalls(defender.coord, true));
+    const walls: isize = @intCast(state.dungeon.neighboringWalls(defender.coord, true));
 
     var chance: isize = defender.stat(.Evade);
 
@@ -150,7 +151,7 @@ pub fn chanceOfAttackEvaded(defender: *const Mob, attacker: ?*const Mob) usize {
     chance -= if (defender.hasStatus(.Enraged)) DEFENDER_ENRAGED_NBONUS else 0;
     chance -= if (defender.hasStatus(.RingConcentration)) DEFENDER_CONCENTRATE_NBONUS else 0;
 
-    return @intCast(usize, math.clamp(chance, 0, 100));
+    return @intCast(math.clamp(chance, 0, 100));
 }
 
 pub fn throwMob(thrower: ?*Mob, throwee: *Mob, direction: Direction, distance: usize) void {
@@ -299,7 +300,7 @@ pub fn shaveDamage(amount: usize, resist: isize) usize {
         }
     };
 
-    return @intCast(usize, @divTrunc(S._helper(amount, resist) + S._helper(amount, resist) + S._helper(amount, resist), 3));
+    return @intCast(@divTrunc(S._helper(amount, resist) + S._helper(amount, resist) + S._helper(amount, resist), 3));
 }
 
 // This doesn't really belong here, but where else would I put it
@@ -316,8 +317,8 @@ pub fn disruptAllUndead(level: usize) void {
         if (mob.coord.z != level or mob.is_dead or mob.life_type != .Undead or mob.faction != .Necromancer)
             continue;
 
-        mob.stats.Melee -|= @intCast(isize, state.destroyed_candles * UNDEAD_DISRUPT_MELEE_DECREASE);
-        mob.stats.Willpower -|= @intCast(isize, state.destroyed_candles / UNDEAD_DISRUPT_WILL_FDECREASE);
+        mob.stats.Melee -|= @intCast(state.destroyed_candles * UNDEAD_DISRUPT_MELEE_DECREASE);
+        mob.stats.Willpower -|= @intCast(state.destroyed_candles / UNDEAD_DISRUPT_WILL_FDECREASE);
         mob.max_HP -|= state.destroyed_candles / UNDEAD_DISRUPT_HLTH_FDECREASE;
 
         if (mob.max_HP == 0 or rng.percent(state.destroyed_candles * UNDEAD_DISRUPT_DESTROY_CHANCE))
@@ -378,17 +379,17 @@ pub fn disruptIndividualUndead(mob: *Mob) void {
 }
 
 test {
-    state.seed = 2384928349;
-    rng.init();
+    // state.seed = 2384928349;
+    // rng.init();
 
-    var i: usize = 10;
-    while (i > 0) : (i -= 1) {
-        var resist = rng.range(isize, -4, 4) * 25;
-        var damage = rng.range(usize, 1, 9);
-        var ndmg = shaveDamage(damage, resist);
-        _ = ndmg;
-        // std.log.warn("damage: {}\tresist: {}\tnew: {}\tshaved: {}", .{
-        //     damage, resist, ndmg, @floatToInt(isize, damage) - @floatToInt(isize, ndmg),
-        // });
-    }
+    // var i: usize = 10;
+    // while (i > 0) : (i -= 1) {
+    //     var resist = rng.range(isize, -4, 4) * 25;
+    //     var damage = rng.range(usize, 1, 9);
+    //     var ndmg = shaveDamage(damage, resist);
+    //     _ = ndmg;
+    //     std.log.warn("damage: {}\tresist: {}\tnew: {}\tshaved: {}", .{
+    //         damage, resist, ndmg, @intFromFloat(isize, damage) - @intFromFloat(isize, ndmg),
+    //     });
+    // }
 }

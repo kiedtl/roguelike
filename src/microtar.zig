@@ -4,7 +4,7 @@ const std = @import("std");
 
 pub const MTar = struct {
     ctx: cmtar.mtar_t = undefined,
-    write: bool = false,
+    is_writing: bool = false,
 
     pub const Error = error{
         UnknownError,
@@ -42,13 +42,13 @@ pub const MTar = struct {
     pub fn init(file: []const u8, mode: [:0]const u8) !@This() {
         var tar: cmtar.mtar_t = undefined;
         return switch (cmtar.mtar_open(&tar, file.ptr, mode)) {
-            cmtar.MTAR_ESUCCESS => .{ .ctx = tar, .write = mode[0] == 'w' },
+            cmtar.MTAR_ESUCCESS => .{ .ctx = tar, .is_writing = mode[0] == 'w' },
             else => |v| errorFromC(v),
         };
     }
 
     pub fn deinit(self: *@This()) !void {
-        if (self.write) {
+        if (self.is_writing) {
             const r1 = cmtar.mtar_finalize(&self.ctx);
             if (r1 != cmtar.MTAR_ESUCCESS) return errorFromC(r1);
         }
@@ -63,7 +63,7 @@ pub const MTar = struct {
         } else false;
 
         if (!already_has) {
-            const r = cmtar.mtar_write_file_header(&self.ctx, header.ptr, @intCast(c_uint, header.len));
+            const r = cmtar.mtar_write_file_header(&self.ctx, header.ptr, @intCast(header.len));
             if (r != cmtar.MTAR_ESUCCESS) return errorFromC(r);
         } else @panic("nah"); // TODO: see if mtar library can seek to area and append
 
@@ -71,7 +71,7 @@ pub const MTar = struct {
     }
 
     pub fn write(self: WriterCtx, bytes: []const u8) Error!usize {
-        switch (cmtar.mtar_write_data(&self.mtar.ctx, bytes.ptr, @intCast(c_uint, bytes.len))) {
+        switch (cmtar.mtar_write_data(&self.mtar.ctx, bytes.ptr, @intCast(bytes.len))) {
             cmtar.MTAR_ESUCCESS => return bytes.len,
             cmtar.MTAR_EFAILURE => return error.UnknownError,
             cmtar.MTAR_EREADFAIL => return error.ReadFailure,
@@ -91,7 +91,7 @@ pub const MTar = struct {
     }
 
     pub fn read(self: ReaderCtx, buffer: []u8) Error!usize {
-        const r = cmtar.mtar_read_data(&self.mtar.ctx, buffer.ptr, @intCast(c_uint, buffer.len));
+        const r = cmtar.mtar_read_data(&self.mtar.ctx, buffer.ptr, @intCast(buffer.len));
         return switch (r) {
             cmtar.MTAR_ESUCCESS => buffer.len,
             else => return errorFromC(r),

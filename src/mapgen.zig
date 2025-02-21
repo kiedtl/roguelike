@@ -1,6 +1,7 @@
 const std = @import("std");
 const heap = std.heap;
 const mem = std.mem;
+const sort = std.sort;
 const math = std.math;
 const meta = std.meta;
 const assert = std.debug.assert;
@@ -24,8 +25,8 @@ const utils = @import("utils.zig");
 const tunneler = @import("mapgen/tunneler.zig");
 
 const LinkedList = @import("list.zig").LinkedList;
-const Generator = @import("generators.zig").Generator;
-const GeneratorCtx = @import("generators.zig").GeneratorCtx;
+// const Generator = @import("generators.zig").Generator;
+// const GeneratorCtx = @import("generators.zig").GeneratorCtx;
 const StackBuffer = @import("buffer.zig").StackBuffer;
 
 const Coord = types.Coord;
@@ -209,7 +210,7 @@ pub fn emitGif(level: usize) void {
         defer state.gpa.allocator().free(fname);
 
         var g_error: c_int = 0;
-        var g_file = giflib.EGifOpenFileName(fname.ptr, false, &g_error);
+        const g_file = giflib.EGifOpenFileName(fname.ptr, false, &g_error);
         if (g_file == null) @panic("error (EGifOpenFileName)");
 
         if (giflib.EGifPutScreenDesc(g_file, WIDTH, HEIGHT, 8, 0, null) == giflib.GIF_ERROR)
@@ -241,7 +242,7 @@ pub fn emitGif(level: usize) void {
             .{ .Red = 0x9f, .Green = 0x8f, .Blue = 0x74 },
         };
 
-        for (frames.?.items) |*frame, i| {
+        for (frames.?.items, 0..) |*frame, i| {
             const sec1: u8 = if (i == frames.?.items.len - 1) 0x04 else 0x00;
             const sec2: u8 = if (i == frames.?.items.len - 1) 0x00 else 0x01;
             const gce_str = [_]u8{
@@ -446,10 +447,10 @@ pub fn chooseRing(night: bool) ItemTemplate {
 fn getConnectionSide(parent: *const Room, child: *const Room) ?Direction {
     assert(!parent.rect.start.eq(child.rect.start)); // parent != child
 
-    const x_overlap = math.max(parent.rect.start.x, child.rect.start.x) <
-        math.min(parent.rect.end().x, child.rect.end().x);
-    const y_overlap = math.max(parent.rect.start.y, child.rect.start.y) <
-        math.min(parent.rect.end().y, child.rect.end().y);
+    const x_overlap = @max(parent.rect.start.x, child.rect.start.x) <
+        @min(parent.rect.end().x, child.rect.end().x);
+    const y_overlap = @max(parent.rect.start.y, child.rect.start.y) <
+        @min(parent.rect.end().y, child.rect.end().y);
 
     // assert that x_overlap or y_overlap, but not both
     assert(!(x_overlap and y_overlap));
@@ -498,7 +499,7 @@ fn randomWallCoord(rect: *const Rect, i: ?usize) Coord {
 
 fn _chooseLootItem(list: []const ItemTemplate, value_range: MinMax(usize), class: ?ItemTemplate.Type) ItemTemplate {
     while (true) {
-        var item_info = rng.choose2(ItemTemplate, list, "w") catch err.wat();
+        const item_info = rng.choose2(ItemTemplate, list, "w") catch err.wat();
 
         if (!value_range.contains(item_info.w))
             continue;
@@ -712,7 +713,7 @@ pub fn findIntersectingRoom(
     ignore2: ?*const Room,
     ignore_corridors: bool,
 ) ?usize {
-    for (rooms.items) |other, i| {
+    for (rooms.items, 0..) |other, i| {
         if (ignore) |ign| {
             if (other.rect.start.eq(ign.rect.start))
                 if (other.rect.width == ign.rect.width and other.rect.height == ign.rect.height)
@@ -1261,7 +1262,7 @@ pub fn selectLevelVault(level: usize) void {
     var candidates = std.ArrayList(usize).init(state.gpa.allocator());
     defer candidates.deinit();
 
-    for (state.rooms[level].items) |room, i| {
+    for (state.rooms[level].items, 0..) |room, i| {
         if (room.connections.len == 1 and
             !room.is_lair and !room.is_extension_room and !room.has_subroom and room.prefab == null and
             !state.mapgen_infos[level].has_vault)
@@ -1362,7 +1363,7 @@ pub fn selectLevelLairs(level: usize) void {
     var candidates = std.ArrayList(usize).init(state.gpa.allocator());
     defer candidates.deinit();
 
-    for (state.rooms[level].items) |room, i| {
+    for (state.rooms[level].items, 0..) |room, i| {
         if (room.connections.len == 1 and
             !room.is_extension_room and !room.has_subroom and room.prefab == null and
             room.rect.width >= LAIR_WIDTH_MIN and room.rect.height >= LAIR_HEIGHT_MIN)
@@ -1375,7 +1376,7 @@ pub fn selectLevelLairs(level: usize) void {
         return;
     rng.shuffle(usize, candidates.items);
 
-    var lair_count = rng.range(usize, 1, math.min(candidates.items.len, Configs[level].lair_max));
+    var lair_count = rng.range(usize, 1, @min(candidates.items.len, Configs[level].lair_max));
     while (lair_count > 0) : (lair_count -= 1) {
         modifyRoomToLair(&state.rooms[level].items[candidates.items[lair_count - 1]]);
     }
@@ -1417,7 +1418,7 @@ pub fn placeMoarCorridors(level: usize, alloc: mem.Allocator) void {
                 continue;
             }
 
-            var side: ?Direction = getConnectionSide(parent, child);
+            const side: ?Direction = getConnectionSide(parent, child);
             if (side == null) continue;
 
             if (createCorridor(level, parent, child, side.?)) |corridor| {
@@ -1480,12 +1481,12 @@ fn createCorridor(level: usize, parent: *Room, child: *Room, side: Direction) ?C
             fab_connectors[1] = con;
         }
     } else {
-        const rsx = math.max(parent.rect.start.x, child.rect.start.x);
-        const rex = math.min(parent.rect.end().x, child.rect.end().x);
-        const rsy = math.max(parent.rect.start.y, child.rect.start.y);
-        const rey = math.min(parent.rect.end().y, child.rect.end().y);
-        corridor_coord.x = rng.range(usize, math.min(rsx, rex), math.max(rsx, rex) - 1);
-        corridor_coord.y = rng.range(usize, math.min(rsy, rey), math.max(rsy, rey) - 1);
+        const rsx = @max(parent.rect.start.x, child.rect.start.x);
+        const rex = @min(parent.rect.end().x, child.rect.end().x);
+        const rsy = @max(parent.rect.start.y, child.rect.start.y);
+        const rey = @min(parent.rect.end().y, child.rect.end().y);
+        corridor_coord.x = rng.range(usize, @min(rsx, rex), @max(rsx, rex) - 1);
+        corridor_coord.y = rng.range(usize, @min(rsy, rey), @max(rsy, rey) - 1);
     }
 
     var room = switch (side) {
@@ -1640,7 +1641,7 @@ fn _place_rooms(rooms: *Room.ArrayList, level: usize, allocator: mem.Allocator) 
     var fab: ?*Prefab = null;
     var distance = rng.choose(usize, &Configs[level].distances[0], &Configs[level].distances[1]) catch err.wat();
     var child: Room = undefined;
-    var side = rng.chooseUnweighted(Direction, &CARDINAL_DIRECTIONS);
+    const side = rng.chooseUnweighted(Direction, &CARDINAL_DIRECTIONS);
 
     if (rng.percent(Configs[level].prefab_chance)) {
         if (distance == 0) distance += 1;
@@ -1811,7 +1812,7 @@ pub fn placeRandomRooms(
     var first: ?Room = null;
     const rooms = &state.rooms[level];
 
-    var required = Configs[level].randroom_opts.starting_fabs;
+    const required = Configs[level].randroom_opts.starting_fabs;
     var reqctr: usize = 0;
 
     while (reqctr < required.len) {
@@ -1821,8 +1822,8 @@ pub fn placeRandomRooms(
 
         const x = rng.rangeClumping(
             usize,
-            math.min(fab.width, state.WIDTH - fab.width - 1),
-            math.max(fab.width, state.WIDTH - fab.width - 1),
+            @min(fab.width, state.WIDTH - fab.width - 1),
+            @max(fab.width, state.WIDTH - fab.width - 1),
             2,
         );
         const y = rng.rangeClumping(
@@ -1835,7 +1836,7 @@ pub fn placeRandomRooms(
                 // like the previous line of code that I removed above (for
                 // future me: see git blame please). Too lazy to investigate
                 // right now though.
-                math.max(fab.height, state.HEIGHT - fab.height - 1),
+                @max(fab.height, state.HEIGHT - fab.height - 1),
             2,
         );
 
@@ -1901,26 +1902,26 @@ pub fn placeDrunkenWalkerCave(level: usize, alloc: mem.Allocator) void {
     while ((tiles_made_floors * 100 / (HEIGHT * WIDTH)) < MIN_OPEN_SPACE) {
         var candidates = StackBuffer(Coord, 4).init(null);
 
-        var gen = Generator(Coord.iterCardinalNeighbors).init(walker);
-        while (gen.next()) |neighbor|
-            if (state.dungeon.at(neighbor).type == .Wall) {
-                candidates.append(neighbor) catch err.wat();
-            };
-
-        // for (&CARDINAL_DIRECTIONS) |d| if (walker.move(d, state.mapgeometry)) |neighbor| {
+        // var gen = Generator(Coord.iterCardinalNeighbors).init(walker);
+        // while (gen.next()) |neighbor|
         //     if (state.dungeon.at(neighbor).type == .Wall) {
         //         candidates.append(neighbor) catch err.wat();
-        //     }
-        // };
+        //     };
+
+        for (&CARDINAL_DIRECTIONS) |d| if (walker.move(d, state.mapgeometry)) |neighbor| {
+            if (state.dungeon.at(neighbor).type == .Wall) {
+                candidates.append(neighbor) catch err.wat();
+            }
+        };
 
         if (candidates.len == 0) {
-            if (visited_stack.items.len > 0) {
-                walker = visited_stack.pop();
+            if (visited_stack.pop()) |w| {
+                walker = w;
                 continue;
             } else break;
         }
 
-        var picked = rng.chooseUnweighted(Coord, candidates.constSlice());
+        const picked = rng.chooseUnweighted(Coord, candidates.constSlice());
         state.dungeon.at(picked).type = .Floor;
         tiles_made_floors += 1;
         visited_stack.append(walker) catch err.wat();
@@ -1930,7 +1931,7 @@ pub fn placeDrunkenWalkerCave(level: usize, alloc: mem.Allocator) void {
     var walls_to_remove = CoordArrayList.init(alloc);
     defer walls_to_remove.deinit();
 
-    var gen = Generator(Rect.rectIter).init(state.mapRect(level));
+    var gen = state.mapRect(level).iter();
     while (gen.next()) |coord| {
         if (state.dungeon.at(coord).type == .Wall and
             state.dungeon.neighboringOfType(coord, true, .Floor) >= 4)
@@ -2064,7 +2065,7 @@ pub fn placeBSPRooms(grandma_rect: Rect, _min_room_width: usize, _min_room_heigh
 
                 var has_child = false;
                 const prospective_children = [_]Rect{ new1, new2 };
-                for (prospective_children) |prospective_child, i| {
+                for (prospective_children, 0..) |prospective_child, i| {
                     const node = try alloc.create(Self);
                     node.* = .{ .rect = prospective_child, .group = undefined, .parent = cur };
                     cur.childs[i] = node;
@@ -2210,7 +2211,7 @@ pub fn _strewItemsAround(room: *Room, max_items: usize) void {
 pub fn _placeLootChest(room: *Room, max_items: usize) void {
     var tries: usize = 1000;
     const container_coord = while (tries > 0) : (tries -= 1) {
-        var item_coord = room.rect.randomCoord();
+        const item_coord = room.rect.randomCoord();
         if (isTileAvailable(item_coord) and
             !state.dungeon.at(item_coord).prison and
             utils.walkableNeighbors(item_coord, false, .{}) >= 3)
@@ -2294,10 +2295,13 @@ pub fn placeItems(level: usize) void {
         const fill = rng.range(usize, 1, container.capacity - container.items.len);
 
         const maybe_item_list: ?[]*const Prop = switch (container.type) {
-            .Drinkables => surfaces.bottle_props.items,
-            .Smackables => surfaces.weapon_props.items,
-            .Evocables => surfaces.tools_props.items,
-            .Utility => if (Configs[level].utility_items.*.len > 0) Configs[level].utility_items.* else null,
+            .Drinkables => @as([]*const Prop, @ptrCast(surfaces.bottle_props.items)),
+            .Smackables => @as([]*const Prop, @ptrCast(surfaces.weapon_props.items)),
+            .Evocables => @as([]*const Prop, @ptrCast(surfaces.tools_props.items)),
+            .Utility => if (Configs[level].utility_items.*.len > 0)
+                @as([]*const Prop, @ptrCast(Configs[level].utility_items.*))
+            else
+                null,
             else => null,
         };
 
@@ -2395,7 +2399,7 @@ pub fn placeMobs(level: usize, alloc: mem.Allocator) void {
         if (room.type == .Corridor and !Configs[level].allow_spawn_in_corridors) continue;
         if (room.rect.height * room.rect.width < 25) continue;
 
-        const vault_type: ?usize = if (room.is_vault) |v| @enumToInt(v) else null;
+        const vault_type: ?usize = if (room.is_vault) |v| @intFromEnum(v) else null;
 
         const max_crowd = if (room.is_lair)
             rng.range(usize, 1, 2)
@@ -2423,7 +2427,7 @@ pub fn placeMobs(level: usize, alloc: mem.Allocator) void {
                 const post_coord = room.rect.randomCoord();
 
                 {
-                    var gen = Generator(Rect.rectIter).init(mob.mobAreaRect(post_coord));
+                    var gen = mob.mobAreaRect(post_coord).iter();
                     while (gen.next()) |mobcoord|
                         if (!isTileAvailable(mobcoord) or state.dungeon.at(mobcoord).prison)
                             continue :loop;
@@ -2561,7 +2565,7 @@ pub fn setVaultFeatures(room: *Room) void {
                 const coord = Coord.new2(level, x, y);
 
                 // Material
-                state.dungeon.at(coord).material = VAULT_MATERIALS[@enumToInt(room.is_vault.?)];
+                state.dungeon.at(coord).material = VAULT_MATERIALS[@intFromEnum(room.is_vault.?)];
 
                 // Door
                 // XXX: hacky, in the future we should store door coords.
@@ -2576,14 +2580,14 @@ pub fn setVaultFeatures(room: *Room) void {
                         state.dungeon.at(coord).surface.?.Machine.disabled = true;
                         state.dungeon.at(coord).surface = null;
                     }
-                    _place_machine(coord, VAULT_DOORS[@enumToInt(room.is_vault.?)]);
+                    _place_machine(coord, VAULT_DOORS[@intFromEnum(room.is_vault.?)]);
                 }
             }
         }
     }
 
     // Subroom, if any
-    if (VAULT_SUBROOMS[@enumToInt(room.is_vault.?)]) |fab_name| {
+    if (VAULT_SUBROOMS[@intFromEnum(room.is_vault.?)]) |fab_name| {
         _ = placeSubroom(room, &Rect{
             .start = Coord.new(0, 0),
             .width = room.rect.width,
@@ -2725,7 +2729,7 @@ pub fn placeRoomFeatures(level: usize, alloc: mem.Allocator) void {
             forbidden_range = range_ind;
             const range = ranges[range_ind];
 
-            const tries = math.max(rect.width, rect.height) * 150 / 100;
+            const tries = @max(rect.width, rect.height) * 150 / 100;
             props += _placePropAlongRange(rect.start.z, range, &prop, tries);
 
             continue;
@@ -2781,7 +2785,7 @@ pub fn placeRoomFeatures(level: usize, alloc: mem.Allocator) void {
                 .Machine => {
                     if (machs < 1) {
                         assert(Configs[level].machines.len > 0);
-                        var m = rng.chooseUnweighted(*const Machine, Configs[level].machines);
+                        const m = rng.chooseUnweighted(*const Machine, Configs[level].machines);
                         _place_machine(coord, m);
                         machs += 1;
                     }
@@ -2810,7 +2814,7 @@ pub fn placeRoomTerrain(level: usize) void {
     var weights = StackBuffer(usize, surfaces.TERRAIN.len).init(null);
     var terrains = StackBuffer(*const surfaces.Terrain, surfaces.TERRAIN.len).init(null);
     for (&surfaces.TERRAIN) |terrain| {
-        var allowed_for_level = for (terrain.for_levels) |allowed_id| {
+        const allowed_for_level = for (terrain.for_levels) |allowed_id| {
             if (mem.eql(u8, allowed_id, state.levelinfo[level].id) or
                 mem.eql(u8, allowed_id, "ANY"))
             {
@@ -2869,7 +2873,7 @@ pub fn placeRoomTerrain(level: usize) void {
                 }
             },
             .RoomSpotty => |r| {
-                const count = math.min(r, (rect.width * rect.height) * r / 100);
+                const count = @min(r, (rect.width * rect.height) * r / 100);
 
                 var placed: usize = 0;
                 while (placed < count) {
@@ -2913,8 +2917,8 @@ pub fn placeStair(level: usize, dest_floor: usize, alloc: mem.Allocator) void {
     //
     var locations = CoordArrayList.init(alloc);
     defer locations.deinit();
-    coord_search: for (state.dungeon.map[level]) |*row, y| {
-        for (row) |_, x| {
+    coord_search: for (&state.dungeon.map[level], 0..) |*row, y| {
+        for (row, 0..) |_, x| {
             const coord = Coord.new2(level, x, y);
 
             for (&DIRECTIONS) |d| if (coord.move(d, state.mapgeometry)) |neighbor| {
@@ -2947,7 +2951,7 @@ pub fn placeStair(level: usize, dest_floor: usize, alloc: mem.Allocator) void {
     // Map out the locations in a grid, so that we can easily tell what's in the
     // location list without scanning the whole list each time.
     var location_map: [HEIGHT][WIDTH]bool = undefined;
-    for (location_map) |*row| for (row) |*cell| {
+    for (&location_map) |*row| for (row) |*cell| {
         cell.* = false;
     };
     for (locations.items) |c| {
@@ -2955,7 +2959,7 @@ pub fn placeStair(level: usize, dest_floor: usize, alloc: mem.Allocator) void {
     }
 
     var walkability_map: [HEIGHT][WIDTH]bool = undefined;
-    for (walkability_map) |*row, y| for (row) |*cell, x| {
+    for (&walkability_map, 0..) |*row, y| for (row, 0..) |*cell, x| {
         const coord = Coord.new2(level, x, y);
         cell.* = location_map[y][x] or
             state.is_walkable(coord, .{ .ignore_mobs = true });
@@ -2964,7 +2968,7 @@ pub fn placeStair(level: usize, dest_floor: usize, alloc: mem.Allocator) void {
     // We'll use dijkstra to create a "ranking matrix", which we'll use to
     // sort out the candidates later.
     var stair_dijkmap: [HEIGHT][WIDTH]?f64 = undefined;
-    for (stair_dijkmap) |*row| for (row) |*cell| {
+    for (&stair_dijkmap) |*row| for (row) |*cell| {
         cell.* = null;
     };
 
@@ -3009,7 +3013,7 @@ pub fn placeStair(level: usize, dest_floor: usize, alloc: mem.Allocator) void {
             return map[a.y][a.x].? < map[b.y][b.x].?;
         }
     };
-    std.sort.sort(Coord, locations.items, &stair_dijkmap, _sortFunc.f);
+    std.sort.insertion(Coord, locations.items, &stair_dijkmap, _sortFunc.f);
 
     // Create some stairs!
     const up_staircase = locations.items[locations.items.len - 1];
@@ -3037,7 +3041,7 @@ pub fn placeEntry(level: usize, alloc: mem.Allocator) bool {
     var reciever_locations = CoordArrayList.init(alloc);
     defer reciever_locations.deinit();
 
-    coord_search: for (state.dungeon.map[level]) |*row, y| for (row) |_, x| {
+    coord_search: for (&state.dungeon.map[level], 0..) |*row, y| for (row, 0..) |_, x| {
         const coord = Coord.new2(level, x, y);
 
         for (&DIRECTIONS) |d| if (coord.move(d, state.mapgeometry)) |neighbor| {
@@ -3193,7 +3197,7 @@ fn createBlob(
     const S = struct {
         fn cellularAutomataRound(buf: *[WIDTH][HEIGHT]usize, births: *const [9]u8, survivals: *const [9]u8) void {
             var buf2: [WIDTH][HEIGHT]usize = undefined;
-            for (buf) |*col, x| for (col) |*cell, y| {
+            for (buf, 0..) |*col, x| for (col, 0..) |*cell, y| {
                 buf2[x][y] = cell.*;
             };
 
@@ -3534,7 +3538,7 @@ pub fn initLevel(level: usize) void {
         }
 
         for (state.levelinfo[level].stairs) |maybe_stair| if (maybe_stair) |dest_stair| {
-            const floor = for (state.levelinfo) |levelinfo, i| {
+            const floor = for (state.levelinfo, 0..) |levelinfo, i| {
                 if (mem.eql(u8, levelinfo.name, dest_stair)) {
                     break i;
                 }
@@ -3621,7 +3625,7 @@ pub const LevelAnalysis = struct {
         slot.c += 1;
     }
 
-    pub fn jsonStringify(val: *const @This(), opts: std.json.StringifyOptions, stream: anytype) !void {
+    pub fn jsonStringify(val: *const @This(), stream: anytype) !void {
         const object: struct {
             prefabs: []const Pair,
             items: []const Pair2,
@@ -3638,7 +3642,8 @@ pub const LevelAnalysis = struct {
             .floor_seed = val.floor_seed,
         };
 
-        try std.json.stringify(object, opts, stream);
+        //try std.json.stringify(object, .{}, stream);
+        try stream.write(object);
     }
 };
 
@@ -3785,13 +3790,13 @@ pub const Prefab = struct {
     player_position: ?Coord = null,
     height: usize = 0,
     width: usize = 0,
-    content: [40][60]FabTile = undefined,
-    connections: [40]?Connection = undefined,
+    content: [25][40]FabTile = undefined,
+    connections: [30]?Connection = undefined,
     features: [128]?Feature = [_]?Feature{null} ** 128,
     features_global: [128]bool = [_]bool{false} ** 128,
-    mobs: [45]?FeatureMob = [_]?FeatureMob{null} ** 45,
-    prisons: StackBuffer(Rect, 16) = StackBuffer(Rect, 16).init(null),
-    subroom_areas: StackBuffer(SubroomArea, 8) = StackBuffer(SubroomArea, 8).init(null),
+    mobs: [16]?FeatureMob = [_]?FeatureMob{null} ** 16,
+    prisons: StackBuffer(Rect, 6) = StackBuffer(Rect, 6).init(null),
+    subroom_areas: StackBuffer(SubroomArea, 4) = StackBuffer(SubroomArea, 4).init(null),
     whitelist: StackBuffer(usize, LEVELS) = StackBuffer(usize, LEVELS).init(null),
     stockpile: ?Rect = null,
     input: ?Rect = null,
@@ -3843,7 +3848,7 @@ pub const Prefab = struct {
     };
 
     pub const FeatureMob = struct {
-        id: [32:0]u8,
+        id: [16:0]u8,
         spawn_at: Coord,
         work_at: ?Coord,
     };
@@ -3860,15 +3865,16 @@ pub const Prefab = struct {
             t: *const Container,
         },
         Cpitem: struct {
-            ts: StackBuffer(?*const Prop, 16),
-            we: StackBuffer(usize, 16),
+            ts: StackBuffer(?*const Prop, 4),
+            we: StackBuffer(usize, 4),
         },
         Poster: *const Poster,
+        // CLEANUP: use ids
         Machine: struct {
-            id: [32:0]u8,
-            points: StackBuffer(Coord, 16),
+            id: [24:0]u8,
+            points: StackBuffer(Coord, 4),
         },
-        Prop: [32:0]u8,
+        Prop: [24:0]u8,
         Stair: surfaces.Stair,
         Key: surfaces.Stair.Type,
     };
@@ -3887,14 +3893,14 @@ pub const Prefab = struct {
 
         self.level_uses[level] = 0;
 
-        for (self.connections) |maybe_con, i| {
+        for (self.connections, 0..) |maybe_con, i| {
             if (maybe_con == null) break;
             self.connections[i].?.used = false;
         }
     }
 
     pub fn useConnector(self: *Prefab, c: Coord) !void {
-        for (self.connections) |maybe_con, i| {
+        for (self.connections, 0..) |maybe_con, i| {
             const con = maybe_con orelse break;
             if (con.c.eq(c)) {
                 if (con.used) return error.ConnectorAlreadyUsed;
@@ -3924,7 +3930,7 @@ pub const Prefab = struct {
         }
 
         new.transforms.clear();
-        for (new.content) |*row| mem.set(FabTile, row, .Wall);
+        for (&new.content) |*row| @memset(row, .Wall);
 
         var width: usize = undefined;
         var height: usize = undefined;
@@ -3935,7 +3941,7 @@ pub const Prefab = struct {
                 height = f.width;
                 if (width >= f.content[0].len or height >= f.content.len)
                     return error.OverflowingTransform;
-                for (f.content) |row, y| for (row) |cell, x| {
+                for (f.content, 0..) |row, y| for (row, 0..) |cell, x| {
                     if (y >= width or x >= height) continue;
                     new.content[x][(width - 1) - y] = cell;
                 };
@@ -3945,7 +3951,7 @@ pub const Prefab = struct {
             .Turn2 => {
                 width = f.width;
                 height = f.height;
-                for (f.content) |row, y| for (row) |cell, x| {
+                for (f.content, 0..) |row, y| for (row, 0..) |cell, x| {
                     if (y >= height or x >= width) continue;
                     new.content[(height - 1) - y][(width - 1) - x] = cell;
                 };
@@ -3957,7 +3963,7 @@ pub const Prefab = struct {
                 height = f.width;
                 if (width >= f.content[0].len or height >= f.content.len)
                     return error.OverflowingTransform;
-                for (f.content) |row, y| for (row) |cell, x| {
+                for (f.content, 0..) |row, y| for (row, 0..) |cell, x| {
                     if (y >= width or x >= height) continue;
                     new.content[(height - 1) - x][y] = cell;
                 };
@@ -4009,7 +4015,7 @@ pub const Prefab = struct {
         f.width = w;
         f.height = y;
 
-        for (&f.connections) |*con, i| {
+        for (&f.connections, 0..) |*con, i| {
             if (con.*) |c| {
                 if (c.c.x == 0) {
                     f.connections[i].?.d = .West;
@@ -4040,15 +4046,15 @@ pub const Prefab = struct {
     //
     pub fn parseAndLoad(name: []const u8, from: []const u8) anyerror!void {
         var f: Prefab = .{};
-        for (f.content) |*row| mem.set(FabTile, row, .Wall);
-        mem.set(?Connection, &f.connections, null);
+        for (&f.content) |*row| @memset(row, .Wall);
+        @memset(&f.connections, null);
 
         var ci: usize = 0; // index for f.connections
         var cm: usize = 0; // index for f.mobs
         var w: usize = 0;
         var y: usize = 0;
 
-        var lines = mem.split(u8, from, "\n");
+        var lines = mem.splitScalar(u8, from, '\n');
         while (lines.next()) |line| {
             if (line.len == 0) {
                 continue;
@@ -4068,13 +4074,13 @@ pub const Prefab = struct {
                     f.width = 0;
                     f.prisons.clear();
                     f.subroom_areas.clear();
-                    for (f.content) |*row| mem.set(FabTile, row, .Wall);
-                    mem.set(?Connection, &f.connections, null);
-                    for (&f.features) |*feat, i| {
+                    for (&f.content) |*row| @memset(row, .Wall);
+                    @memset(&f.connections, null);
+                    for (&f.features, 0..) |*feat, i| {
                         if (!f.features_global[i])
                             feat.* = null;
                     }
-                    mem.set(?FeatureMob, &f.mobs, null);
+                    @memset(&f.mobs, null);
                     f.stockpile = null;
                     f.input = null;
                     f.output = null;
@@ -4082,16 +4088,16 @@ pub const Prefab = struct {
                     f.tunneler_inset = false;
                 },
                 ':' => {
-                    var words = mem.tokenize(u8, line[1..], " ");
+                    var words = mem.tokenizeScalar(u8, line[1..], ' ');
                     const key = words.next() orelse return error.MalformedMetadata;
                     const val = words.next() orelse "";
 
-                    // At some point I really need to sit down and cleanup this mess
+                    // At some point I really need to sit down and cleanup this horrid mess
                     //
                     if (mem.eql(u8, key, "begin_prefab")) {
                         if (val.len == 0) return error.ExpectedMetadataValue;
                         const next = lines.next() orelse return error.UnexpectedEndOfFile;
-                        const ptr = @ptrToInt(next.ptr) - @ptrToInt(from.ptr);
+                        const ptr = @intFromPtr(next.ptr) - @intFromPtr(from.ptr);
                         try parseAndLoad(val, from[ptr..]);
                         break;
                     } else if (mem.eql(u8, key, "invisible")) {
@@ -4166,7 +4172,7 @@ pub const Prefab = struct {
                         const maybe_work_at_str: ?[]const u8 = words.next() orelse null;
 
                         var spawn_at = Coord.new(0, 0);
-                        var spawn_at_tokens = mem.tokenize(u8, spawn_at_str, ",");
+                        var spawn_at_tokens = mem.tokenizeScalar(u8, spawn_at_str, ',');
                         const spawn_at_str_a = spawn_at_tokens.next() orelse return error.InvalidMetadataValue;
                         const spawn_at_str_b = spawn_at_tokens.next() orelse return error.InvalidMetadataValue;
                         spawn_at.x = std.fmt.parseInt(usize, spawn_at_str_a, 0) catch return error.InvalidMetadataValue;
@@ -4181,7 +4187,7 @@ pub const Prefab = struct {
 
                         if (maybe_work_at_str) |work_at_str| {
                             var work_at = Coord.new(0, 0);
-                            var work_at_tokens = mem.tokenize(u8, work_at_str, ",");
+                            var work_at_tokens = mem.tokenizeScalar(u8, work_at_str, ',');
                             const work_at_str_a = work_at_tokens.next() orelse return error.InvalidMetadataValue;
                             const work_at_str_b = work_at_tokens.next() orelse return error.InvalidMetadataValue;
                             work_at.x = std.fmt.parseInt(usize, work_at_str_a, 0) catch return error.InvalidMetadataValue;
@@ -4195,7 +4201,7 @@ pub const Prefab = struct {
                         var width: usize = 0;
                         var height: usize = 0;
 
-                        var rect_start_tokens = mem.tokenize(u8, val, ",");
+                        var rect_start_tokens = mem.tokenizeScalar(u8, val, ',');
                         const rect_start_str_a = rect_start_tokens.next() orelse return error.InvalidMetadataValue;
                         const rect_start_str_b = rect_start_tokens.next() orelse return error.InvalidMetadataValue;
                         rect_start.x = std.fmt.parseInt(usize, rect_start_str_a, 0) catch return error.InvalidMetadataValue;
@@ -4229,7 +4235,7 @@ pub const Prefab = struct {
                         var width: usize = 0;
                         var height: usize = 0;
 
-                        var rect_start_tokens = mem.tokenize(u8, val, ",");
+                        var rect_start_tokens = mem.tokenizeScalar(u8, val, ',');
                         const rect_start_str_a = rect_start_tokens.next() orelse return error.InvalidMetadataValue;
                         const rect_start_str_b = rect_start_tokens.next() orelse return error.InvalidMetadataValue;
                         rect_start.x = std.fmt.parseInt(usize, rect_start_str_a, 0) catch return error.InvalidMetadataValue;
@@ -4255,7 +4261,7 @@ pub const Prefab = struct {
                         var width: usize = 0;
                         var height: usize = 0;
 
-                        var rect_start_tokens = mem.tokenize(u8, val, ",");
+                        var rect_start_tokens = mem.tokenizeScalar(u8, val, ',');
                         const rect_start_str_a = rect_start_tokens.next() orelse return error.InvalidMetadataValue;
                         const rect_start_str_b = rect_start_tokens.next() orelse return error.InvalidMetadataValue;
                         rect_start.x = std.fmt.parseInt(usize, rect_start_str_a, 0) catch return error.InvalidMetadataValue;
@@ -4274,7 +4280,7 @@ pub const Prefab = struct {
                         var width: usize = 0;
                         var height: usize = 0;
 
-                        var rect_start_tokens = mem.tokenize(u8, val, ",");
+                        var rect_start_tokens = mem.tokenizeScalar(u8, val, ',');
                         const rect_start_str_a = rect_start_tokens.next() orelse return error.InvalidMetadataValue;
                         const rect_start_str_b = rect_start_tokens.next() orelse return error.InvalidMetadataValue;
                         rect_start.x = std.fmt.parseInt(usize, rect_start_str_a, 0) catch return error.InvalidMetadataValue;
@@ -4293,7 +4299,7 @@ pub const Prefab = struct {
                         var width: usize = 0;
                         var height: usize = 0;
 
-                        var rect_start_tokens = mem.tokenize(u8, val, ",");
+                        var rect_start_tokens = mem.tokenizeScalar(u8, val, ',');
                         const rect_start_str_a = rect_start_tokens.next() orelse return error.InvalidMetadataValue;
                         const rect_start_str_b = rect_start_tokens.next() orelse return error.InvalidMetadataValue;
                         rect_start.x = std.fmt.parseInt(usize, rect_start_str_a, 0) catch return error.InvalidMetadataValue;
@@ -4308,7 +4314,7 @@ pub const Prefab = struct {
                     } else return error.InvalidMetadataValue;
                 },
                 '@' => {
-                    var words = mem.tokenize(u8, line, " ");
+                    var words = mem.tokenizeScalar(u8, line, ' ');
                     _ = words.next(); // Skip the '@<ident>' bit
 
                     const is_global = line[1] == '@';
@@ -4322,7 +4328,7 @@ pub const Prefab = struct {
                                 const mob_t = mobs.findMobById(id orelse return error.MalformedFeatureDefinition) orelse
                                     return error.NoSuchMob;
 
-                                const ind = @ptrToInt((words.next() orelse return error.MalformedFeatureDefinition).ptr) - @ptrToInt(line.ptr);
+                                const ind = @intFromPtr((words.next() orelse return error.MalformedFeatureDefinition).ptr) - @intFromPtr(line.ptr);
                                 const rest = line[ind..];
                                 var cbf_p = cbf.Parser{ .input = rest };
                                 var res = try cbf_p.parse(state.gpa.allocator());
@@ -4340,7 +4346,7 @@ pub const Prefab = struct {
                                 f.features[identifier] = Feature{ .CCont = .{ .t = container } };
                                 f.features_global[identifier] = is_global;
                             } else if (mem.eql(u8, feature_type, "Cpitem")) {
-                                const rest = line[@ptrToInt((id orelse return error.MalformedFeatureDefinition).ptr) - @ptrToInt(line.ptr) ..];
+                                const rest = line[@intFromPtr((id orelse return error.MalformedFeatureDefinition).ptr) - @intFromPtr(line.ptr) ..];
                                 var cbf_p = cbf.Parser{ .input = rest };
                                 var res = try cbf_p.parse(state.gpa.allocator());
                                 defer cbf.Parser.deinit(&res);
@@ -4352,8 +4358,8 @@ pub const Prefab = struct {
                                 //     return error.MalformedFeatureDefinition;
 
                                 var feature = Feature{ .Cpitem = .{
-                                    .ts = StackBuffer(?*const Prop, 16).init(null),
-                                    .we = StackBuffer(usize, 16).init(null),
+                                    .ts = StackBuffer(?*const Prop, 4).init(null),
+                                    .we = StackBuffer(usize, 4).init(null),
                                 } };
                                 for (res.items[0].value.List.items) |entry| {
                                     const weight = entry.value.List.items[1].value.Usize;
@@ -4369,7 +4375,7 @@ pub const Prefab = struct {
                                 f.features[identifier] = feature;
                                 f.features_global[identifier] = is_global;
                             } else if (mem.eql(u8, feature_type, "Ckey")) {
-                                const rest = line[@ptrToInt((id orelse return error.MalformedFeatureDefinition).ptr) - @ptrToInt(line.ptr) ..];
+                                const rest = line[@intFromPtr((id orelse return error.MalformedFeatureDefinition).ptr) - @intFromPtr(line.ptr) ..];
                                 var cbf_p = cbf.Parser{ .input = rest };
                                 var res = try cbf_p.parse(state.gpa.allocator());
                                 defer cbf.Parser.deinit(&res);
@@ -4382,7 +4388,7 @@ pub const Prefab = struct {
                                 };
                                 f.features[identifier] = Feature{ .Key = artoo };
                             } else if (mem.eql(u8, feature_type, "Cstair")) {
-                                const rest = line[@ptrToInt((id orelse return error.MalformedFeatureDefinition).ptr) - @ptrToInt(line.ptr) ..];
+                                const rest = line[@intFromPtr((id orelse return error.MalformedFeatureDefinition).ptr) - @intFromPtr(line.ptr) ..];
                                 var cbf_p = cbf.Parser{ .input = rest };
                                 var res = try cbf_p.parse(state.gpa.allocator());
                                 defer cbf.Parser.deinit(&res);
@@ -4441,15 +4447,15 @@ pub const Prefab = struct {
                             f.features_global[identifier] = is_global;
                         },
                         'p' => {
-                            f.features[identifier] = Feature{ .Prop = [_:0]u8{0} ** 32 };
+                            f.features[identifier] = Feature{ .Prop = [_:0]u8{0} ** 24 };
                             f.features_global[identifier] = is_global;
-                            mem.copy(u8, &f.features[identifier].?.Prop, id orelse return error.MalformedFeatureDefinition);
+                            mem.copyForwards(u8, &f.features[identifier].?.Prop, id orelse return error.MalformedFeatureDefinition);
                         },
                         'm' => {
-                            var points = StackBuffer(Coord, 16).init(null);
+                            var points = StackBuffer(Coord, 4).init(null);
                             while (words.next()) |word| {
                                 var coord = Coord.new2(0, 0, 0);
-                                var coord_tokens = mem.tokenize(u8, word, ",");
+                                var coord_tokens = mem.tokenizeScalar(u8, word, ',');
                                 const coord_str_a = coord_tokens.next() orelse return error.InvalidMetadataValue;
                                 const coord_str_b = coord_tokens.next() orelse return error.InvalidMetadataValue;
                                 coord.x = std.fmt.parseInt(usize, coord_str_a, 0) catch return error.InvalidMetadataValue;
@@ -4458,11 +4464,11 @@ pub const Prefab = struct {
                             }
                             f.features[identifier] = Feature{
                                 .Machine = .{
-                                    .id = [_:0]u8{0} ** 32,
+                                    .id = [_:0]u8{0} ** 24,
                                     .points = points,
                                 },
                             };
-                            mem.copy(u8, &f.features[identifier].?.Machine.id, id orelse return error.MalformedFeatureDefinition);
+                            mem.copyForwards(u8, &f.features[identifier].?.Machine.id, id orelse return error.MalformedFeatureDefinition);
                             f.features_global[identifier] = is_global;
                         },
                         'i' => {
@@ -4519,7 +4525,7 @@ pub const Prefab = struct {
                             '=' => .Ring,
                             '?' => .Any,
                             'α'...'δ' => FabTile{ .LevelFeature = @as(usize, c - 'α') },
-                            '0'...'9', 'a'...'z' => FabTile{ .Feature = @intCast(u8, c) },
+                            '0'...'9', 'a'...'z' => FabTile{ .Feature = @intCast(c) },
                             'L' => .Loot1,
                             'R' => .RareLoot,
                             'C' => .Corpse,
@@ -4557,6 +4563,7 @@ pub const Prefab = struct {
 pub const PrefabArrayList = std.ArrayList(Prefab);
 
 fn _readPrefab(name: []const u8, fab_f: std.fs.File, buf: []u8) void {
+    //std.log.info("Loading {s}", .{name});
     const read = fab_f.readAll(buf[0..]) catch err.wat();
 
     Prefab.parseAndLoad(name, buf[0..read]) catch |e| {
@@ -4587,7 +4594,7 @@ fn _readPrefab(name: []const u8, fab_f: std.fs.File, buf: []u8) void {
             error.OverflowingTransform => "Requested transform would overflow limits",
             else => "Unknown error",
         };
-        std.log.err("{s}: Couldn't load prefab: {s} [{s}]", .{ name, msg, e });
+        std.log.err("{s}: Couldn't load prefab: {s} [{}]", .{ name, msg, e });
     };
 }
 
@@ -4605,15 +4612,18 @@ pub fn readPrefabs(alloc: mem.Allocator) void {
 
         var fabs_dir_iterator = fabs_dir.iterate();
         while (fabs_dir_iterator.next() catch err.wat()) |fab_file| {
-            if (fab_file.kind != .File) continue;
-            var fab_f = fabs_dir.openFile(fab_file.name, .{ .read = true }) catch err.wat();
+            if (fab_file.kind != .file) continue;
+            var fab_f = fabs_dir.openFile(fab_file.name, .{}) catch err.wat();
             defer fab_f.close();
             _readPrefab(fab_file.name, fab_f, &buf);
         }
     }
 
+    std.log.info("shuffle", .{});
     rng.shuffle(Prefab, s_fabs.items);
-    std.sort.insertionSort(Prefab, s_fabs.items, {}, Prefab.lesserThan);
+    std.log.info("sort", .{});
+    std.sort.insertion(Prefab, s_fabs.items, {}, Prefab.lesserThan);
+    std.log.info("done", .{});
 
     std.log.info("Loaded {} prefabs.", .{n_fabs.items.len + s_fabs.items.len});
 }
@@ -4629,7 +4639,7 @@ pub const LevelConfig = struct {
     shrink_corridors_to_fit: bool = true,
     prefab_chance: usize,
 
-    mapgen_func: fn (usize, mem.Allocator) void = placeTunnelsThenRandomRooms,
+    mapgen_func: *const fn (usize, mem.Allocator) void = placeTunnelsThenRandomRooms,
 
     tunneler_opts: tunneler.TunnelerOptions = .{},
     randroom_opts: RandomRoomOpts = .{},
@@ -4690,7 +4700,7 @@ pub const LevelConfig = struct {
 
     blobs: []const BlobConfig = &[_]BlobConfig{},
 
-    pub const LevelFeatureFunc = fn (usize, Coord, *const Room, *const Prefab, mem.Allocator) void;
+    pub const LevelFeatureFunc = *const fn (usize, Coord, *const Room, *const Prefab, mem.Allocator) void;
 
     pub const RequiredMob = struct { count: usize, template: *const mobs.MobTemplate };
 
@@ -4702,23 +4712,22 @@ pub const LevelConfig = struct {
 
 // -----------------------------------------------------------------------------
 
-pub fn _buildRandomRoomOpts(comptime prefabs: []const []const u8) RandomRoomOpts {
-    comptime var fabs: [prefabs.len]RandomRoomOpts.StartingFab = undefined;
-    inline for (prefabs) |fab, i| {
-        fabs[i] = .{ .n = fab };
-    }
-    return RandomRoomOpts{
-        .starting_fabs = &fabs,
-    };
-}
-
 pub fn createLevelConfig_PRI(crowd: usize, statues: bool, comptime prefabs: []const []const u8) LevelConfig {
     return LevelConfig{
         .required_prefabs = prefabs,
         .prefab_chance = 20,
         .mapgen_iters = 2048,
         .mapgen_func = placeRandomRooms,
-        .randroom_opts = _buildRandomRoomOpts(prefabs),
+        .randroom_opts = genopts: {
+            var c_fabs: [prefabs.len]RandomRoomOpts.StartingFab = undefined;
+            inline for (prefabs, 0..) |fab, i| {
+                c_fabs[i] = .{ .n = fab };
+            }
+            const fabs = c_fabs;
+            break :genopts RandomRoomOpts{
+                .starting_fabs = &fabs,
+            };
+        },
         .level_features = [_]?LevelConfig.LevelFeatureFunc{
             levelFeaturePrisoners,
             levelFeaturePrisonersMaybe,
@@ -4737,7 +4746,7 @@ const HLD_BASE_LEVELCONFIG = LevelConfig{
     .required_prefabs = &[_][]const u8{"HLD_first_aid"},
     .tunneler_opts = .{
         .max_iters = 450,
-        .max_length = math.max(WIDTH, HEIGHT),
+        .max_length = @max(WIDTH, HEIGHT),
         .turn_chance = 0,
         .branch_chance = 5,
         .reduce_branch_chance = true,
@@ -4780,7 +4789,7 @@ pub fn createLevelConfig_LAB(comptime prefabs: []const []const u8) LevelConfig {
         .required_prefabs = prefabs,
         .tunneler_opts = .{
             .max_iters = 450,
-            .max_length = math.max(WIDTH, HEIGHT),
+            .max_length = @max(WIDTH, HEIGHT),
             .turn_chance = 0,
             .branch_chance = 5,
             .reduce_branch_chance = true,
@@ -4949,7 +4958,7 @@ pub fn createLevelConfig_WRK(crowd: usize, comptime prefabs: []const []const u8)
     return LevelConfig{
         .required_prefabs = prefabs,
         .tunneler_opts = .{
-            .max_length = math.max(WIDTH, HEIGHT),
+            .max_length = @max(WIDTH, HEIGHT),
             .turn_chance = 0,
             .branch_chance = 5,
             .allow_chaotic_branching = false,

@@ -3,12 +3,13 @@ const build_options = @import("build_options");
 
 const std = @import("std");
 const math = std.math;
+const sort = std.sort;
 const assert = std.debug.assert;
 const mem = std.mem;
 const meta = std.meta;
 
-const Generator = @import("generators.zig").Generator;
-const GeneratorCtx = @import("generators.zig").GeneratorCtx;
+// const Generator = @import("generators.zig").Generator;
+// const GeneratorCtx = @import("generators.zig").GeneratorCtx;
 const StackBuffer = @import("buffer.zig").StackBuffer;
 
 const ai = @import("ai.zig");
@@ -69,7 +70,7 @@ const WIDTH = state.WIDTH;
 
 pub fn log(
     comptime message_level: std.log.Level,
-    comptime scope: @Type(.EnumLiteral),
+    comptime scope: @Type(.enum_literal),
     comptime format: []const u8,
     args: anytype,
 ) void {
@@ -80,7 +81,7 @@ pub fn log(
 // Install a panic handler that tries to shutdown termbox and print the RNG
 // seed before calling sentry and then the default panic handler.
 var __panic_stage: usize = 0;
-pub fn panic(msg: []const u8, trace: ?*std.builtin.StackTrace) noreturn {
+pub fn panic(msg: []const u8, trace: ?*std.builtin.StackTrace, x: ?usize) noreturn {
     nosuspend switch (__panic_stage) {
         0 => {
             __panic_stage = 1;
@@ -90,7 +91,7 @@ pub fn panic(msg: []const u8, trace: ?*std.builtin.StackTrace) noreturn {
             if (!state.sentry_disabled) {
                 var membuf: [65535]u8 = undefined;
                 var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
-                var alloc = fba.allocator();
+                const alloc = fba.allocator();
 
                 sentry.captureError(
                     build_options.release,
@@ -109,14 +110,14 @@ pub fn panic(msg: []const u8, trace: ?*std.builtin.StackTrace) noreturn {
                 };
             }
 
-            std.builtin.default_panic(msg, trace);
+            std.debug.defaultPanic(msg, x);
         },
         1 => {
             __panic_stage = 2;
-            std.builtin.default_panic(msg, trace);
+            std.debug.defaultPanic(msg, x);
         },
         else => {
-            std.os.abort();
+            std.posix.abort();
         },
     };
 }
@@ -163,10 +164,10 @@ fn initGameState() void {
     state.dungeon.* = types.Dungeon{};
 
     rng.init();
-    for (state.floor_seeds) |*seed|
+    for (&state.floor_seeds) |*seed|
         seed.* = rng.int(u64);
 
-    for (state.default_patterns) |*r| r.pattern_checker.reset();
+    for (&state.default_patterns) |*r| r.pattern_checker.reset();
 
     state.memory = state.MemoryTileMap.init(state.gpa.allocator());
 
@@ -186,7 +187,7 @@ fn initGameState() void {
     player.choosePlayerUpgrades();
     events.executeGlobalEvents();
 
-    for (state.dungeon.map) |*map, level| {
+    for (&state.dungeon.map, 0..) |*map, level| {
         state.stockpiles[level] = StockpileArrayList.init(state.gpa.allocator());
         state.inputs[level] = StockpileArrayList.init(state.gpa.allocator());
         state.outputs[level] = Rect.ArrayList.init(state.gpa.allocator());
@@ -252,7 +253,7 @@ fn deinitGameState() void {
             squad.deinit();
     }
 
-    for (state.dungeon.map) |_, level| {
+    for (state.dungeon.map, 0..) |_, level| {
         state.stockpiles[level].deinit();
         state.inputs[level].deinit();
         state.outputs[level].deinit();
@@ -283,26 +284,26 @@ fn readDescriptions(alloc: mem.Allocator) void {
     const data_dir = std.fs.cwd().openDir("data/des", .{ .iterate = true }) catch err.wat();
     var data_dir_iterator = data_dir.iterate();
     while (data_dir_iterator.next() catch err.wat()) |data_f| {
-        if (data_f.kind != .File) continue;
-        var data_file = data_dir.openFile(data_f.name, .{ .read = true }) catch err.wat();
+        if (data_f.kind != .file) continue;
+        var data_file = data_dir.openFile(data_f.name, .{}) catch err.wat();
         defer data_file.close();
 
         const filesize = data_file.getEndPos() catch err.wat();
-        const filebuf = alloc.alloc(u8, @intCast(usize, filesize)) catch err.wat();
+        const filebuf = alloc.alloc(u8, @intCast(filesize)) catch err.wat();
         defer alloc.free(filebuf);
         const read = data_file.readAll(filebuf[0..]) catch err.wat();
 
-        var lines = mem.split(u8, filebuf[0..read], "\n");
+        var lines = mem.splitScalar(u8, filebuf[0..read], '\n');
         var current_desc_id: ?[]const u8 = null;
         var current_desc = StackBuffer(u8, 4096).init(null);
 
         const S = struct {
             pub fn _finishDescEntry(fname: []const u8, id: []const u8, desc: []const u8, a: mem.Allocator) void {
                 const key = a.alloc(u8, id.len) catch err.wat();
-                mem.copy(u8, key, id);
+                mem.copyForwards(u8, key, id);
 
                 const val = a.alloc(u8, desc.len) catch err.wat();
-                mem.copy(u8, val, desc);
+                mem.copyForwards(u8, val, desc);
 
                 state.descriptions.putNoClobber(key, val) catch err.bug(
                     "{s}: Duplicate description {s} found",
@@ -363,7 +364,7 @@ fn readNoActionInput(timeout: ?usize) !void {
     ui.draw();
     if (state.state == .Quit) return error.Quit;
 
-    var evgen = Generator(display.getEvents).init(timeout);
+    var evgen = display.getEvents(timeout);
     while (evgen.next()) |e| switch (e) {
         .Quit => {
             state.state = .Quit;
@@ -388,7 +389,7 @@ fn readInput() !bool {
     if (state.state == .Quit) return error.Quit;
     var action_taken = false;
 
-    var evgen = Generator(display.getEvents).init(ui.FRAMERATE);
+    var evgen = display.getEvents(ui.FRAMERATE);
     while (evgen.next()) |ev| {
         switch (ev) {
             .Quit => state.state = .Quit,
@@ -596,7 +597,7 @@ fn viewerDisplay(tty_height: usize, sy: usize) void {
     while (y < tty_height) : (y += 1) {
         var x: usize = 0;
         while (x < WIDTH) : (x += 1) {
-            termbox.tb_change_cell(@intCast(isize, x), @intCast(isize, y), ' ', 0, 0);
+            termbox.tb_change_cell(@intCast(x), @intCast(y), ' ', 0, 0);
         }
     }
     termbox.tb_present();
@@ -662,7 +663,7 @@ fn viewerMain() void {
     } else {
         // mapgen.initLevel(11);
         // state.current_level = 11;
-        for (state.rooms) |*smh, i| {
+        for (&state.rooms, 0..) |*smh, i| {
             if (smh.items.len == 0) {
                 mapgen.initLevel(i);
             }
@@ -673,7 +674,7 @@ fn viewerMain() void {
         var y: usize = 0;
         var running: bool = false;
 
-        const tty_height = @intCast(usize, termbox.tb_height());
+        const tty_height: usize = @intCast(termbox.tb_height());
 
         while (true) {
             viewerDisplay(tty_height, y);
@@ -697,10 +698,10 @@ fn viewerMain() void {
                 if (ev.key != 0) {
                     switch (ev.key) {
                         termbox.TB_KEY_CTRL_C => break,
-                        termbox.TB_KEY_F7 => {
-                            serializer.serializeWorld() catch err.wat();
-                            serializer.deserializeWorld() catch err.wat();
-                        },
+                        // termbox.TB_KEY_F7 => {
+                        //     serializer.serializeWorld() catch err.wat();
+                        //     serializer.deserializeWorld() catch err.wat();
+                        // },
                         else => {},
                     }
                 } else if (ev.ch != 0) {
@@ -708,7 +709,7 @@ fn viewerMain() void {
                         '.' => tickGame(state.current_level) catch {},
                         'a' => running = !running,
                         'j' => if (y < HEIGHT) {
-                            y = math.min(y + (tty_height / 2), HEIGHT - 1);
+                            y = @min(y + (tty_height / 2), HEIGHT - 1);
                         },
                         'k' => y -|= tty_height / 2,
                         'e' => explosions.kaboom(
@@ -766,10 +767,10 @@ fn testerMain() void {
                 const retaddr = it.next().?;
 
                 const module = debug_info.getModuleForAddress(retaddr) catch err.wat();
-                const symb_info = module.getSymbolAtAddress(retaddr) catch err.wat();
-                defer symb_info.deinit();
+                const symb_info = module.getSymbolAtAddress(state.gpa.allocator(), retaddr) catch err.wat();
+                // MIGRATION defer symb_info.deinit(state.gpa.allocator());
                 const str = std.fmt.allocPrint(x.alloc, "{s}:{s} ({})\t" ++ fmt ++ "\n", .{
-                    x.current_suite, x.current_test, symb_info.line_info.?.line,
+                    x.current_suite, x.current_test, symb_info.source_location.?.line,
                 } ++ args) catch err.wat();
                 x.errors.append(str) catch err.wat();
             }
@@ -828,12 +829,12 @@ fn testerMain() void {
     const Test = struct {
         name: []const u8,
         prefab: []const u8,
-        initial_setup: ?fn (*TestContext) Error!void,
+        initial_setup: ?*const fn (*TestContext) Error!void,
         initial_ticks: usize,
-        fun: fn (*TestContext) Error!void,
+        fun: *const fn (*TestContext) Error!void,
         entry: bool,
 
-        pub fn n(name: []const u8, fab: []const u8, ticks: usize, f1: ?fn (*TestContext) Error!void, f2: fn (*TestContext) Error!void, entry: bool) @This() {
+        pub fn n(name: []const u8, fab: []const u8, ticks: usize, f1: ?*const fn (*TestContext) Error!void, f2: *const fn (*TestContext) Error!void, entry: bool) @This() {
             return .{ .name = name, .prefab = fab, .initial_setup = f1, .initial_ticks = ticks, .fun = f2, .entry = entry };
         }
     };
@@ -849,7 +850,7 @@ fn testerMain() void {
             .tests = &[_]Test{
                 Test.n("mob_spawns", "TEST_dummy", 0, null, struct {
                     pub fn f(x: *TestContext) !void {
-                        for (mobs.spawns.TABLES) |spawn_table, i|
+                        for (mobs.spawns.TABLES, 0..) |spawn_table, i|
                             for (spawn_table) |table|
                                 for (table.items) |spawn_info| {
                                     try x.assertNotNull(
@@ -1036,13 +1037,13 @@ fn testerMain() void {
 
     stdout.print("*** Starting test suites\n", .{}) catch {};
 
-    for (&TESTS) |test_group, j| {
+    for (&TESTS, 0..) |test_group, j| {
         ctx.current_suite = test_group.name;
         if (j != 0) stdout.print("\n", .{}) catch {};
         stdout.print("--- Beginning test suite '{s}'; {} test(s)", .{ // deliberately omit newline
             test_group.name, test_group.tests.len,
         }) catch {};
-        for (test_group.tests) |testg, i| {
+        for (test_group.tests, 0..) |testg, i| {
             ctx.current_test = testg.name;
             ctx.total += 1;
 
@@ -1114,7 +1115,7 @@ fn testerMain() void {
 
     deinitGame();
 
-    std.os.exit(if (ctx.failed > 0) 1 else 0);
+    std.posix.exit(if (ctx.failed > 0) 1 else 0);
 }
 
 fn profilerMain() void {
@@ -1192,7 +1193,7 @@ fn analyzerMain() void {
 
     var i: usize = 0;
     while (i < ITERS) : (i += 1) {
-        state.seed = @intCast(u64, std.time.milliTimestamp());
+        state.seed = @intCast(std.time.milliTimestamp());
         std.log.info("*** \x1b[94;1m ITERATION \x1b[m {} (seed: {})", .{ i, state.seed });
         initGameState();
 
@@ -1202,13 +1203,13 @@ fn analyzerMain() void {
         mapgen.initLevel(S);
         results[i][S] = mapgen.analyzeLevel(S, arena.allocator()) catch err.wat();
 
-        for (state.levelinfo) |_, z| if (z != S)
+        for (state.levelinfo, 0..) |_, z| if (z != S)
             mapgen.initLevel(z);
-        for (state.levelinfo) |_, z| if (z != S) {
+        for (state.levelinfo, 0..) |_, z| if (z != S) {
             results[i][z] = mapgen.analyzeLevel(z, arena.allocator()) catch err.wat();
         };
 
-        for (state.levelinfo) |_, z|
+        for (state.levelinfo, 0..) |_, z|
             mapgen.resetLevel(z);
 
         deinitGameState();
@@ -1263,7 +1264,7 @@ pub fn actualMain() anyerror!void {
             break :b 0;
         };
     } else |_| {
-        state.seed = @intCast(u64, std.time.milliTimestamp());
+        state.seed = @intCast(std.time.milliTimestamp());
     }
 
     if (use_tester) {
@@ -1352,7 +1353,7 @@ pub fn main() void {
             if (@errorReturnTrace()) |error_trace| {
                 var membuf: [65535]u8 = undefined;
                 var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
-                var alloc = fba.allocator();
+                const alloc = fba.allocator();
 
                 sentry.captureError(
                     build_options.release,

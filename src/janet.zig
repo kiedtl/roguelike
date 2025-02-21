@@ -3,8 +3,11 @@ const builtin = @import("builtin");
 pub const c = @cImport(@cInclude("janet.h"));
 
 const std = @import("std");
+const sort = std.sort;
 const mem = std.mem;
 const math = std.math;
+
+const utils = @import("utils.zig");
 
 var janet_env: ?*c.JanetTable = null;
 
@@ -18,11 +21,11 @@ pub fn init() !void {
 pub fn loadFile(path: []const u8, alloc: mem.Allocator) !c.Janet {
     const file = try (try std.fs.cwd().openDir("data", .{})).openFile(path, .{});
     defer file.close();
-    const data = try file.readToEndAlloc(alloc, math.maxInt(usize));
+    const data = try file.readToEndAlloc(alloc, std.math.maxInt(usize));
     defer alloc.free(data);
 
     var out: c.Janet = undefined;
-    if (c.janet_dobytes(janet_env, data.ptr, @intCast(i32, data.len), @ptrCast([*c]const u8, path), &out) != 0) {
+    if (c.janet_dobytes(janet_env, data.ptr, @intCast(data.len), @ptrCast(path), &out) != 0) {
         return error.JanetEvalError;
     }
 
@@ -30,7 +33,7 @@ pub fn loadFile(path: []const u8, alloc: mem.Allocator) !c.Janet {
 }
 
 pub fn getGlobalOfType(j_type: c_uint, name: []const u8) !c.Janet {
-    const j_namesym = c.janet_symbol(name.ptr, @intCast(i32, name.len));
+    const j_namesym = c.janet_symbol(name.ptr, @intCast(name.len));
     const j_binding = c.janet_resolve_ext(janet_env, j_namesym);
 
     return switch (j_binding.type) {
@@ -47,26 +50,26 @@ pub fn getGlobalOfType(j_type: c_uint, name: []const u8) !c.Janet {
 pub fn toJanet(comptime T: type, arg: T) !c.Janet {
     return switch (T) {
         c.Janet => arg,
-        comptime_float, f64 => c.janet_wrap_number(@floatCast(f64, arg)),
-        usize, comptime_int => c.janet_wrap_number(@intToFloat(f64, arg)),
-        []const u8 => c.janet_stringv(arg.ptr, @intCast(i32, arg.len)),
-        else => if (@typeInfo(T) == .Struct) b: {
-            const t_info = @typeInfo(T).Struct;
-            var j_table = c.janet_table(@intCast(i32, t_info.fields.len));
+        comptime_float, f64 => c.janet_wrap_number(@floatCast(arg)),
+        usize, comptime_int => c.janet_wrap_number(@floatFromInt(arg)),
+        []const u8 => c.janet_stringv(arg.ptr, @as(i32, @intCast(arg.len))),
+        else => if (@typeInfo(T) == .@"struct") b: {
+            const t_info = @typeInfo(T).@"struct";
+            const j_table = c.janet_table(@intCast(t_info.fields.len));
             comptime var i: usize = 0;
             inline while (i < t_info.fields.len) : (i += 1) {
-                const key = c.janet_keywordv(t_info.fields[i].name.ptr, @intCast(i32, t_info.fields[i].name.len));
-                const val = try toJanet(t_info.fields[i].field_type, @field(arg, t_info.fields[i].name));
+                const key = c.janet_keywordv(t_info.fields[i].name.ptr, @as(u32, @intCast(t_info.fields[i].name.len)));
+                const val = try toJanet(t_info.fields[i].type, @field(arg, t_info.fields[i].name));
                 c.janet_table_put(j_table, key, val);
             }
             if (@hasDecl(T, "__JANET_PROTOTYPE")) {
                 j_table.*.proto = c.janet_unwrap_table(try getGlobalOfType(c.JANET_TABLE, T.__JANET_PROTOTYPE));
             }
             break :b c.janet_wrap_table(j_table);
-        } else if (comptime std.meta.trait.isZigString(T)) b: {
-            break :b c.janet_stringv(arg.ptr, @intCast(i32, arg.len));
-        } else if (comptime std.meta.trait.isManyItemPtr(T) or std.meta.trait.isSlice(T)) b: {
-            var j_array = c.janet_array(@intCast(i32, arg.len));
+        } else if (comptime utils.isZigString(T)) b: {
+            break :b c.janet_stringv(arg.ptr, @intCast(arg.len));
+        } else if (comptime utils.isManyItemPtr(T) or utils.isSlice(T)) b: {
+            const j_array = c.janet_array(@intCast(arg.len));
             for (arg) |item|
                 c.janet_array_push(j_array, try toJanet(std.meta.Elem(T), item));
             break :b c.janet_wrap_array(j_array);
@@ -79,7 +82,7 @@ pub fn toJanet(comptime T: type, arg: T) !c.Janet {
 pub fn callFunction(func: []const u8, args: anytype) !c.Janet {
     //comptime assert(@Type(args == <tuple type>)); // FIXME: assert this
 
-    const j_sym = c.janet_csymbol(@ptrCast([*c]const u8, func));
+    const j_sym = c.janet_csymbol(@ptrCast(func));
     const j_binding = c.janet_resolve_ext(janet_env, j_sym);
     if (j_binding.type != c.JANET_BINDING_NONE) {
         if (c.janet_checktype(j_binding.value, c.JANET_FUNCTION) == 0) {
@@ -87,7 +90,7 @@ pub fn callFunction(func: []const u8, args: anytype) !c.Janet {
         }
 
         var args_buf = [1]c.Janet{undefined} ** args.len;
-        const args_info = @typeInfo(@TypeOf(args)).Struct.fields;
+        const args_info = @typeInfo(@TypeOf(args)).@"struct".fields;
         comptime var i: usize = 0;
         inline while (i < args_info.len) : (i += 1) {
             const arg = @field(args, args_info[i].name);

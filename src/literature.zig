@@ -71,10 +71,7 @@ pub var posters: PosterList = undefined;
 
 pub fn readPosters(alloc: mem.Allocator) void {
     const data_dir = std.fs.cwd().openDir("data", .{}) catch unreachable;
-    const data_file = data_dir.openFile("posters.tsv", .{
-        .read = true,
-        .lock = .None,
-    }) catch unreachable;
+    const data_file = data_dir.openFile("posters.tsv", .{}) catch unreachable;
 
     var rbuf: [8192]u8 = undefined;
     const read = data_file.readAll(rbuf[0..]) catch unreachable;
@@ -114,10 +111,7 @@ pub fn readNames(alloc: mem.Allocator) void {
     };
 
     const data_dir = std.fs.cwd().openDir("data", .{}) catch unreachable;
-    const data_file = data_dir.openFile("names.tsv", .{
-        .read = true,
-        .lock = .None,
-    }) catch unreachable;
+    const data_file = data_dir.openFile("names.tsv", .{}) catch unreachable;
 
     var rbuf: [65535]u8 = undefined;
     const read = data_file.readAll(rbuf[0..]) catch unreachable;
@@ -127,10 +121,13 @@ pub fn readNames(alloc: mem.Allocator) void {
         &[_]tsv.TSVSchemaItem{
             .{ .field_name = "name", .parse_to = []u8, .parse_fn = tsv.parseUtf8String },
             .{ .field_name = "function", .parse_to = Name.Function, .parse_fn = tsv.parsePrimitive },
-            .{ .field_name = "is_noble", .parse_to = bool, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = false },
-            .{ .field_name = "flags", .parse_to = ?Name.Flag, .is_array = Name.Flag.NUM, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = null },
+            .{ .field_name = "is_noble", .parse_to = bool, .parse_fn = tsv.parsePrimitive, .optional = true },
+            .{ .field_name = "flags", .parse_to = ?Name.Flag, .is_array = Name.Flag.NUM, .parse_fn = tsv.parsePrimitive, .optional = true },
         },
-        .{},
+        .{
+            .is_noble = false,
+            .flags = [_]?Name.Flag{null} ** Name.Flag.NUM,
+        },
         rbuf[0..read],
         alloc,
     );

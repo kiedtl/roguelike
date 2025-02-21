@@ -41,7 +41,7 @@ fn loadFontData(path: [*c]const u8, databuf: *[]u8) void {
         err.fatal("{s}: Failed to read font data: libPNG error", .{path});
     }
 
-    // var font_f = std.fs.cwd().openFile(FONT_PATH, .{ .read = true }) catch |e|
+    // var font_f = std.fs.cwd().openFile(FONT_PATH, .{  }) catch |e|
     //     err.fatal("Failed to read font data: {s}", .{@errorName(e)});
     // defer font_f.close();
 
@@ -72,10 +72,10 @@ fn loadFontData(path: [*c]const u8, databuf: *[]u8) void {
         var x: usize = 0;
         while (x < width) : (x += 1) {
             const rgb: u32 =
-                @intCast(u32, rows[y][(x * 3) + 0]) << 16 |
-                @intCast(u32, rows[y][(x * 3) + 1]) << 8 |
-                @intCast(u32, rows[y][(x * 3) + 2]);
-            databuf.*[y * width + x] = @intCast(u8, colors.filterGrayscale(rgb) >> 16 & 0xFF);
+                @as(u32, @intCast(rows[y][(x * 3) + 0])) << 16 |
+                @as(u32, @intCast(rows[y][(x * 3) + 1])) << 8 |
+                @as(u32, @intCast(rows[y][(x * 3) + 2]));
+            databuf.*[y * width + x] = @intCast(colors.filterGrayscale(rgb) >> 16 & 0xFF);
         }
     }
 }

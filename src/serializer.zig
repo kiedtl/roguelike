@@ -14,8 +14,8 @@ const surfaces = @import("surfaces.zig");
 const types = @import("types.zig");
 
 const StackBuffer = @import("buffer.zig").StackBuffer;
-const Generator = @import("generators.zig").Generator;
-const GeneratorCtx = @import("generators.zig").GeneratorCtx;
+// const Generator = @import("generators.zig").Generator;
+// const GeneratorCtx = @import("generators.zig").GeneratorCtx;
 
 pub const Error = error{ PointerNotFound, MismatchedPointerTypes, CorruptedData, MismatchedType, InvalidUnionField } || std.ArrayList(u8).Writer.Error || std.mem.Allocator.Error || std.fs.File.Reader.Error || std.fs.File.Writer.Error || error{EndOfStream} || microtar.MTar.Error;
 
@@ -25,18 +25,18 @@ const FIELDS_ALWAYS_KEEP_LIST = [_][]const u8{ "__next", "__prev" };
 const STATIC_CONTAINERS = [_]struct {
     m: []const u8,
     t: type,
-    s: anytype,
+    s: *opaque {},
 }
 // zig fmt: off
 {
-.{ .m = "s.props",       .t = types.Prop,              .s = &surfaces.props.items   },
-.{ .m = "s.TERRAIN",     .t = *const surfaces.Terrain, .s = &@as([]const *const surfaces.Terrain, &surfaces.TERRAIN)      },
-.{ .m = "i.ARMORS",      .t = *const types.Armor,      .s = &itemlists.ARMORS      },
-.{ .m = "i.WEAPONS",     .t = *const types.Weapon,     .s = &itemlists.WEAPONS     },
-.{ .m = "i.CLOAKS",      .t = *const items.Cloak,      .s = &itemlists.CLOAKS      },
-.{ .m = "i.HEADGEAR",    .t = *const items.Headgear,   .s = &itemlists.HEADGEAR    },
-.{ .m = "i.AUXES",       .t = *const items.Aux,        .s = &itemlists.AUXES       },
-.{ .m = "i.CONSUMABLES", .t = *const items.Consumable, .s = &itemlists.CONSUMABLES },
+.{ .m = "s.props",       .t = types.Prop,              .s = @ptrCast(&surfaces.props.items)  },
+.{ .m = "s.TERRAIN",     .t = *const surfaces.Terrain, .s = @ptrCast(&@as([]const *const surfaces.Terrain, &surfaces.TERRAIN)) },
+.{ .m = "i.ARMORS",      .t = *const types.Armor,      .s = @ptrCast(&itemlists.ARMORS)      },
+.{ .m = "i.WEAPONS",     .t = *const types.Weapon,     .s = @ptrCast(&itemlists.WEAPONS)     },
+.{ .m = "i.CLOAKS",      .t = *const items.Cloak,      .s = @ptrCast(&itemlists.CLOAKS)      },
+.{ .m = "i.HEADGEAR",    .t = *const items.Headgear,   .s = @ptrCast(&itemlists.HEADGEAR)    },
+.{ .m = "i.AUXES",       .t = *const items.Aux,        .s = @ptrCast(&itemlists.AUXES)       },
+.{ .m = "i.CONSUMABLES", .t = *const items.Consumable, .s = @ptrCast(&itemlists.CONSUMABLES) },
 };
 // zig fmt: on
 
@@ -61,11 +61,10 @@ fn _cacheTypeId(t: []const u8, v: usize) void {
 
 fn _typeId(comptime T: type) usize {
     // From https://zig.news/xq/cool-zig-patterns-type-identifier-3mfd
-    _ = T;
     const H = struct {
         var byte: u8 = 0;
     };
-    const id = @ptrToInt(&H.byte);
+    const id = @intFromPtr(&H.byte);
     _cacheTypeId(@typeName(T), id);
     return id;
 }
@@ -73,13 +72,13 @@ fn _typeId(comptime T: type) usize {
 fn _fieldType(comptime T: type, fieldname: []const u8) type {
     return inline for (meta.fields(T)) |field| {
         if (mem.eql(u8, field.name, fieldname))
-            break field.field_type;
+            break field.type;
     } else @compileError("Type " ++ @typeName(T) ++ " has no field " ++ fieldname);
 }
 
 fn _normIntT(comptime Int: type) type {
-    const s = @typeInfo(Int).Int.signedness == .signed;
-    return switch (@typeInfo(Int).Int.bits) {
+    const s = @typeInfo(Int).int.signedness == .signed;
+    return switch (@typeInfo(Int).int.bits) {
         1...8 => if (s) i8 else u8,
         9...16 => if (s) i16 else u16,
         17...32 => if (s) i32 else u32,
@@ -91,22 +90,23 @@ fn _normIntT(comptime Int: type) type {
 
 pub fn write(comptime IntType: type, value: IntType, out: anytype) !void {
     // std.log.debug("..... => {: <20} {}", .{ _normIntT(IntType), value });
-    try out.writeIntLittle(_normIntT(IntType), @as(_normIntT(IntType), value));
+    try out.writeInt(_normIntT(IntType), @as(_normIntT(IntType), value), .little);
 }
 
 pub fn read(comptime IntType: type, in: anytype) !IntType {
-    const value = try in.readIntLittle(_normIntT(IntType));
+    const value = try in.readInt(_normIntT(IntType), .little);
     // std.log.debug("..... <= {: <20} {}", .{ _normIntT(IntType), value });
-    return @intCast(IntType, value);
+    return @intCast(value);
 }
 
-pub fn SerializeFunctionFromModule(comptime T: type, field: []const u8, container: type) fn (*const T, *const _fieldType(T, field), anytype) Error!void {
+pub fn SerializeFunctionFromModule(comptime T: type, field: []const u8, comptime container: type) fn (*const T, *const _fieldType(T, field), anytype) Error!void {
     return struct {
         pub fn f(_: *const T, field_value: *const _fieldType(T, field), out: anytype) Error!void {
-            inline for (meta.declarations(container)) |decl|
-                if (decl.is_pub and _fieldType(T, field) == @TypeOf(@field(container, decl.name))) {
+            inline for (@typeInfo(container).@"struct".decls) |decl|
+                //inline for (meta.declarations(container)) |decl|
+                if (_fieldType(T, field) == @TypeOf(@field(container, decl.name))) {
                     // std.log.debug("comparing 0x{x:0>8} to 0x{x:0>8} ({s})", .{
-                    //     @ptrToInt(field_value), @ptrToInt(@field(container, decl.name)), decl.name,
+                    //     @intFromPtr(field_value), @intFromPtr(@field(container, decl.name)), decl.name,
                     // });
                     if (field_value.* == @field(container, decl.name)) {
                         try serialize([]const u8, decl.name, out);
@@ -124,7 +124,8 @@ pub fn DeserializeFunctionFromModule(comptime T: type, field: []const u8, contai
             var val: []const u8 = undefined;
             try deserialize([]const u8, &val, in, alloc);
             defer alloc.free(val);
-            inline for (meta.declarations(container)) |decl| {
+            inline for (@typeInfo(container).@"struct".decls) |decl| {
+                //inline for (meta.declarations(container)) |decl| {
                 if (comptime mem.eql(u8, field, decl.name))
                     out.* = @field(container, field);
             }
@@ -152,30 +153,30 @@ pub fn serialize(comptime T: type, obj: T, out: anytype) Error!void {
     }
 
     switch (@typeInfo(T)) {
-        .Bool => try write(u8, if (obj) @as(u8, 1) else 0, out),
-        .Int => try write(_normIntT(T), obj, out),
-        .Float => {
+        .bool => try write(u8, if (obj) @as(u8, 1) else 0, out),
+        .int => try write(_normIntT(T), obj, out),
+        .float => {
             const F = if (T == f32) u32 else u64;
-            try write(F, @bitCast(F, obj), out);
+            try write(F, @bitCast(obj), out);
         },
-        .Pointer => |p| switch (p.size) {
-            .One => {
-                if (!ptrtable.contains(@ptrToInt(obj)))
+        .pointer => |p| switch (p.size) {
+            .one => {
+                if (!ptrtable.contains(@intFromPtr(obj)))
                     std.log.warn("serialize: found {} pointer not in table", .{p.child});
-                try serialize(usize, @ptrToInt(obj), out);
+                try serialize(usize, @intFromPtr(obj), out);
             },
-            .Slice => {
+            .slice => {
                 try serialize(usize, obj.len, out);
                 for (obj) |value| try serialize(p.child, value, out);
             },
-            .Many, .C => @compileError("Cannot serialize " ++ @typeName(T)),
+            .many, .c => @compileError("Cannot serialize " ++ @typeName(T)),
         },
-        .Array => |a| {
+        .array => |a| {
             try serialize(usize, a.len, out);
             for (obj) |value| try serialize(a.child, value, out);
         },
-        .Struct => |info| {
-            if (comptime std.meta.trait.hasFn("serialize")(T)) {
+        .@"struct" => |info| {
+            if (comptime @hasDecl(T, "serialize")) {
                 try obj.serialize(out);
             } else {
                 if (@hasDecl(T, "__SER_GET_ID")) {
@@ -190,32 +191,32 @@ pub fn serialize(comptime T: type, obj: T, out: anytype) Error!void {
                         if (mem.eql(u8, item, field.name)) break true;
                     } else false;
                     if (!noser_field) {
-                        // std.log.debug("Ser {s: <20} ({s})", .{ field.name, @typeName(field.field_type) });
-                        try serialize(usize, _typeId(field.field_type), out);
+                        // std.log.debug("Ser {s: <20} ({s})", .{ field.name, @typeName(field.type) });
+                        try serialize(usize, _typeId(field.type), out);
 
                         if (@hasDecl(T, "__SER_FIELDW_" ++ field.name)) {
                             comptime assert(@hasDecl(T, "__SER_FIELDR_" ++ field.name));
                             try @field(T, "__SER_FIELDW_" ++ field.name)(&obj, &@field(obj, field.name), out);
                         } else {
-                            try serialize(field.field_type, @field(obj, field.name), out);
+                            try serialize(field.type, @field(obj, field.name), out);
                         }
                     }
                 }
             }
         },
-        .Optional => |o| if (obj) |v| {
+        .optional => |o| if (obj) |v| {
             try serialize(u8, 1, out);
             try serialize(o.child, v, out);
         } else {
             try serialize(u8, 0, out);
         },
-        .Enum => |e| try serialize(e.tag_type, @enumToInt(obj), out),
-        .Union => |u| {
+        .@"enum" => |e| try serialize(e.tag_type, @intFromEnum(obj), out),
+        .@"union" => |u| {
             try serialize(meta.Tag(T), meta.activeTag(obj), out);
             inline for (u.fields) |ufield|
                 if (mem.eql(u8, ufield.name, @tagName(meta.activeTag(obj)))) {
-                    if (ufield.field_type != void)
-                        try serialize(ufield.field_type, @field(obj, ufield.name), out);
+                    if (ufield.type != void)
+                        try serialize(ufield.type, @field(obj, ufield.name), out);
                     break;
                 };
         },
@@ -251,11 +252,11 @@ pub fn deserialize(comptime T: type, out: *T, in: anytype, alloc: mem.Allocator)
     }
 
     switch (@typeInfo(T)) {
-        .Bool => out.* = (try read(u8, in)) == 1,
-        .Int => out.* = try read(T, in),
-        .Float => out.* = try read(if (T == f32) u32 else u64, in),
-        .Pointer => |p| switch (p.size) {
-            .One => {
+        .bool => out.* = (try read(u8, in)) == 1,
+        .int => out.* = try read(T, in),
+        .float => out.* = try read(if (T == f32) u32 else u64, in),
+        .pointer => |p| switch (p.size) {
+            .one => {
                 const ptr = try deserializeQ(usize, in, alloc);
                 if (ptrtable.get(ptr)) |ptrdata| {
                     if (!mem.eql(u8, ptrdata.ptrtype, @typeName(T))) {
@@ -271,8 +272,7 @@ pub fn deserialize(comptime T: type, out: *T, in: anytype, alloc: mem.Allocator)
                             };
 
                     inline for (meta.declarations(state)) |declinfo|
-                        if (declinfo.is_pub and
-                            @typeInfo(@TypeOf(@field(state, declinfo.name))) == .Struct and
+                        if (@typeInfo(@TypeOf(@field(state, declinfo.name))) == .@"struct" and
                             @hasDecl(@TypeOf(@field(state, declinfo.name)), "nth") and
                             *@TypeOf(@field(state, declinfo.name)).ChildType == T)
                         {
@@ -287,7 +287,7 @@ pub fn deserialize(comptime T: type, out: *T, in: anytype, alloc: mem.Allocator)
                                         ptrdata.index,
                                         @field(state, declinfo.name).len(),
                                     });
-                                    return error.PointerNotFound;
+                                    return error.pointerNotFound;
                                 }
                             }
                         };
@@ -295,29 +295,29 @@ pub fn deserialize(comptime T: type, out: *T, in: anytype, alloc: mem.Allocator)
                     std.log.err("Could not find pointer {s},{s},{}", .{
                         ptrdata.container, ptrdata.ptrtype, ptrdata.index,
                     });
-                    return error.PointerNotFound;
+                    return error.pointerNotFound;
                 } else {
                     std.log.warn("deserialize: found {} pointer not in table", .{p.child});
                     out.* = undefined;
                 }
             },
-            .Slice => {
+            .slice => {
                 var i = try deserializeQ(usize, in, alloc);
                 var o = try alloc.alloc(p.child, i);
                 while (i > 0) : (i -= 1)
                     try deserialize(p.child, &o[o.len - i], in, alloc);
                 out.* = o;
             },
-            .Many, .C => @compileError("Cannot deserialize " ++ @typeName(T)),
+            .many, .c => @compileError("Cannot deserialize " ++ @typeName(T)),
         },
-        .Array => {
+        .array => {
             var i = try deserializeQ(usize, in, alloc);
             assert(i == out.len);
             while (i > 0) : (i -= 1)
                 try deserialize(meta.Child(T), &out[out.len - 1], in, alloc);
         },
-        .Struct => |info| {
-            if (comptime std.meta.trait.hasFn("deserialize")(T)) {
+        .@"struct" => |info| {
+            if (@hasDecl(T, "deserialize")) {
                 try T.deserialize(out, in, alloc);
             } else {
                 const oldobj = out.*;
@@ -342,32 +342,32 @@ pub fn deserialize(comptime T: type, out: *T, in: anytype, alloc: mem.Allocator)
                     if (!noser_field) {
                         // std.log.debug("Deser {s: <20} ({s})", .{
                         //     field.name,
-                        //     @typeName(field.field_type),
+                        //     @typeName(field.type),
                         // });
 
-                        try deserializeExpect(field.field_type, in, alloc);
+                        try deserializeExpect(field.type, in, alloc);
 
                         if (@hasDecl(T, "__SER_FIELDR_" ++ field.name)) {
                             comptime assert(@hasDecl(T, "__SER_FIELDW_" ++ field.name));
                             try @field(T, "__SER_FIELDR_" ++ field.name)(&@field(out, field.name), in, alloc);
                         } else {
-                            try deserialize(field.field_type, &@field(out, field.name), in, alloc);
+                            try deserialize(field.type, &@field(out, field.name), in, alloc);
                         }
 
-                        // switch (@typeInfo(field.field_type)) {
-                        //     .Pointer => if (field.field_type == []const u8) std.log.debug("Deser value: {s}", .{@field(out, field.name)}) else std.log.debug("Deser value: skip", .{}),
-                        //     .Array => std.log.debug("Deser value: {any}", .{@field(out, field.name)}),
-                        //     .Bool, .Enum, .Int, .Float => {
+                        // switch (@typeInfo(field.type)) {
+                        //     .pointer => if (field.type == []const u8) std.log.debug("Deser value: {s}", .{@field(out, field.name)}) else std.log.debug("Deser value: skip", .{}),
+                        //     .array => std.log.debug("Deser value: {any}", .{@field(out, field.name)}),
+                        //     .@"bool", .@"enum", .int, .float => {
                         //         std.log.debug("Deser value: {}", .{@field(out, field.name)});
                         //     },
                         //     else => {
-                        //         if (field.field_type == ?[]const u8) {
+                        //         if (field.type == ?[]const u8) {
                         //             if (@field(out, field.name)) |v|
                         //                 std.log.debug("Deser value: {s}", .{v})
                         //             else
                         //                 std.log.debug("Deser value: null", .{});
-                        //         } else if (field.field_type == ?types.Damage or
-                        //             field.field_type == ?types.Direction)
+                        //         } else if (field.type == ?types.Damage or
+                        //             field.type == ?types.Direction)
                         //         {
                         //             std.log.debug("Deser value: {}", .{@field(out, field.name)});
                         //         } else {
@@ -381,20 +381,20 @@ pub fn deserialize(comptime T: type, out: *T, in: anytype, alloc: mem.Allocator)
                 }
             }
         },
-        .Optional => |o| {
+        .optional => |o| {
             const flag = try deserializeQ(u8, in, alloc);
             out.* = if (flag == 0) null else @as(T, try deserializeQ(o.child, in, alloc));
         },
-        .Enum => |e| out.* = @intToEnum(T, try deserializeQ(e.tag_type, in, alloc)),
-        .Union => |u| {
+        .@"enum" => |e| out.* = @enumFromInt(try deserializeQ(e.tag_type, in, alloc)),
+        .@"union" => |u| {
             const tag = try deserializeQ(meta.Tag(T), in, alloc);
             inline for (u.fields) |ufield|
                 if (mem.eql(u8, ufield.name, @tagName(tag)))
                     // Can't break here due to Zig comptime control-flow bug
-                    if (ufield.field_type == void) {
+                    if (ufield.type == void) {
                         out.* = @unionInit(T, ufield.name, {});
                     } else {
-                        const value = try deserializeQ(ufield.field_type, in, alloc);
+                        const value = try deserializeQ(ufield.type, in, alloc);
                         out.* = @unionInit(T, ufield.name, value);
                     };
         },
@@ -428,14 +428,14 @@ pub fn deserializeWE(comptime T: type, out: *T, in: anytype, alloc: mem.Allocato
 pub fn buildPointerTable() void {
     ptrtable = @TypeOf(ptrtable).init(state.gpa.allocator());
 
-    inline for (meta.declarations(state)) |declinfo| if (declinfo.is_pub) {
+    inline for (@typeInfo(state).@"struct".decls) |declinfo| {
         const decl = @field(state, declinfo.name);
         const declptr = &@field(state, declinfo.name);
-        if (@typeInfo(@TypeOf(decl)) == .Struct and
+        if (@typeInfo(@TypeOf(decl)) == .@"struct" and
             @hasDecl(@TypeOf(decl), "__SER_getPointerData"))
         {
             var max: usize = 0;
-            var g = Generator(@TypeOf(decl).__SER_getPointerData).init(declptr);
+            var g = @TypeOf(decl).__SER_getPointerData(declptr);
             while (g.next()) |ptrdata2| {
                 ptrtable.putNoClobber(ptrdata2.ptr, .{
                     .container = declinfo.name,
@@ -447,13 +447,13 @@ pub fn buildPointerTable() void {
             }
             ptrinits.append(.{ .container = declinfo.name, .init_up_to = max + 1 }) catch err.wat();
         }
-    };
+    }
 
     inline for (&STATIC_CONTAINERS) |container| {
-        const Ptr = if (@typeInfo(container.t) == .Pointer) container.t else *const container.t;
-        const slice = @intToPtr(*const []const container.t, @ptrToInt(container.s));
-        for (slice.*) |*item, ind| {
-            const ptr = if (@typeInfo(container.t) == .Pointer) @ptrToInt(item.*) else @ptrToInt(item);
+        const Ptr = if (@typeInfo(container.t) == .pointer) container.t else *const container.t;
+        const slice: *const []const container.t = @ptrFromInt(@intFromPtr(container.s));
+        for (slice.*, 0..) |*item, ind| {
+            const ptr = if (@typeInfo(container.t) == .pointer) @intFromPtr(item.*) else @intFromPtr(item);
             if (ptrtable.contains(ptr)) {
                 std.log.err("Pointer collision for {} (types: {s} vs {})", .{
                     ptr, ptrtable.get(ptr).?.ptrtype, Ptr,
@@ -471,9 +471,8 @@ pub fn buildPointerTable() void {
 
 pub fn initPointerContainers() void {
     for (ptrinits.constSlice()) |ptrinit| {
-        inline for (meta.declarations(state)) |declinfo|
-            if (declinfo.is_pub and
-                @typeInfo(@TypeOf(@field(state, declinfo.name))) == .Struct and
+        inline for (@typeInfo(state).@"struct".decls) |declinfo| {
+            if (@typeInfo(@TypeOf(@field(state, declinfo.name))) == .@"struct" and
                 @hasDecl(@TypeOf(@field(state, declinfo.name)), "nth"))
             {
                 if (mem.eql(u8, declinfo.name, ptrinit.container)) {
@@ -483,7 +482,8 @@ pub fn initPointerContainers() void {
                         container.append(undefined) catch err.wat();
                     }
                 }
-            };
+            }
+        }
     }
 }
 
@@ -511,16 +511,14 @@ pub fn serializeWorld() !void {
     try serializeWE(@TypeOf(ptrinits), ptrinits, f.writer());
 
     comptime var begin = false;
-    inline for (meta.declarations(state)) |declinfo| {
-        if (declinfo.is_pub) {
-            if (comptime mem.eql(u8, declinfo.name, "__SER_BEGIN")) {
-                begin = true;
-            } else if (comptime mem.eql(u8, declinfo.name, "__SER_STOP")) {
-                begin = false;
-            } else if (begin) {
-                const decl = @field(state, declinfo.name);
-                try serializeWE(@TypeOf(decl), decl, f.writer());
-            }
+    inline for (@typeInfo(state).@"struct".decls) |declinfo| {
+        if (comptime mem.eql(u8, declinfo.name, "__SER_BEGIN")) {
+            begin = true;
+        } else if (comptime mem.eql(u8, declinfo.name, "__SER_STOP")) {
+            begin = false;
+        } else if (begin) {
+            const decl = @field(state, declinfo.name);
+            try serializeWE(@TypeOf(decl), decl, f.writer());
         }
     }
 }

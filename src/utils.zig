@@ -1,4 +1,5 @@
 const std = @import("std");
+const sort = std.sort;
 const assert = std.debug.assert;
 const testing = std.testing;
 const math = std.math;
@@ -29,8 +30,75 @@ const DIAGONAL_DIRECTIONS = types.DIAGONAL_DIRECTIONS;
 const CARDINAL_DIRECTIONS = types.CARDINAL_DIRECTIONS;
 
 const StackBuffer = buffer.StackBuffer;
-const Generator = @import("generators.zig").Generator;
-const GeneratorCtx = @import("generators.zig").GeneratorCtx;
+// const Generator = @import("generators.zig").Generator;
+// const GeneratorCtx = @import("generators.zig").GeneratorCtx;
+
+pub fn is(comptime id: std.builtin.TypeId) fn (type) bool {
+    const Closure = struct {
+        pub fn trait(comptime T: type) bool {
+            return id == @typeInfo(T);
+        }
+    };
+    return Closure.trait;
+}
+
+/// Copied from Zig 0.9.1 standard library.
+///
+/// Returns true if the passed type will coerce to []const u8.
+/// Any of the following are considered strings:
+/// ```
+/// []const u8, [:S]const u8, *const [N]u8, *const [N:S]u8,
+/// []u8, [:S]u8, *[:S]u8, *[N:S]u8.
+/// ```
+/// These types are not considered strings:
+/// ```
+/// u8, [N]u8, [*]const u8, [*:0]const u8,
+/// [*]const [N]u8, []const u16, []const i8,
+/// *const u8, ?[]const u8, ?*const [N]u8.
+/// ```
+pub fn isZigString(comptime T: type) bool {
+    comptime {
+        // Only pointer types can be strings, no optionals
+        const info = @typeInfo(T);
+        if (info != .pointer) return false;
+
+        const ptr = &info.pointer;
+        // Check for CV qualifiers that would prevent coerction to []const u8
+        if (ptr.is_volatile or ptr.is_allowzero) return false;
+
+        // If it's already a slice, simple check.
+        if (ptr.size == .slice) {
+            return ptr.child == u8;
+        }
+
+        // Otherwise check if it's an array type that coerces to slice.
+        if (ptr.size == .one) {
+            const child = @typeInfo(ptr.child);
+            if (child == .array) {
+                const arr = &child.array;
+                return arr.child == u8;
+            }
+        }
+
+        return false;
+    }
+}
+
+/// Copied from Zig 0.9.1 standard library.
+pub fn isManyItemPtr(comptime T: type) bool {
+    if (comptime is(.pointer)(T)) {
+        return @typeInfo(T).pointer.size == .many;
+    }
+    return false;
+}
+
+/// Copied from Zig 0.9.1 standard library.
+pub fn isSlice(comptime T: type) bool {
+    if (comptime is(.pointer)(T)) {
+        return @typeInfo(T).pointer.size == .slice;
+    }
+    return false;
+}
 
 // Print into fixed buffer, no allocation
 pub fn print(buf: []u8, comptime fmt: []const u8, args: anytype) []const u8 {
@@ -76,7 +144,7 @@ pub const DateTime = struct {
     m: usize,
 
     pub fn collect() @This() {
-        const ep_secs = std.time.epoch.EpochSeconds{ .secs = @intCast(u64, std.time.timestamp()) };
+        const ep_secs = std.time.epoch.EpochSeconds{ .secs = @intCast(std.time.timestamp()) };
         const ep_day = ep_secs.getEpochDay();
         const year_day = ep_day.calculateYearDay();
         const month_day = year_day.calculateMonthDay();
@@ -92,22 +160,58 @@ pub const DateTime = struct {
     }
 };
 
-pub fn iterCircle(ctx: *GeneratorCtx(Coord), arg: struct { center: Coord, r: usize }) void {
-    assert(arg.r < math.min(HEIGHT, WIDTH));
-    var buf: [HEIGHT][WIDTH]bool = [_][WIDTH]bool{[_]bool{false} ** WIDTH} ** HEIGHT;
+pub const IterCircle = struct {
+    buf: [HEIGHT][WIDTH]bool = [_][WIDTH]bool{[_]bool{false} ** WIDTH} ** HEIGHT,
+    y: usize = 0,
+    x: usize = 0,
+    z: usize,
 
-    fov.shadowCast(arg.center, arg.r, state.mapgeometry, &buf, struct {
+    pub fn next(self: *@This()) ?Coord {
+        while (true) {
+            if (self.y >= HEIGHT) return null;
+            defer {
+                self.x += 1;
+                if (self.x > WIDTH) {
+                    self.x = 0;
+                    self.y += 1;
+                }
+            }
+            if (self.buf[self.y][self.x])
+                return Coord.new2(self.z, self.y, self.x);
+        }
+    }
+};
+
+pub fn iterCircle(center: Coord, r: usize) IterCircle {
+    assert(r < @min(HEIGHT, WIDTH));
+
+    var i = IterCircle{ .z = center.z };
+
+    fov.shadowCast(center, r, state.mapgeometry, &i.buf, struct {
         pub fn f(_: Coord) bool {
             return true;
         }
     }.f);
 
-    for (buf) |row, y| for (row) |cell, x| if (cell) {
-        ctx.yield(Coord.new2(arg.center.z, x, y));
-    };
-
-    ctx.finish();
+    return i;
 }
+
+// pub fn iterCircle(ctx: *GeneratorCtx(Coord), arg: struct { center: Coord, r: usize }) void {
+//     assert(arg.r < @min(HEIGHT, WIDTH));
+//     var buf: [HEIGHT][WIDTH]bool = [_][WIDTH]bool{[_]bool{false} ** WIDTH} ** HEIGHT;
+
+//     fov.shadowCast(arg.center, arg.r, state.mapgeometry, &buf, struct {
+//         pub fn f(_: Coord) bool {
+//             return true;
+//         }
+//     }.f);
+
+//     for (buf, 0..) |row, y| for (row, 0..) |cell, x| if (cell) {
+//         ctx.yield(Coord.new2(arg.center.z, x, y));
+//     };
+
+//     ctx.finish();
+// }
 
 // Count the characters needed to display some text
 pub fn countFmt(comptime fmt: []const u8, args: anytype) u64 {
@@ -170,9 +274,11 @@ pub fn getMobInDirection(self: *Mob, d: Direction) !*Mob {
 
 pub fn adjacentHostiles(self: *const Mob) usize {
     var i: usize = 0;
-    for (&DIRECTIONS) |d| if (getHostileInDirection(self, d)) {
-        i += 1;
-    } else |_| {};
+    for (&DIRECTIONS) |d| {
+        if (getHostileInDirection(self, d)) |_| {
+            i += 1;
+        } else |_| {}
+    }
     return i;
 }
 
@@ -195,7 +301,7 @@ pub fn getHostileAt(self: *const Mob, coord: Coord) !*Mob {
 pub fn findFirstNeedlePtr(
     haystack: anytype,
     ctx: anytype,
-    func: fn (*meta.Elem(@TypeOf(haystack)), @TypeOf(ctx)) bool,
+    func: *const fn (*meta.Elem(@TypeOf(haystack)), @TypeOf(ctx)) bool,
 ) ?*meta.Elem(@TypeOf(haystack)) {
     return for (haystack) |*straw| {
         if ((func)(straw, ctx)) {
@@ -207,7 +313,7 @@ pub fn findFirstNeedlePtr(
 pub fn findFirstNeedle(
     haystack: anytype,
     ctx: anytype,
-    func: fn (meta.Elem(@TypeOf(haystack)), @TypeOf(ctx)) bool,
+    func: *const fn (meta.Elem(@TypeOf(haystack)), @TypeOf(ctx)) bool,
 ) ?meta.Elem(@TypeOf(haystack)) {
     return for (haystack) |straw| {
         if ((func)(straw, ctx)) {
@@ -221,7 +327,7 @@ pub fn findFirstNeedle(
 // A bit idiosyncratic...
 pub const ReputationFormatter = struct {
     pub fn dewIt(_: @This()) bool {
-        const rep = state.night_rep[@enumToInt(state.player.faction)];
+        const rep = state.night_rep[@intFromEnum(state.player.faction)];
         const is_on_slade = state.dungeon.terrainAt(state.player.coord) == &surfaces.SladeTerrain;
         return rep != 0 or is_on_slade;
     }
@@ -229,7 +335,7 @@ pub const ReputationFormatter = struct {
     pub fn format(self: *const @This(), comptime f: []const u8, _: std.fmt.FormatOptions, writer: anytype) !void {
         if (comptime !mem.eql(u8, f, "")) @compileError("Unknown format string: '" ++ f ++ "'");
 
-        const rep = state.night_rep[@enumToInt(state.player.faction)];
+        const rep = state.night_rep[@intFromEnum(state.player.faction)];
         const is_on_slade = state.dungeon.terrainAt(state.player.coord) == &surfaces.SladeTerrain;
 
         if (self.dewIt()) {
@@ -258,7 +364,7 @@ pub const SignedFormatter = struct {
 
     pub fn format(value: @This(), comptime fmt: []const u8, options: std.fmt.FormatOptions, writer: anytype) !void {
         if (value.v >= 0) {
-            try std.fmt.formatType(@intCast(usize, value.v), fmt, options, writer, 0);
+            try std.fmt.formatType(@as(usize, @intCast(value.v)), fmt, options, writer, 0);
         } else {
             try std.fmt.formatType(value.v, fmt, options, writer, 0);
         }
@@ -275,16 +381,16 @@ pub fn directEnumArrayLen(comptime E: type) usize {
 }
 
 pub fn getFieldByEnumPtr(comptime E: type, comptime V: type, s: anytype, v: E) V {
-    inline for (@typeInfo(E).Enum.fields) |enumv| {
-        const e = @intToEnum(E, enumv.value);
+    inline for (@typeInfo(E).@"enum".fields) |enumv| {
+        const e: E = @enumFromInt(enumv.value);
         if (e == v) return &@field(s, @tagName(e));
     }
     unreachable;
 }
 
-pub fn getFieldByEnum(comptime E: type, s: anytype, v: E) @typeInfo(@TypeOf(s)).Struct.fields[0].field_type {
-    inline for (@typeInfo(E).Enum.fields) |enumv| {
-        const e = @intToEnum(E, enumv.value);
+pub fn getFieldByEnum(comptime E: type, s: anytype, v: E) @typeInfo(@TypeOf(s)).@"struct".fields[0].type {
+    inline for (@typeInfo(E).@"enum".fields) |enumv| {
+        const e: E = @enumFromInt(enumv.value);
         if (e == v) return @field(s, @tagName(e));
     }
     unreachable;
@@ -293,7 +399,7 @@ pub fn getFieldByEnum(comptime E: type, s: anytype, v: E) @typeInfo(@TypeOf(s)).
 pub fn getNearestCorpse(me: *Mob) ?Coord {
     var buf = StackBuffer(Coord, 32).init(null);
 
-    search: for (me.fov) |row, y| for (row) |cell, x| {
+    search: for (me.fov, 0..) |row, y| for (row, 0..) |cell, x| {
         if (buf.isFull()) break :search;
 
         if (cell == 0) continue;
@@ -313,7 +419,7 @@ pub fn getNearestCorpse(me: *Mob) ?Coord {
             return a.distance(mob.coord) > b.distance(mob.coord);
         }
     };
-    std.sort.insertionSort(Coord, buf.slice(), me, _sortFunc._fn);
+    std.sort.insertion(Coord, buf.slice(), me, _sortFunc._fn);
 
     return buf.last().?;
 }
@@ -339,8 +445,8 @@ pub fn used(slice: anytype) rt: {
     const ChildType = std.meta.Elem(SliceType);
 
     break :rt switch (@typeInfo(SliceType)) {
-        .Pointer => |p| if (p.is_const) []const ChildType else []ChildType,
-        .Array => []const ChildType,
+        .pointer => |p| if (p.is_const) []const ChildType else []ChildType,
+        .array => []const ChildType,
         else => @compileError("Expected slice, got " ++ @typeName(SliceType)),
     };
 } {
@@ -353,7 +459,7 @@ pub fn used(slice: anytype) rt: {
 pub fn findById(haystack: anytype, _needle: anytype) ?usize {
     const needle = used(_needle);
 
-    for (haystack) |straw, i| {
+    for (haystack, 0..) |straw, i| {
         const id = used(straw.id);
         if (mem.eql(u8, needle, id)) return i;
     }
@@ -362,8 +468,8 @@ pub fn findById(haystack: anytype, _needle: anytype) ?usize {
 }
 
 pub fn cloneStr(str: []const u8, alloc: mem.Allocator) ![]const u8 {
-    var new = alloc.alloc(u8, str.len) catch return error.OutOfMemory;
-    mem.copy(u8, new, str);
+    const new = alloc.alloc(u8, str.len) catch return error.OutOfMemory;
+    mem.copyForwards(u8, new, str);
     return new;
 }
 
@@ -410,7 +516,7 @@ pub fn findPatternMatch(coord: Coord, patterns: []const []const u8) ?usize {
         coord.move(.SouthEast, state.mapgeometry),
     };
 
-    patterns: for (patterns) |pattern, pattern_i| {
+    patterns: for (patterns, 0..) |pattern, pattern_i| {
         var i: usize = 0;
         while (i < 9) : (i += 1) {
             if (pattern[i] == '?') continue;

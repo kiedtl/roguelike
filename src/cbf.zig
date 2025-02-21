@@ -283,7 +283,7 @@ test "parse values" {
 
     var res = try p.parse(gpa.allocator());
 
-    for (res.items) |kv, i| {
+    for (res.items, 0..) |kv, i| {
         const key = Key{ .Numeric = i };
         try testing.expectEqual(KV{ .key = key, .value = output[i] }, kv);
     }
@@ -350,7 +350,7 @@ test "parse nested list" {
     try testing.expectEqual(res.items[0].value, .True);
     try testing.expectEqual(meta.activeTag(res.items[1].value), .List);
 
-    var list1 = res.items[1].value.List;
+    const list1 = res.items[1].value.List;
 
     try testing.expectEqual(meta.activeTag(list1.items[0].value), .List);
     try testing.expectEqual(list1.items[1].value, .False);
@@ -400,7 +400,7 @@ test "parse lists with tags" {
 
     try testing.expectEqualSlices(u8, res.items[0].key.String, "xyz");
     try testing.expectEqual(meta.activeTag(res.items[0].value), .List);
-    var list = res.items[0].value.List;
+    const list = res.items[0].value.List;
 
     // Keys
     try testing.expectEqual(list.items[0].key.Numeric, 0);
@@ -422,40 +422,40 @@ test "parse lists with tags" {
 
 pub fn deserializeValue(comptime T: type, val: Value, default: ?T) !T {
     return switch (@typeInfo(T)) {
-        .NoReturn, .Void, .Type => error.E,
-        .Vector, .ComptimeInt, .ComptimeFloat, .Undefined => error.E,
-        .Bool => switch (val) {
+        .noreturn, .void, .type => error.E,
+        .vector, .comptime_int, .comptime_float, .undefined => error.E,
+        .bool => switch (val) {
             .True => true,
             .False => false,
             else => error.E,
         },
-        .Int => switch (val) {
-            .Char => |c| @intCast(T, c),
+        .int => switch (val) {
+            .Char => |c| @as(T, @intCast(c)),
             .String => |s| fmt.parseInt(T, s.constSlice(), 0) catch error.E,
             .Usize => |u| if (T == usize) u else error.E,
             .Isize => |u| if (T == isize) u else error.E,
             else => error.E,
         },
-        .Float => switch (val) {
+        .float => switch (val) {
             .String => |s| fmt.parseFloat(T, s.constSlice()) catch error.E,
             else => error.E,
         },
-        .Enum => switch (val) {
+        .@"enum" => switch (val) {
             .String => |s| std.meta.stringToEnum(T, s.constSlice()) orelse error.E,
             else => error.E,
         },
-        .Union => switch (val) {
+        .@"union" => switch (val) {
             .List => |l| {
                 if (l.items.len > 2 or l.items.len == 0) return error.E;
                 const tag = try deserializeValue(std.meta.Tag(T), l.items[0].value, null);
                 inline for (std.meta.fields(T)) |field| {
                     if (mem.eql(u8, field.name, @tagName(tag))) {
-                        if (field.field_type == void) {
+                        if (field.type == void) {
                             if (l.items.len == 2) return error.E;
                             return @unionInit(T, field.name, {});
                         } else {
                             if (l.items.len == 1) return error.E;
-                            const fld = try deserializeValue(field.field_type, l.items[1].value, null);
+                            const fld = try deserializeValue(field.type, l.items[1].value, null);
                             return @unionInit(T, field.name, fld);
                         }
                     }
@@ -464,11 +464,11 @@ pub fn deserializeValue(comptime T: type, val: Value, default: ?T) !T {
             },
             else => error.E,
         },
-        .Optional => |optional| switch (val) {
+        .optional => |optional| switch (val) {
             .None => null,
             else => try deserializeValue(optional.child, val, null),
         },
-        .Struct => switch (val) {
+        .@"struct" => switch (val) {
             .List => |l| try deserializeStruct(T, l, default.?),
             else => error.E,
         },
@@ -477,7 +477,7 @@ pub fn deserializeValue(comptime T: type, val: Value, default: ?T) !T {
 }
 
 pub fn deserializeStruct(comptime T: type, data: KVList, initial: T) !T {
-    const struct_info = @typeInfo(T).Struct;
+    const struct_info = @typeInfo(T).@"struct";
     const fields = struct_info.fields;
 
     var output: T = initial;
@@ -490,9 +490,9 @@ pub fn deserializeStruct(comptime T: type, data: KVList, initial: T) !T {
         switch (node.key) {
             .Numeric => |n| {
                 var found: bool = false;
-                inline for (fields) |f, i| {
+                inline for (fields, 0..) |f, i| {
                     if (n == i) {
-                        @field(output, f.name) = try deserializeValue(f.field_type, node.value, f.default_value);
+                        @field(output, f.name) = try deserializeValue(f.type, node.value, f.defaultValue());
                         found = true;
                     }
                 }
@@ -502,7 +502,7 @@ pub fn deserializeStruct(comptime T: type, data: KVList, initial: T) !T {
                 var found: bool = false;
                 inline for (fields) |f| {
                     if (mem.eql(u8, s, f.name)) {
-                        @field(output, f.name) = try deserializeValue(f.field_type, node.value, f.default_value);
+                        @field(output, f.name) = try deserializeValue(f.type, node.value, f.defaultValue());
                         found = true;
                     }
                 }

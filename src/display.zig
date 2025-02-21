@@ -3,13 +3,14 @@ const build_options = @import("build_options");
 const std = @import("std");
 const mem = std.mem;
 const assert = std.debug.assert;
+const sort = std.sort;
 
 const err = @import("err.zig"); // For the allocator
 const state = @import("state.zig"); // For the allocator
 const colors = @import("colors.zig");
 
-const Generator = @import("generators.zig").Generator;
-const GeneratorCtx = @import("generators.zig").GeneratorCtx;
+// const Generator = @import("generators.zig").Generator;
+// const GeneratorCtx = @import("generators.zig").GeneratorCtx;
 const Coord = @import("types.zig").Coord;
 
 pub const driver: Driver = if (build_options.use_sdl) .SDL2 else .Termbox;
@@ -148,7 +149,7 @@ pub const Key = enum(u16) {
 
     pub fn fromTermbox(v: u16) Key {
         // FIXME: handle crash here
-        return @intToEnum(Key, v);
+        return @enumFromInt(v);
     }
 
     // TODO: some aren't handled, e.g. CtrlTilde
@@ -271,8 +272,8 @@ pub fn init(preferred_width: usize, preferred_height: usize, scale: f32) InitErr
                 "Oathbreaker", // TODO: move to const
                 driver_m.SDL_WINDOWPOS_CENTERED,
                 driver_m.SDL_WINDOWPOS_CENTERED,
-                @floatToInt(c_int, @intToFloat(f64, preferred_width * font.FONT_WIDTH) * scale),
-                @floatToInt(c_int, @intToFloat(f64, preferred_height * font.FONT_HEIGHT) * scale),
+                @intFromFloat(@as(f64, @floatFromInt(preferred_width * font.FONT_WIDTH)) * scale),
+                @intFromFloat(@as(f64, @floatFromInt(preferred_height * font.FONT_HEIGHT)) * scale),
                 driver_m.SDL_WINDOW_SHOWN,
             );
             if (window == null)
@@ -287,17 +288,17 @@ pub fn init(preferred_width: usize, preferred_height: usize, scale: f32) InitErr
                 renderer,
                 driver_m.SDL_PIXELFORMAT_RGBA8888,
                 driver_m.SDL_TEXTUREACCESS_STREAMING,
-                @intCast(c_int, preferred_width * font.FONT_WIDTH),
-                @intCast(c_int, preferred_height * font.FONT_HEIGHT),
+                @intCast(preferred_width * font.FONT_WIDTH),
+                @intCast(preferred_height * font.FONT_HEIGHT),
             );
             if (texture == null)
                 return error.SDL2InitError;
 
             grid = try state.gpa.allocator().alloc(Cell, preferred_width * preferred_height);
-            mem.set(Cell, grid, .{ .ch = ' ', .fg = 0, .bg = colors.BG });
+            @memset(grid, .{ .ch = ' ', .fg = 0, .bg = colors.BG });
 
             dirty = try state.gpa.allocator().alloc(bool, preferred_width * preferred_height);
-            mem.set(bool, dirty, true);
+            @memset(dirty, true);
 
             driver_m.SDL_StartTextInput();
 
@@ -337,7 +338,7 @@ pub fn deinit() !void {
 // FIXME: handle negative value from tb_width() if called before/after tb_init/tb_shutdown
 pub fn width() usize {
     return switch (driver) {
-        .Termbox => @intCast(usize, driver_m.tb_width()),
+        .Termbox => @intCast(driver_m.tb_width()),
         .SDL2 => return w_width,
     };
 }
@@ -345,7 +346,7 @@ pub fn width() usize {
 // FIXME: handle negative value from tb_height() if called before/after tb_init/tb_shutdown
 pub fn height() usize {
     return switch (driver) {
-        .Termbox => @intCast(usize, driver_m.tb_height()),
+        .Termbox => @intCast(driver_m.tb_height()),
         .SDL2 => return w_height,
     };
 }
@@ -359,7 +360,7 @@ pub fn present() void {
             var pixels: [*c]u32 = undefined;
             var pitch: c_int = undefined;
 
-            _ = driver_m.SDL_LockTexture(texture, null, @ptrCast([*c]?*anyopaque, &pixels), &pitch);
+            _ = driver_m.SDL_LockTexture(texture, null, @as([*c]?*anyopaque, @ptrCast(&pixels)), &pitch);
 
             var dy: usize = 0;
             var py: usize = 0;
@@ -374,7 +375,7 @@ pub fn present() void {
                         continue;
                     }
 
-                    const ch = if (cell.sch) |sch| @enumToInt(sch) else cell.ch;
+                    const ch = if (cell.sch) |sch| @intFromEnum(sch) else cell.ch;
                     const bg = if (cell.sch != null and cell.sbg != 0) cell.sbg else cell.bg;
                     const fg = if (cell.sch != null and cell.sbg != 0) cell.sfg else cell.fg;
 
@@ -413,7 +414,7 @@ pub fn present() void {
         },
     }
 
-    mem.set(bool, dirty, false);
+    @memset(dirty, false);
 }
 
 pub fn setCell(x: usize, y: usize, cell: Cell) void {
@@ -423,7 +424,7 @@ pub fn setCell(x: usize, y: usize, cell: Cell) void {
 
     switch (driver) {
         .Termbox => {
-            driver_m.tb_change_cell(@intCast(isize, x), @intCast(isize, y), cell.ch, cell.fg, cell.bg);
+            driver_m.tb_change_cell(@as(isize, @intCast(x)), @as(isize, @intCast(y)), cell.ch, cell.fg, cell.bg);
         },
         .SDL2 => {
             grid[y * width() + x] = cell;
@@ -455,125 +456,134 @@ inline fn norm(c: Coord) Coord {
     }
 }
 
+pub const GetEventsIter = struct {
+    timeout: ?usize,
+    timer: std.time.Timer,
+    nonmouse_event_received: bool,
+
+    pub fn next(self: *@This()) ?Event {
+        while (true) {
+            const max_timeout_ns = 15_000_000; // 15 ms
+            const remaining = ((self.timeout orelse std.math.maxInt(u64)) *| 1_000_000) -| self.timer.read();
+            std.time.sleep(@min(max_timeout_ns, remaining));
+
+            if (self.timeout != null and self.timer.read() / 1_000_000 > self.timeout.?) {
+                return null;
+            } else if (self.timeout == null and self.nonmouse_event_received) {
+                return null;
+            }
+
+            switch (driver) {
+                .Termbox => {
+                    var ev: driver_m.tb_event = undefined;
+                    const t = driver_m.tb_peek_event(&ev, 0);
+
+                    switch (t) {
+                        0 => return self.next(), // This might be stupid, but I can't tell right now
+                        -1 => err.bug("Termbox error", .{}),
+                        driver_m.TB_EVENT_KEY => {
+                            self.nonmouse_event_received = true;
+                            if (ev.ch != 0) {
+                                return Event{ .Char = @intCast(ev.ch) };
+                            } else if (ev.key != 0) {
+                                return switch (ev.key) {
+                                    driver_m.TB_KEY_SPACE => Event{ .Char = ' ' },
+                                    else => Event{ .Key = Key.fromTermbox(ev.key) },
+                                };
+                            } else unreachable;
+                        },
+                        driver_m.TB_EVENT_RESIZE => {
+                            return Event{ .Resize = .{
+                                .new_width = @intCast(ev.w),
+                                .new_height = @intCast(ev.h),
+                            } };
+                        },
+                        driver_m.TB_EVENT_MOUSE => @panic("TODO"),
+                        else => unreachable,
+                    }
+                },
+                .SDL2 => {
+                    var ev: driver_m.SDL_Event = undefined;
+
+                    const r = driver_m.SDL_PollEvent(&ev);
+                    if (r != 1) continue;
+
+                    switch (ev.type) {
+                        driver_m.SDL_QUIT => {
+                            self.nonmouse_event_received = true;
+                            return .Quit;
+                        },
+                        driver_m.SDL_TEXTINPUT => {
+                            self.nonmouse_event_received = true;
+                            const len = std.unicode.utf8ByteSequenceLength(ev.text.text[0]) catch err.wat();
+                            const text = ev.text.text[0..len];
+                            return Event{ .Char = std.unicode.utf8Decode(text) catch err.wat() };
+                        },
+                        driver_m.SDL_KEYDOWN => {
+                            const kcode = ev.key.keysym.sym;
+                            if (Key.fromSDL(kcode, ev.key.keysym.mod)) |key| {
+                                self.nonmouse_event_received = true;
+                                return Event{ .Key = key };
+                            } else if (kcode == driver_m.SDLK_SPACE) {
+                                self.nonmouse_event_received = true;
+                                return Event{ .Char = ' ' };
+                            } else return self.next();
+                        },
+                        driver_m.SDL_MOUSEBUTTONUP => {
+                            // ev is driver_m.SDL_MouseButtonEvent
+                            const xpix: usize = @intCast(ev.button.x);
+                            const ypix: usize = @intCast(ev.button.y);
+                            const xrel = xpix / font.FONT_WIDTH;
+                            const yrel = ypix / font.FONT_HEIGHT;
+                            if (xrel < width() and yrel < height()) {
+                                return Event{ .Click = norm(Coord.new(xrel, yrel)) };
+                            }
+                        },
+                        driver_m.SDL_MOUSEMOTION => {
+                            // ev is driver_m.SDL_MouseMotionEvent
+                            const xpix: usize = @intCast(ev.motion.x);
+                            const ypix: usize = @intCast(ev.motion.y);
+                            const xrel = xpix / font.FONT_WIDTH;
+                            const yrel = ypix / font.FONT_HEIGHT;
+                            if ((xrel != last_hover_x or yrel != last_hover_y) and
+                                xrel < width() and yrel < height() and
+                                ev.button.state == 0)
+                            {
+                                last_hover_y = yrel;
+                                last_hover_x = xrel;
+                                return Event{ .Hover = norm(Coord.new(xrel, yrel)) };
+                            }
+                        },
+                        driver_m.SDL_MOUSEWHEEL => {
+                            // ev is driver_m.SDL_MouseWheelEvent
+                            const xpix: usize = @intCast(ev.wheel.mouseX);
+                            const ypix: usize = @intCast(ev.wheel.mouseY);
+                            const xrel = xpix / font.FONT_WIDTH;
+                            const yrel = ypix / font.FONT_HEIGHT;
+                            if (xrel < width() and yrel < height()) {
+                                return Event{ .Wheel = .{
+                                    .y = ev.wheel.y,
+                                    .c = norm(Coord.new(xrel, yrel)),
+                                } };
+                            }
+                        },
+                        else => return self.next(),
+                    }
+                },
+            }
+        }
+    }
+};
+
 // Continuously get events, optionally quitting after a timeout is reached. If
 // timeout is null, getEvents() will finish when the first non-mouse event is
 // reached.
-pub fn getEvents(ctx: *GeneratorCtx(Event), timeout: ?usize) void {
+pub fn getEvents(timeout: ?usize) GetEventsIter {
     assert(timeout == null or timeout.? >= 15);
 
-    var timer = std.time.Timer.start() catch err.wat();
-    var nonmouse_event_received = false;
-
-    while (true) {
-        const max_timeout_ns = 15_000_000; // 15 ms
-        const remaining = ((timeout orelse std.math.maxInt(u64)) *| 1_000_000) -| timer.read();
-        std.time.sleep(std.math.min(max_timeout_ns, remaining));
-
-        if (timeout != null and timer.read() / 1_000_000 > timeout.?) {
-            ctx.finish();
-            return;
-        } else if (timeout == null and nonmouse_event_received) {
-            ctx.finish();
-            return;
-        }
-
-        switch (driver) {
-            .Termbox => {
-                var ev: driver_m.tb_event = undefined;
-                const t = driver_m.tb_peek_event(&ev, 0);
-
-                switch (t) {
-                    0 => continue,
-                    -1 => err.bug("Termbox error", .{}),
-                    driver_m.TB_EVENT_KEY => {
-                        nonmouse_event_received = true;
-                        if (ev.ch != 0) {
-                            ctx.yield(Event{ .Char = @intCast(u21, ev.ch) });
-                        } else if (ev.key != 0) {
-                            ctx.yield(switch (ev.key) {
-                                driver_m.TB_KEY_SPACE => Event{ .Char = ' ' },
-                                else => Event{ .Key = Key.fromTermbox(ev.key) },
-                            });
-                        } else unreachable;
-                    },
-                    driver_m.TB_EVENT_RESIZE => {
-                        ctx.yield(Event{ .Resize = .{
-                            .new_width = @intCast(usize, ev.w),
-                            .new_height = @intCast(usize, ev.h),
-                        } });
-                    },
-                    driver_m.TB_EVENT_MOUSE => @panic("TODO"),
-                    else => unreachable,
-                }
-            },
-            .SDL2 => {
-                var ev: driver_m.SDL_Event = undefined;
-
-                const r = driver_m.SDL_PollEvent(&ev);
-                if (r != 1) continue;
-
-                switch (ev.type) {
-                    driver_m.SDL_QUIT => {
-                        nonmouse_event_received = true;
-                        ctx.yield(.Quit);
-                    },
-                    driver_m.SDL_TEXTINPUT => {
-                        nonmouse_event_received = true;
-                        const len = std.unicode.utf8ByteSequenceLength(ev.text.text[0]) catch err.wat();
-                        const text = ev.text.text[0..len];
-                        ctx.yield(Event{ .Char = std.unicode.utf8Decode(text) catch err.wat() });
-                    },
-                    driver_m.SDL_KEYDOWN => {
-                        const kcode = ev.key.keysym.sym;
-                        if (Key.fromSDL(kcode, ev.key.keysym.mod)) |key| {
-                            ctx.yield(Event{ .Key = key });
-                            nonmouse_event_received = true;
-                        } else if (kcode == driver_m.SDLK_SPACE) {
-                            ctx.yield(Event{ .Char = ' ' });
-                            nonmouse_event_received = true;
-                        } else continue;
-                    },
-                    driver_m.SDL_MOUSEBUTTONUP => {
-                        // ev is driver_m.SDL_MouseButtonEvent
-                        const xpix = @intCast(usize, ev.button.x);
-                        const ypix = @intCast(usize, ev.button.y);
-                        const xrel = xpix / font.FONT_WIDTH;
-                        const yrel = ypix / font.FONT_HEIGHT;
-                        if (xrel < width() and yrel < height()) {
-                            ctx.yield(Event{ .Click = norm(Coord.new(xrel, yrel)) });
-                        }
-                    },
-                    driver_m.SDL_MOUSEMOTION => {
-                        // ev is driver_m.SDL_MouseMotionEvent
-                        const xpix = @intCast(usize, ev.motion.x);
-                        const ypix = @intCast(usize, ev.motion.y);
-                        const xrel = xpix / font.FONT_WIDTH;
-                        const yrel = ypix / font.FONT_HEIGHT;
-                        if ((xrel != last_hover_x or yrel != last_hover_y) and
-                            xrel < width() and yrel < height() and
-                            ev.button.state == 0)
-                        {
-                            last_hover_y = yrel;
-                            last_hover_x = xrel;
-                            ctx.yield(Event{ .Hover = norm(Coord.new(xrel, yrel)) });
-                        }
-                    },
-                    driver_m.SDL_MOUSEWHEEL => {
-                        // ev is driver_m.SDL_MouseWheelEvent
-                        const xpix = @intCast(usize, ev.wheel.mouseX);
-                        const ypix = @intCast(usize, ev.wheel.mouseY);
-                        const xrel = xpix / font.FONT_WIDTH;
-                        const yrel = ypix / font.FONT_HEIGHT;
-                        if (xrel < width() and yrel < height()) {
-                            ctx.yield(Event{ .Wheel = .{
-                                .y = ev.wheel.y,
-                                .c = norm(Coord.new(xrel, yrel)),
-                            } });
-                        }
-                    },
-                    else => continue,
-                }
-            },
-        }
-    }
+    return .{
+        .timeout = timeout,
+        .timer = std.time.Timer.start() catch err.wat(),
+        .nonmouse_event_received = false,
+    };
 }

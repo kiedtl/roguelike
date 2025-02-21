@@ -1,4 +1,5 @@
 const std = @import("std");
+const sort = std.sort;
 const meta = std.meta;
 const math = std.math;
 const mem = std.mem;
@@ -48,8 +49,8 @@ pub var map_win: struct {
                         }
                         break :b true;
                     } else {
-                        st.x = math.min(st.fab.width, coord.x / 2);
-                        st.y = math.min(st.fab.height, coord.y);
+                        st.x = @min(st.fab.width, coord.x / 2);
+                        st.y = @min(st.fab.height, coord.y);
                         break :b true;
                     }
                 },
@@ -88,53 +89,53 @@ pub var hud_win: struct {
             .Click, .Hover => |c| switch (self.main.handleMouseEvent(c, _evToMEvType(ev))) {
                 .Coord => err.wat(),
                 .Signal => |s| b: {
-                    if (s & @enumToInt(HudMouseSignalTag.SwitchPane) > 0) {
-                        const i = s & ~@enumToInt(HudMouseSignalTag.SwitchPane);
-                        st.hud_pane = @intToEnum(fabedit.EdState.HudPane, i);
+                    if (s & @intFromEnum(HudMouseSignalTag.SwitchPane) > 0) {
+                        const i = s & ~@intFromEnum(HudMouseSignalTag.SwitchPane);
+                        st.hud_pane = @enumFromInt(i);
                         st.fab_redraw = true;
                         break :b true;
-                    } else if (s & @enumToInt(HudMouseSignalTag.Prop) > 0) {
-                        const i = s & ~@enumToInt(HudMouseSignalTag.Prop);
+                    } else if (s & @intFromEnum(HudMouseSignalTag.Prop) > 0) {
+                        const i = s & ~@intFromEnum(HudMouseSignalTag.Prop);
                         st.cursor = .{ .Prop = i };
                         break :b true;
-                    } else if (s & @enumToInt(HudMouseSignalTag.Mob) > 0) {
-                        const i = s & ~@enumToInt(HudMouseSignalTag.Mob);
+                    } else if (s & @intFromEnum(HudMouseSignalTag.Mob) > 0) {
+                        const i = s & ~@intFromEnum(HudMouseSignalTag.Mob);
                         st.cursor = .{ .Mob = i };
                         break :b true;
-                    } else if (s & @enumToInt(HudMouseSignalTag.Basic) > 0) {
-                        const i = s & ~@enumToInt(HudMouseSignalTag.Basic);
-                        st.cursor = .{ .Basic = @intToEnum(fabedit.EdState.BasicCursor, i) };
+                    } else if (s & @intFromEnum(HudMouseSignalTag.Basic) > 0) {
+                        const i = s & ~@intFromEnum(HudMouseSignalTag.Basic);
+                        st.cursor = .{ .Basic = @enumFromInt(i) };
                         break :b true;
-                    } else if (s & @enumToInt(HudMouseSignalTag.Area) > 0) {
-                        const i = s & ~@enumToInt(HudMouseSignalTag.Area);
+                    } else if (s & @intFromEnum(HudMouseSignalTag.Area) > 0) {
+                        const i = s & ~@intFromEnum(HudMouseSignalTag.Area);
                         st.cursor = .{ .PrisonArea = i };
                         break :b true;
-                    } else if (s & @enumToInt(HudMouseSignalTag.AreaIncH) > 0) {
-                        const i = s & ~@enumToInt(HudMouseSignalTag.AreaIncH);
+                    } else if (s & @intFromEnum(HudMouseSignalTag.AreaIncH) > 0) {
+                        const i = s & ~@intFromEnum(HudMouseSignalTag.AreaIncH);
                         st.fab.prisons.slice()[i].height += 1;
                         st.fab_info[st.fab_index].unsaved = true;
                         st.fab_redraw = true;
                         break :b true;
-                    } else if (s & @enumToInt(HudMouseSignalTag.AreaDecH) > 0) {
-                        const i = s & ~@enumToInt(HudMouseSignalTag.AreaDecH);
+                    } else if (s & @intFromEnum(HudMouseSignalTag.AreaDecH) > 0) {
+                        const i = s & ~@intFromEnum(HudMouseSignalTag.AreaDecH);
                         st.fab.prisons.slice()[i].height -|= 1;
                         st.fab_info[st.fab_index].unsaved = true;
                         st.fab_redraw = true;
                         break :b true;
-                    } else if (s & @enumToInt(HudMouseSignalTag.AreaIncW) > 0) {
-                        const i = s & ~@enumToInt(HudMouseSignalTag.AreaIncW);
+                    } else if (s & @intFromEnum(HudMouseSignalTag.AreaIncW) > 0) {
+                        const i = s & ~@intFromEnum(HudMouseSignalTag.AreaIncW);
                         st.fab.prisons.slice()[i].width += 1;
                         st.fab_info[st.fab_index].unsaved = true;
                         st.fab_redraw = true;
                         break :b true;
-                    } else if (s & @enumToInt(HudMouseSignalTag.AreaDecW) > 0) {
-                        const i = s & ~@enumToInt(HudMouseSignalTag.AreaDecW);
+                    } else if (s & @intFromEnum(HudMouseSignalTag.AreaDecW) > 0) {
+                        const i = s & ~@intFromEnum(HudMouseSignalTag.AreaDecW);
                         st.fab.prisons.slice()[i].width -|= 1;
                         st.fab_info[st.fab_index].unsaved = true;
                         st.fab_redraw = true;
                         break :b true;
-                    } else if (s & @enumToInt(HudMouseSignalTag.AreaAddDel) > 0) {
-                        switch (s & ~@enumToInt(HudMouseSignalTag.AreaAddDel)) {
+                    } else if (s & @intFromEnum(HudMouseSignalTag.AreaAddDel) > 0) {
+                        switch (s & ~@intFromEnum(HudMouseSignalTag.AreaAddDel)) {
                             0 => st.fab.prisons.append(Rect.new(Coord.new(0, 0), 1, 1)) catch {
                                 std.log.err("Too many prison areas", .{});
                             },
@@ -326,7 +327,7 @@ pub fn drawHUD(st: *fabedit.EdState) void {
     var y: usize = 0;
 
     var tabx: usize = 0;
-    inline for (meta.fields(fabedit.EdState.HudPane)) |field, i| {
+    inline for (meta.fields(fabedit.EdState.HudPane), 0..) |field, i| {
         if (i != 0) {
             _ = hud_win.main.drawTextAt(tabx, y, " · ", .{});
             tabx += 3;
@@ -335,7 +336,7 @@ pub fn drawHUD(st: *fabedit.EdState) void {
         if (mem.eql(u8, @tagName(st.hud_pane), field.name))
             c = 'c';
         _ = hud_win.main.drawTextAtf(tabx, y, "${u}{s}$.", .{ c, field.name }, .{});
-        const signal = @enumToInt(HudMouseSignalTag.SwitchPane) | i;
+        const signal = @intFromEnum(HudMouseSignalTag.SwitchPane) | i;
         hud_win.main.addClickableTextBoth(.{ .Signal = signal });
         tabx += field.name.len;
     }
@@ -347,7 +348,7 @@ pub fn drawHUD(st: *fabedit.EdState) void {
         .Basic => {
             var dx: usize = 0;
             inline for (meta.fields(fabedit.EdState.BasicCursor)) |field| {
-                const v = @intToEnum(fabedit.EdState.BasicCursor, field.value);
+                const v: fabedit.EdState.BasicCursor = @enumFromInt(field.value);
                 var cell: display.Cell = switch (v) {
                     .Wall => displayAs(st, .Wall),
                     .Window => displayAs(st, .Window),
@@ -362,7 +363,7 @@ pub fn drawHUD(st: *fabedit.EdState) void {
                 cell.fl.wide = true;
                 hud_win.main.setCell(dx, y, cell);
                 hud_win.main.setCell(dx + 1, y, .{ .fl = .{ .skip = true } });
-                const signal = @enumToInt(HudMouseSignalTag.Basic) | field.value;
+                const signal = @intFromEnum(HudMouseSignalTag.Basic) | field.value;
                 hud_win.main.addClickableTextBoth(.{ .Signal = signal });
                 hud_win.main.addMouseTrigger(Rect.new(Coord.new(dx, y), 0, 0), .Click, .{
                     .Signal = signal,
@@ -382,14 +383,14 @@ pub fn drawHUD(st: *fabedit.EdState) void {
             y += 1;
 
             var dx: usize = 0;
-            for (mobs.MOBS) |template, i| {
+            for (mobs.MOBS, 0..) |template, i| {
                 var cell = display.Cell{ .ch = template.mob.tile, .fg = colors.OFF_WHITE };
                 if (st.cursor == .Mob and i == st.cursor.Mob)
                     cell.bg = colors.mix(cell.bg, 0xffffff, 0.2);
                 cell.fl.wide = true;
                 hud_win.main.setCell(dx, y, cell);
                 hud_win.main.setCell(dx + 1, y, .{ .fl = .{ .skip = true } });
-                const signal = @enumToInt(HudMouseSignalTag.Mob) | i;
+                const signal = @intFromEnum(HudMouseSignalTag.Mob) | i;
                 hud_win.main.addMouseTrigger(Rect.new(Coord.new(dx, y), 0, 0), .Click, .{
                     .Signal = signal,
                 });
@@ -412,7 +413,7 @@ pub fn drawHUD(st: *fabedit.EdState) void {
             y += hud_win.main.drawTextAtf(0, y, "$cSelected:$. {s}", .{selected.id}, .{});
 
             var dx: usize = 0;
-            for (surfaces.props.items) |prop, i| {
+            for (surfaces.props.items, 0..) |prop, i| {
                 var cell = display.Cell{};
                 cell.fg = prop.fg orelse colors.BG;
                 cell.bg = prop.bg orelse colors.BG;
@@ -425,7 +426,7 @@ pub fn drawHUD(st: *fabedit.EdState) void {
                 cell.fl.wide = true;
                 hud_win.main.setCell(dx, y, cell);
                 hud_win.main.setCell(dx + 1, y, .{ .fl = .{ .skip = true } });
-                const signal = @enumToInt(HudMouseSignalTag.Prop) | i;
+                const signal = @intFromEnum(HudMouseSignalTag.Prop) | i;
                 hud_win.main.addMouseTrigger(Rect.new(Coord.new(dx, y), 0, 0), .Click, .{
                     .Signal = signal,
                 });
@@ -492,7 +493,7 @@ pub fn drawHUD(st: *fabedit.EdState) void {
                 if (mem.lastIndexOfScalar(u8, sel.id, '_')) |last| {
                     if (last + 1 < sel.id.len) {
                         const sel_charname = sel.id[last + 1 ..];
-                        sel_char = for (box_char_names) |charname, i| {
+                        sel_char = for (box_char_names, 0..) |charname, i| {
                             if (mem.eql(u8, charname.name, sel_charname))
                                 break i;
                         } else null;
@@ -534,7 +535,7 @@ pub fn drawHUD(st: *fabedit.EdState) void {
                 hud_win.main.setCell(dx + 1, y, .{ .fl = .{ .skip = true } });
 
                 if (prop) |prop_index| {
-                    const signal = @enumToInt(HudMouseSignalTag.Prop) | prop_index;
+                    const signal = @intFromEnum(HudMouseSignalTag.Prop) | prop_index;
                     hud_win.main.addMouseTrigger(Rect.new(Coord.new(dx, y), 0, 0), .Click, .{
                         .Signal = signal,
                     });
@@ -544,7 +545,7 @@ pub fn drawHUD(st: *fabedit.EdState) void {
             }
         },
         .Areas => {
-            for (st.fab.prisons.constSlice()) |prect, i| {
+            for (st.fab.prisons.constSlice(), 0..) |prect, i| {
                 const sel = st.cursor == .PrisonArea and st.cursor.PrisonArea == i;
                 const c1: u21 = if (sel) 'c' else '.';
                 const c2: u21 = if (sel) '.' else 'g';
@@ -553,7 +554,7 @@ pub fn drawHUD(st: *fabedit.EdState) void {
                     i, c1, c3, c2, prect.start.x, c3, c2, prect.start.y, prect.width, c3, c2, prect.height, c3,
                 }, .{});
                 if (!sel) {
-                    const signal = @enumToInt(HudMouseSignalTag.Area) | i;
+                    const signal = @intFromEnum(HudMouseSignalTag.Area) | i;
                     hud_win.main.addClickableTextBoth(.{ .Signal = signal });
                 }
 
@@ -564,7 +565,7 @@ pub fn drawHUD(st: *fabedit.EdState) void {
                     .AreaDecW,
                     .AreaIncW,
                 };
-                for (&buttons) |button, bi| {
+                for (&buttons, 0..) |button, bi| {
                     if (bi == 1 or bi == 3) {
                         hud_win.main.setCell(x, y, .{ .ch = '/', .fg = colors.GREY });
                         x += 1;
@@ -573,7 +574,7 @@ pub fn drawHUD(st: *fabedit.EdState) void {
                     }
                     const ch: u21 = if (bi % 2 == 1) '+' else '-';
                     hud_win.main.setCell(x, y, .{ .ch = ch, .fg = colors.LIGHT_CONCRETE });
-                    const signal = @enumToInt(button) | i;
+                    const signal = @intFromEnum(button) | i;
                     hud_win.main.addMouseTrigger(Rect.new(Coord.new(x, y), 0, 0), .Click, .{
                         .Signal = signal,
                     });
@@ -590,11 +591,11 @@ pub fn drawHUD(st: *fabedit.EdState) void {
 
             var x: usize = 0;
             _ = hud_win.main.drawTextAt(x, y, " Add new ", .{ .xptr = &x });
-            const s1 = @enumToInt(HudMouseSignalTag.AreaAddDel) | 0;
+            const s1 = @intFromEnum(HudMouseSignalTag.AreaAddDel) | 0;
             hud_win.main.addClickableTextBoth(.{ .Signal = s1 });
             _ = hud_win.main.drawTextAt(x, y, " $g·$. ", .{ .xptr = &x });
             _ = hud_win.main.drawTextAt(x, y, " Delete selected ", .{});
-            const s2 = @enumToInt(HudMouseSignalTag.AreaAddDel) | 1;
+            const s2 = @intFromEnum(HudMouseSignalTag.AreaAddDel) | 1;
             hud_win.main.addClickableTextBoth(.{ .Signal = s2 });
         },
     }
@@ -664,7 +665,7 @@ pub fn drawMap(st: *fabedit.EdState) void {
             };
 
             cell.ch = switch (st.fab.content[y][x]) {
-                .LevelFeature => |l| '0' + @intCast(u21, l),
+                .LevelFeature => |l| '0' + @as(u21, @intCast(l)),
                 .Feature => |f| switch (st.fab.features[f].?) {
                     .Stair => |s| @as(u21, switch (s.stairtype) {
                         .Up => '<',

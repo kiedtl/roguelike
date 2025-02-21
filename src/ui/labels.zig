@@ -52,7 +52,7 @@ pub fn addFor(mob: *Mob, text: []const u8, opts: LabelOpts) void {
 }
 
 pub fn addForf(mob: *Mob, comptime fmt: []const u8, args: anytype, opts: LabelOpts) void {
-    const s = @call(.{ .modifier = .always_inline }, std.fmt.allocPrint, .{ state.gpa.allocator(), fmt, args }) catch unreachable;
+    const s = @call(.always_inline, std.fmt.allocPrint, .{ state.gpa.allocator(), fmt, args }) catch unreachable;
     add(.{ .Mob = mob }, s, opts, true);
 }
 
@@ -65,7 +65,7 @@ pub fn addAtf(coord: Coord, comptime fmt: []const u8, args: anytype, opts: Label
     add(.{ .Coord = coord }, s, opts, true);
 }
 
-fn add(loc: std.meta.fieldInfo(MapLabel, .loc).field_type, text: []const u8, opts: LabelOpts, malloced: bool) void {
+fn add(loc: std.meta.fieldInfo(MapLabel, .loc).type, text: []const u8, opts: LabelOpts, malloced: bool) void {
     labels.append(.{
         .text = text,
         .loc = loc,
@@ -117,7 +117,7 @@ pub fn drawLabels() void {
     ui.map_win.annotations.clear();
 
     var new_labels = @TypeOf(labels).init(state.gpa.allocator());
-    while (labels.popOrNull()) |label|
+    while (labels.pop()) |label|
         if (label.age < label.max_age and ui.coordToScreen(label.getLoc()) != null) {
             new_labels.append(label) catch unreachable;
             const last = &new_labels.items[new_labels.items.len - 1];

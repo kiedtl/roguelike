@@ -1,6 +1,7 @@
 const std = @import("std");
 const mem = std.mem;
 const math = std.math;
+const sort = std.sort;
 const assert = std.debug.assert;
 const enums = std.enums;
 
@@ -53,8 +54,8 @@ const CARDINAL_DIRECTIONS = types.CARDINAL_DIRECTIONS;
 const SoundState = @import("sound.zig").SoundState;
 const TaskArrayList = @import("tasks.zig").TaskArrayList;
 const EvocableList = @import("items.zig").EvocableList;
-const Generator = @import("generators.zig").Generator;
-const GeneratorCtx = @import("generators.zig").GeneratorCtx;
+// const Generator = @import("generators.zig").Generator;
+// const GeneratorCtx = @import("generators.zig").GeneratorCtx;
 const StackBuffer = @import("buffer.zig").StackBuffer;
 
 pub const GameState = union(enum) { Game, Win, Lose, Quit, Viewer };
@@ -293,7 +294,7 @@ pub fn is_walkable(coord: Coord, opts: IsWalkableOptions) bool {
         newopts._no_multitile_recurse = true;
         const l = opts.mob.?.multitile.?;
 
-        var gen = Generator(Rect.rectIter).init(Rect.new(coord, l, l));
+        var gen = Rect.new(coord, l, l).iter();
         while (gen.next()) |mobcoord|
             if (!is_walkable(mobcoord, newopts))
                 return false;
@@ -381,7 +382,7 @@ pub fn createMobList(include_player: bool, only_if_infov: bool, level: usize, al
             return player.coord.distance(a.coord) < player.coord.distance(b.coord);
         }
     };
-    std.sort.insertionSort(*Mob, moblist.items, {}, S._sortFunc);
+    std.sort.insertion(*Mob, moblist.items, {}, S._sortFunc);
 
     return moblist;
 }
@@ -441,16 +442,16 @@ pub fn loadStatusStringInfo() void {
 
     var rbuf: [65535]u8 = undefined;
     const data_dir = std.fs.cwd().openDir("data", .{}) catch unreachable;
-    const data_file = data_dir.openFile("status_help.tsv", .{ .read = true }) catch unreachable;
+    const data_file = data_dir.openFile("status_help.tsv", .{}) catch unreachable;
 
     const read = data_file.readAll(rbuf[0..]) catch unreachable;
 
     const result = tsv.parse(struct { e: Status, n: []u8, un: ?[]u8, mn: ?[]u8 }, &[_]tsv.TSVSchemaItem{
         .{ .field_name = "e", .parse_to = Status, .parse_fn = tsv.parsePrimitive },
         .{ .field_name = "n", .parse_to = []u8, .parse_fn = tsv.parseUtf8String },
-        .{ .field_name = "un", .parse_to = ?[]u8, .parse_fn = tsv.parseOptionalUtf8String, .optional = true, .default_val = null },
-        .{ .field_name = "mn", .parse_to = ?[]u8, .parse_fn = tsv.parseOptionalUtf8String, .optional = true, .default_val = null },
-    }, .{ .e = undefined, .n = undefined, .un = undefined, .mn = undefined }, rbuf[0..read], alloc);
+        .{ .field_name = "un", .parse_to = ?[]u8, .parse_fn = tsv.parseOptionalUtf8String, .optional = true },
+        .{ .field_name = "mn", .parse_to = ?[]u8, .parse_fn = tsv.parseOptionalUtf8String, .optional = true },
+    }, .{ .e = undefined, .n = undefined, .un = null, .mn = null }, rbuf[0..read], alloc);
 
     if (!result.is_ok()) {
         err.bug("Can't load data/status_help.tsv: {} (line {}, field {})", .{
@@ -494,7 +495,7 @@ pub fn loadLevelInfo() void {
 
     var rbuf: [65535]u8 = undefined;
     const data_dir = std.fs.cwd().openDir("data", .{}) catch unreachable;
-    const data_file = data_dir.openFile("levelinfo.tsv", .{ .read = true }) catch unreachable;
+    const data_file = data_dir.openFile("levelinfo.tsv", .{}) catch unreachable;
 
     const read = data_file.readAll(rbuf[0..]) catch unreachable;
 
@@ -506,7 +507,7 @@ pub fn loadLevelInfo() void {
         .{ .field_name = "ecosystem", .parse_to = bool, .parse_fn = tsv.parsePrimitive },
         .{ .field_name = "upgr", .parse_to = bool, .parse_fn = tsv.parsePrimitive },
         .{ .field_name = "optional", .parse_to = bool, .parse_fn = tsv.parsePrimitive },
-        .{ .field_name = "stairs", .parse_to = ?[]u8, .is_array = Dungeon.MAX_STAIRS, .parse_fn = tsv.parseOptionalUtf8String, .optional = true, .default_val = null },
+        .{ .field_name = "stairs", .parse_to = ?[]u8, .is_array = Dungeon.MAX_STAIRS, .parse_fn = tsv.parseOptionalUtf8String, .optional = true },
     }, .{
         .id = undefined,
         .depth = undefined,
@@ -515,7 +516,7 @@ pub fn loadLevelInfo() void {
         .ecosystem = undefined,
         .upgr = undefined,
         .optional = undefined,
-        .stairs = undefined,
+        .stairs = [_]?[]u8{null} ** Dungeon.MAX_STAIRS,
     }, rbuf[0..read], alloc);
 
     if (!result.is_ok()) {
@@ -533,14 +534,14 @@ pub fn loadLevelInfo() void {
         err.bug("Can't load data/levelinfo.tsv: Incorrect number of entries.", .{});
     }
 
-    for (data.items) |row, i|
+    for (data.items, 0..) |row, i|
         levelinfo[i] = row;
 
     std.log.info("Loaded data/levelinfo.tsv.", .{});
 }
 
 pub fn findLevelByName(name: []const u8) ?usize {
-    return for (levelinfo) |item, i| {
+    return for (levelinfo, 0..) |item, i| {
         if (mem.eql(u8, item.name, name)) break i;
     } else null;
 }
@@ -577,7 +578,7 @@ pub fn messageAboutMob(
     mob_is_else_args: anytype,
 ) void {
     var buf: [128]u8 = undefined;
-    for (buf) |*i| i.* = 0;
+    for (&buf) |*i| i.* = 0;
     var fbs = std.io.fixedBufferStream(&buf);
 
     if (mob == player) {
@@ -594,9 +595,9 @@ pub fn messageAboutMob(
 
 pub fn message(mtype: MessageType, comptime fmt: []const u8, args: anytype) void {
     var buf: [256]u8 = undefined;
-    for (buf) |*i| i.* = 0;
+    for (&buf) |*i| i.* = 0;
     var fbs = std.io.fixedBufferStream(&buf);
-    @call(.{ .modifier = .always_inline }, std.fmt.format, .{ fbs.writer(), fmt, args }) catch err.bug("format error (buffer overflow?)", .{});
+    @call(.always_inline, std.fmt.format, .{ fbs.writer(), fmt, args }) catch err.bug("format error (buffer overflow?)", .{});
 
     var msg: Message = .{
         .msg = undefined,

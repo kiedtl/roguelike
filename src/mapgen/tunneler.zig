@@ -1,5 +1,6 @@
 const std = @import("std"); // {{{
 const mem = std.mem;
+const sort = std.sort;
 const math = std.math;
 // const meta = std.meta;
 const assert = std.debug.assert;
@@ -140,9 +141,9 @@ pub const Ctx = struct {
                     // XXX: I have no idea if this is correct or not
                     const p_length = roomie.parent.corridorLength();
                     switch (roomie.parent.direction) {
-                        .North => roomie.born_at = math.min(p_length, roomie.born_at + fab.height),
+                        .North => roomie.born_at = @min(p_length, roomie.born_at + fab.height),
                         //.South => roomie.born_at -= fab.height,
-                        .West => roomie.born_at = math.min(p_length, roomie.born_at + fab.width),
+                        .West => roomie.born_at = @min(p_length, roomie.born_at + fab.width),
                         //.East => roomie.born_at -= fab.width,
                         .South, .East => {},
                         else => unreachable,
@@ -208,7 +209,7 @@ pub const Ctx = struct {
                 state.rooms[level].append(room) catch err.wat();
 
             roomie.parent.child_rooms += 1;
-            roomie.parent.roomie_last_born_at = math.max(roomie.parent.roomie_last_born_at, roomie.born_at);
+            roomie.parent.roomie_last_born_at = @max(roomie.parent.roomie_last_born_at, roomie.born_at);
             _ = self.roomies.swapRemove(i);
         }
     }
@@ -421,12 +422,12 @@ pub const Roomie = struct {
     // Returns false if invalid
     pub fn checkOverlap(room: Room, parent: *const Tunneler) bool {
         const door_x = [_]usize{
-            math.max(room.rect.start.x, parent.rect.start.x),
-            math.min(room.rect.end().x - 1, parent.rect.end().x - 1),
+            @max(room.rect.start.x, parent.rect.start.x),
+            @min(room.rect.end().x - 1, parent.rect.end().x - 1),
         };
         const door_y = [_]usize{
-            math.max(room.rect.start.y, parent.rect.start.y),
-            math.min(room.rect.end().y - 1, parent.rect.end().y - 1),
+            @max(room.rect.start.y, parent.rect.start.y),
+            @min(room.rect.end().y - 1, parent.rect.end().y - 1),
         };
         return switch (parent.direction) {
             .North, .South => door_y[0] <= door_y[1],
@@ -439,12 +440,12 @@ pub const Roomie = struct {
         const level = room.rect.start.z;
 
         const door_x = [_]usize{
-            math.max(room.rect.start.x, parent.rect.start.x),
-            math.min(room.rect.end().x - 1, parent.rect.end().x - 1),
+            @max(room.rect.start.x, parent.rect.start.x),
+            @min(room.rect.end().x - 1, parent.rect.end().x - 1),
         };
         const door_y = [_]usize{
-            math.max(room.rect.start.y, parent.rect.start.y),
-            math.min(room.rect.end().y - 1, parent.rect.end().y - 1),
+            @max(room.rect.start.y, parent.rect.start.y),
+            @min(room.rect.end().y - 1, parent.rect.end().y - 1),
         };
 
         switch (parent.direction) {
@@ -731,7 +732,7 @@ pub const Tunneler = struct {
             .North, .South => &[_]Direction{ .East, .West },
             else => unreachable,
         };
-        for (newdirecs) |newdirec, i| {
+        for (newdirecs, 0..) |newdirec, i| {
             var cor_width: usize = self.corridorWidth();
             if (rng.percent(ctx.opts.grow_chance) and cor_width < ctx.opts.max_width) {
                 cor_width += 1;
@@ -786,7 +787,7 @@ pub const Tunneler = struct {
 
         const level = self.rect.start.z;
 
-        for (res) |_, i| {
+        for (res, 0..) |_, i| {
             var rectw = rng.range(usize, Configs[level].min_room_width, Configs[level].max_room_width);
             var recth = rng.range(usize, Configs[level].min_room_height, Configs[level].max_room_height);
 
@@ -869,7 +870,7 @@ pub const Tunneler = struct {
         var last_branch: usize = 0;
         for (self.child_corridors.constSlice()) |child| {
             if (!child.is_eviscerated) {
-                last_branch = math.max(child.born_at, last_branch);
+                last_branch = @max(child.born_at, last_branch);
             }
         }
         return self.corridorLength() - last_branch;
@@ -879,7 +880,7 @@ pub const Tunneler = struct {
         var farthest: usize = self.roomie_last_born_at;
         for (self.child_corridors.constSlice()) |child| {
             if (!child.is_eviscerated) {
-                farthest = math.max(child.born_at, farthest);
+                farthest = @max(child.born_at, farthest);
             }
         }
         return farthest;
@@ -921,7 +922,7 @@ pub const Tunneler = struct {
         const b_begin = if (other.direction == .North or other.direction == .South) other.rect.start.y else other.rect.start.x;
         const b_end = b_begin + other.corridorLength();
 
-        return math.max(a_begin, b_begin) <= math.min(a_end, b_end);
+        return @max(a_begin, b_begin) <= @min(a_end, b_end);
     }
 
     pub fn minimumDistanceBetween(self: *const Self, other: *const Self) usize {
@@ -941,7 +942,7 @@ pub const TunnelerOptions = struct {
 
     // Maximum tunnel length before the algorithm tries to force it to change
     // directions.
-    max_length: usize = math.max(WIDTH, HEIGHT) * 2 / 3, //WIDTH / 3,
+    max_length: usize = @max(WIDTH, HEIGHT) * 2 / 3, //WIDTH / 3,
 
     // Maximum tunnel width. If the tunnel is this size, it won't grow farther.
     max_width: usize = 6,

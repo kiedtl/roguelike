@@ -2,6 +2,7 @@ const std = @import("std");
 const mem = std.mem;
 const math = std.math;
 const assert = std.debug.assert;
+const sort = std.sort;
 
 const err = @import("err.zig");
 const state = @import("state.zig");
@@ -174,7 +175,7 @@ pub const Info = struct {
                     } else if (state.player.coord.eq(coord)) {
                         s.surroundings[dy][dx] = '@';
                     } else {
-                        s.surroundings[dy][dx] = @intCast(u21, Tile.displayAs(coord, false, false).ch);
+                        s.surroundings[dy][dx] = @intCast(Tile.displayAs(coord, false, false).ch);
                     }
                 }
             }
@@ -183,7 +184,7 @@ pub const Info = struct {
         s.messages.reinit(null);
         if (state.messages.items.len > 0) {
             const msgcount = state.messages.items.len - 1;
-            var i: usize = msgcount - math.min(msgcount, MESSAGE_COUNT - 1);
+            var i: usize = msgcount - @min(msgcount, MESSAGE_COUNT - 1);
             while (i <= msgcount) : (i += 1) {
                 const msg = state.messages.items[i];
                 s.messages.append(.{
@@ -214,8 +215,8 @@ pub const Info = struct {
         }
 
         s.equipment.reinit(null);
-        inline for (@typeInfo(Mob.Inventory.EquSlot).Enum.fields) |slots_f| {
-            const slot = @intToEnum(Mob.Inventory.EquSlot, slots_f.value);
+        inline for (@typeInfo(Mob.Inventory.EquSlot).@"enum".fields) |slots_f| {
+            const slot: Mob.Inventory.EquSlot = @enumFromInt(slots_f.value);
             const item = state.player.inventory.equipment(slot).*;
             s.equipment.append(.{
                 .slot_id = @tagName(slot),
@@ -306,7 +307,7 @@ pub const Stat = enum(usize) {
 };
 
 pub const StatValue = struct {
-    SingleUsize: SingleUsize = .{},
+    SingleUsize: Single = .{},
     BatchUsize: struct {
         total: usize = 0,
         singles: StackBuffer(BatchEntry, 256) = StackBuffer(BatchEntry, 256).init(null),
@@ -314,14 +315,14 @@ pub const StatValue = struct {
 
     pub const BatchEntry = struct {
         id: StackBuffer(u8, 64) = StackBuffer(u8, 64).init(null),
-        val: SingleUsize = .{},
+        val: Single = .{},
     };
 
-    pub const SingleUsize = struct {
+    pub const Single = struct {
         total: usize = 0,
         each: [LEVELS]usize = [1]usize{0} ** LEVELS,
 
-        pub fn jsonStringify(val: SingleUsize, opts: std.json.StringifyOptions, stream: anytype) !void {
+        pub fn jsonStringify(val: Single, stream: anytype) !void {
             const JsonValue = struct { floor_type: []const u8, floor_name: []const u8, value: usize };
             var object: struct { total: usize, values: StackBuffer(JsonValue, LEVELS) } = .{
                 .total = val.total,
@@ -338,20 +339,21 @@ pub const StatValue = struct {
                 object.values.append(v) catch err.wat();
             };
 
-            try std.json.stringify(object, opts, stream);
+            //try std.json.stringify(object, opts, stream);
+            try stream.write(object);
         }
     };
 };
 
 pub fn init() void {
-    for (state.scoredata) |*entry, i|
-        if (std.meta.intToEnum(Stat, i)) |_| {
+    for (state.scoredata, 0..) |*entry, i|
+        if (std.meta.enumFromInt(Stat, i)) |_| {
             entry.* = .{};
         } else |_| {};
 }
 
 pub fn get(s: Stat) *StatValue {
-    return &state.scoredata[@enumToInt(s)];
+    return &state.scoredata[@intFromEnum(s)];
 }
 
 // XXX: this hidden reliance on state.player.z could cause bugs
@@ -359,8 +361,8 @@ pub fn get(s: Stat) *StatValue {
 pub fn recordUsize(stat: Stat, value: usize) void {
     switch (stat.stattype()) {
         .SingleUsize => {
-            state.scoredata[@enumToInt(stat)].SingleUsize.total += value;
-            state.scoredata[@enumToInt(stat)].SingleUsize.each[state.player.coord.z] += value;
+            state.scoredata[@intFromEnum(stat)].SingleUsize.total += value;
+            state.scoredata[@intFromEnum(stat)].SingleUsize.each[state.player.coord.z] += value;
         },
         else => unreachable,
     }
@@ -375,7 +377,7 @@ pub const Tag = union(enum) {
     pub fn intoString(self: Tag) StackBuffer(u8, 64) {
         return switch (self) {
             .M => |mob| StackBuffer(u8, 64).initFmt("{s}", .{mob.displayName()}),
-            .I => |item| StackBuffer(u8, 64).init((item.shortName() catch err.wat()).slice()),
+            .I => |item| StackBuffer(u8, 64).init((item.shortName() catch err.wat()).constSlice()),
             .W => |wiz| StackBuffer(u8, 64).init(@tagName(wiz)),
             .s => |str| StackBuffer(u8, 64).init(str),
         };
@@ -388,18 +390,18 @@ pub fn recordTaggedUsize(stat: Stat, tag: Tag, value: usize) void {
     const key = tag.intoString();
     switch (stat.stattype()) {
         .BatchUsize => {
-            state.scoredata[@enumToInt(stat)].BatchUsize.total += value;
-            const index: ?usize = for (state.scoredata[@enumToInt(stat)].BatchUsize.singles.constSlice()) |single, i| {
+            state.scoredata[@intFromEnum(stat)].BatchUsize.total += value;
+            const index: ?usize = for (state.scoredata[@intFromEnum(stat)].BatchUsize.singles.constSlice(), 0..) |single, i| {
                 if (mem.eql(u8, single.id.constSlice(), key.constSlice())) break i;
             } else null;
             if (index) |i| {
-                state.scoredata[@enumToInt(stat)].BatchUsize.singles.slice()[i].val.total += value;
-                state.scoredata[@enumToInt(stat)].BatchUsize.singles.slice()[i].val.each[state.player.coord.z] += value;
+                state.scoredata[@intFromEnum(stat)].BatchUsize.singles.slice()[i].val.total += value;
+                state.scoredata[@intFromEnum(stat)].BatchUsize.singles.slice()[i].val.each[state.player.coord.z] += value;
             } else {
-                state.scoredata[@enumToInt(stat)].BatchUsize.singles.append(.{}) catch err.wat();
-                state.scoredata[@enumToInt(stat)].BatchUsize.singles.lastPtr().?.id = key;
-                state.scoredata[@enumToInt(stat)].BatchUsize.singles.lastPtr().?.val.total += value;
-                state.scoredata[@enumToInt(stat)].BatchUsize.singles.lastPtr().?.val.each[state.player.coord.z] += value;
+                state.scoredata[@intFromEnum(stat)].BatchUsize.singles.append(.{}) catch err.wat();
+                state.scoredata[@intFromEnum(stat)].BatchUsize.singles.lastPtr().?.id = key;
+                state.scoredata[@intFromEnum(stat)].BatchUsize.singles.lastPtr().?.val.total += value;
+                state.scoredata[@intFromEnum(stat)].BatchUsize.singles.lastPtr().?.val.each[state.player.coord.z] += value;
             }
         },
         else => unreachable,
@@ -407,7 +409,7 @@ pub fn recordTaggedUsize(stat: Stat, tag: Tag, value: usize) void {
 }
 
 fn _isLevelSignificant(level: usize) bool {
-    return state.scoredata[@enumToInt(@as(Stat, .TurnsSpent))].SingleUsize.each[level] > 0;
+    return state.scoredata[@intFromEnum(@as(Stat, .TurnsSpent))].SingleUsize.each[level] > 0;
 }
 
 fn exportTextMorgue(info: Info, alloc: mem.Allocator) !std.ArrayList(u8) {
@@ -454,7 +456,7 @@ fn exportTextMorgue(info: Info, alloc: mem.Allocator) !std.ArrayList(u8) {
 
     if (info.aptitudes_names.len > 0) {
         try w.print("Aptitudes:\n", .{});
-        for (info.aptitudes_names.constSlice()) |apt, i|
+        for (info.aptitudes_names.constSlice(), 0..) |apt, i|
             try w.print("- [{s}] {s}\n", .{ apt, info.aptitudes_descs.data[i] });
     } else {
         try w.print("Your memory was still clouded.\n", .{});
@@ -463,13 +465,13 @@ fn exportTextMorgue(info: Info, alloc: mem.Allocator) !std.ArrayList(u8) {
 
     if (info.augments_names.len > 0) {
         try w.print("Conjuration Augments:\n", .{});
-        for (info.augments_names.constSlice()) |apt, i|
+        for (info.augments_names.constSlice(), 0..) |apt, i|
             try w.print("- [{s}] {s}\n", .{ apt, info.augments_descs.data[i] });
         try w.print("\n", .{});
     }
 
-    const killed = state.scoredata[@enumToInt(@as(Stat, .KillRecord))].BatchUsize.total;
-    const stabbed = state.scoredata[@enumToInt(@as(Stat, .StabRecord))].BatchUsize.total;
+    const killed = state.scoredata[@intFromEnum(@as(Stat, .KillRecord))].BatchUsize.total;
+    const stabbed = state.scoredata[@intFromEnum(@as(Stat, .StabRecord))].BatchUsize.total;
     try w.print("You killed {} foe(s), stabbing {} of them.\n", .{ killed, stabbed });
     try w.print("\n", .{});
 
@@ -577,7 +579,7 @@ fn exportTextMorgue(info: Info, alloc: mem.Allocator) !std.ArrayList(u8) {
                 try w.print("\n", .{});
             },
             .Stat => |stat| {
-                const entry = &state.scoredata[@enumToInt(stat.s)];
+                const entry = &state.scoredata[@intFromEnum(stat.s)];
                 switch (stat.s.stattype()) {
                     .SingleUsize => {
                         try w.print("{s: <24} {: >5} | ", .{ stat.n, entry.SingleUsize.total });
@@ -628,10 +630,10 @@ fn exportJsonMorgue(info: Info) !std.ArrayList(u8) {
     try std.json.stringify(info, .{}, w);
 
     try w.writeAll(",\"stats\":{");
-    for (&CHUNKS) |chunk, chunk_i| switch (chunk) {
+    for (&CHUNKS, 0..) |chunk, chunk_i| switch (chunk) {
         .Header => {},
         .Stat => |stat| {
-            const entry = &state.scoredata[@enumToInt(stat.s)];
+            const entry = &state.scoredata[@intFromEnum(stat.s)];
             try w.print("\"{s}\": {{", .{stat.n});
             try w.print("\"type\": \"{s}\",", .{@tagName(stat.s.stattype())});
             switch (stat.s.stattype()) {
@@ -641,7 +643,7 @@ fn exportJsonMorgue(info: Info) !std.ArrayList(u8) {
                 },
                 .BatchUsize => {
                     try w.writeAll("\"values\": [");
-                    for (entry.BatchUsize.singles.slice()) |batch_entry, i| {
+                    for (entry.BatchUsize.singles.slice(), 0..) |batch_entry, i| {
                         try w.print("{{ \"name\": \"{s}\", \"value\":", .{batch_entry.id.constSlice()});
                         try std.json.stringify(batch_entry.val, .{}, w);
                         try w.writeAll("}");
@@ -670,7 +672,7 @@ pub fn createMorgue() Info {
 
     const info = Info.collect(arena.allocator());
 
-    std.os.mkdir("morgue", 0o776) catch |e| switch (e) {
+    std.posix.mkdir("morgue", 0o776) catch |e| switch (e) {
         error.PathAlreadyExists => {},
         else => {
             std.log.err("Could not create morgue directory: {}", .{e});
@@ -678,6 +680,7 @@ pub fn createMorgue() Info {
             return info;
         },
     };
+    const morgue_dir = std.fs.cwd().openDir("morgue", .{}) catch err.wat();
 
     {
         const morgue = exportJsonMorgue(info) catch err.wat();
@@ -686,7 +689,7 @@ pub fn createMorgue() Info {
         const filename = std.fmt.allocPrintZ(state.gpa.allocator(), "morgue-{s}-{}-{}-{:0>2}-{:0>2}-{}:{}.json", .{ info.username.constSlice(), state.seed, info.end_datetime.Y, info.end_datetime.M, info.end_datetime.D, info.end_datetime.h, info.end_datetime.m }) catch err.oom();
         defer state.gpa.allocator().free(filename);
 
-        (std.fs.cwd().openDir("morgue", .{}) catch err.wat()).writeFile(filename, morgue.items[0..]) catch |e| {
+        morgue_dir.writeFile(.{ .sub_path = filename, .data = morgue.items[0..] }) catch |e| {
             std.log.err("Could not write to morgue file '{s}': {}", .{ filename, e });
             std.log.err("Refusing to write morgue entries.", .{});
             return info;
@@ -700,7 +703,7 @@ pub fn createMorgue() Info {
         const filename = std.fmt.allocPrintZ(state.gpa.allocator(), "morgue-{s}-{}-{}-{:0>2}-{:0>2}-{}:{}.txt", .{ info.username.constSlice(), state.seed, info.end_datetime.Y, info.end_datetime.M, info.end_datetime.D, info.end_datetime.h, info.end_datetime.m }) catch err.oom();
         defer state.gpa.allocator().free(filename);
 
-        (std.fs.cwd().openDir("morgue", .{}) catch err.wat()).writeFile(filename, morgue.items[0..]) catch |e| {
+        morgue_dir.writeFile(.{ .sub_path = filename, .data = morgue.items[0..] }) catch |e| {
             std.log.err("Could not write to morgue file '{s}': {}", .{ filename, e });
             std.log.err("Refusing to write morgue entries.", .{});
             return info;

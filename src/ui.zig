@@ -1,6 +1,7 @@
 const std = @import("std");
 const math = std.math;
 const io = std.io;
+const sort = std.sort;
 const assert = std.debug.assert;
 const mem = std.mem;
 const meta = std.meta;
@@ -26,8 +27,8 @@ const types = @import("types.zig");
 const rng = @import("rng.zig");
 const scores = @import("scores.zig");
 
-const Generator = @import("generators.zig").Generator;
-const GeneratorCtx = @import("generators.zig").GeneratorCtx;
+// const Generator = @import("generators.zig").Generator;
+// const GeneratorCtx = @import("generators.zig").GeneratorCtx;
 const StackBuffer = @import("buffer.zig").StackBuffer;
 const StringBuf64 = @import("buffer.zig").StringBuf64;
 
@@ -67,14 +68,6 @@ pub const MAP_WIDTH_R = 20;
 
 pub const MIN_HEIGHT = (MAP_HEIGHT_R * 2) + LOG_HEIGHT + 2;
 pub const MIN_WIDTH = (MAP_WIDTH_R * 4) + LEFT_INFO_WIDTH + 2 + 1;
-
-pub fn foobar(ctx: *GeneratorCtx(void), _: void) void {
-    var i: usize = 0;
-    while (true) {
-        i += 1;
-        ctx.yield({});
-    }
-}
 
 pub var log_win: struct {
     main: Console,
@@ -145,7 +138,7 @@ pub var map_win: struct {
     map: Console = undefined,
     text_line: Console = undefined,
     text_line_anim_layer: Console = undefined,
-    text_line_anim: ?*Generator(animationRevealUnreveal) = null,
+    text_line_anim: ?AnimationRevealUnreveal = null,
 
     // For Examine mode, directional choose, labels, etc.
     annotations: Console = undefined,
@@ -191,7 +184,7 @@ pub var map_win: struct {
             var ctr: usize = 0;
         };
         self.grid_annotations.clear();
-        const f = (1 + math.sin(@intToFloat(f64, S.ctr) * math.pi / 180.0)) / 4;
+        const f = (1 + math.sin(@as(f64, @floatFromInt(S.ctr)) * math.pi / 180.0)) / 4;
         const c = colors.mix(colors.BG, colors.CONCRETE, math.clamp(f, 0.1, 0.7));
         const a = Rect.new(Coord.new(0, 0), WIDTH + 2, HEIGHT + 2);
         const b = Rect.new(Coord.new(1, 1), WIDTH + 0, HEIGHT + 0);
@@ -201,10 +194,10 @@ pub var map_win: struct {
             while (x < a.end().x) : (x += 1) {
                 const co = Coord.new(x, y).asRect();
                 if (co.intersects(&a, 0) and !co.intersects(&b, 0)) {
-                    const zy = @intCast(isize, y) - (@intCast(isize, refpoint.y) - MAP_HEIGHT_R) - 1;
-                    const zx = @intCast(isize, x) - (@intCast(isize, refpoint.x) - MAP_WIDTH_R) - 1;
+                    const zy = @as(isize, @intCast(y)) - (@as(isize, @intCast(refpoint.y)) - MAP_HEIGHT_R) - 1;
+                    const zx = @as(isize, @intCast(x)) - (@as(isize, @intCast(refpoint.x)) - MAP_WIDTH_R) - 1;
                     if (zy > 0 and zx > 0 and zx < self.map.width and zy < self.map.height - 1) {
-                        self.grid_annotations.setCell(@intCast(usize, zx * 2), @intCast(usize, zy), .{ .bg = c, .fl = .{ .wide = true } });
+                        self.grid_annotations.setCell(@intCast(zx * 2), @intCast(zy), .{ .bg = c, .fl = .{ .wide = true } });
                     }
                 }
             }
@@ -213,10 +206,15 @@ pub var map_win: struct {
     }
 
     fn _addTextLineReveal(self: *@This(), duration: usize) void {
-        if (self.text_line_anim) |ptr|
-            state.gpa.allocator().destroy(ptr);
-        self.text_line_anim = state.gpa.allocator().create(Generator(animationRevealUnreveal)) catch err.oom();
-        self.text_line_anim.?.* = Generator(animationRevealUnreveal).init(.{
+        //if (self.text_line_anim) |ptr|
+        //state.gpa.allocator().destroy(ptr);
+        //self.text_line_anim = state.gpa.allocator().create(Generator(animationRevealUnreveal)) catch err.oom();
+        // self.text_line_anim.?.* = Generator(animationRevealUnreveal).init(.{
+        //     .main_layer = &self.text_line,
+        //     .anim_layer = &self.text_line_anim_layer,
+        //     .opts = .{ .rv_unrv_delay = duration },
+        // });
+        self.text_line_anim = animationRevealUnreveal(.{
             .main_layer = &self.text_line,
             .anim_layer = &self.text_line_anim_layer,
             .opts = .{ .rv_unrv_delay = duration },
@@ -235,15 +233,15 @@ pub var map_win: struct {
             y += self.text_line.drawTextAt(x, y, line, opts);
         }
 
-        self._addTextLineReveal(80 * math.max(1, str.len / 20));
+        self._addTextLineReveal(80 * @max(1, str.len / 20));
     }
 
     pub fn stepTextLineAnimations(self: *@This()) void {
-        if (self.text_line_anim) |anim|
+        if (self.text_line_anim) |*anim|
             if (anim.next() == null) {
                 self.text_line.clear();
                 self.text_line_anim_layer.clear();
-                state.gpa.allocator().destroy(self.text_line_anim.?);
+                //state.gpa.allocator().destroy(self.text_line_anim.?);
                 self.text_line_anim = null;
             };
     }
@@ -262,8 +260,8 @@ pub var map_win: struct {
 
     pub fn deinit(self: *@This()) void {
         self.map.deinit();
-        if (self.text_line_anim) |ptr|
-            state.gpa.allocator().destroy(ptr);
+        // if (self.text_line_anim) |ptr|
+        //     state.gpa.allocator().destroy(ptr);
     }
 } = .{};
 
@@ -335,7 +333,7 @@ pub fn checkWindowSize() bool {
 
         display.present();
 
-        var evgen = Generator(display.getEvents).init(null);
+        var evgen = display.getEvents(null);
         while (evgen.next()) |ev| switch (ev) {
             .Quit => {
                 state.state = .Quit;
@@ -431,7 +429,7 @@ pub fn dimensions(w: DisplayWindow) Dimension {
             .starty = 2 + main_height,
             .endy = height - 1,
             //.width = main_width,
-            //.height = math.max(LOG_HEIGHT, height - (2 + main_height) - 1),
+            //.height = @max(LOG_HEIGHT, height - (2 + main_height) - 1),
         },
         .Zap => .{
             .startx = 0,
@@ -511,7 +509,7 @@ fn _writerTwice(
 ) usize {
     _ = self.drawTextAtf(0, starty, "$c{s}$.", .{string}, .{});
 
-    var col = linewidth - utils.countFmt(fmt2, args2);
+    const col = linewidth - utils.countFmt(fmt2, args2);
     _ = self.drawTextAtf(col, starty, fmt2, args2, .{});
     return 1;
 }
@@ -560,18 +558,18 @@ fn _writerMobStats(self: *Console, starty: usize, mob: *Mob) usize {
         if (!stat.showMobStat(mob, stat_val_raw))
             continue;
 
-        const stat_val_real = switch (stat) {
-            .Melee => @intCast(isize, combat.chanceOfMeleeLanding(mob, null)),
-            .Evade => @intCast(isize, combat.chanceOfAttackEvaded(mob, null)),
-            .Missile => @intCast(isize, combat.chanceOfMissileLanding(mob)),
+        const stat_val_real: isize = switch (stat) {
+            .Melee => @intCast(combat.chanceOfMeleeLanding(mob, null)),
+            .Evade => @intCast(combat.chanceOfAttackEvaded(mob, null)),
+            .Missile => @intCast(combat.chanceOfMissileLanding(mob)),
             else => stat_val_raw,
         };
 
         // Special cases
         switch (stat) {
             .Melee, .Evade, .Missile => {
-                if (@intCast(usize, math.clamp(stat_val_raw, 0, 100)) != stat_val_real) {
-                    const c = if (@intCast(isize, stat_val_real) < stat_val_raw) @as(u21, 'r') else 'b';
+                if (@as(usize, @intCast(math.clamp(stat_val_raw, 0, 100))) != stat_val_real) {
+                    const c = if (@as(usize, @intCast(stat_val_real)) < stat_val_raw) @as(u21, 'r') else 'b';
                     y += self.drawTextAtf(0, y, "$c{s: <9}$. {: >5}{s: >1}  $g(${u}{}{s}$g)$.", .{ stat.string(), stat_val, stat.formatAfter(), c, stat_val_real, stat.formatAfter() }, .{});
                     continue;
                 }
@@ -588,8 +586,8 @@ fn _writerMobStats(self: *Console, starty: usize, mob: *Mob) usize {
     }
     y += self.drawTextAt(0, y, "\n", .{});
 
-    inline for (@typeInfo(Resistance).Enum.fields) |resistancev| {
-        const resist = @intToEnum(Resistance, resistancev.value);
+    inline for (@typeInfo(Resistance).@"enum".fields) |resistancev| {
+        const resist: Resistance = @enumFromInt(resistancev.value);
         const resist_val = utils.SignedFormatter{ .v = mob.resistance(resist) };
         const resist_str = resist.string();
         if (resist_val.v != 0)
@@ -609,8 +607,8 @@ fn _writerSobStats(
     var y = starty;
 
     if (p_stats) |stats| {
-        inline for (@typeInfo(Stat).Enum.fields) |statv| {
-            const stat = @intToEnum(Stat, statv.value);
+        inline for (@typeInfo(Stat).@"enum".fields) |statv| {
+            const stat: Stat = @enumFromInt(statv.value);
 
             const x_stat_val = utils.getFieldByEnum(Stat, stats, stat);
             // var base_stat_val = @intCast(isize, switch (stat) {
@@ -638,8 +636,8 @@ fn _writerSobStats(
         }
     }
     if (p_resists) |resists| {
-        inline for (@typeInfo(Resistance).Enum.fields) |resistancev| {
-            const resist = @intToEnum(Resistance, resistancev.value);
+        inline for (@typeInfo(Resistance).@"enum".fields) |resistancev| {
+            const resist: Resistance = @enumFromInt(resistancev.value);
 
             const x_resist_val = utils.getFieldByEnum(Resistance, resists, resist);
             // var base_resist_val = @intCast(isize, state.player.resistance(resist));
@@ -1000,7 +998,7 @@ fn _getMonsSpellsDescription(self: *Console, starty: usize, mob: *Mob, _: usize)
                 y += self.drawTextAtf(0, y, "· $gTmp$. {s} ({})", .{
                     s.string(state.player), spellcfg.duration,
                 }, .{});
-                self.addTooltipForText("{s}", .{s.string(state.player)}, "nonplayer_{s}", .{s});
+                self.addTooltipForText("{s}", .{s.string(state.player)}, "nonplayer_{}", .{s});
             },
             .Heal => {
                 y += self.drawTextAtf(0, y, "· $gIns$. Heal <{}>", .{spellcfg.power}, .{});
@@ -1414,7 +1412,7 @@ fn _drawStr(_x: usize, _y: usize, endx: usize, str: []const u8, opts: DrawStrOpt
     var fg = opts.fg;
     var bg: ?u32 = opts.bg;
 
-    const linewidth = if (opts.fold) @intCast(usize, endx - x + 1) else str.len;
+    const linewidth = if (opts.fold) @as(usize, @intCast(endx - x + 1)) else str.len;
 
     var fibuf = StackBuffer(u8, 4096).init(null);
     var fold_iter = utils.FoldedTextIterator.init(str, linewidth);
@@ -1488,8 +1486,8 @@ fn _drawStr(_x: usize, _y: usize, endx: usize, str: []const u8, opts: DrawStrOpt
 
 fn drawHUD(moblist: []const *Mob) void {
     // const last_action_cost = if (state.player.activities.current()) |lastaction| b: {
-    //     const spd = @intToFloat(f64, state.player.speed());
-    //     break :b (spd * @intToFloat(f64, lastaction.cost())) / 100.0 / 10.0;
+    //     const spd = @floatFromInt(f64, state.player.speed());
+    //     break :b (spd * @floatFromInt(f64, lastaction.cost())) / 100.0 / 10.0;
     // } else 0.0;
 
     const endx = hud_win.main.width - 1;
@@ -1528,7 +1526,7 @@ fn drawHUD(moblist: []const *Mob) void {
             else => unreachable,
         };
         const c: u21 = if (stat.v < 0) 'p' else '.';
-        if (stat.va == null or @intCast(usize, math.clamp(stat.v, 0, 100)) == stat.va.?) {
+        if (stat.va == null or @as(usize, @intCast(math.clamp(stat.v, 0, 100))) == stat.va.?) {
             _ = hud_win.main.drawTextAtf(x, y, "$c{s}$. ${u}{: >3}{s}$.", .{ stat.b, c, v, stat.a }, .{});
         } else {
             const ca: u21 = if (stat.va.? < stat.v) 'p' else 'b';
@@ -1574,7 +1572,7 @@ fn drawHUD(moblist: []const *Mob) void {
 
     // const ev = utils.SignedFormatter{ .v = state.player.stat(.Evade) };
     const arm = utils.SignedFormatter{ .v = state.player.resistance(.Armor) };
-    const willpower = @intCast(usize, state.player.stat(.Willpower));
+    const willpower: usize = @intCast(state.player.stat(.Willpower));
     const is_corrupted = state.player.hasStatus(.Corruption);
     const corruption_str = if (is_corrupted) "corrupted" else "corruption";
     const corruption_val = if (is_corrupted) willpower else state.player.corruption_ctr;
@@ -1600,7 +1598,7 @@ fn drawHUD(moblist: []const *Mob) void {
             } else {
                 y += hud_win.main.drawBarAt(0, endx, y, Status.MAX_DURATION, Status.MAX_DURATION, sname, 0x054c20, 0x69fcd0, .{ .detail = false });
             }
-            hud_win.main.addTooltipForText("{s}", .{sname}, "player_{s}", .{entry.key});
+            hud_win.main.addTooltipForText("{s}", .{sname}, "player_{}", .{entry.key});
 
             //y += hud_win.main.drawTextAtf(startx, y, endx, "{s} ({} turns)", .{ sname, duration }, .{ .fg = 0x8019ac, .bg = null });
 
@@ -1643,7 +1641,7 @@ fn drawHUD(moblist: []const *Mob) void {
         var dijk = dijkstra.Dijkstra.init(
             state.player.coord,
             state.mapgeometry,
-            @intCast(usize, state.player.stat(.Vision)),
+            @intCast(state.player.stat(.Vision)),
             dijkstra.dummyIsValid,
             .{},
             state.gpa.allocator(),
@@ -1717,7 +1715,7 @@ fn drawHUD(moblist: []const *Mob) void {
             }
         };
 
-        std.sort.sort(FeatureInfo, features.items, {}, struct {
+        std.sort.insertion(FeatureInfo, features.items, {}, struct {
             pub fn f(_: void, a: FeatureInfo, b: FeatureInfo) bool {
                 return a.priority < b.priority;
             }
@@ -1785,7 +1783,7 @@ fn drawHUD(moblist: []const *Mob) void {
                 const sname = statusinfo.status.string(state.player);
 
                 y += hud_win.main.drawBarAt(0, endx, y, duration, Status.MAX_DURATION, sname, 0x30055c, 0xd069fc, .{});
-                hud_win.main.addTooltipForText("{s}", .{sname}, "nonplayer_{s}", .{entry.key});
+                hud_win.main.addTooltipForText("{s}", .{sname}, "nonplayer_{}", .{entry.key});
                 status_drawn = true;
             }
             if (status_drawn) y += 1;
@@ -1808,7 +1806,7 @@ fn drawLog() void {
     const messages_len = state.messages.items.len - 1;
 
     var y: usize = log_win.main.height;
-    for (state.messages.items) |message, i| {
+    for (state.messages.items, 0..) |message, i| {
         if (log_win.last_message) |last_message|
             if (i <= last_message)
                 continue;
@@ -1864,13 +1862,13 @@ fn _mobs_can_see(moblist: []const *Mob, coord: Coord) bool {
 
 pub fn screenCoordToNormal(coord: Coord, absrefpoint: Coord) ?Coord {
     const refpoint = coordToScreenFromRefpoint(absrefpoint, absrefpoint).?;
-    const x = @intCast(isize, absrefpoint.x) +
-        @divFloor(@intCast(isize, coord.x) - @intCast(isize, refpoint.x), 2);
-    const y = @intCast(isize, absrefpoint.y) +
-        (@intCast(isize, coord.y) - @intCast(isize, refpoint.y) - 1);
+    const x = @as(isize, @intCast(absrefpoint.x)) +
+        @divFloor(@as(isize, @intCast(coord.x)) - @as(isize, @intCast(refpoint.x)), 2);
+    const y = @as(isize, @intCast(absrefpoint.y)) +
+        (@as(isize, @intCast(coord.y)) - @as(isize, @intCast(refpoint.y)) - 1);
     if (x < 0 or y < 0 or x >= WIDTH or y >= HEIGHT)
         return null;
-    return Coord.new2(absrefpoint.z, @intCast(usize, x), @intCast(usize, y));
+    return Coord.new2(absrefpoint.z, @intCast(x), @intCast(y));
 }
 
 pub fn coordToScreenFromRefpoint(coord: Coord, refpoint: Coord) ?Coord {
@@ -1881,8 +1879,8 @@ pub fn coordToScreenFromRefpoint(coord: Coord, refpoint: Coord) ?Coord {
     }
     const r = Coord.new2(
         0,
-        @intCast(usize, @intCast(isize, coord.x) - (@intCast(isize, refpoint.x) -| MAP_WIDTH_R)) * 2,
-        @intCast(usize, @intCast(isize, coord.y) - (@intCast(isize, refpoint.y) -| MAP_HEIGHT_R)),
+        @as(usize, @intCast(@as(isize, @intCast(coord.x)) - (@as(isize, @intCast(refpoint.x)) -| MAP_WIDTH_R))) * 2,
+        @intCast(@as(isize, @intCast(coord.y)) - (@as(isize, @intCast(refpoint.y)) -| MAP_HEIGHT_R)),
     );
     if (r.x >= map_win.map.width or r.y >= map_win.map.height) {
         return null;
@@ -1941,17 +1939,17 @@ fn modifyTile(moblist: []const *Mob, coord: Coord, p_tile: display.Cell) display
 }
 
 pub fn drawMap(console: *Console, moblist: []const *Mob, refpoint: Coord) void {
-    const refpointy = @intCast(isize, refpoint.y);
-    const refpointx = @intCast(isize, refpoint.x);
+    const refpointy: isize = @intCast(refpoint.y);
+    const refpointx: isize = @intCast(refpoint.x);
     const level = state.player.coord.z;
 
     var cursory: usize = 0;
     var cursorx: usize = 0;
 
-    const map_starty = refpointy - @intCast(isize, MAP_HEIGHT_R);
-    const map_endy = refpointy + @intCast(isize, MAP_HEIGHT_R);
-    const map_startx = refpointx - @intCast(isize, MAP_WIDTH_R);
-    const map_endx = refpointx + @intCast(isize, MAP_WIDTH_R);
+    const map_starty = refpointy - @as(isize, @intCast(MAP_HEIGHT_R));
+    const map_endy = refpointy + @as(isize, @intCast(MAP_HEIGHT_R));
+    const map_startx = refpointx - @as(isize, @intCast(MAP_WIDTH_R));
+    const map_endx = refpointx + @as(isize, @intCast(MAP_WIDTH_R));
 
     if (console == &map_win.map) // yuck
         console.clearMouseTriggers();
@@ -1976,8 +1974,8 @@ pub fn drawMap(console: *Console, moblist: []const *Mob, refpoint: Coord) void {
                 continue;
             }
 
-            const u_x: usize = @intCast(usize, x);
-            const u_y: usize = @intCast(usize, y);
+            const u_x: usize = @intCast(x);
+            const u_y: usize = @intCast(y);
             const coord = Coord.new2(level, u_x, u_y);
             const cursor_coord = Coord.new(cursorx, cursory);
 
@@ -2045,7 +2043,7 @@ pub fn drawAnimationNoPresentTimeout(timeout: ?usize) void {
 
         const max_timeout_ns = FRAMERATE * 1_000_000; // 20 ms
         const remaining = ((timeout orelse std.math.maxInt(u64)) *| 1_000_000) -| timer.read();
-        std.time.sleep(std.math.min(max_timeout_ns, remaining));
+        std.time.sleep(@min(max_timeout_ns, remaining));
 
         if (timer.read() / 1_000_000 > timeout.?) return;
     }
@@ -2115,7 +2113,7 @@ pub const ChooseCellOpts = struct {
             pub const AList = std.ArrayList(@This());
         };
 
-        pub const Func = fn (Targeter, bool, Coord, *Result.AList) Error!void;
+        pub const Func = *const fn (Targeter, bool, Coord, *Result.AList) Error!void;
         pub const Error = error{ BrokenLOF, OutOfRange, OutOfLOS, RequireEnemyOnTile, Unwalkable };
 
         pub fn func(self: Targeter) Func {
@@ -2192,7 +2190,7 @@ pub const ChooseCellOpts = struct {
 
                         var matrix = std.mem.zeroes([HEIGHT][WIDTH]usize);
                         _ = gas.mockGasSpread(targeter.Gas.gas, 100, coord, &matrix);
-                        for (matrix) |row, y| for (row) |cell, x| if (cell > 0) {
+                        for (matrix, 0..) |row, y| for (row, 0..) |cell, x| if (cell > 0) {
                             const c = Coord.new2(coord.z, x, y);
                             buf.append(.{ .coord = c, .color = cell }) catch err.wat();
                         };
@@ -2306,7 +2304,7 @@ pub fn chooseCell(opts: ChooseCellOpts) ?Coord {
         map_win.map.renderFullyW(.Main);
         display.present();
 
-        var evgen = Generator(display.getEvents).init(null);
+        var evgen = display.getEvents(null);
         while (evgen.next()) |ev| switch (ev) {
             .Quit => {
                 state.state = .Quit;
@@ -2377,7 +2375,7 @@ pub fn chooseDirection() ?Direction {
 
         drawModalText(colors.CONCRETE, "direction: {}", .{direction});
 
-        var evgen = Generator(display.getEvents).init(null);
+        var evgen = display.getEvents(null);
         while (evgen.next()) |ev| switch (ev) {
             .Quit => {
                 state.state = .Quit;
@@ -2464,12 +2462,12 @@ pub fn drawLoadingScreen(loading_win: *LoadingScreen, text_context: []const u8, 
         .{ .detail_type = .Percent },
     );
 
-    loading_win.main_con.renderFully(@intCast(usize, win.startx), @intCast(usize, win.starty));
+    loading_win.main_con.renderFully(@as(usize, @intCast(win.startx)), @as(usize, @intCast(win.starty)));
 
     display.present();
     clearScreen();
 
-    var evgen = Generator(display.getEvents).init(20);
+    var evgen = display.getEvents(20);
     while (evgen.next()) |ev| switch (ev) {
         .Quit => {
             state.state = .Quit;
@@ -2496,7 +2494,7 @@ pub fn drawLoadingScreenFinish(loading_win: *LoadingScreen) bool {
 
     _ = loading_win.text_con.drawTextAtf(0, 0, "$b{s}$.", .{text}, .{});
 
-    loading_win.main_con.renderFully(@intCast(usize, win.startx), @intCast(usize, win.starty));
+    loading_win.main_con.renderFully(@intCast(win.startx), @intCast(win.starty));
 
     display.present();
     clearScreen();
@@ -2618,7 +2616,7 @@ pub fn drawGameOverScreen(scoreinfo: scores.Info) void {
         };
         // zig fmt: on
 
-        for (stats) |stat, i| {
+        for (stats, 0..) |stat, i| {
             if (i % 2 == 0)
                 _ = container_c.drawTextAt(startx, oy, "$c│$.", .{});
             const v = scores.get(stat.v).BatchUsize.total;
@@ -2635,14 +2633,14 @@ pub fn drawGameOverScreen(scoreinfo: scores.Info) void {
 
     // _ = container_c.drawTextAt(player_dc.x - 32, player_dc.y - 4, "$gPress <Enter> to continue.$.", .{});
 
-    var layer1_anim = Generator(animationDeath).init(&layer1_c);
+    var layer1_anim = animationDeath(&layer1_c);
 
     while (true) {
         _ = layer1_anim.next();
-        container_c.renderFully(@intCast(usize, win_d.startx), @intCast(usize, win_d.starty));
+        container_c.renderFully(@intCast(win_d.startx), @intCast(win_d.starty));
         display.present();
 
-        var evgen = Generator(display.getEvents).init(FRAMERATE);
+        var evgen = display.getEvents(FRAMERATE);
         while (evgen.next()) |ev| switch (ev) {
             .Quit => return,
             .Key => |k| switch (k) {
@@ -2670,13 +2668,13 @@ pub fn drawTextScreen(comptime fmt: []const u8, args: anytype) void {
     var y: usize = 0;
     y += con.drawTextAt(0, y, text, .{});
 
-    con.renderFully(@intCast(usize, mainw.startx), @intCast(usize, mainw.starty));
+    con.renderFully(@intCast(mainw.startx), @intCast(mainw.starty));
 
     display.present();
     clearScreen();
 
     while (true) {
-        var evgen = Generator(display.getEvents).init(null);
+        var evgen = display.getEvents(null);
         while (evgen.next()) |ev| switch (ev) {
             .Quit => {
                 state.state = .Quit;
@@ -2714,7 +2712,7 @@ pub fn drawMessagesScreen() void {
 
     main: while (true) {
         if (starty > mainw.starty) {
-            starty = math.max(mainw.starty, starty -| 3);
+            starty = @max(mainw.starty, starty -| 3);
         }
 
         // Clear window.
@@ -2724,18 +2722,18 @@ pub fn drawMessagesScreen() void {
                 _clear_line(mainw.startx, mainw.endx, y);
         }
 
-        const window_height = @intCast(usize, endy - starty - 1);
+        const window_height: usize = @intCast(endy - starty - 1);
 
-        scroll = math.min(scroll, log_win.main.height -| window_height);
+        scroll = @min(scroll, log_win.main.height -| window_height);
 
         const first_line = log_win.main.height -| window_height -| scroll;
-        const last_line = math.min(first_line + window_height, log_win.main.height);
+        const last_line = @min(first_line + window_height, log_win.main.height);
         log_win.main.addMouseTrigger(log_win.main.dimensionsRect(), .Wheel, .{ .Signal = 1 });
-        log_win.main.renderAreaAt(@intCast(usize, mainw.startx), @intCast(usize, starty), 0, first_line, log_win.main.width, last_line);
+        log_win.main.renderAreaAt(@intCast(mainw.startx), @intCast(starty), 0, first_line, log_win.main.width, last_line);
 
         display.present();
 
-        var evgen = Generator(display.getEvents).init(50);
+        var evgen = display.getEvents(50);
         while (evgen.next()) |ev| switch (ev) {
             .Quit => {
                 state.state = .Quit;
@@ -2748,8 +2746,8 @@ pub fn drawMessagesScreen() void {
             },
             .Wheel => |w| switch (log_win.main.handleMouseEvent(w.c, .Wheel)) {
                 .Signal => |s| if (s == 1) {
-                    const new = @intCast(isize, scroll) + w.y;
-                    scroll = @intCast(usize, math.max(0, new));
+                    const new: isize = @as(isize, @intCast(scroll)) + w.y;
+                    scroll = @intCast(@max(0, new));
                 },
                 else => {},
             },
@@ -2784,18 +2782,18 @@ pub fn drawPlayerInfoScreen() void {
             var iy: usize = 0;
             switch (self) {
                 .Stats => {
-                    inline for (@typeInfo(Stat).Enum.fields) |statv| {
-                        const stat = @intToEnum(Stat, statv.value);
+                    inline for (@typeInfo(Stat).@"enum".fields) |statv| {
+                        const stat: Stat = @enumFromInt(statv.value);
                         const stat_val_raw = state.player.stat(stat);
                         const stat_val = utils.SignedFormatter{ .v = stat_val_raw };
-                        const stat_val_real = switch (stat) {
-                            .Melee => @intCast(isize, combat.chanceOfMeleeLanding(state.player, null)),
-                            .Evade => @intCast(isize, combat.chanceOfAttackEvaded(state.player, null)),
+                        const stat_val_real: isize = switch (stat) {
+                            .Melee => @intCast(combat.chanceOfMeleeLanding(state.player, null)),
+                            .Evade => @intCast(combat.chanceOfAttackEvaded(state.player, null)),
                             else => stat_val_raw,
                         };
                         if (stat.showMobStat(state.player, stat_val_raw)) {
                             if (stat.showMobStatFancy(stat_val_raw, stat_val_real)) {
-                                const c = if (@intCast(isize, stat_val_real) < stat_val_raw) @as(u21, 'r') else 'b';
+                                const c = if (@as(isize, @intCast(stat_val_real)) < stat_val_raw) @as(u21, 'r') else 'b';
                                 iy += pinfo_win.right.drawTextAtf(0, iy, "$c{s: <11}$.  {: >5}{s: >1}    $g(${u}{}{s}$g)$.\n", .{ stat.string(), stat_val, stat.formatAfter(), c, stat_val_real, stat.formatAfter() }, .{});
                             } else {
                                 iy += pinfo_win.right.drawTextAtf(0, iy, "$c{s: <11}$.  {: >5}{s: >1}\n", .{ stat.string(), stat_val, stat.formatAfter() }, .{});
@@ -2803,8 +2801,8 @@ pub fn drawPlayerInfoScreen() void {
                         }
                     }
                     iy += pinfo_win.right.drawTextAt(0, iy, "\n", .{});
-                    inline for (@typeInfo(Resistance).Enum.fields) |resistancev| {
-                        const resist = @intToEnum(Resistance, resistancev.value);
+                    inline for (@typeInfo(Resistance).@"enum".fields) |resistancev| {
+                        const resist: Resistance = @enumFromInt(resistancev.value);
                         const resist_val = utils.SignedFormatter{ .v = state.player.resistance(resist) };
                         const resist_str = resist.string();
                         iy += pinfo_win.right.drawTextAtf(0, iy, "$c{s: <11}$.  {: >5}%\n", .{ resist_str, resist_val }, .{});
@@ -2845,7 +2843,7 @@ pub fn drawPlayerInfoScreen() void {
                     }
                 },
                 .Augments => {
-                    const conjuration = @intCast(usize, state.player.stat(.Conjuration));
+                    const conjuration: usize = @intCast(state.player.stat(.Conjuration));
                     if (conjuration > 0) {
                         iy = pinfo_win.right.drawTextAtf(0, iy, "$cConjuration:$. $b{}$.", .{conjuration}, .{});
 
@@ -2856,9 +2854,9 @@ pub fn drawPlayerInfoScreen() void {
                             augment_buf.append(aug.a) catch err.wat();
                         };
 
-                        std.sort.sort(player.ConjAugment, augment_buf.slice(), {}, struct {
+                        std.sort.insertion(player.ConjAugment, augment_buf.slice(), {}, struct {
                             pub fn f(_: void, a: player.ConjAugment, b: player.ConjAugment) bool {
-                                return @enumToInt(a) < @enumToInt(b);
+                                return @intFromEnum(a) < @intFromEnum(b);
                             }
                         }.f);
 
@@ -2879,7 +2877,7 @@ pub fn drawPlayerInfoScreen() void {
         }
     };
 
-    var tab: usize = @enumToInt(@as(Tab, .Stats));
+    var tab: usize = @intFromEnum(@as(Tab, .Stats));
     var tab_hover: ?usize = null;
     var tab_changed = true;
 
@@ -2890,7 +2888,7 @@ pub fn drawPlayerInfoScreen() void {
         pinfo_win.left.clearMouseTriggers();
         var my: usize = 0;
         my += pinfo_win.left.drawTextAt(0, my, "$cPlayer Info$.", .{});
-        inline for (@typeInfo(Tab).Enum.fields) |tabv| {
+        inline for (@typeInfo(Tab).@"enum".fields) |tabv| {
             const sel = if (tabv.value == tab) "$c>" else "$g ";
             const bg = if (tab_hover != null and tab_hover.? == tabv.value) colors.BG_L else colors.BG;
             pinfo_win.left.clearLine(0, pinfo_win.left.width, my);
@@ -2903,7 +2901,7 @@ pub fn drawPlayerInfoScreen() void {
 
         if (tab_changed) {
             pinfo_win.right.clear();
-            @intToEnum(Tab, tab).draw();
+            @as(Tab, @enumFromInt(tab)).draw();
             pinfo_win.right.addRevealAnimation(.{ .factor = 2, .idelay = 1 });
             tab_changed = false;
         }
@@ -2912,7 +2910,7 @@ pub fn drawPlayerInfoScreen() void {
         pinfo_win.container.renderFullyW(.PlayerInfoModal);
         display.present();
 
-        var evgen = Generator(display.getEvents).init(FRAMERATE);
+        var evgen = display.getEvents(FRAMERATE);
         while (evgen.next()) |ev| switch (ev) {
             .Quit => {
                 state.state = .Quit;
@@ -2990,7 +2988,7 @@ pub fn drawWizScreen() void {
         wiz_win.container.renderFullyW(.Zap);
         display.present();
 
-        var evgen = Generator(display.getEvents).init(FRAMERATE);
+        var evgen = display.getEvents(FRAMERATE);
         while (evgen.next()) |ev| switch (ev) {
             .Quit => {
                 state.state = .Quit;
@@ -3004,9 +3002,9 @@ pub fn drawWizScreen() void {
             .Char => |c| switch (c) {
                 'a'...'z' => {
                     const sel = c - 'a';
-                    inline for (meta.fields(player.WizardFun)) |field, i| {
+                    inline for (meta.fields(player.WizardFun), 0..) |field, i| {
                         if (sel == i) {
-                            player.executeWizardFun(@intToEnum(player.WizardFun, field.value));
+                            player.executeWizardFun(@as(player.WizardFun, @enumFromInt(field.value)));
                             break;
                         }
                     }
@@ -3086,7 +3084,7 @@ pub fn drawZapScreen() void {
 
         const oldselected = selected;
 
-        var evgen = Generator(display.getEvents).init(FRAMERATE);
+        var evgen = display.getEvents(FRAMERATE);
         while (evgen.next()) |ev| switch (ev) {
             .Quit => {
                 state.state = .Quit;
@@ -3105,7 +3103,7 @@ pub fn drawZapScreen() void {
             .Key => |k| switch (k) {
                 .CtrlC, .CtrlG, .Esc => break :main,
                 .ArrowUp => selected -|= 1,
-                .ArrowDown => selected = math.min(ring_count, selected + 1),
+                .ArrowDown => selected = @min(ring_count, selected + 1),
                 .Enter => if (!has_no_rings and r_error == null) {
                     clearScreen();
                     player.beginUsingRing(selected);
@@ -3115,7 +3113,7 @@ pub fn drawZapScreen() void {
             },
             .Char => |c| switch (c) {
                 'w', 'k' => selected -|= 1,
-                'x', 'j' => selected = math.min(ring_count, selected + 1),
+                'x', 'j' => selected = @min(ring_count, selected + 1),
                 else => {},
             },
             else => {},
@@ -3211,7 +3209,7 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus, start_coord: ?Coord)
             var y: usize = 0;
 
             var tabx: usize = 0;
-            inline for (meta.fields(ExamineTileFocus)) |field, i| {
+            inline for (meta.fields(ExamineTileFocus), 0..) |field, i| {
                 if (i != 0) {
                     _ = inf_win.drawTextAt(tabx, y, " · ", .{});
                     tabx += 3;
@@ -3228,7 +3226,7 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus, start_coord: ?Coord)
             //y += inf_win.drawTextAt(0, y, "Press $b<$./$b>$. to switch tabs.\n\n", .{});
             y += inf_win.drawTextAt(0, y, "Switch tabs with $b<$./$b>$..\n\n", .{});
 
-            const linewidth = @intCast(usize, inf_d.endx - inf_d.startx);
+            const linewidth: usize = @intCast(inf_d.endx - inf_d.startx);
 
             if (tile_focus == .Mob and has_mons) {
                 const mob = state.dungeon.at(coord).mob.?;
@@ -3274,7 +3272,7 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus, start_coord: ?Coord)
         if (state.player.cansee(coord)) {
             var descbuf: [4096]u8 = undefined;
             var descbuf_stream = io.fixedBufferStream(&descbuf);
-            var writer = descbuf_stream.writer();
+            const writer = descbuf_stream.writer();
 
             if (tile_focus == .Mob and state.dungeon.at(coord).mob != null) {
                 const mob = state.dungeon.at(coord).mob.?;
@@ -3347,7 +3345,7 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus, start_coord: ?Coord)
         container.renderFully(0, 0);
         display.present();
 
-        var evgen = Generator(display.getEvents).init(FRAMERATE);
+        var evgen = display.getEvents(FRAMERATE);
         while (evgen.next()) |ev| switch (ev) {
             .Quit => {
                 state.state = .Quit;
@@ -3371,7 +3369,7 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus, start_coord: ?Coord)
                     0xFF => mob_tile_focus.cycle(),
                     else => {
                         tile_focus_set_manually = true;
-                        tile_focus = @intToEnum(ExamineTileFocus, s);
+                        tile_focus = @enumFromInt(s);
                         if (tile_focus == .Mob) mob_tile_focus = .Main;
                         desc_scroll = 0;
                     },
@@ -3380,8 +3378,8 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus, start_coord: ?Coord)
             },
             .Wheel => |w| switch (container.handleMouseEvent(w.c, .Wheel)) {
                 .Signal => |s| if (s == 1) {
-                    const new = @intCast(isize, desc_scroll) + w.y * -1;
-                    desc_scroll = @intCast(usize, math.max(0, new));
+                    const new = @as(isize, @intCast(desc_scroll)) + w.y * -1;
+                    desc_scroll = @as(usize, @intCast(@max(0, new)));
                 },
                 else => {},
             },
@@ -3489,13 +3487,13 @@ pub fn drawEscapeMenu() void {
     // TODO: credit tilde.team here
 
     const Tab = enum(usize) { Continue = 0, @"Player Info" = 1, Quit = 2 };
-    var tab: usize = @enumToInt(@as(Tab, .Continue));
+    var tab: usize = @intFromEnum(@as(Tab, .Continue));
 
     while (true) {
         menu_c.clearMouseTriggers();
         var my: usize = 0;
         my += menu_c.drawTextAt(0, my, "$cMain Menu$.", .{});
-        inline for (@typeInfo(Tab).Enum.fields) |tabv| {
+        inline for (@typeInfo(Tab).@"enum".fields) |tabv| {
             const sel = if (tabv.value == tab) "$c>" else "$g ";
             my += menu_c.drawTextAtf(0, my, "{s} {s}$.", .{ sel, tabv.name }, .{});
             menu_c.addClickableText(.Hover, .{ .Signal = tabv.value });
@@ -3510,7 +3508,7 @@ pub fn drawEscapeMenu() void {
 
         var menu_tab_chosen = false;
 
-        var evgen = Generator(display.getEvents).init(FRAMERATE);
+        var evgen = display.getEvents(FRAMERATE);
         while (evgen.next()) |ev| switch (ev) {
             .Quit => return,
             .Hover => |c| switch (menu_c.handleMouseEvent(c, .Hover)) {
@@ -3548,7 +3546,7 @@ pub fn drawEscapeMenu() void {
             else => {},
         };
 
-        if (menu_tab_chosen) switch (@intToEnum(Tab, tab)) {
+        if (menu_tab_chosen) switch (@as(Tab, @enumFromInt(tab))) {
             .Continue => return,
             .@"Player Info" => drawPlayerInfoScreen(),
             .Quit => {
@@ -3566,7 +3564,7 @@ pub fn drawEscapeMenu() void {
 // mouse event or resize event was recieved.
 pub fn waitForInput(default_input: ?u8) ?u32 {
     while (true) {
-        var evgen = Generator(display.getEvents).init(null);
+        var evgen = display.getEvents(null);
         while (evgen.next()) |ev| switch (ev) {
             .Quit => {
                 state.state = .Quit;
@@ -3619,7 +3617,7 @@ pub fn drawInventoryScreen() bool {
 
             y = 0;
             y += inv_win.drawTextAt(0, y, "$cInventory:$.", .{});
-            for (state.player.inventory.pack.constSlice()) |item, i| {
+            for (state.player.inventory.pack.constSlice(), 0..) |item, i| {
                 const name = (item.longName() catch err.wat()).constSlice();
                 const color = if (i == chosen and chosen_itemlist == .Pack) colors.LIGHT_CONCRETE else colors.GREY;
                 const arrow = if (i == chosen and chosen_itemlist == .Pack) ">" else " ";
@@ -3631,8 +3629,8 @@ pub fn drawInventoryScreen() bool {
             y = 0;
             const startx = inv_win.width - @divTrunc(inv_win.width, 2);
             y += inv_win.drawTextAt(startx, y, "$cEquipment:$.", .{});
-            inline for (@typeInfo(Mob.Inventory.EquSlot).Enum.fields) |slots_f, i| {
-                const slot = @intToEnum(Mob.Inventory.EquSlot, slots_f.value);
+            inline for (@typeInfo(Mob.Inventory.EquSlot).@"enum".fields, 0..) |slots_f, i| {
+                const slot: Mob.Inventory.EquSlot = @enumFromInt(slots_f.value);
                 const arrow = if (i == chosen and chosen_itemlist == .Equip) ">" else "·";
                 const color = if (i == chosen and chosen_itemlist == .Equip) colors.LIGHT_CONCRETE else colors.GREY;
 
@@ -3710,7 +3708,7 @@ pub fn drawInventoryScreen() bool {
         container.renderFully(0, 0);
         display.present();
 
-        var evgen = Generator(display.getEvents).init(FRAMERATE);
+        var evgen = display.getEvents(FRAMERATE);
         while (evgen.next()) |ev| switch (ev) {
             .Quit => {
                 state.state = .Quit;
@@ -3730,7 +3728,7 @@ pub fn drawInventoryScreen() bool {
                         } else if (chosen_item) |item| switch (item) {
                             .Weapon => drawTextModal("Bump into enemies to attack.", .{}),
                             .Ring => {
-                                const slot = @intToEnum(Mob.Inventory.EquSlot, chosen);
+                                const slot: Mob.Inventory.EquSlot = @enumFromInt(chosen);
                                 player.beginUsingRing(player.getRingIndexBySlot(slot));
                                 return false;
                             },
@@ -3759,8 +3757,8 @@ pub fn drawInventoryScreen() bool {
             },
             .Wheel => |w| switch (container.handleMouseEvent(w.c, .Wheel)) {
                 .Signal => |s| if (s == 1) {
-                    const new = @intCast(isize, desc_scroll) + w.y * -1;
-                    desc_scroll = @intCast(usize, math.max(0, new));
+                    const new = @as(isize, @intCast(desc_scroll)) + w.y * -1;
+                    desc_scroll = @as(usize, @intCast(@max(0, new)));
                 },
                 else => {},
             },
@@ -3787,7 +3785,7 @@ pub fn drawInventoryScreen() bool {
                     switch (item) {
                         .Weapon => drawTextModal("Bump into enemies to attack.", .{}),
                         .Ring => {
-                            const slot = @intToEnum(Mob.Inventory.EquSlot, chosen);
+                            const slot: Mob.Inventory.EquSlot = @enumFromInt(chosen);
                             player.beginUsingRing(player.getRingIndexBySlot(slot));
                             return false;
                         },
@@ -3918,7 +3916,7 @@ pub fn drawTextModal(comptime fmt: []const u8, args: anytype) void {
         );
         display.present();
 
-        var evgen = Generator(display.getEvents).init(FRAMERATE);
+        var evgen = display.getEvents(FRAMERATE);
         while (evgen.next()) |ev| switch (ev) {
             .Quit => {
                 state.state = .Quit;
@@ -3972,7 +3970,7 @@ pub fn drawChoicePrompt(comptime fmt: []const u8, args: anytype, options: []cons
         var y: usize = 0;
         options_c.clearTo(.{ .bg = colors.ABG });
         options_c.clearMouseTriggers();
-        for (options) |option, i| {
+        for (options, 0..) |option, i| {
             const ind = if (chosen == i) ">" else "-";
             const color = if (chosen == i) colors.LIGHT_CONCRETE else colors.GREY;
             y += options_c.drawTextAtf(0, y, "{s} {s}", .{ ind, option }, .{ .fg = color, .bg = colors.ABG });
@@ -3987,7 +3985,7 @@ pub fn drawChoicePrompt(comptime fmt: []const u8, args: anytype, options: []cons
         );
         display.present();
 
-        var evgen = Generator(display.getEvents).init(FRAMERATE);
+        var evgen = display.getEvents(FRAMERATE);
         while (evgen.next()) |ev| switch (ev) {
             .Quit => {
                 state.state = .Quit;
@@ -4163,7 +4161,7 @@ pub const Animation = union(enum) {
     }) void {
         var coords = StackBuffer(Coord, 128).init(null);
         for (list) |mob| {
-            var gen = Generator(Rect.rectIter).init(mob.areaRect());
+            var gen = mob.areaRect().iter();
             while (gen.next()) |mobcoord|
                 coords.append(mobcoord) catch err.wat();
         }
@@ -4241,7 +4239,7 @@ pub const Animation = union(enum) {
 
                 var ctr: usize = anim.repeat;
                 while (ctr > 0) : (ctr -= 1) {
-                    for (coords.constSlice()) |coord, i| {
+                    for (coords.constSlice(), 0..) |coord, i| {
                         const dcoord = coordToScreen(coord).?;
                         const old = old_cells.constSlice()[i];
                         map_win.animations.setCell(dcoord.x, dcoord.y, .{ .ch = anim.char, .fg = anim.fg orelse old.fg, .bg = colors.BG, .fl = .{ .wide = true } });
@@ -4252,7 +4250,7 @@ pub const Animation = union(enum) {
                     // std.time.sleep(anim.delay * 1_000_000);
                     drawAnimationNoPresentTimeout(anim.delay);
 
-                    for (coords.constSlice()) |coord, i| if (state.player.cansee(coord)) {
+                    for (coords.constSlice(), 0..) |coord, i| if (state.player.cansee(coord)) {
                         const dcoord = coordToScreen(coord).?;
                         const old = old_cells.constSlice()[i];
                         map_win.animations.setCell(dcoord.x, dcoord.y, old);
@@ -4347,7 +4345,7 @@ pub const Animation = union(enum) {
                     std.time.sleep(40_000_000);
 
                     if (anim.approach != null and animated_len < line.len) {
-                        animated_len = math.min(line.len, animated_len + anim.approach.?);
+                        animated_len = @min(line.len, animated_len + anim.approach.?);
                         animated = line.data[0..animated_len];
                     }
                 }
@@ -4364,7 +4362,7 @@ pub const Animation = union(enum) {
                 } else {
                     const target = switch (anim.target) {
                         .C => |c| c,
-                        .I => |n| Coord.new(anim.coord.x, anim.coord.y + @intCast(usize, n)),
+                        .I => |n| Coord.new(anim.coord.x, anim.coord.y + @as(usize, @intCast(n))),
                         .Z => |n| Coord.new(anim.coord.x, anim.coord.y + n),
                         .L => unreachable,
                     };
@@ -4391,7 +4389,7 @@ pub const Animation = union(enum) {
                 var tick: usize = 1;
                 while (tick < 200) : (tick += 1) {
                     if (were_any_visible) {
-                        const time_since_last_sleep = @intCast(u64, std.time.nanoTimestamp() - last_tick_time);
+                        const time_since_last_sleep = @as(u64, @intCast(std.time.nanoTimestamp() - last_tick_time));
                         std.time.sleep(WAIT_PERIOD -| time_since_last_sleep);
                     }
 
@@ -4404,20 +4402,20 @@ pub const Animation = union(enum) {
 
                     map_win.animations.clear();
 
-                    var particles = janet.c.janet_unwrap_array(j_particles).*;
+                    const particles = janet.c.janet_unwrap_array(j_particles).*;
                     if (particles.count == 0) {
                         break;
                     }
                     var i: usize = 0;
-                    while (i < @intCast(usize, particles.count)) : (i += 1) {
+                    while (i < @as(usize, @intCast(particles.count))) : (i += 1) {
                         const particle = janet.c.janet_unwrap_array(particles.data[i]).*;
                         const p_tile_str = janet.c.janet_unwrap_string(particle.data[0]);
                         const p_tile = std.unicode.utf8Decode(p_tile_str[0..mem.len(p_tile_str)]) catch 'X';
-                        const p_fg = @intCast(u32, janet.c.janet_unwrap_integer(particle.data[1]));
-                        const p_bg = @intCast(u32, janet.c.janet_unwrap_integer(particle.data[2]));
+                        const p_fg: u32 = @intCast(janet.c.janet_unwrap_integer(particle.data[1]));
+                        const p_bg: u32 = @intCast(janet.c.janet_unwrap_integer(particle.data[2]));
                         const p_bg_mix = janet.c.janet_unwrap_number(particle.data[3]);
-                        const p_x = @intCast(usize, janet.c.janet_unwrap_integer(particle.data[4]));
-                        const p_y = @intCast(usize, janet.c.janet_unwrap_integer(particle.data[5]));
+                        const p_x: usize = @intCast(janet.c.janet_unwrap_integer(particle.data[4]));
+                        const p_y: usize = @intCast(janet.c.janet_unwrap_integer(particle.data[5]));
                         const p_need_los = janet.c.janet_unwrap_number(particle.data[6]);
                         const p_need_nonwall = janet.c.janet_unwrap_boolean(particle.data[7]);
                         const p_coord = Coord.new2(state.player.coord.z, p_x, p_y);
@@ -4447,6 +4445,65 @@ pub const Animation = union(enum) {
     }
 };
 
+pub const AnimationRevealUnreveal = struct {
+    args: RevealAnimationArgs,
+    stage: union(enum) {
+        a: AnimationReveal,
+        b: usize,
+        c: AnimationReveal,
+    },
+
+    pub fn next(self: *@This()) ?void {
+        switch (self.stage) {
+            .a => |*iter| {
+                if (iter.next() == null)
+                    self.stage = .{ .b = self.args.opts.rv_unrv_delay };
+                return {};
+            },
+            .b => |*ctr| {
+                ctr.* -= 1;
+                if (ctr.* == 0) {
+                    var cargs = self.args;
+                    cargs.opts.reverse = true;
+                    self.stage = .{ .c = animationReveal(cargs) };
+                    return self.next();
+                } else {
+                    return {};
+                }
+            },
+            .c => |*iter| {
+                if (iter.next() == null) {
+                    return null;
+                } else {
+                    return {};
+                }
+            },
+        }
+    }
+};
+
+pub fn animationRevealUnreveal(args: RevealAnimationArgs) AnimationRevealUnreveal {
+    return .{
+        .args = args,
+        .stage = .{ .a = animationReveal(args) },
+    };
+}
+
+// pub fn animationRevealUnreveal(ctx: *GeneratorCtx(void), args: RevealAnimationArgs) void {
+//     var a = animationReveal(args);
+//     while (a.next()) |_| ctx.yield(.{});
+
+//     var b = args.opts.rv_unrv_delay;
+//     while (b > 0) : (b -= 1) ctx.yield(.{});
+
+//     var cargs = args;
+//     cargs.opts.reverse = true;
+//     var c = animationReveal(cargs);
+//     while (c.next()) |_| ctx.yield(.{});
+
+//     ctx.finish();
+// }
+
 pub const RevealAnimationOpts = struct {
     factor: usize = 3,
     ydelay: usize = 4,
@@ -4462,95 +4519,169 @@ pub const RevealAnimationArgs = struct {
     opts: RevealAnimationOpts = .{},
 };
 
-pub fn animationRevealUnreveal(ctx: *GeneratorCtx(void), args: RevealAnimationArgs) void {
-    var a = Generator(animationReveal).init(args);
-    while (a.next()) |_| ctx.yield(.{});
+pub const AnimationReveal = struct {
+    args: RevealAnimationArgs,
+    revealctrs: [128]usize = [_]usize{0} ** 128,
+    i: usize = 0,
+    did_anything: bool = false,
 
-    var b = args.opts.rv_unrv_delay;
-    while (b > 0) : (b -= 1) ctx.yield(.{});
+    pub fn _resetAnimLayer(self: *@This()) void {
+        const args = &self.args;
 
-    var cargs = args;
-    cargs.opts.reverse = true;
-    var c = Generator(animationReveal).init(cargs);
-    while (c.next()) |_| ctx.yield(.{});
-
-    ctx.finish();
-}
-
-pub fn animationReveal(ctx: *GeneratorCtx(void), args: RevealAnimationArgs) void {
-    const S_resetAnimLayer = struct {
-        pub fn f(_args: RevealAnimationArgs, revealctrs: []const usize) void {
-            var y: usize = 0;
-            while (y < _args.main_layer.height) : (y += 1) {
-                var x: usize = 0;
-                while (x < _args.main_layer.width) : (x += 1) {
-                    if (!_args.main_layer.getCell(x, y).fl.skip and
-                        _args.main_layer.getCell(x, y).ch != ' ' and
-                        _args.anim_layer.getCell(x, y).trans and
-                        revealctrs[y] != 0)
-                    {
-                        _args.anim_layer.setCell(x, y, _args.main_layer.getCell(x, y));
-                        if (_args.opts.reverse) {
-                            _args.anim_layer.grid[_args.main_layer.width * y + x].trans = false;
-                        } else {
-                            _args.anim_layer.grid[_args.main_layer.width * y + x].ch = ' ';
-                            _args.anim_layer.grid[_args.main_layer.width * y + x].sch = null;
-                        }
+        var y: usize = 0;
+        while (y < args.main_layer.height) : (y += 1) {
+            var x: usize = 0;
+            while (x < args.main_layer.width) : (x += 1) {
+                if (!args.main_layer.getCell(x, y).fl.skip and
+                    args.main_layer.getCell(x, y).ch != ' ' and
+                    args.anim_layer.getCell(x, y).trans and
+                    self.revealctrs[y] != 0)
+                {
+                    args.anim_layer.setCell(x, y, args.main_layer.getCell(x, y));
+                    if (args.opts.reverse) {
+                        args.anim_layer.grid[args.main_layer.width * y + x].trans = false;
+                    } else {
+                        args.anim_layer.grid[args.main_layer.width * y + x].ch = ' ';
+                        args.anim_layer.grid[args.main_layer.width * y + x].sch = null;
                     }
                 }
             }
         }
-    }.f;
+    }
 
-    var revealctrs = [_]usize{0} ** 128;
-    for (&revealctrs) |*c| c.* = 2 * args.opts.factor;
+    pub fn next(self: *@This()) ?void {
+        const args = self.args;
 
-    S_resetAnimLayer(args, &revealctrs);
+        self._resetAnimLayer();
 
-    var i: usize = 0;
-    var did_anything = false;
-    while (true) : (i += 1) {
-        S_resetAnimLayer(args, &revealctrs);
-        did_anything = false;
         var y: usize = 0;
         while (y < args.anim_layer.height) : (y += 1) {
-            if (revealctrs[y] == 0)
-                continue;
-            did_anything = true;
-            if (args.opts.rvtype != .All and 1 + (i / args.opts.idelay) < y + args.opts.ydelay)
-                continue;
+            if (self.revealctrs[y] == 0)
+                return {};
+            self.did_anything = true;
+            if (args.opts.rvtype != .All and 1 + (self.i / args.opts.idelay) < y + args.opts.ydelay)
+                return {};
             var x: usize = 0;
             while (x < args.anim_layer.width) : (x += 1) {
                 if (args.opts.reverse) {
-                    if (revealctrs[y] == 2 * args.opts.factor) {
+                    if (self.revealctrs[y] == 2 * args.opts.factor) {
                         args.anim_layer.grid[args.main_layer.width * y + x].ch = '⠿';
-                    } else if (revealctrs[y] == 1 * args.opts.factor) {
+                    } else if (self.revealctrs[y] == 1 * args.opts.factor) {
                         args.anim_layer.grid[args.main_layer.width * y + x].ch = '·';
-                    } else if (revealctrs[y] == 1) {
+                    } else if (self.revealctrs[y] == 1) {
                         args.anim_layer.grid[args.main_layer.width * y + x].ch = ' ';
                         args.anim_layer.grid[args.main_layer.width * y + x].sch = null;
                     }
                 } else {
-                    if (revealctrs[y] == 2 * args.opts.factor) {
+                    if (self.revealctrs[y] == 2 * args.opts.factor) {
                         args.anim_layer.grid[args.main_layer.width * y + x].ch = '·';
-                    } else if (revealctrs[y] == 1 * args.opts.factor) {
+                    } else if (self.revealctrs[y] == 1 * args.opts.factor) {
                         args.anim_layer.grid[args.main_layer.width * y + x].ch = '⠿';
-                    } else if (revealctrs[y] == 1) {
+                    } else if (self.revealctrs[y] == 1) {
                         args.anim_layer.setCell(x, y, .{ .trans = true });
                     }
                 }
             }
-            revealctrs[y] -= 1;
+            self.revealctrs[y] -= 1;
         }
-        if (!did_anything)
-            break;
-        ctx.yield({});
-    }
 
-    ctx.finish();
+        if (!self.did_anything)
+            return null;
+
+        self.i += 1;
+        return {};
+    }
+};
+
+pub fn animationReveal(args: RevealAnimationArgs) AnimationReveal {
+    var self = AnimationReveal{ .args = args };
+    for (&self.revealctrs) |*c| c.* = 2 * args.opts.factor;
+    return self;
 }
 
-pub fn animationDeath(ctx: *GeneratorCtx(void), self: *Console) void {
+// pub fn animationReveal(ctx: *GeneratorCtx(void), args: RevealAnimationArgs) void {
+//     const S_resetAnimLayer = struct {
+//         pub fn f(_args: RevealAnimationArgs, revealctrs: []const usize) void {
+//             var y: usize = 0;
+//             while (y < _args.main_layer.height) : (y += 1) {
+//                 var x: usize = 0;
+//                 while (x < _args.main_layer.width) : (x += 1) {
+//                     if (!_args.main_layer.getCell(x, y).fl.skip and
+//                         _args.main_layer.getCell(x, y).ch != ' ' and
+//                         _args.anim_layer.getCell(x, y).trans and
+//                         revealctrs[y] != 0)
+//                     {
+//                         _args.anim_layer.setCell(x, y, _args.main_layer.getCell(x, y));
+//                         if (_args.opts.reverse) {
+//                             _args.anim_layer.grid[_args.main_layer.width * y + x].trans = false;
+//                         } else {
+//                             _args.anim_layer.grid[_args.main_layer.width * y + x].ch = ' ';
+//                             _args.anim_layer.grid[_args.main_layer.width * y + x].sch = null;
+//                         }
+//                     }
+//                 }
+//             }
+//         }
+//     }.f;
+
+//     var revealctrs = [_]usize{0} ** 128;
+//     for (&revealctrs) |*c| c.* = 2 * args.opts.factor;
+
+//     S_resetAnimLayer(args, &revealctrs);
+
+//     var i: usize = 0;
+//     var did_anything = false;
+//     while (true) : (i += 1) {
+//         S_resetAnimLayer(args, &revealctrs);
+//         did_anything = false;
+//         var y: usize = 0;
+//         while (y < args.anim_layer.height) : (y += 1) {
+//             if (revealctrs[y] == 0)
+//                 continue;
+//             did_anything = true;
+//             if (args.opts.rvtype != .All and 1 + (i / args.opts.idelay) < y + args.opts.ydelay)
+//                 continue;
+//             var x: usize = 0;
+//             while (x < args.anim_layer.width) : (x += 1) {
+//                 if (args.opts.reverse) {
+//                     if (revealctrs[y] == 2 * args.opts.factor) {
+//                         args.anim_layer.grid[args.main_layer.width * y + x].ch = '⠿';
+//                     } else if (revealctrs[y] == 1 * args.opts.factor) {
+//                         args.anim_layer.grid[args.main_layer.width * y + x].ch = '·';
+//                     } else if (revealctrs[y] == 1) {
+//                         args.anim_layer.grid[args.main_layer.width * y + x].ch = ' ';
+//                         args.anim_layer.grid[args.main_layer.width * y + x].sch = null;
+//                     }
+//                 } else {
+//                     if (revealctrs[y] == 2 * args.opts.factor) {
+//                         args.anim_layer.grid[args.main_layer.width * y + x].ch = '·';
+//                     } else if (revealctrs[y] == 1 * args.opts.factor) {
+//                         args.anim_layer.grid[args.main_layer.width * y + x].ch = '⠿';
+//                     } else if (revealctrs[y] == 1) {
+//                         args.anim_layer.setCell(x, y, .{ .trans = true });
+//                     }
+//                 }
+//             }
+//             revealctrs[y] -= 1;
+//         }
+//         if (!did_anything)
+//             break;
+//         ctx.yield({});
+//     }
+
+//     ctx.finish();
+// }
+
+pub const AnimationDeath = struct {
+    console: *Console,
+    pdc: Coord,
+    pdci: CoordIsize,
+    rays: StackBuffer(Ray, 360),
+
+    i: usize,
+    z: isize,
+    m: usize,
+
     const Ray = struct {
         c: display.Cell,
         x: f64,
@@ -4560,88 +4691,77 @@ pub fn animationDeath(ctx: *GeneratorCtx(void), self: *Console) void {
         dead: bool = false,
 
         pub fn init(x: f64, y: f64) @This() {
-            const xr = @floatToInt(isize, math.round(x));
-            const yr = @floatToInt(isize, math.round(y));
+            const xr: isize = @intFromFloat(math.round(x));
+            const yr: isize = @intFromFloat(math.round(y));
             return .{ .c = .{ .trans = true }, .x = x, .y = y, .orig = CoordIsize.new(xr, yr) };
         }
 
         pub fn move(ray: *@This(), angle: usize, f: f64) void {
-            ray.x -= math.sin(@intToFloat(f64, angle) * math.pi / 180.0) * f;
-            ray.y -= math.cos(@intToFloat(f64, angle) * math.pi / 180.0) * f;
+            ray.x -= math.sin(@as(f64, @floatFromInt(angle)) * math.pi / 180.0) * f;
+            ray.y -= math.cos(@as(f64, @floatFromInt(angle)) * math.pi / 180.0) * f;
         }
 
         pub fn isValid(ray: *@This(), w: usize, h: usize) bool {
             if (!ray.dead and ray.x > 0 and ray.y > 0) {
-                const x = @floatToInt(usize, math.round(ray.x));
-                const y = @floatToInt(usize, math.round(ray.y));
+                const x: usize = @intFromFloat(math.round(ray.x));
+                const y: usize = @intFromFloat(math.round(ray.y));
                 if (x < w and y < h) return true;
             }
             return false;
         }
     };
 
-    const pdc = coordToScreen(state.player.coord).?;
-    const pdci = CoordIsize.fromCoord(pdc);
+    pub fn next(self: *@This()) ?void {
+        if (self.i == self.m) {
+            self.console.clearTo(.{ .trans = true });
+            return null;
+        }
 
-    var rays = StackBuffer(Ray, 360).init(null);
-    {
-        const d = pdc.distanceEuclidean(Coord.new(self.width, self.height));
-        var i: f64 = 0;
-        while (i < 360) : (i += 1)
-            rays.append(Ray.init(
-                @intToFloat(f64, pdc.x) + math.sin(i * math.pi / 180.0) * d,
-                @intToFloat(f64, pdc.y) + math.cos(i * math.pi / 180.0) * d,
-            )) catch err.wat();
-        for (rays.slice()) |*ray, angle|
-            ray.move(angle, 0.5);
-    }
+        const pdc = self.pdc;
+        const pdci = self.pdci;
 
-    var i: usize = 0;
-    var z: isize = @intCast(isize, pdc.distance(Coord.new(self.width, self.height / 2)));
-    const m = math.max(self.width - pdc.x, self.height - pdc.y) * 15 / 10;
-    while (i < m) : (i += 1) {
         var farthest_ray: usize = 0;
-        for (rays.slice()) |*ray, angle| {
-            if (ray.isValid(self.width, self.height)) {
-                const x = @floatToInt(usize, math.round(ray.x));
-                const y = @floatToInt(usize, math.round(ray.y));
+        for (self.rays.slice(), 0..) |*ray, angle| {
+            if (ray.isValid(self.console.width, self.console.height)) {
+                const x: usize = @intFromFloat(math.round(ray.x));
+                const y: usize = @intFromFloat(math.round(ray.y));
 
                 if (farthest_ray < Coord.new(x, y).distance(pdc)) {
                     farthest_ray = Coord.new(x, y).distance(pdc);
                 }
 
-                self.setCell(x, y, .{ .trans = true });
+                self.console.setCell(x, y, .{ .trans = true });
             }
 
             // Some stupid casting going on because rangeClumping can't handle f64's
-            const f = ray.speed / (@intToFloat(f64, rng.range(usize, 14, 28)) / 10.0);
+            const f = ray.speed / (@as(f64, @floatFromInt(rng.range(usize, 14, 28))) / 10.0);
             ray.move(angle, f);
 
             {
-                const x = @floatToInt(isize, math.round(ray.x));
-                const y = @floatToInt(isize, math.round(ray.y));
+                const x: isize = @intFromFloat(math.round(ray.x));
+                const y: isize = @intFromFloat(math.round(ray.y));
 
                 const orig_dist = ray.orig.distanceEuclidean(pdci);
                 const curr_dist = CoordIsize.new(x, y).distanceEuclidean(pdci);
                 const journey_done = (orig_dist - curr_dist) / orig_dist;
                 ray.speed = 2 * (1.3 + (journey_done * journey_done * journey_done));
-                ray.speed = math.min(2.3, ray.speed);
+                ray.speed = @min(2.3, ray.speed);
             }
 
-            if (ray.isValid(self.width, self.height)) {
-                const x = @floatToInt(usize, math.round(ray.x));
-                const y = @floatToInt(usize, math.round(ray.y));
+            if (ray.isValid(self.console.width, self.console.height)) {
+                const x: usize = @intFromFloat(math.round(ray.x));
+                const y: usize = @intFromFloat(math.round(ray.y));
 
-                const cell = self.getCell(x, y);
+                const cell = self.console.getCell(x, y);
 
                 if (Coord.new(x, y).distance(pdc) < 2) {
                     ray.dead = true;
-                    self.setCell(x, y, .{ .trans = true, .fl = .{ .wide = cell.fl.wide } });
-                    if (cell.fl.wide) self.setCell(x, y, .{ .fl = .{ .skip = true } });
+                    self.console.setCell(x, y, .{ .trans = true, .fl = .{ .wide = cell.fl.wide } });
+                    if (cell.fl.wide) self.console.setCell(x, y, .{ .fl = .{ .skip = true } });
                 } else if (!cell.fl.skip) {
                     ray.c.trans = false;
                     if ((ray.c.bg == colors.BG or rng.percent(33)) and cell.bg != colors.BG) {
-                        const frac = @intToFloat(f64, rng.range(usize, 0, 0) / 100);
+                        const frac = @as(f64, @floatFromInt(rng.range(usize, 0, 0) / 100));
                         const bg = colors.percentageOf2(cell.bg, 140);
                         if (colors.brightness(bg) > colors.brightness(ray.c.bg)) {
                             ray.c.bg = bg;
@@ -4659,15 +4779,15 @@ pub fn animationDeath(ctx: *GeneratorCtx(void), self: *Console) void {
                     }
                     if (cell.fl.wide and !(cell.bg == colors.BG and cell.fg == 0x0)) {
                         ray.c.fl.wide = true;
-                        self.setCell(x + 1, y, .{ .fl = .{ .skip = true } });
+                        self.console.setCell(x + 1, y, .{ .fl = .{ .skip = true } });
                     }
 
-                    self.setCell(x, y, ray.c);
+                    self.console.setCell(x, y, ray.c);
 
-                    for (rays.slice()) |*otherray|
-                        if (otherray.isValid(self.width, self.height) and
-                            @floatToInt(usize, math.round(otherray.x)) == x and
-                            @floatToInt(usize, math.round(otherray.y)) == y and
+                    for (self.rays.slice()) |*otherray|
+                        if (otherray.isValid(self.console.width, self.console.height) and
+                            @as(usize, @intFromFloat(math.round(otherray.x))) == x and
+                            @as(usize, @intFromFloat(math.round(otherray.y))) == y and
                             !otherray.c.trans and
                             colors.brightness(otherray.c.bg) < colors.brightness(ray.c.bg))
                         {
@@ -4677,26 +4797,172 @@ pub fn animationDeath(ctx: *GeneratorCtx(void), self: *Console) void {
             }
         }
 
-        while (farthest_ray > 0 and z > 0 and z > farthest_ray + 1) : (z -= 1) {
+        while (farthest_ray > 0 and self.z > 0 and self.z > farthest_ray + 1) : (self.z -= 1) {
             var box_x: usize = 0;
-            while (box_x < self.width) : (box_x += 1) {
-                self.setCell(box_x, pdc.y + @intCast(usize, z), .{ .trans = true });
-                if (@intCast(usize, z) <= pdc.y)
-                    self.setCell(box_x, pdc.y - @intCast(usize, z), .{ .trans = true });
+            while (box_x < self.console.width) : (box_x += 1) {
+                self.console.setCell(box_x, pdc.y + @as(usize, @intCast(self.z)), .{ .trans = true });
+                if (@as(usize, @intCast(self.z)) <= pdc.y)
+                    self.console.setCell(box_x, pdc.y - @as(usize, @intCast(self.z)), .{ .trans = true });
             }
             var box_b: usize = 0;
-            while (box_b < self.height) : (box_b += 1) {
-                self.setCell(pdc.x + @intCast(usize, z), box_b, .{ .trans = true });
-                if (@intCast(usize, z) <= pdc.x)
-                    self.setCell(pdc.x - @intCast(usize, z), box_b, .{ .trans = true });
+            while (box_b < self.console.height) : (box_b += 1) {
+                self.console.setCell(pdc.x + @as(usize, @intCast(self.z)), box_b, .{ .trans = true });
+                if (@as(usize, @intCast(self.z)) <= pdc.x)
+                    self.console.setCell(pdc.x - @as(usize, @intCast(self.z)), box_b, .{ .trans = true });
             }
         }
 
-        ctx.yield({});
+        self.i += 1;
+        return {};
+    }
+};
+
+pub fn animationDeath(self: *Console) AnimationDeath {
+    const pdc = coordToScreen(state.player.coord).?;
+    const pdci = CoordIsize.fromCoord(pdc);
+
+    var rays = StackBuffer(AnimationDeath.Ray, 360).init(null);
+    {
+        const d = pdc.distanceEuclidean(Coord.new(self.width, self.height));
+        var i: f64 = 0;
+        while (i < 360) : (i += 1)
+            rays.append(AnimationDeath.Ray.init(
+                @as(f64, @floatFromInt(pdc.x)) + math.sin(i * math.pi / 180.0) * d,
+                @as(f64, @floatFromInt(pdc.y)) + math.cos(i * math.pi / 180.0) * d,
+            )) catch err.wat();
+        for (rays.slice(), 0..) |*ray, angle|
+            ray.move(angle, 0.5);
     }
 
-    self.clearTo(.{ .trans = true });
-    ctx.finish();
+    return .{
+        .console = self,
+        .pdc = pdc,
+        .pdci = pdci,
+        .rays = rays,
+        .i = 0,
+        .z = @intCast(pdc.distance(Coord.new(self.width, self.height / 2))),
+        .m = @max(self.width - pdc.x, self.height - pdc.y) * 15 / 10,
+    };
 }
+
+// pub fn animationDeath(ctx: *GeneratorCtx(void), self: *Console) void {
+//     const pdc = coordToScreen(state.player.coord).?;
+//     const pdci = CoordIsize.fromCoord(pdc);
+
+//     var rays = StackBuffer(Ray, 360).init(null);
+//     {
+//         const d = pdc.distanceEuclidean(Coord.new(self.width, self.height));
+//         var i: f64 = 0;
+//         while (i < 360) : (i += 1)
+//             rays.append(Ray.init(
+//                 @as(f64, @floatFromInt(pdc.x)) + math.sin(i * math.pi / 180.0) * d,
+//                 @as(f64, @floatFromInt(pdc.y)) + math.cos(i * math.pi / 180.0) * d,
+//             )) catch err.wat();
+//         for (rays.slice(), 0..) |*ray, angle|
+//             ray.move(angle, 0.5);
+//     }
+
+//     var i: usize = 0;
+//     var z: isize = @intCast(pdc.distance(Coord.new(self.width, self.height / 2)));
+//     const m = @max(self.width - pdc.x, self.height - pdc.y) * 15 / 10;
+//     while (i < m) : (i += 1) {
+//         var farthest_ray: usize = 0;
+//         for (rays.slice(), 0..) |*ray, angle| {
+//             if (ray.isValid(self.width, self.height)) {
+//                 const x: usize = @intFromFloat(math.round(ray.x));
+//                 const y: usize = @intFromFloat(math.round(ray.y));
+
+//                 if (farthest_ray < Coord.new(x, y).distance(pdc)) {
+//                     farthest_ray = Coord.new(x, y).distance(pdc);
+//                 }
+
+//                 self.setCell(x, y, .{ .trans = true });
+//             }
+
+//             // Some stupid casting going on because rangeClumping can't handle f64's
+//             const f = ray.speed / (@as(f64, @floatFromInt(rng.range(usize, 14, 28))) / 10.0);
+//             ray.move(angle, f);
+
+//             {
+//                 const x: isize = @intFromFloat(math.round(ray.x));
+//                 const y: isize = @intFromFloat(math.round(ray.y));
+
+//                 const orig_dist = ray.orig.distanceEuclidean(pdci);
+//                 const curr_dist = CoordIsize.new(x, y).distanceEuclidean(pdci);
+//                 const journey_done = (orig_dist - curr_dist) / orig_dist;
+//                 ray.speed = 2 * (1.3 + (journey_done * journey_done * journey_done));
+//                 ray.speed = @min(2.3, ray.speed);
+//             }
+
+//             if (ray.isValid(self.width, self.height)) {
+//                 const x: usize = @intFromFloat(math.round(ray.x));
+//                 const y: usize = @intFromFloat(math.round(ray.y));
+
+//                 const cell = self.getCell(x, y);
+
+//                 if (Coord.new(x, y).distance(pdc) < 2) {
+//                     ray.dead = true;
+//                     self.setCell(x, y, .{ .trans = true, .fl = .{ .wide = cell.fl.wide } });
+//                     if (cell.fl.wide) self.setCell(x, y, .{ .fl = .{ .skip = true } });
+//                 } else if (!cell.fl.skip) {
+//                     ray.c.trans = false;
+//                     if ((ray.c.bg == colors.BG or rng.percent(33)) and cell.bg != colors.BG) {
+//                         const frac = @as(f64, @floatFromInt(rng.range(usize, 0, 0) / 100));
+//                         const bg = colors.percentageOf2(cell.bg, 140);
+//                         if (colors.brightness(bg) > colors.brightness(ray.c.bg)) {
+//                             ray.c.bg = bg;
+//                         } else if (colors.brightness(0xcccccc) < colors.brightness(ray.c.bg)) {
+//                             ray.c.bg = colors.mix(ray.c.bg, cell.bg, frac);
+//                         } else {
+//                             ray.c.bg = colors.mix(ray.c.bg, bg, frac);
+//                         }
+//                     }
+//                     if ((ray.c.ch == ' ' or rng.percent(33)) and cell.ch != ' ') {
+//                         ray.c.ch = cell.ch;
+//                     }
+//                     if ((ray.c.fg == 0x0 or rng.percent(33)) and cell.fg != 0x0) {
+//                         ray.c.fg = colors.mix(ray.c.fg, cell.fg, 0.5);
+//                     }
+//                     if (cell.fl.wide and !(cell.bg == colors.BG and cell.fg == 0x0)) {
+//                         ray.c.fl.wide = true;
+//                         self.setCell(x + 1, y, .{ .fl = .{ .skip = true } });
+//                     }
+
+//                     self.setCell(x, y, ray.c);
+
+//                     for (rays.slice()) |*otherray|
+//                         if (otherray.isValid(self.width, self.height) and
+//                             @as(usize, @intFromFloat(math.round(otherray.x))) == x and
+//                             @as(usize, @intFromFloat(math.round(otherray.y))) == y and
+//                             !otherray.c.trans and
+//                             colors.brightness(otherray.c.bg) < colors.brightness(ray.c.bg))
+//                         {
+//                             otherray.c = ray.c;
+//                         };
+//                 }
+//             }
+//         }
+
+//         while (farthest_ray > 0 and z > 0 and z > farthest_ray + 1) : (z -= 1) {
+//             var box_x: usize = 0;
+//             while (box_x < self.width) : (box_x += 1) {
+//                 self.setCell(box_x, pdc.y + @as(usize, @intCast(z)), .{ .trans = true });
+//                 if (@as(usize, @intCast(z)) <= pdc.y)
+//                     self.setCell(box_x, pdc.y - @as(usize, @intCast(z)), .{ .trans = true });
+//             }
+//             var box_b: usize = 0;
+//             while (box_b < self.height) : (box_b += 1) {
+//                 self.setCell(pdc.x + @as(usize, @intCast(z)), box_b, .{ .trans = true });
+//                 if (@as(usize, @intCast(z)) <= pdc.x)
+//                     self.setCell(pdc.x - @as(usize, @intCast(z)), box_b, .{ .trans = true });
+//             }
+//         }
+
+//         ctx.yield({});
+//     }
+
+//     self.clearTo(.{ .trans = true });
+//     ctx.finish();
+// }
 
 // }}}

@@ -3,6 +3,7 @@ const math = std.math;
 const enums = std.enums;
 const meta = std.meta;
 const mem = std.mem;
+const sort = std.sort;
 const assert = std.debug.assert;
 
 const ai = @import("ai.zig");
@@ -53,8 +54,8 @@ const LEVELS = state.LEVELS;
 const HEIGHT = state.HEIGHT;
 const WIDTH = state.WIDTH;
 
-const Generator = @import("generators.zig").Generator;
-const GeneratorCtx = @import("generators.zig").GeneratorCtx;
+// const Generator = @import("generators.zig").Generator;
+// const GeneratorCtx = @import("generators.zig").GeneratorCtx;
 const LinkedList = @import("list.zig").LinkedList;
 const StackBuffer = @import("buffer.zig").StackBuffer;
 
@@ -110,8 +111,8 @@ pub const RARE_ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 10, .i = .{ .W = &CopperRapierWeapon } },
     .{ .w = 10, .i = .{ .W = &MasterSwordWeapon } },
     // Overlap with Unholy temple's loot, so even rarer
-    .{ .w = 05, .i = .{ .C = &PureGoldCloak } },
-    .{ .w = 05, .i = .{ .W = &GoldDaggerWeapon } },
+    .{ .w = 5, .i = .{ .C = &PureGoldCloak } },
+    .{ .w = 5, .i = .{ .W = &GoldDaggerWeapon } },
 };
 pub const WEAP_ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 40, .i = .{ .W = &SwordWeapon } },
@@ -121,12 +122,12 @@ pub const WEAP_ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 20, .i = .{ .W = &BalancedSwordWeapon } },
     .{ .w = 20, .i = .{ .W = &MartialSwordWeapon } },
     .{ .w = 10, .i = .{ .W = &WoldoWeapon } },
-    .{ .w = 05, .i = .{ .W = &MorningstarWeapon } },
+    .{ .w = 5, .i = .{ .W = &MorningstarWeapon } },
     // Make it really rare since it's the starting weapon
-    .{ .w = 01, .i = .{ .W = &DaggerWeapon } },
+    .{ .w = 1, .i = .{ .W = &DaggerWeapon } },
 };
 pub const ITEM_DROPS = [_]ItemTemplate{
-    .{ .w = 05, .i = .{ .List = &RARE_ITEM_DROPS } },
+    .{ .w = 5, .i = .{ .List = &RARE_ITEM_DROPS } },
     // Weapons
     .{ .w = 20, .i = .{ .List = &WEAP_ITEM_DROPS } },
     // Armor
@@ -135,9 +136,9 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 20, .i = .{ .A = SilusGambesonArmor } },
     .{ .w = 15, .i = .{ .A = HauberkArmor } },
     .{ .w = 10, .i = .{ .A = SpikedLeatherArmor } },
-    .{ .w = 05, .i = .{ .A = GoldArmor } },
-    .{ .w = 05, .i = .{ .A = CuirassArmor } },
-    .{ .w = 05, .i = .{ .A = BrigandineArmor } },
+    .{ .w = 5, .i = .{ .A = GoldArmor } },
+    .{ .w = 5, .i = .{ .A = CuirassArmor } },
+    .{ .w = 5, .i = .{ .A = BrigandineArmor } },
     // Aux items
     .{ .w = 20, .i = .{ .X = &BucklerAux } },
     .{ .w = 20, .i = .{ .X = &ShieldAux } },
@@ -148,7 +149,7 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 10, .i = .{ .X = &DetectHeatAux } },
     .{ .w = 10, .i = .{ .X = &DetectElecAux } },
     // .{ .w = 10, .i = .{ .X = &DispelUndeadAux } },
-    .{ .w = 05, .i = .{ .X = &TowerShieldAux } },
+    .{ .w = 5, .i = .{ .X = &TowerShieldAux } },
     // Potions
     .{ .w = 190, .i = .{ .P = &DisorientPotion } },
     .{ .w = 190, .i = .{ .P = &DebilitatePotion } },
@@ -205,7 +206,7 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 10, .i = .{ .H = &GoldTiara } },
     .{ .w = 10, .i = .{ .H = &InsulatedMask } },
     .{ .w = 10, .i = .{ .H = &SilusMask } },
-    .{ .w = 05, .i = .{ .H = &SilusHood } },
+    .{ .w = 5, .i = .{ .H = &SilusHood } },
     // Shoes
     .{ .w = 10, .i = .{ .S = &SabatonsShoe } },
     .{ .w = 10, .i = .{ .S = &MartialShoe } },
@@ -213,7 +214,7 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 10, .i = .{ .S = &BlackShoe } },
     .{ .w = 10, .i = .{ .S = &SilusShoe } },
     .{ .w = 10, .i = .{ .S = &InsulatedShoe } },
-    .{ .w = 05, .i = .{ .S = &GoldShoe } },
+    .{ .w = 5, .i = .{ .S = &GoldShoe } },
 };
 pub const NIGHT_ITEM_DROPS = [_]ItemTemplate{
     // NOTE: 60 is min weight for "common" item
@@ -240,7 +241,7 @@ pub const NIGHT_ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 20, .i = .{ .c = &SpectralOrbConsumable } },
     // Auxes
     .{ .w = 10, .i = .{ .X = &ShadowShieldAux } },
-    .{ .w = 05, .i = .{ .X = &EtherealShieldAux } },
+    .{ .w = 5, .i = .{ .X = &EtherealShieldAux } },
 };
 pub const UNHOLY_ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 99, .i = .{ .c = &GoldOrbConsumable } },
@@ -646,7 +647,7 @@ pub const Evocable = struct {
     // Must be false if max_charges == 0.
     rechargable: bool = true,
 
-    trigger_fn: fn (*Mob, *Evocable) EvokeError!void,
+    trigger_fn: *const fn (*Mob, *Evocable) EvokeError!void,
 
     // TODO: targeting functionality
 
@@ -741,7 +742,7 @@ fn _triggerEldritchLantern(mob: *Mob, _: *Evocable) Evocable.EvokeError!void {
     assert(mob == state.player);
     state.message(.Info, "The eldritch lantern flashes brilliantly!", .{});
 
-    for (mob.fov) |row, y| for (row) |cell, x| {
+    for (mob.fov, 0..) |row, y| for (row, 0..) |cell, x| {
         if (cell == 0) continue;
 
         const coord = Coord.new2(mob.coord.z, x, y);
@@ -774,7 +775,7 @@ pub const SymbolEvoc = Evocable{
     .trigger_fn = struct {
         fn f(_: *Mob, _: *Evocable) Evocable.EvokeError!void {
             const DIST = 7;
-            const OPTS = .{ .ignore_mobs = true, .only_if_breaks_lof = true, .right_now = true };
+            const OPTS = state.IsWalkableOptions{ .ignore_mobs = true, .only_if_breaks_lof = true, .right_now = true };
 
             const dest = ui.chooseCell(.{
                 .targeter = .{ .Duo = [2]*const ui.ChooseCellOpts.Targeter{
@@ -816,7 +817,7 @@ pub const LightningRing = Ring{ // {{{
     .required_MP = 1,
     .effect = struct {
         pub fn f() bool {
-            const rElec_pips = @intCast(usize, math.max(0, state.player.resistance(.rElec))) / 25;
+            const rElec_pips = @as(usize, @intCast(@max(0, state.player.resistance(.rElec)))) / 25;
             const power = 2 + (rElec_pips / 2);
             const duration = 4 + (rElec_pips * 4);
 
@@ -876,7 +877,7 @@ pub const DamnationRing = Ring{ // {{{
     .hated_by_nc = true,
     .effect = struct {
         pub fn f() bool {
-            const rFire_pips = @intCast(usize, math.max(0, state.player.resistance(.rFire))) / 25;
+            const rFire_pips = @as(usize, @intCast(@max(0, state.player.resistance(.rFire)))) / 25;
             const power = 2 + rFire_pips;
             const duration = 4 + (rFire_pips * 4);
 
@@ -947,7 +948,7 @@ pub const MagnetizationRing = Ring{ // {{{
                 .require_enemy_on_tile = true,
             }) orelse return false).mob.?;
 
-            var gen = Generator(Rect.rectIter).init(state.mapRect(state.player.coord.z));
+            var gen = state.mapRect(state.player.coord.z).iter();
             while (gen.next()) |coord| if (state.player.cansee(coord)) {
                 if (state.dungeon.at(coord).mob) |othermob| {
                     if (othermob != magnet and
@@ -990,8 +991,8 @@ pub const AccelerationRing = Ring{ // {{{
     .required_MP = 2,
     .effect = struct {
         pub fn f() bool {
-            const ev = @intCast(usize, state.player.stat(.Evade));
-            const duration = math.max(3, ev / 4);
+            const ev: usize = @intCast(state.player.stat(.Evade));
+            const duration = @max(3, ev / 4);
             state.player.addStatus(.RingAcceleration, 0, .{ .Tmp = duration });
 
             if (utils.adjacentHostiles(state.player) == 0) {
@@ -1013,12 +1014,12 @@ pub const TransformationRing = Ring{ // {{{
     .required_MP = 3,
     .effect = struct {
         pub fn f() bool {
-            const rElec_pips = @intCast(usize, math.max(0, state.player.resistance(.rElec))) / 25;
+            const rElec_pips = @as(usize, @intCast(@max(0, state.player.resistance(.rElec)))) / 25;
             const damage = rElec_pips + 1;
 
             var coords = StackBuffer(Coord, HEIGHT * WIDTH).init(null);
 
-            for (state.player.fov) |row, y| for (row) |cell, x| {
+            for (state.player.fov, 0..) |row, y| for (row, 0..) |cell, x| {
                 if (cell == 0) continue;
                 const coord = Coord.new2(state.player.coord.z, x, y);
 
@@ -1041,7 +1042,7 @@ pub const TransformationRing = Ring{ // {{{
                         else => err.wat(),
                     };
                     mob.takeDamage(.{
-                        .amount = math.max(1, damage * percent / 100),
+                        .amount = @max(1, damage * percent / 100),
                         .by_mob = state.player,
                         .source = .RingAOE,
                         .kind = .Electric,
@@ -1064,7 +1065,7 @@ pub const DisintegrationRing = Ring{ // {{{
     .required_MP = 4,
     .effect = struct {
         pub fn f() bool {
-            const will = @intCast(usize, state.player.stat(.Willpower));
+            const will: usize = @intCast(state.player.stat(.Willpower));
 
             const dest = ui.chooseCell(.{
                 .require_seen = false,
@@ -1167,8 +1168,8 @@ pub const DeceptionRing = Ring{ // {{{
     .requires_uncorrupt = true,
     .effect = struct {
         pub fn f() bool {
-            const will = @intCast(usize, state.player.stat(.Willpower));
-            const duration = math.max(1, will);
+            const will: usize = @intCast(state.player.stat(.Willpower));
+            const duration = @max(1, will);
             state.player.addStatus(.RingDeception, 0, .{ .Tmp = duration });
 
             state.message(.Info, "A strange aura begins to surround you.", .{});
@@ -1200,8 +1201,8 @@ pub const CondemnationRing = Ring{ // {{{
                 },
             });
 
-            const will = @intCast(usize, state.player.stat(.Willpower));
-            const duration = 20 - math.max(1, will);
+            const will: usize = @intCast(state.player.stat(.Willpower));
+            const duration = 20 - @max(1, will);
             state.player.addStatus(.Held, 0, .{ .Tmp = duration });
 
             return true;
@@ -1216,8 +1217,8 @@ pub const ConcentrationRing = Ring{ // {{{
     .requires_nopain = true,
     .effect = struct {
         pub fn f() bool {
-            const will = @intCast(usize, state.player.stat(.Willpower));
-            const duration = math.max(1, will * 2);
+            const will: usize = @intCast(state.player.stat(.Willpower));
+            const duration = @max(1, will * 2);
             state.player.addStatus(.RingConcentration, 0, .{ .Tmp = duration });
             state.player.addStatus(.Slow, 0, .{ .Tmp = duration });
 
@@ -1234,8 +1235,8 @@ pub const ObscurationRing = Ring{ // {{{
     .requires_noglow = true,
     .effect = struct {
         pub fn f() bool {
-            const will = @intCast(usize, state.player.stat(.Willpower));
-            const duration = math.max(1, will);
+            const will: usize = @intCast(state.player.stat(.Willpower));
+            const duration = @max(1, will);
             state.player.addStatus(.RingObscuration, 0, .{ .Tmp = duration });
 
             state.message(.Info, "An ethereal cloak begins to cover you.", .{});
@@ -1250,8 +1251,8 @@ pub const DecelerationRing = Ring{ // {{{
     .required_MP = 2,
     .effect = struct {
         pub fn f() bool {
-            const will = @intCast(usize, state.player.stat(.Willpower));
-            const duration = math.max(1, will) * 2;
+            const will: usize = @intCast(state.player.stat(.Willpower));
+            const duration = @max(1, will) * 2;
             state.player.addStatus(.RingDeceleration, 0, .{ .Tmp = duration });
 
             state.message(.Info, "An invisible shield begins to surround you.", .{});
@@ -1356,7 +1357,7 @@ pub const ExcisionRing = Ring{ // {{{
             state.player.addUnderling(s);
             state.message(.Info, "A spectral blade appears mid-air, hovering precariously.", .{});
 
-            const will = @intCast(usize, state.player.stat(.Willpower));
+            const will: usize = @intCast(state.player.stat(.Willpower));
             state.player.addStatus(.RingExcision, 0, .{ .Tmp = will });
 
             return true;
@@ -1374,8 +1375,8 @@ pub const ConjurationRing = Ring{ // {{{
     .stats = .{ .Conjuration = 1 },
     .effect = struct {
         pub fn f() bool {
-            const will = @intCast(usize, state.player.stat(.Willpower));
-            const duration = math.max(1, will / 2);
+            const will: usize = @intCast(state.player.stat(.Willpower));
+            const duration = @max(1, will / 2);
             state.player.addStatus(.RingConjuration, 0, .{ .Tmp = duration });
             return true;
         }
@@ -1405,7 +1406,7 @@ pub const Consumable = struct {
         Resist: struct { r: Resistance, change: isize },
         Stat: struct { s: Stat, change: isize },
         MaxMP: isize,
-        Custom: fn (?*Mob, Coord) void,
+        Custom: *const fn (?*Mob, Coord) void,
     };
 
     const VERBS_PLAYER_POTION = &[_][]const u8{ "slurp", "quaff" };
@@ -1421,7 +1422,7 @@ pub const Consumable = struct {
         comptime id: []const u8,
         comptime name: []const u8,
         hated_by_nc: bool,
-        func: fn (*Machine, *Mob) void,
+        func: *const fn (*Machine, *Mob) void,
     ) Consumable {
         return Consumable{
             .id = id,
@@ -1527,7 +1528,7 @@ pub const SpectralOrbConsumable = Consumable{
                     state.player.stats.Conjuration += 1;
                     state.message(.Info, "[$oConjuration$.] Your Conjuration stat increases.", .{});
                 } else {
-                    const next_aug = for (state.player_conj_augments) |aug, i| {
+                    const next_aug = for (state.player_conj_augments, 0..) |aug, i| {
                         if (!aug.received)
                             break i;
                     } else {
@@ -1837,7 +1838,7 @@ fn triggerDistractPotion(_: ?*Mob, coord: Coord) void {
 }
 
 fn triggerIgnitePotion(_: ?*Mob, coord: Coord) void {
-    fire.setTileOnFire(coord, math.max(25, fire.tileFlammability(coord)));
+    fire.setTileOnFire(coord, @max(25, fire.tileFlammability(coord)));
 }
 
 fn triggerIncineratePotion(_: ?*Mob, coord: Coord) void {
@@ -1913,7 +1914,7 @@ pub const SpikedLeatherArmor = Armor{
 pub const GoldArmor = Armor{
     .id = "gold_armor",
     .name = "golden armor",
-    .resists = .{ .Armor = 05 },
+    .resists = .{ .Armor = 5 },
     .stats = .{ .Potential = 10 },
 };
 

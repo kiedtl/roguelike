@@ -1,5 +1,6 @@
 const std = @import("std");
 const math = std.math;
+const sort = std.sort;
 const mem = std.mem;
 const meta = std.meta;
 
@@ -14,8 +15,8 @@ const surfaces = @import("surfaces.zig");
 const ui = @import("fabedit/ui.zig");
 const utils = @import("utils.zig");
 
-const Generator = @import("generators.zig").Generator;
-const GeneratorCtx = @import("generators.zig").GeneratorCtx;
+// const Generator = @import("generators.zig").Generator;
+// const GeneratorCtx = @import("generators.zig").GeneratorCtx;
 const StackBuffer = @import("buffer.zig").StackBuffer;
 
 pub const EdState = struct {
@@ -46,17 +47,17 @@ pub const EdState = struct {
 
         pub fn incrBy(self: *Cursor, by: usize) void {
             switch (self.*) {
-                .Prop => self.Prop = math.min(surfaces.props.items.len - 1, self.Prop + by),
-                .Basic => self.Basic = @intToEnum(BasicCursor, math.min(meta.fields(BasicCursor).len - 1, @enumToInt(self.Basic) + by)),
-                .PrisonArea => self.PrisonArea = math.min(st.fab.prisons.len - 1, self.PrisonArea + 1),
-                .Mob => self.Mob = math.min(mobs.MOBS.len - 1, self.Mob + by),
+                .Prop => self.Prop = @min(surfaces.props.items.len - 1, self.Prop + by),
+                .Basic => self.Basic = @enumFromInt(@min(meta.fields(BasicCursor).len - 1, @intFromEnum(self.Basic) + by)),
+                .PrisonArea => self.PrisonArea = @min(st.fab.prisons.len - 1, self.PrisonArea + 1),
+                .Mob => self.Mob = @min(mobs.MOBS.len - 1, self.Mob + by),
             }
         }
 
         pub fn decrBy(self: *Cursor, by: usize) void {
             switch (st.cursor) {
                 .Prop => self.Prop -|= by,
-                .Basic => self.Basic = @intToEnum(BasicCursor, @enumToInt(self.Basic) -| by),
+                .Basic => self.Basic = @enumFromInt(@intFromEnum(self.Basic) -| by),
                 .PrisonArea => self.PrisonArea -|= 1,
                 .Mob => self.Mob -|= by,
             }
@@ -86,7 +87,7 @@ pub fn prevFab() void {
 pub fn nextFab() void {
     st.x = 0;
     st.y = 0;
-    st.fab_index = math.min(st.fab_variants.len - 1, st.fab_index + 1);
+    st.fab_index = @min(st.fab_variants.len - 1, st.fab_index + 1);
     st.fab = st.fab_variants.slice()[st.fab_index];
     st.fab_redraw = true;
 }
@@ -106,10 +107,10 @@ pub fn removeUnusedFeatures() ?u8 {
     }
 
     var first: ?u8 = null;
-    for (used_markers) |used_marker, i| if (!used_marker) {
+    for (used_markers, 0..) |used_marker, i| if (!used_marker) {
         if (first == null)
             switch (i) {
-                '0'...'9', 'a'...'z' => first = @intCast(u8, i),
+                '0'...'9', 'a'...'z' => first = @intCast(i),
                 else => {},
             };
         st.fab.features[i] = null;
@@ -149,10 +150,10 @@ pub fn applyCursorMob() void {
     const blank = removeUnusedFeatures();
 
     const selected = &mobs.MOBS[st.cursor.Mob];
-    const feature = for (st.fab.features) |maybe_feature, i| {
+    const feature = for (st.fab.features, 0..) |maybe_feature, i| {
         if (maybe_feature) |feature|
             if (feature == .Mob and feature.Mob == selected)
-                break @intCast(u8, i);
+                break @as(u8, @intCast(i));
     } else b: {
         if (blank == null) {
             std.log.err("Fab features are full", .{});
@@ -171,10 +172,10 @@ pub fn applyCursorProp() void {
     const blank = removeUnusedFeatures();
 
     const selected = &surfaces.props.items[st.cursor.Prop];
-    const feature = for (st.fab.features) |maybe_feature, i| {
+    const feature: u8 = for (st.fab.features, 0..) |maybe_feature, i| {
         if (maybe_feature) |feature|
             if (feature == .Prop and mem.eql(u8, utils.used(feature.Prop), selected.id))
-                break @intCast(u8, i);
+                break @intCast(i);
     } else b: {
         if (blank == null) {
             std.log.err("Fab features are full", .{});
@@ -211,7 +212,7 @@ fn _saveVariant(ind: usize, writer: anytype) void {
         writer.writeByte('\n') catch err.wat();
 
     const oldpos2 = writer.context.getPos() catch err.wat();
-    for (fab.features) |maybe_feature, i| if (maybe_feature) |feature| {
+    for (fab.features, 0..) |maybe_feature, i| if (maybe_feature) |feature| {
         const chr: u21 = switch (feature) {
             .Item => 'i',
             .Mob => 'M',
@@ -236,7 +237,7 @@ fn _saveVariant(ind: usize, writer: anytype) void {
                 return;
             },
         };
-        writer.print("@{u} {u} {s}\n", .{ @intCast(u8, i), chr, str }) catch err.wat();
+        writer.print("@{u} {u} {s}\n", .{ @as(u8, @intCast(i)), chr, str }) catch err.wat();
     };
 
     if (writer.context.getPos() catch err.wat() != oldpos2)
@@ -262,7 +263,7 @@ fn _saveVariant(ind: usize, writer: anytype) void {
                 .Feature => |u| u,
                 .Loot1 => 'L',
                 .RareLoot => 'R',
-                .LevelFeature => |i| 'α' + @intCast(u21, i),
+                .LevelFeature => |i| 'α' + @as(u21, @intCast(i)),
                 .Corpse => 'C',
                 .Ring => '=',
                 .Any => '?',
@@ -286,7 +287,7 @@ pub fn saveFile() void {
     fab_f.seekTo(0) catch err.wat();
     fab_f.setEndPos(0) catch err.wat();
 
-    var lines = mem.split(u8, buf[0..read], "\n");
+    var lines = mem.splitScalar(u8, buf[0..read], "\n");
     while (lines.next()) |line| {
         writer.writeAll(line) catch err.wat();
         writer.writeByte('\n') catch err.wat();
@@ -296,7 +297,7 @@ pub fn saveFile() void {
         }
     }
 
-    for (st.fab_variants.constSlice()) |_, i| {
+    for (st.fab_variants.constSlice(), 0..) |_, i| {
         _saveVariant(i, writer);
         if (i < st.fab_variants.len - 1)
             writer.print("\n\\\n", .{}) catch err.wat();
@@ -363,7 +364,7 @@ pub fn main() anyerror!void {
     main: while (true) {
         ui.draw(&st);
 
-        var evgen = Generator(display.getEvents).init(ui.FRAMERATE);
+        var evgen = display.getEvents(ui.FRAMERATE);
         while (evgen.next()) |ev| {
             switch (ev) {
                 .Quit => break :main,
@@ -385,8 +386,8 @@ pub fn main() anyerror!void {
                 .Char => |c| {
                     switch (c) {
                         's' => saveFile(),
-                        'l' => st.x = math.min(st.fab.width - 1, st.x + 1),
-                        'j' => st.y = math.min(st.fab.height - 1, st.y + 1),
+                        'l' => st.x = @min(st.fab.width - 1, st.x + 1),
+                        'j' => st.y = @min(st.fab.height - 1, st.y + 1),
                         'h' => st.x -|= 1,
                         'k' => st.y -|= 1,
                         'J' => st.cursor.incrBy(14),

@@ -7,14 +7,47 @@ const state = @import("state.zig");
 const types = @import("types.zig");
 const mapgen = @import("mapgen.zig");
 
-const Generator = @import("generators.zig").Generator;
-const GeneratorCtx = @import("generators.zig").GeneratorCtx;
+// const Generator = @import("generators.zig").Generator;
+// const GeneratorCtx = @import("generators.zig").GeneratorCtx;
 
-fn gimmePrefabs(ctx: *GeneratorCtx(*mapgen.Prefab), name: []const u8) void {
-    for (mapgen.n_fabs.items) |*f| if (mem.eql(u8, name, f.name.constSlice())) ctx.yield(f);
-    for (mapgen.s_fabs.items) |*f| if (mem.eql(u8, name, f.name.constSlice())) ctx.yield(f);
-    ctx.finish();
+const GimmePrefabIter = struct {
+    name: []const u8,
+    i: usize = 0,
+    s_fabs: bool = true,
+
+    // CHECK
+    pub fn next(self: *@This()) ?*mapgen.Prefab {
+        if (self.s_fabs) {
+            while (self.i < mapgen.s_fabs.items.len) {
+                const i = self.i;
+                self.i += 1;
+                if (mem.eql(u8, self.name, mapgen.s_fabs.items[i].name.constSlice()))
+                    return &mapgen.s_fabs.items[i];
+            }
+            self.i = 0;
+            self.s_fabs = false;
+            return self.next();
+        } else {
+            while (self.i < mapgen.n_fabs.items.len) {
+                const i = self.i;
+                self.i += 1;
+                if (mem.eql(u8, self.name, mapgen.n_fabs.items[i].name.constSlice()))
+                    return &mapgen.n_fabs.items[i];
+            }
+            return null;
+        }
+    }
+};
+
+fn gimmePrefabs(name: []const u8) GimmePrefabIter {
+    return .{ .name = name };
 }
+
+// fn gimmePrefabs(ctx: *GeneratorCtx(*mapgen.Prefab), name: []const u8) void {
+//     for (mapgen.n_fabs.items) |*f| if (mem.eql(u8, name, f.name.constSlice())) ctx.yield(f);
+//     for (mapgen.s_fabs.items) |*f| if (mem.eql(u8, name, f.name.constSlice())) ctx.yield(f);
+//     ctx.finish();
+// }
 
 pub const Effect = union(enum) {
     SetPrefabGlobalRestriction: struct { prefab: []const u8, val: usize },
@@ -23,13 +56,13 @@ pub const Effect = union(enum) {
     pub fn apply(self: @This()) !void {
         switch (self) {
             .SetPrefabGlobalRestriction => |ctx| {
-                var gen = Generator(gimmePrefabs).init(ctx.prefab);
+                var gen = gimmePrefabs(ctx.prefab);
                 while (gen.next()) |fab| {
                     fab.global_restriction = ctx.val;
                 }
             },
             .AppendPrefabWhitelist => |ctx| {
-                var gen = Generator(gimmePrefabs).init(ctx.prefab);
+                var gen = gimmePrefabs(ctx.prefab);
                 while (gen.next()) |prefab| {
                     const z = if (mem.eql(u8, ctx.val, "$SPAWN_LEVEL"))
                         state.PLAYER_STARTING_LEVEL
@@ -96,7 +129,7 @@ pub fn deinit() void {
 }
 
 pub fn eventUsedCount(id: []const u8) usize {
-    const ind = for (EVENTS) |ev, i| {
+    const ind = for (EVENTS, 0..) |ev, i| {
         if (mem.eql(u8, ev.v.id, id)) break i;
     } else err.wat();
     return state.completed_events[ind];
@@ -117,9 +150,9 @@ pub fn eventCanBeUsed(event: *const Event) bool {
 // XXX: Need to add checks for restrictions etc when that's added
 //
 pub fn executeGlobalEvents() void {
-    for (&EVENTS) |event, i| {
+    for (&EVENTS, 0..) |event, i| {
         if (rng.percent(event.p) and eventCanBeUsed(event.v)) {
-            var new_event = event.v.*;
+            const new_event = event.v.*;
             for (new_event.effect) |effect|
                 effect.apply() catch unreachable;
             state.completed_events[i] += 1;

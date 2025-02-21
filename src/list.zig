@@ -4,8 +4,8 @@ const assert = std.debug.assert;
 const testing = std.testing;
 
 const serializer = @import("serializer.zig");
-const Generator = @import("generators.zig").Generator;
-const GeneratorCtx = @import("generators.zig").GeneratorCtx;
+// const Generator = @import("generators.zig").Generator;
+// const GeneratorCtx = @import("generators.zig").GeneratorCtx;
 
 // Basic node that can be used for scalar data.
 pub fn ScalarNode(comptime T: type) type {
@@ -20,7 +20,7 @@ pub fn ScalarNode(comptime T: type) type {
 
 pub fn LinkedList(comptime T: type) type {
     switch (@typeInfo(T)) {
-        .Struct => {},
+        .@"struct" => {},
         else => @compileError("Expected struct, got '" ++ @typeName(T) ++ "'"),
     }
 
@@ -177,13 +177,19 @@ pub fn LinkedList(comptime T: type) type {
         }
 
         // Deserialization stuff
-        pub fn __SER_getPointerData(ctx: *GeneratorCtx(serializer.PointerData2), self: *@This()) void {
-            var i = self.iterator();
-            var c: usize = 0;
-            while (i.next()) |item| : (c += 1)
-                ctx.yield(.{ .ptr = @ptrToInt(item), .ind = c, .ptrtype = @typeName(*T) });
-            ctx.finish();
-        }
+        pub const __PointerDataIter = struct {
+            i: Iterator,
+            c: usize = 0,
+
+            pub fn next(self: *@This()) ?serializer.pointerData2 {
+                if (self.i.next()) |item| {
+                    self.c += 1;
+                    return .{ .ptr = @intFromPtr(item), .ind = self.c - 1, .ptrtype = @typeName(*T) };
+                } else {
+                    return null;
+                }
+            }
+        };
     };
 }
 

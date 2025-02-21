@@ -47,8 +47,8 @@ const Cloak = items.Cloak;
 const Projectile = items.Projectile;
 const StackBuffer = buffer.StackBuffer;
 const SpellOptions = spells.SpellOptions;
-const Generator = @import("generators.zig").Generator;
-const GeneratorCtx = @import("generators.zig").GeneratorCtx;
+// const Generator = @import("generators.zig").Generator;
+// const GeneratorCtx = @import("generators.zig").GeneratorCtx;
 
 // -----------------------------------------------------------------------------
 
@@ -2490,7 +2490,7 @@ pub fn placeMob(
     opts: PlaceMobOptions,
 ) *Mob {
     {
-        var gen = Generator(Rect.rectIter).init(template.mobAreaRect(coord));
+        var gen = template.mobAreaRect(coord).iter();
         while (gen.next()) |mobcoord| {
             if (state.dungeon.at(mobcoord).mob) |other|
                 err.bug("Attempting to place {s} in tile occupied by {f}", .{ template.mob.id, other });
@@ -2606,7 +2606,7 @@ pub fn placeMob(
     }
 
     {
-        var gen = Generator(Rect.rectIter).init(mob_ptr.areaRect());
+        var gen = mob_ptr.areaRect().iter();
         while (gen.next()) |mobcoord|
             state.dungeon.at(mobcoord).mob = mob_ptr;
     }

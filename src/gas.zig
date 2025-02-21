@@ -23,7 +23,7 @@ pub const Gas = struct {
     color: u32,
     dissipation_rate: usize,
     opacity: f64 = 0.0,
-    trigger: fn (*Mob, usize) void,
+    trigger: *const fn (*Mob, usize) void,
     not_breathed: bool = false, // if true, will affect nonbreathing mobs
     id: usize,
     residue: ?Spatter = null,
@@ -182,8 +182,7 @@ pub const GAS_NUM: usize = Gases.len;
 
 // Ensure that each gas's ID matches the index that it appears as in Gases.
 comptime {
-    for (&Gases) |gas, i|
-        if (i != gas.id) @compileError("Gas's ID doesn't match index");
+    for (&Gases, 0..) |gas, i| if (i != gas.id) @compileError("Gas's ID doesn't match index");
 }
 
 fn triggerNone(_: *Mob, _: usize) void {}
@@ -306,7 +305,7 @@ pub fn mockGasSpread(gas: usize, amount: usize, coord: Coord, result: *[HEIGHT][
     while (j > 0) : (j -= 1) {
         spreadGas(&buf, coord.z, gas, true);
         var anyleft = false;
-        for (buf) |row, y| for (row) |cell, x| if (cell > 0) {
+        for (buf, 0..) |row, y| for (row, 0..) |cell, x| if (cell > 0) {
             anyleft = true;
             result[y][x] += 1;
         };
@@ -328,7 +327,7 @@ pub fn tickGases(cur_lev: usize) void {
             while (x < WIDTH) : (x += 1) {
                 const coord = Coord.new2(cur_lev, x, y);
                 const gases = state.dungeon.atGas(coord);
-                for (gases) |gas, gas_i| if (gas != 0) {
+                for (gases, 0..) |gas, gas_i| if (gas != 0) {
                     dirty_flags[gas_i] = true;
                 };
             }

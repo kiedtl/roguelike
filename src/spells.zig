@@ -43,8 +43,8 @@ const Status = types.Status;
 const Machine = types.Machine;
 const Direction = types.Direction;
 
-const Generator = @import("generators.zig").Generator;
-const GeneratorCtx = @import("generators.zig").GeneratorCtx;
+// const Generator = @import("generators.zig").Generator;
+// const GeneratorCtx = @import("generators.zig").GeneratorCtx;
 const StackBuffer = @import("buffer.zig").StackBuffer;
 
 const DIRECTIONS = types.DIRECTIONS;
@@ -68,7 +68,7 @@ fn newCorpseSpell(
         .name = "call " ++ name,
         .cast_type = .Smite,
         .smite_target_type = .Corpse,
-        .animation = .{ .Particle = animation },
+        .animation = .{ .Particles = animation },
         .effects = &[_]Effect{.{
             .Custom = struct {
                 fn f(caster_coord: Coord, _: SpellOptions, coord: Coord) void {
@@ -186,7 +186,7 @@ pub const CAST_CALL_UNDEAD = Spell{
     .name = "call undead",
     .cast_type = .Smite,
     .checks_will = true,
-    .animation = .{ .Particle = .{ .name = "beams-call-undead" } },
+    .animation = .{ .Particles = .{ .name = "beams-call-undead" } },
     .effects = &[_]Effect{.{
         .Custom = struct {
             fn f(caster_coord: Coord, opts: SpellOptions, target: Coord) void {
@@ -289,7 +289,7 @@ fn _createSpecificStatusSp(comptime id: []const u8, name: []const u8, anim: []co
     return Spell{
         .id = "sp_" ++ status_str ++ "_" ++ id,
         .name = status_str ++ " " ++ name,
-        .animation = .{ .Particle = .{ .name = anim } },
+        .animation = .{ .Particles = .{ .name = anim } },
         .cast_type = .Smite,
         .smite_target_type = .{ .SpecificAlly = id },
         .effects = &[_]Effect{.{ .Status = s }},
@@ -308,7 +308,7 @@ pub const CAST_AWAKEN_CONSTRUCT = Spell{
     .name = "awaken construct",
     .cast_type = .Smite,
     .smite_target_type = .ConstructAlly,
-    .animation = .{ .Particle = .{ .name = "zap-awaken-construct" } },
+    .animation = .{ .Particles = .{ .name = "zap-awaken-construct" } },
     .check_has_effect = struct {
         fn f(_: *Mob, _: SpellOptions, target: Coord) bool {
             return state.dungeon.at(target).mob.?.hasStatus(.Sleeping);
@@ -327,7 +327,7 @@ pub const CAST_FIREBLAST = Spell{
     .name = "vomit flames",
     .cast_type = .Smite,
     .smite_target_type = .Self,
-    .animation = .{ .Particle = .{ .name = "explosion-fire1", .target = .Power } },
+    .animation = .{ .Particles = .{ .name = "explosion-fire1", .target = .Power } },
     .check_has_effect = struct {
         fn f(caster: *Mob, opts: SpellOptions, target: Coord) bool {
             return opts.power >= target.distance(caster.coord);
@@ -342,7 +342,7 @@ pub const CAST_FIREBLAST = Spell{
 pub const BOLT_AIRBLAST = Spell{
     .id = "sp_airblast",
     .name = "airblast",
-    .animation = .{ .Particle = .{ .name = "zap-air-messy" } },
+    .animation = .{ .Particles = .{ .name = "zap-air-messy" } },
     .cast_type = .Bolt,
     .bolt_multitarget = false,
     .check_has_effect = struct {
@@ -372,7 +372,7 @@ pub const BOLT_FIERY_JAVELIN = Spell{
     .bolt_dodgeable = true,
     .bolt_missable = true,
     .bolt_multitarget = false,
-    .animation = .{ .Particle = .{ .name = "zap-bolt-fiery" } },
+    .animation = .{ .Particles = .{ .name = "zap-bolt-fiery" } },
     .noise = .Loud,
     .effects = &[_]Effect{
         .{ .Damage = .{ .msg = .{ .noun = "The blazing javelin", .strs = &items.PIERCING_STRS } } },
@@ -387,7 +387,7 @@ pub const BOLT_JAVELIN = Spell{
     .bolt_dodgeable = true,
     .bolt_missable = true,
     .bolt_multitarget = false,
-    .animation = .{ .Particle = .{ .name = "zap-bolt" } },
+    .animation = .{ .Particles = .{ .name = "zap-bolt" } },
     .noise = .Medium,
     .check_has_effect = struct {
         fn f(caster: *Mob, _: SpellOptions, target: Coord) bool {
@@ -407,7 +407,7 @@ pub const BOLT_BOLT = Spell{
     .bolt_dodgeable = true,
     .bolt_missable = true,
     .bolt_multitarget = false,
-    .animation = .{ .Particle = .{ .name = "zap-bolt" } },
+    .animation = .{ .Particles = .{ .name = "zap-bolt" } },
     .noise = .Medium,
     .effects = &[_]Effect{
         .{ .Damage = .{ .msg = .{ .noun = "The bolt", .strs = &items.PIERCING_STRS } } },
@@ -453,7 +453,7 @@ pub const BOLT_PULL_FOE = Spell{
     .id = "sp_pull_enemy",
     .name = "yank foe",
     .cast_type = .Smite,
-    .animation = .{ .Particle = .{ .name = "zap-pull-foe" } },
+    .animation = .{ .Particles = .{ .name = "zap-pull-foe" } },
     .smite_target_type = .Mob,
     .needs_visible_target = true,
     .check_has_effect = struct {
@@ -515,8 +515,8 @@ fn _effectSummonEnemy(caster: Coord, _: SpellOptions, coord: Coord) void {
     // Find a spot in caster's LOS
     var new: ?Coord = null;
     var farthest_dist: usize = 0;
-    for (caster_mob.fov) |row, y| {
-        for (row) |cell, x| {
+    for (caster_mob.fov, 0..) |row, y| {
+        for (row, 0..) |cell, x| {
             const fitem = Coord.new2(caster_mob.coord.z, x, y);
             const dist = fitem.distance(caster);
             if (cell == 0 or dist == 1)
@@ -564,8 +564,8 @@ fn _effectAuraDispersal(caster: Coord, _: SpellOptions, _: Coord) void {
                 // Find a new home
                 var new: ?Coord = null;
                 var farthest_dist: usize = 0;
-                for (caster_mob.fov) |row, y| {
-                    for (row) |cell, x| {
+                for (caster_mob.fov, 0..) |row, y| {
+                    for (row, 0..) |cell, x| {
                         const fitem = Coord.new2(caster_mob.coord.z, x, y);
                         const dist = fitem.distance(caster);
                         if (cell == 0 or dist == 1)
@@ -626,10 +626,10 @@ pub fn spawnSabreSingle(caster: *Mob, coord: Coord) void {
         (if (caster == state.player and player.hasAugment(.Evade)) @as(usize, 25) else 0);
 
     const ss = mobs.placeMob(state.gpa.allocator(), &mobs.SpectralSabreTemplate, coord, .{});
-    ss.innate_resists.rFire += @intCast(isize, rFire);
-    ss.innate_resists.rElec += @intCast(isize, rElec);
-    ss.stats.Melee += @intCast(isize, Melee);
-    ss.stats.Evade += @intCast(isize, Evade);
+    ss.innate_resists.rFire += @intCast(rFire);
+    ss.innate_resists.rElec += @intCast(rElec);
+    ss.stats.Melee += @intCast(Melee);
+    ss.stats.Evade += @intCast(Evade);
     caster.addUnderling(ss);
 }
 
@@ -637,7 +637,7 @@ pub fn spawnSabreVolley(caster: *Mob, coord: Coord) void {
     var directions = DIRECTIONS;
     rng.shuffle(Direction, &directions);
 
-    var spawned_ctr: usize = @intCast(usize, caster.stat(.Conjuration));
+    var spawned_ctr: usize = @intCast(caster.stat(.Conjuration));
 
     if (state.is_walkable(coord, .{ .right_now = true })) {
         spawnSabreSingle(caster, coord);
@@ -663,7 +663,7 @@ pub const BOLT_CONJURE = Spell{
     .name = "conjure spectral sabre",
     .cast_type = .Bolt,
     .bolt_multitarget = false,
-    .animation = .{ .Particle = .{ .name = "zap-conjuration" } },
+    .animation = .{ .Particles = .{ .name = "zap-conjuration" } },
     .noise = .Silent,
     .effects = &[_]Effect{.{
         .Custom = struct {
@@ -683,7 +683,7 @@ pub const BOLT_AOE_AMNESIA = Spell{
     .bolt_avoids_allies = true,
     // .checks_will = true,
     .bolt_aoe = 4, // XXX: Need to update particle effect if changing this
-    .animation = .{ .Particle = .{ .name = "zap-mass-amnesia" } },
+    .animation = .{ .Particles = .{ .name = "zap-mass-amnesia" } },
     .noise = .Silent,
     .effects = &[_]Effect{.{ .Status = .Amnesia }},
 };
@@ -702,7 +702,7 @@ pub const BOLT_AOE_INSANITY = Spell{
             return mob.allies.items.len > 0;
         }
     }.f,
-    .animation = .{ .Particle = .{ .name = "zap-mass-insanity" } },
+    .animation = .{ .Particles = .{ .name = "zap-mass-insanity" } },
     .noise = .Silent,
     .effects = &[_]Effect{.{ .Status = .Insane }},
 };
@@ -737,7 +737,7 @@ pub const SUPER_DAMNATION = Spell{
             const SPELL = Spell{
                 .id = "_",
                 .name = "[this is a bug]",
-                .animation = .{ .Particle = .{ .name = "lzap-fire-quick" } },
+                .animation = .{ .Particles = .{ .name = "lzap-fire-quick" } },
                 .cast_type = .Bolt,
                 .noise = .Medium,
                 .effects = &[_]Effect{.{ .Custom = struct {
@@ -767,7 +767,7 @@ pub const SUPER_DAMNATION = Spell{
 pub const BOLT_PARALYSE = Spell{
     .id = "sp_elec_paralyse",
     .name = "paralysing zap",
-    .animation = .{ .Particle = .{ .name = "zap-electric-charging" } },
+    .animation = .{ .Particles = .{ .name = "zap-electric-charging" } },
     .cast_type = .Bolt,
     .noise = .Medium,
     .check_has_effect = struct {
@@ -798,7 +798,7 @@ pub const BOLT_SPINNING_SWORD = Spell{
     .name = "ethereal spin",
     .cast_type = .Bolt,
     .noise = .Loud,
-    .animation = .{ .Particle = .{ .name = "zap-sword" } },
+    .animation = .{ .Particles = .{ .name = "zap-sword" } },
     // Commented out because it'll never be called
     //
     // .check_has_effect = struct {
@@ -840,7 +840,7 @@ pub const BOLT_BLINKBOLT = Spell{
     .name = "lightning flyover",
     .cast_type = .Bolt,
     .noise = .Loud,
-    .animation = .{ .Particle = .{ .name = "zap-electric" } },
+    .animation = .{ .Particles = .{ .name = "zap-electric" } },
     .check_has_effect = struct {
         fn f(_: *Mob, _: SpellOptions, target: Coord) bool {
             const mob = state.dungeon.at(target).mob.?;
@@ -864,7 +864,7 @@ pub const BOLT_IRON = Spell{
     .cast_type = .Bolt,
     .bolt_dodgeable = true,
     .bolt_multitarget = false,
-    .animation = .{ .Particle = .{ .name = "zap-iron-inacc" } },
+    .animation = .{ .Particles = .{ .name = "zap-iron-inacc" } },
     .noise = .Medium,
     .effects = &[_]Effect{
         .{ .Damage = .{ .msg = .{ .noun = "The iron arrow", .strs = &items.PIERCING_STRS } } },
@@ -874,7 +874,7 @@ pub const BOLT_IRON = Spell{
 pub const BOLT_CRYSTAL = Spell{
     .id = "sp_crystal_shard",
     .name = "crystal shard",
-    .animation = .{ .Particle = .{ .name = "zap-crystal-chargeover" } },
+    .animation = .{ .Particles = .{ .name = "zap-crystal-chargeover" } },
     .cast_type = .Bolt,
     .bolt_dodgeable = true,
     .bolt_multitarget = false,
@@ -887,7 +887,7 @@ pub const BOLT_CRYSTAL = Spell{
 pub const BOLT_LIGHTNING = Spell{
     .id = "sp_elec_bolt",
     .name = "bolt of electricity",
-    .animation = .{ .Particle = .{ .name = "lzap-electric" } },
+    .animation = .{ .Particles = .{ .name = "lzap-electric" } },
     .cast_type = .Bolt,
     .check_has_effect = struct {
         fn f(_: *Mob, _: SpellOptions, target: Coord) bool {
@@ -904,7 +904,7 @@ pub const BOLT_LIGHTNING = Spell{
 pub const BOLT_FIREBALL = Spell{
     .id = "sp_fireball",
     .name = "fireball",
-    .animation = .{ .Particle = .{ .name = "zap-fire-messy" } },
+    .animation = .{ .Particles = .{ .name = "zap-fire-messy" } },
     .cast_type = .Bolt,
     // Has effect if:
     //    mob isn't fire-immune
@@ -928,7 +928,7 @@ pub const BOLT_FIREBALL = Spell{
 pub const CAST_ENRAGE_UNDEAD = Spell{
     .id = "sp_enrage_undead",
     .name = "enrage undead",
-    .animation = .{ .Particle = .{ .name = "glow-white-gray" } },
+    .animation = .{ .Particles = .{ .name = "glow-white-gray" } },
     .cast_type = .Smite,
     .smite_target_type = .UndeadAlly,
     .effects = &[_]Effect{.{ .Status = .Enraged }},
@@ -938,7 +938,7 @@ pub const CAST_ENRAGE_UNDEAD = Spell{
 pub const CAST_HEAL_UNDEAD = Spell{
     .id = "sp_heal_undead",
     .name = "heal undead",
-    .animation = .{ .Particle = .{ .name = "chargeover-white-pink" } },
+    .animation = .{ .Particles = .{ .name = "chargeover-white-pink" } },
     .cast_type = .Smite,
     .smite_target_type = .UndeadAlly,
     .check_has_effect = _hasEffectHealUndead,
@@ -966,7 +966,7 @@ fn _effectHealUndead(caster: Coord, _: SpellOptions, coord: Coord) void {
 pub const CAST_HASTEN_ROT = Spell{
     .id = "sp_hasten_rot",
     .name = "hasten rot",
-    .animation = .{ .Particle = .{ .name = "glow-purple" } },
+    .animation = .{ .Particles = .{ .name = "glow-purple" } },
     .cast_type = .Smite,
     .smite_target_type = .Corpse,
     .effects = &[_]Effect{.{ .Custom = _effectHastenRot }},
@@ -987,7 +987,7 @@ fn _effectHastenRot(_: Coord, opts: SpellOptions, coord: Coord) void {
 pub const CAST_RESURRECT_FIRE = Spell{
     .id = "sp_burnt_offering",
     .name = "burnt offering",
-    .animation = .{ .Particle = .{ .name = "glow-orange-red" } },
+    .animation = .{ .Particles = .{ .name = "glow-orange-red" } },
     .cast_type = .Smite,
     .smite_target_type = .Corpse,
     .effects = &[_]Effect{.{ .Custom = _resurrectFire }},
@@ -1012,7 +1012,7 @@ fn _resurrectFire(caster_coord: Coord, opts: SpellOptions, coord: Coord) void {
 pub const CAST_RESURRECT_FROZEN = Spell{
     .id = "sp_raise_frozen",
     .name = "frozen resurrection",
-    .animation = .{ .Particle = .{ .name = "glow-blue-dblue" } },
+    .animation = .{ .Particles = .{ .name = "glow-blue-dblue" } },
     .cast_type = .Smite,
     .smite_target_type = .Corpse,
     .effects = &[_]Effect{.{ .Custom = _resurrectFrozen }},
@@ -1042,7 +1042,7 @@ fn _resurrectFrozen(_: Coord, opts: SpellOptions, coord: Coord) void {
 pub const CAST_POLAR_LAYER = Spell{
     .id = "sp_polar_casing",
     .name = "polar casing",
-    .animation = .{ .Particle = .{ .name = "chargeover-blue-out" } },
+    .animation = .{ .Particles = .{ .name = "chargeover-blue-out" } },
     .cast_type = .Smite,
     .smite_target_type = .Mob,
     .check_has_effect = _hasEffectPolarLayer,
@@ -1073,7 +1073,7 @@ fn _effectPolarLayer(_: Coord, opts: SpellOptions, coord: Coord) void {
 pub const CAST_RESURRECT_NORMAL = Spell{
     .id = "sp_raise",
     .name = "resurrection",
-    .animation = .{ .Particle = .{ .name = "pulse-twice-explosion", .target = .Origin, .coord_is_target = true } },
+    .animation = .{ .Particles = .{ .name = "pulse-twice-explosion", .target = .Origin, .coord_is_target = true } },
     .cast_type = .Smite,
     .smite_target_type = .Corpse,
     .effects = &[_]Effect{.{ .Custom = _resurrectNormal }},
@@ -1093,7 +1093,7 @@ fn _resurrectNormal(_: Coord, _: SpellOptions, coord: Coord) void {
 pub const CAST_DISCHARGE = Spell{
     .id = "sp_discharge",
     .name = "static discharge",
-    .animation = .{ .Particle = .{ .name = "pulse-twice-electric-explosion" } },
+    .animation = .{ .Particles = .{ .name = "pulse-twice-electric-explosion" } },
     .cast_type = .Smite,
     .check_has_effect = struct {
         fn f(_: *Mob, _: SpellOptions, target: Coord) bool {
@@ -1136,7 +1136,7 @@ pub const CAST_BARTENDER_FERMENT = Spell{
 pub const CAST_FLAMMABLE = Spell{
     .id = "sp_flammable",
     .name = "flammabilification",
-    .animation = .{ .Particle = .{ .name = "glow-orange-red" } },
+    .animation = .{ .Particles = .{ .name = "glow-orange-red" } },
     .cast_type = .Smite,
     .effects = &[_]Effect{.{ .Status = .Flammable }},
     .checks_will = true,
@@ -1149,7 +1149,7 @@ pub const CAST_FREEZE = Spell{
     .effects = &[_]Effect{.{ .Status = .Paralysis }},
     .needs_cardinal_direction_target = true,
     .checks_will = true,
-    .animation = .{ .Particle = .{ .name = "zap-statues" } },
+    .animation = .{ .Particles = .{ .name = "zap-statues" } },
 };
 pub const CAST_FAMOUS = Spell{
     .id = "sp_famous",
@@ -1158,7 +1158,7 @@ pub const CAST_FAMOUS = Spell{
     .effects = &[_]Effect{.{ .Status = .Corona }},
     .needs_cardinal_direction_target = true,
     .checks_will = true,
-    .animation = .{ .Particle = .{ .name = "zap-statues" } },
+    .animation = .{ .Particles = .{ .name = "zap-statues" } },
 };
 pub const CAST_FERMENT = Spell{
     .id = "sp_ferment",
@@ -1167,13 +1167,13 @@ pub const CAST_FERMENT = Spell{
     .effects = &[_]Effect{.{ .Status = .Disorient }},
     .needs_cardinal_direction_target = true,
     .checks_will = true,
-    .animation = .{ .Particle = .{ .name = "zap-statues" } },
+    .animation = .{ .Particles = .{ .name = "zap-statues" } },
 };
 
 pub const CAST_FEAR = Spell{
     .id = "sp_fear",
     .name = "fear",
-    .animation = .{ .Particle = .{ .name = "glow-pink" } },
+    .animation = .{ .Particles = .{ .name = "glow-pink" } },
     .cast_type = .Smite,
     .effects = &[_]Effect{.{ .Status = .Fear }},
     .checks_will = true,
@@ -1181,7 +1181,7 @@ pub const CAST_FEAR = Spell{
 pub const CAST_PAIN = Spell{
     .id = "sp_pain",
     .name = "pain",
-    .animation = .{ .Particle = .{ .name = "glow-pink" } },
+    .animation = .{ .Particles = .{ .name = "glow-pink" } },
     .cast_type = .Smite,
     .effects = &[_]Effect{.{ .Status = .Pain }},
     .checks_will = true,
@@ -1216,8 +1216,8 @@ pub fn initAvgWillChances() void {
             var defeated: usize = 1;
             var i: usize = 10_000;
             while (i > 0) : (i -= 1) {
-                const cw = @intCast(isize, atk);
-                const tw = @intCast(isize, def);
+                const cw: isize = @intCast(atk);
+                const tw: isize = @intCast(def);
                 if (willSucceedAgainstMobStats(cw, tw)) {
                     defeated += 1;
                 }
@@ -1233,7 +1233,7 @@ pub fn checkAvgWillChances(caster: *Mob, target: *Mob) usize {
         mobs.WILL_IMMUNE => 10,
         else => |w| w,
     };
-    return AVG_WILL_CHANCES[@intCast(usize, cw)][@intCast(usize, tw)];
+    return AVG_WILL_CHANCES[@intCast(cw)][@intCast(tw)];
 }
 
 pub const SpellOptions = struct {
@@ -1262,7 +1262,7 @@ pub const Effect = union(enum) {
         radius: EffectNumber,
         damage: EffectNumber,
     },
-    Custom: fn (caster: Coord, opts: SpellOptions, coord: Coord) void,
+    Custom: *const fn (caster: Coord, opts: SpellOptions, coord: Coord) void,
 
     pub const EffectNumber = union(enum) {
         Fixed: usize,
@@ -1339,7 +1339,7 @@ pub const Spell = struct {
     needs_visible_target: bool = true,
     needs_cardinal_direction_target: bool = false,
 
-    check_has_effect: ?fn (*Mob, SpellOptions, Coord) bool = null,
+    check_has_effect: ?*const fn (*Mob, SpellOptions, Coord) bool = null,
 
     noise: sound.SoundIntensity = .Silent,
 
@@ -1348,7 +1348,7 @@ pub const Spell = struct {
     // Options effect callback for the very last coord the bolt passed through.
     //
     // Added for Blinkbolt.
-    bolt_last_coord_effect: ?fn (caster: Coord, spell: SpellOptions, coord: Coord) void = null,
+    bolt_last_coord_effect: ?*const fn (caster: Coord, spell: SpellOptions, coord: Coord) void = null,
 
     pub const Animation = union(enum) {
         Simple: struct {
@@ -1362,7 +1362,7 @@ pub const Spell = struct {
             bg_mix: ?f64 = null,
             approach: ?usize = null,
         },
-        Particle: Particle,
+        Particles: Particle,
 
         pub const Particle = struct {
             name: []const u8,
@@ -1429,18 +1429,18 @@ pub const Spell = struct {
                     if (state.dungeon.at(target).mob) |victim|
                         state.messageAboutMob(caster.?, target, .CombatUnimportant, "missed {}.", .{victim}, "missed {}.", .{victim});
                     const dist = caster_coord.distanceEuclidean(target);
-                    const diff_x = @intToFloat(f64, target.x) - @intToFloat(f64, caster_coord.x);
-                    const diff_y = @intToFloat(f64, target.y) - @intToFloat(f64, caster_coord.y);
-                    const prev_angle = math.atan2(f64, diff_y, diff_x);
-                    const angle_vary = @intToFloat(f64, rng.range(usize, 5, 15)) * math.pi / 180.0;
+                    const diff_x = @as(f64, @floatFromInt(target.x)) - @as(f64, @floatFromInt(caster_coord.x));
+                    const diff_y = @as(f64, @floatFromInt(target.y)) - @as(f64, @floatFromInt(caster_coord.y));
+                    const prev_angle = math.atan2(diff_y, diff_x);
+                    const angle_vary = @as(f64, @floatFromInt(rng.range(usize, 5, 15))) * math.pi / 180.0;
                     const new_angle = if (rng.boolean()) prev_angle + angle_vary else prev_angle - angle_vary;
                     // std.log.warn("prev_angle: {}, new_angle: {}, x_off: {}, y_off: {}", .{
                     //     prev_angle,                             new_angle,
                     //     math.round(math.cos(new_angle) * dist), math.round(math.sin(new_angle) * dist),
                     // });
-                    const new_x = @intCast(isize, caster_coord.x) + @floatToInt(isize, math.round(math.cos(new_angle) * dist));
-                    const new_y = @intCast(isize, caster_coord.y) + @floatToInt(isize, math.round(math.sin(new_angle) * dist));
-                    actual_target = Coord.new2(target.z, @intCast(usize, new_x), @intCast(usize, new_y));
+                    const new_x = @as(isize, @intCast(caster_coord.x)) + @as(isize, @intFromFloat(math.round(math.cos(new_angle) * dist)));
+                    const new_y = @as(isize, @intCast(caster_coord.y)) + @as(isize, @intFromFloat(math.round(math.sin(new_angle) * dist)));
+                    actual_target = Coord.new2(target.z, @intCast(new_x), @intCast(new_y));
                 }
 
                 // Fling a bolt and let it hit whatever
@@ -1468,7 +1468,7 @@ pub const Spell = struct {
                         if (!self.bolt_multitarget or hit_mob == null) {
                             // Now we apply AOE effects if applicable
                             if (self.bolt_aoe > 1) {
-                                var gen = Generator(utils.iterCircle).init(.{ .center = c, .r = self.bolt_aoe });
+                                var gen = utils.iterCircle(c, self.bolt_aoe);
                                 while (gen.next()) |aoecoord| {
                                     if (affected_tiles.linearSearch(aoecoord, Coord.eqNotInline) == null)
                                         affected_tiles.append(aoecoord) catch err.wat();
@@ -1501,7 +1501,7 @@ pub const Spell = struct {
                             .bg_mix = type2_anim.bg_mix,
                         } });
                     },
-                    .Particle => |particle_anim| {
+                    .Particles => |particle_anim| {
                         ui.Animation.apply(.{ .Particle = .{
                             .name = particle_anim.name,
                             .coord = if (particle_anim.coord_is_target) last_processed_coord else caster_coord,
@@ -1564,7 +1564,7 @@ pub const Spell = struct {
                             .bg_mix = type2_anim.bg_mix,
                         } });
                     },
-                    .Particle => |particle_anim| {
+                    .Particles => |particle_anim| {
                         ui.Animation.apply(.{ .Particle = .{
                             .name = particle_anim.name,
                             .coord = if (particle_anim.coord_is_target) target else caster_coord,

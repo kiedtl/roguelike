@@ -162,12 +162,12 @@ pub fn reportThreat(by: ?*Mob, threat: Threat, threattype: ThreatIncrease) void 
 
     const info = getThreat(threat);
 
-    onThreatIncrease(z, threat, info.level, info.level + @enumToInt(threattype));
+    onThreatIncrease(z, threat, info.level, info.level + @intFromEnum(threattype));
 
-    // std.log.info("*** Increasing level for {} by {}", .{ threat, @enumToInt(threattype) });
+    // std.log.info("*** Increasing level for {} by {}", .{ threat, @intFromEnum(threattype) });
 
     info.deadly = info.deadly or threattype.isDeadly();
-    info.level += @enumToInt(threattype);
+    info.level += @intFromEnum(threattype);
     info.last_incident = state.ticks;
     info.last_known_coord = if (threat == .Specific) threat.Specific.coord else null;
 
@@ -189,7 +189,6 @@ pub fn dismissThreat(by: ?*Mob, threat: Threat) void {
     assert(threat != .General);
     assert(by == null or by.?.faction == .Necromancer);
 
-    _ = by;
     _ = state.threats.remove(threat);
 }
 

@@ -1,5 +1,6 @@
 const std = @import("std");
 const math = std.math;
+const sort = std.sort;
 const assert = std.debug.assert;
 
 const state = @import("state.zig");
@@ -272,7 +273,7 @@ pub fn rayCast(
     center: Coord,
     radius: usize,
     energy: usize,
-    opacity_func: fn (Coord) usize,
+    opacity_func: *const fn (Coord) usize,
     buffer: *[HEIGHT][WIDTH]usize,
     direction: ?Direction,
     remove_artefacts: bool,
@@ -335,7 +336,7 @@ pub fn rayCastOctants(
     center: Coord,
     radius: usize,
     energy: usize,
-    opacity_func: fn (Coord) usize,
+    opacity_func: *const fn (Coord) usize,
     buffer: *[HEIGHT][WIDTH]usize,
     start: usize,
     end: usize,
@@ -345,8 +346,8 @@ pub fn rayCastOctants(
         const ax = sintable[i];
         const ay = costable[i];
 
-        var x = @intToFloat(f64, center.x);
-        var y = @intToFloat(f64, center.y);
+        var x: f64 = @floatFromInt(center.x);
+        var y: f64 = @floatFromInt(center.y);
 
         var ray_energy: usize = energy;
         var z: usize = 0;
@@ -356,8 +357,8 @@ pub fn rayCastOctants(
 
             if (x < 0 or y < 0) break;
 
-            const ix = @floatToInt(usize, math.round(x));
-            const iy = @floatToInt(usize, math.round(y));
+            const ix: usize = @intFromFloat(math.round(x));
+            const iy: usize = @intFromFloat(math.round(y));
             const coord = Coord.new2(center.z, ix, iy);
 
             if (ix >= state.mapgeometry.x or iy >= state.mapgeometry.y)
@@ -385,17 +386,17 @@ fn _removeArtifacts(
     dx: isize,
     dy: isize,
     buffer: *[HEIGHT][WIDTH]usize,
-    opacity_func: fn (Coord) usize,
+    opacity_func: *const fn (Coord) usize,
 ) void {
-    assert((math.absInt(dx) catch unreachable) == 1);
-    assert((math.absInt(dy) catch unreachable) == 1);
+    assert(@abs(dx) == 1);
+    assert(@abs(dy) == 1);
 
     var cx: usize = x0;
     while (cx <= x1) : (cx += 1) {
         var cy: usize = y0;
         while (cy <= y1) : (cy += 1) {
-            const x2 = @intCast(isize, cx) + dx;
-            const y2 = @intCast(isize, cy) + dy;
+            const x2 = @as(isize, @intCast(cx)) + dx;
+            const y2 = @as(isize, @intCast(cy)) + dy;
 
             if (cx >= WIDTH or cy >= HEIGHT) {
                 continue;
@@ -411,29 +412,29 @@ fn _removeArtifacts(
             }
 
             if (buffer[cy][cx] > 0 and opacity_func(Coord.new2(z, cx, cy)) < 100) {
-                if (x2 >= @intCast(isize, x0) and x2 <= @intCast(isize, x1)) {
-                    const cx2 = @intCast(usize, x2);
+                if (x2 >= @as(isize, @intCast(x0)) and x2 <= @as(isize, @intCast(x1))) {
+                    const cx2: usize = @intCast(x2);
                     if (cx2 < WIDTH and cy < HEIGHT and opacity_func(Coord.new2(z, cx2, cy)) >= 100) {
-                        buffer[cy][cx2] = math.max(buffer[cy][cx2], buffer[cy][cx]);
+                        buffer[cy][cx2] = @max(buffer[cy][cx2], buffer[cy][cx]);
                     }
                 }
 
-                if (@intCast(isize, y2) >= y0 and @intCast(isize, y2) <= y1) {
-                    const cy2 = @intCast(usize, y2);
+                if (@as(isize, @intCast(y2)) >= y0 and @as(isize, @intCast(y2)) <= y1) {
+                    const cy2: usize = @intCast(y2);
                     if (cx < WIDTH and cy2 < HEIGHT and opacity_func(Coord.new2(z, cx, cy2)) >= 100) {
-                        buffer[cy2][cx] = math.max(buffer[cy2][cx], buffer[cy][cx]);
+                        buffer[cy2][cx] = @max(buffer[cy2][cx], buffer[cy][cx]);
                     }
                 }
 
-                if (@intCast(usize, x2) >= x0 and
-                    @intCast(isize, x2) <= x1 and
-                    @intCast(usize, y2) >= y0 and
-                    @intCast(usize, y2) <= y1)
+                if (@as(usize, @intCast(x2)) >= x0 and
+                    @as(isize, @intCast(x2)) <= x1 and
+                    @as(usize, @intCast(y2)) >= y0 and
+                    @as(usize, @intCast(y2)) <= y1)
                 {
-                    const cx2 = @intCast(usize, x2);
-                    const cy2 = @intCast(usize, y2);
+                    const cx2: usize = @intCast(x2);
+                    const cy2: usize = @intCast(y2);
                     if (cx2 < WIDTH and cy2 < HEIGHT and opacity_func(Coord.new2(z, cx2, cy2)) >= 100) {
-                        buffer[cy2][cx2] = math.max(buffer[cy2][cx2], buffer[cy][cx]);
+                        buffer[cy2][cx2] = @max(buffer[cy2][cx2], buffer[cy][cx]);
                     }
                 }
             }
@@ -448,7 +449,7 @@ pub fn shadowCast(
     radius: usize,
     limit: Coord,
     buffer: *[HEIGHT][WIDTH]bool,
-    opacity_func: fn (Coord) bool,
+    opacity_func: *const fn (Coord) bool,
 ) void {
     // Area of coverage by each octant (the MULT constant does the job of
     // converting between octants, I think?):
@@ -482,14 +483,14 @@ pub fn shadowCast(
 
     var max_radius = radius;
     if (max_radius == 0) {
-        const max_radius_x = math.max(limit.x - coord.x, coord.x);
-        const max_radius_y = math.max(limit.y - coord.y, coord.y);
+        const max_radius_x = @max(limit.x - coord.x, coord.x);
+        const max_radius_y = @max(limit.y - coord.y, coord.y);
         max_radius = math.sqrt(max_radius_x * max_radius_x + max_radius_y * max_radius_y) + 1;
     }
 
     const octants = [_]usize{ 0, 1, 2, 3, 4, 5, 6, 7 };
     for (octants) |oct| {
-        _cast_light(coord.z, @intCast(isize, coord.x), @intCast(isize, coord.y), 1, 1.0, 0.0, @intCast(isize, max_radius), MULT[0][oct], MULT[1][oct], MULT[2][oct], MULT[3][oct], limit, buffer, opacity_func);
+        _cast_light(coord.z, @intCast(coord.x), @intCast(coord.y), 1, 1.0, 0.0, @intCast(max_radius), MULT[0][oct], MULT[1][oct], MULT[2][oct], MULT[3][oct], limit, buffer, opacity_func);
     }
 
     buffer[coord.y][coord.x] = true;
@@ -509,7 +510,7 @@ fn _cast_light(
     yy: isize,
     limit: Coord,
     buffer: *[HEIGHT][WIDTH]bool,
-    tile_opacity: fn (Coord) bool,
+    tile_opacity: *const fn (Coord) bool,
 ) void {
     if (start_p < end) {
         return;
@@ -519,7 +520,7 @@ fn _cast_light(
     var new_start: f64 = 0.0;
 
     var j: isize = row;
-    var stepj: isize = if (row < radius) 1 else -1;
+    const stepj: isize = if (row < radius) 1 else -1;
 
     while (j < radius) : (j += stepj) {
         const dy = -j;
@@ -532,13 +533,13 @@ fn _cast_light(
             const cur_x = cx + dx * xx + dy * xy;
             const cur_y = cy + dx * yx + dy * yy;
 
-            if (cur_x < 0 or cur_x >= @intCast(isize, limit.x) or cur_y < 0 or cur_y >= @intCast(isize, limit.y)) {
+            if (cur_x < 0 or cur_x >= @as(isize, @intCast(limit.x)) or cur_y < 0 or cur_y >= @as(isize, @intCast(limit.y))) {
                 continue;
             }
 
-            const coord = Coord.new2(level, @intCast(usize, cur_x), @intCast(usize, cur_y));
-            const l_slope = (@intToFloat(f64, dx) - 0.5) / (@intToFloat(f64, dy) + 0.5);
-            const r_slope = (@intToFloat(f64, dx) + 0.5) / (@intToFloat(f64, dy) - 0.5);
+            const coord = Coord.new2(level, @intCast(cur_x), @intCast(cur_y));
+            const l_slope = (@as(f64, @floatFromInt(dx)) - 0.5) / (@as(f64, @floatFromInt(dy)) + 0.5);
+            const r_slope = (@as(f64, @floatFromInt(dx)) + 0.5) / (@as(f64, @floatFromInt(dy)) - 0.5);
 
             if (start < r_slope) {
                 continue;
@@ -546,7 +547,7 @@ fn _cast_light(
                 break;
             }
 
-            if (dx * dx + dy * dy <= @intCast(isize, radius * radius)) {
+            if (dx * dx + dy * dy <= @as(isize, @intCast(radius * radius))) {
                 // Our light beam is hitting this tile, light it.
                 buffer[coord.y][coord.x] = true;
             }
@@ -582,10 +583,10 @@ fn _cast_light(
 //
 // Used for creating list of allies (since we don't want to take directional FOV
 // into account for that case).
-pub fn quickLOSCheck(refpoint: Coord, coord: Coord, opacity_func: fn (Coord) usize) bool {
+pub fn quickLOSCheck(refpoint: Coord, coord: Coord, opacity_func: *const fn (Coord) usize) bool {
     var energy: usize = 100;
     const trajectory = refpoint.drawLine(coord, state.mapgeometry, 0);
-    for (trajectory.constSlice()) |line_coord, i| {
+    for (trajectory.constSlice(), 0..) |line_coord, i| {
         if (i == 0 or i == trajectory.len - 1) continue;
 
         energy -|= opacity_func(line_coord);

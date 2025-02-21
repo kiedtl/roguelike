@@ -23,4 +23,5 @@ pub var CLOAKS = _createDeclList(items.Cloak);
 pub var CONSUMABLES = _createDeclList(items.Consumable);
 pub var EVOCABLES = _createDeclList(items.Evocable);
 pub var HEADGEAR = _createDeclList(items.Headgear);
+pub var SHOES = _createDeclList(types.Shoe);
 pub var WEAPONS = _createDeclList(types.Weapon);

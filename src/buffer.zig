@@ -21,7 +21,7 @@ pub fn StackBuffer(comptime T: type, comptime capacity: usize) type {
         pub fn init(data: ?[]const T) Self {
             if (data) |d| {
                 var b: Self = .{ .len = d.len };
-                mem.copy(T, &b.data, d);
+                mem.copyForwards(T, &b.data, d);
                 return b;
             } else {
                 return .{};
@@ -42,7 +42,7 @@ pub fn StackBuffer(comptime T: type, comptime capacity: usize) type {
         pub fn fmt(self: *Self, comptime format: []const u8, args: anytype) void {
             var fbs = std.io.fixedBufferStream(&self.data);
             std.fmt.format(fbs.writer(), format, args) catch unreachable;
-            self.resizeTo(@intCast(usize, fbs.getPos() catch unreachable));
+            self.resizeTo(@intCast(fbs.getPos() catch unreachable));
         }
 
         pub fn slice(self: *Self) []T {
@@ -64,7 +64,7 @@ pub fn StackBuffer(comptime T: type, comptime capacity: usize) type {
             }
 
             const item = self.data[index];
-            for (self.data[index..newlen]) |*data, j|
+            for (self.data[index..newlen], 0..) |*data, j|
                 data.* = self.data[index + 1 + j];
             self.len = newlen;
             return item;
@@ -98,21 +98,21 @@ pub fn StackBuffer(comptime T: type, comptime capacity: usize) type {
             for (items) |item| try self.append(item);
         }
 
-        pub usingnamespace if (@typeInfo(T) == .Int or @typeInfo(T) == .Enum or @typeInfo(T) == .Pointer) struct {
+        pub usingnamespace if (@typeInfo(T) == .int or @typeInfo(T) == .@"enum" or @typeInfo(T) == .pointer) struct {
             pub fn linearSearch(self: *const Self, value: T) ?usize {
-                return for (self.constSlice()) |item, i| {
+                return for (self.constSlice(), 0..) |item, i| {
                     if (item == value) break i;
                 } else null;
             }
         } else if (T == []const u8) struct {
             pub fn linearSearch(self: *const Self, value: T) ?usize {
-                return for (self.constSlice()) |item, i| {
+                return for (self.constSlice(), 0..) |item, i| {
                     if (mem.eql(u8, item, value)) break i;
                 } else null;
             }
         } else struct {
-            pub fn linearSearch(self: *const Self, value: T, eq_fn: fn (a: T, b: T) bool) ?usize {
-                return for (self.constSlice()) |item, i| {
+            pub fn linearSearch(self: *const Self, value: T, eq_fn: *const fn (a: T, b: T) bool) ?usize {
+                return for (self.constSlice(), 0..) |item, i| {
                     if ((eq_fn)(value, item)) break i;
                 } else null;
             }
@@ -135,8 +135,9 @@ pub fn StackBuffer(comptime T: type, comptime capacity: usize) type {
             return if (self.len > 0) &self.data[self.len - 1] else null;
         }
 
-        pub fn jsonStringify(val: @This(), opts: std.json.StringifyOptions, stream: anytype) !void {
-            try std.json.stringify(val.constSlice(), opts, stream);
+        pub fn jsonStringify(val: @This(), stream: anytype) !void {
+            //try std.json.stringify(val.constSlice(), .{}, stream);
+            try stream.write(val.constSlice());
         }
 
         pub fn serialize(val: @This(), out: anytype) !void {
@@ -154,7 +155,7 @@ pub fn StackBuffer(comptime T: type, comptime capacity: usize) type {
 
 test "orderedRemove odd" {
     var buf = StackBuffer(usize, 5).init(&[1]usize{0} ** 5);
-    for (buf.slice()) |*x, i| x.* = i + 1;
+    for (buf.slice(), 0..) |*x, i| x.* = i + 1;
 
     const r = try buf.orderedRemove(0);
     try std.testing.expectEqual(@as(usize, 1), r);
@@ -168,7 +169,7 @@ test "orderedRemove odd" {
 
 test "orderedRemove even" {
     var buf = StackBuffer(usize, 4).init(&[1]usize{0} ** 4);
-    for (buf.slice()) |*x, i| x.* = i + 1;
+    for (buf.slice(), 0..) |*x, i| x.* = i + 1;
 
     const r = try buf.orderedRemove(0);
     try std.testing.expectEqual(@as(usize, 1), r);

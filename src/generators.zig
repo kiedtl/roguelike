@@ -2,9 +2,12 @@ const std = @import("std");
 const mem = std.mem;
 const testing = std.testing;
 
+const libcoro = @import("libcoro");
+
 pub fn GeneratorCtx(comptime Out: type) type {
     return struct {
-        frame: anyframe = undefined,
+        //frame: anyframe = undefined,
+        frame: libcoro.Frame = undefined,
         out: Out = undefined,
         done: bool = false,
 
@@ -12,16 +15,26 @@ pub fn GeneratorCtx(comptime Out: type) type {
 
         pub fn yield(self: *Self, val: Out) void {
             self.out = val;
-            suspend {
-                self.frame = @frame();
-            }
+            // suspend {
+            //     self.frame = @frame();
+            // }
+            libcoro.xsuspendBlock(struct {
+                pub fn f(s: *Self, v: Out) void {
+                    s.frame = libcoro.xframe();
+                }
+            }.f, .{ .s = self, .v = val });
         }
 
         pub fn finish(self: *Self) void {
             self.done = true;
-            suspend {
-                self.frame = @frame();
-            }
+            // suspend {
+            //     self.frame = @frame();
+            // }
+            libcoro.xsuspendBlock(struct {
+                pub fn f(s: *Self, v: Out) void {
+                    s.frame = libcoro.xframe();
+                }
+            }.f, .{ self, val });
         }
     };
 }
@@ -33,11 +46,11 @@ pub fn Generator(comptime function: anytype) type {
     return struct {
         const Self = @This();
 
-        const CtxType = @typeInfo(info.args[0].arg_type.?).Pointer.child;
+        const CtxType = @typeInfo(info.args[0].arg_type.?).pointer.child;
         const VType = std.meta.fieldInfo(CtxType, .out).field_type;
         const ArgType = info.args[1].arg_type.?;
 
-        frame: @Frame(function) = undefined,
+        frame: Frame = undefined, //@Frame(function) = undefined,
         was_init: bool = false,
         ctx: CtxType = .{ .out = undefined, .done = false },
         args: ArgType,
@@ -54,9 +67,11 @@ pub fn Generator(comptime function: anytype) type {
         pub fn next(self: *Self) ?VType {
             if (!self.ctx.done) {
                 if (self.was_init) {
-                    resume self.ctx.frame;
+                    //resume self.ctx.frame;
+                    libcoro.xresume(self.ctx.frame);
                 } else {
-                    self.frame = async function(&self.ctx, self.args);
+                    //self.frame = async function(&self.ctx, self.args);
+                    self.frame = libcoro.xasync(&self.ctx, self.args, );
                     self.was_init = true;
                 }
             }

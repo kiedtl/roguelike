@@ -343,7 +343,7 @@ pub fn runAwayFromEnemies(mob: *Mob, min_dist: usize) bool {
 
     if (mob.distance2(closest_enemy) < min_dist) {
         var walkability_map: [HEIGHT][WIDTH]bool = undefined;
-        for (walkability_map) |*row, y| for (row) |*cell, x| {
+        for (&walkability_map, 0..) |*row, y| for (row, 0..) |*cell, x| {
             const coord = Coord.new2(mob.coord.z, x, y);
             cell.* = state.is_walkable(coord, .{ .mob = mob });
         };
@@ -436,7 +436,7 @@ pub fn updateEnemyRecord(mob: *Mob, new: EnemyRecord) void {
     // Both to avoid unnecessary investigation and prevent redundant threat reporting
     while (true) {
         var completed = true;
-        for (mob.sustiles.items) |susrecord, i|
+        for (mob.sustiles.items, 0..) |susrecord, i|
             if (susrecord.sound) |s| if (s.mob_source) |src| if (src == new.mob) {
                 completed = false;
                 _ = mob.sustiles.orderedRemove(i);
@@ -495,7 +495,7 @@ pub fn checkForHostiles(mob: *Mob) void {
         if (ally.life_type != .Undead) break true;
     } else false;
 
-    for (mob.fov) |row, y| for (row) |cell, x| {
+    for (mob.fov, 0..) |row, y| for (row, 0..) |cell, x| {
         if (cell == 0) continue;
         const fitem = Coord.new2(mob.coord.z, x, y);
 
@@ -586,7 +586,7 @@ pub fn checkForAllies(mob: *Mob) void {
     mob.allies.shrinkRetainingCapacity(0);
 
     // We're iterating over FOV because it's the lazy thing to do.
-    for (mob.fov) |row, y| for (row) |_, x| {
+    for (mob.fov, 0..) |row, y| for (row, 0..) |_, x| {
         const fitem = Coord.new2(mob.coord.z, x, y);
         if (fitem.distance(mob.coord) > vision) continue;
 
@@ -600,7 +600,7 @@ pub fn checkForAllies(mob: *Mob) void {
     };
 
     // Sort allies according to distance.
-    std.sort.sort(*Mob, mob.allies.items, mob, struct {
+    std.sort.insertion(*Mob, mob.allies.items, mob, struct {
         fn f(me: *Mob, a: *Mob, b: *Mob) bool {
             return a.coord.distance(me.coord) > b.coord.distance(me.coord);
         }
@@ -674,7 +674,7 @@ pub fn checkForNoises(mob: *Mob) void {
     mob.sustiles = new_sustiles;
 
     // Sort coords according to newest sound.
-    std.sort.insertionSort(SuspiciousTileRecord, mob.sustiles.items, mob, struct {
+    std.sort.insertion(SuspiciousTileRecord, mob.sustiles.items, mob, struct {
         fn f(_: *Mob, a: SuspiciousTileRecord, b: SuspiciousTileRecord) bool {
             // return a.coord.distance(me.coord) > b.coord.distance(me.coord);
             return state.dungeon.soundAt(a.coord).when < state.dungeon.soundAt(b.coord).when;
@@ -789,7 +789,7 @@ pub fn patrolWork(mob: *Mob, _: mem.Allocator) void {
     assert(state.dungeon.at(mob.coord).mob != null);
     assert(mob.ai.phase == .Work);
 
-    var to = mob.ai.work_area.items[0];
+    const to = mob.ai.work_area.items[0];
 
     if (mob.cansee(to)) {
         if (tryChooseRandomPatrolDest(mob)) |point|
@@ -826,7 +826,7 @@ pub fn patrolWork(mob: *Mob, _: mem.Allocator) void {
 }
 
 pub fn guardWork(mob: *Mob, _: mem.Allocator) void {
-    var post = mob.ai.work_area.items[0];
+    const post = mob.ai.work_area.items[0];
 
     // Choose a nearby room to watch as well, if we haven't already.
     if (mob.ai.work_area.items.len < 2) {
@@ -1045,7 +1045,7 @@ pub fn haulerWork(mob: *Mob, alloc: mem.Allocator) void {
                 tryRest(mob);
             }
 
-            for (state.tasks.items) |*task, id|
+            for (state.tasks.items, 0..) |*task, id|
                 if (!task.completed and task.assigned_to == null) {
                     switch (task.type) {
                         .Haul => |_| {
@@ -1123,7 +1123,7 @@ pub fn stayNearLeaderWork(mob: *Mob, _: mem.Allocator) void {
 
 pub fn hulkWork(mob: *Mob, _: mem.Allocator) void {
     switch (rng.range(usize, 0, 99)) {
-        00...75 => tryRest(mob),
+        0...75 => tryRest(mob),
         76...90 => if (!mob.moveInDirection(rng.chooseUnweighted(Direction, &DIRECTIONS))) tryRest(mob),
         91...99 => mob.tryMoveTo(state.player.coord),
         else => unreachable,
@@ -1193,7 +1193,7 @@ pub fn tortureWork(mob: *Mob, _: mem.Allocator) void {
 
     var prisoners = StackBuffer(*Mob, 32).init(null);
 
-    for (mob.fov) |row, y| for (row) |cell, x| {
+    for (mob.fov, 0..) |row, y| for (row, 0..) |cell, x| {
         if (cell == 0) continue;
         const fitem = Coord.new2(mob.coord.z, x, y);
 
@@ -1202,7 +1202,7 @@ pub fn tortureWork(mob: *Mob, _: mem.Allocator) void {
         }
     };
 
-    std.sort.insertionSort(*Mob, prisoners.slice(), mob, _sortFunc._sortWithDistance);
+    std.sort.insertion(*Mob, prisoners.slice(), mob, _sortFunc._sortWithDistance);
 
     for (prisoners.constSlice()) |prisoner| {
         if (prisoner.isUnderStatus(.Pain)) |_|
@@ -1221,13 +1221,13 @@ pub fn tortureWork(mob: *Mob, _: mem.Allocator) void {
 
 pub fn ballLightningWorkOrFight(mob: *Mob, _: mem.Allocator) void {
     var walkability_map: [HEIGHT][WIDTH]bool = undefined;
-    for (walkability_map) |*row, y| for (row) |*cell, x| {
+    for (&walkability_map, 0..) |*row, y| for (row, 0..) |*cell, x| {
         const coord = Coord.new2(mob.coord.z, x, y);
         cell.* = state.is_walkable(coord, .{ .mob = mob });
     };
 
     var conductivity_dijkmap: [HEIGHT][WIDTH]?f64 = undefined;
-    for (conductivity_dijkmap) |*row, y| for (row) |*cell, x| {
+    for (&conductivity_dijkmap, 0..) |*row, y| for (row, 0..) |*cell, x| {
         const coord = Coord.new2(mob.coord.z, x, y);
 
         if (state.dungeon.at(coord).mob) |othermob| {
@@ -1283,7 +1283,7 @@ pub fn nightCreatureWork(mob: *Mob, alloc: mem.Allocator) void {
             }
 
             // If player is hated, randomly meditate on them
-            if (!mob.immobile and state.night_rep[@enumToInt(state.player.faction)] <= -10 and rng.onein(1500)) {
+            if (!mob.immobile and state.night_rep[@intFromEnum(state.player.faction)] <= -10 and rng.onein(1500)) {
                 updateEnemyKnowledge(mob, state.player, null);
                 tryRest(mob);
                 return;
@@ -1320,7 +1320,7 @@ pub fn nightCreatureWork(mob: *Mob, alloc: mem.Allocator) void {
         },
         .NC_MoveTo, .NC_PatrolTo => {
             // First check for enemies that have seen us, and disable them.
-            for (mob.fov) |row, y| for (row) |cell, x| if (cell != 0) {
+            for (mob.fov, 0..) |row, y| for (row, 0..) |cell, x| if (cell != 0) {
                 const fitem = Coord.new2(mob.coord.z, x, y);
 
                 if (state.dungeon.at(fitem).mob) |othermob| {
@@ -1338,7 +1338,7 @@ pub fn nightCreatureWork(mob: *Mob, alloc: mem.Allocator) void {
                 }
             };
 
-            var to = mob.ai.work_area.items[0];
+            const to = mob.ai.work_area.items[0];
 
             if ((mob.ai.work_phase == .NC_PatrolTo and mob.cansee(to)) or
                 (mob.ai.work_phase == .NC_MoveTo and mob.coord.eq(to)))
@@ -1461,7 +1461,7 @@ pub fn stalkerFight(mob: *Mob, alloc: mem.Allocator) void {
         if (!mob.cansee(target.coord)) {
             mob.tryMoveTo(target.coord);
         } else {
-            const dist = @intCast(usize, mob.stat(.Vision) - 1);
+            const dist: usize = @intCast(mob.stat(.Vision) - 1);
             if (!runAwayFromEnemies(mob, dist))
                 tryRest(mob);
         }
@@ -1494,7 +1494,7 @@ pub fn rangedFight(mob: *Mob, alloc: mem.Allocator) void {
     const spare_enemy_proj = rng.tenin(25);
 
     const inventory = mob.inventory.pack.constSlice();
-    const proj_item: ?usize = for (inventory) |item, id| {
+    const proj_item: ?usize = for (inventory, 0..) |item, id| {
         if (meta.activeTag(item) == .Projectile) break id;
     } else null;
     const proj_status: ?Status = if (proj_item) |i|
@@ -1645,7 +1645,7 @@ pub fn mageFight(mob: *Mob, alloc: mem.Allocator) void {
     switch (mob.ai.spellcaster_backup_action) {
         .Melee => meleeFight(mob, alloc),
         .KeepDistance => if (!mob.immobile) {
-            const dist = @intCast(usize, mob.stat(.Vision) -| 2);
+            const dist: usize = @intCast(mob.stat(.Vision) -| 2);
             const moved = runAwayFromEnemies(mob, dist);
             if (!moved) meleeFight(mob, alloc);
             mob.facing = mob.coord.closestDirectionTo(target.mob.coord, state.mapgeometry);
@@ -1657,7 +1657,7 @@ pub fn mageFight(mob: *Mob, alloc: mem.Allocator) void {
                 assert(workJobs(mob));
             } else {
                 assert(!mob.immobile);
-                const dist = @intCast(usize, mob.stat(.Vision) -| 1);
+                const dist: usize = @intCast(mob.stat(.Vision) -| 1);
                 const moved = runAwayFromEnemies(mob, dist);
                 if (!moved) meleeFight(mob, alloc);
             }
@@ -1732,7 +1732,10 @@ pub fn _Job_WRK_LeaveFloor(mob: *Mob, job: *AIJob) AIJob.JStatus {
 
     // Chosen incase we haven't done this step yet. If we have done this step of
     // choosing the stair, then its ignored
-    var random_stair = if (state.dungeon.stairs[mob.coord.z].len > 0) rng.chooseUnweighted(Coord, state.dungeon.stairs[mob.coord.z].constSlice()) else state.dungeon.entries[mob.coord.z];
+    const random_stair = if (state.dungeon.stairs[mob.coord.z].len > 0)
+        rng.chooseUnweighted(Coord, state.dungeon.stairs[mob.coord.z].constSlice())
+    else
+        state.dungeon.entries[mob.coord.z];
 
     const stair = job.ctx.get(Coord, CTX_STAIR_LOCATION, random_stair);
 
@@ -1764,7 +1767,7 @@ pub fn _Job_WRK_ScanJobs(mob: *Mob, job: *AIJob) AIJob.JStatus {
         return .Complete;
     }
 
-    for (state.tasks.items) |*task, id|
+    for (state.tasks.items, 0..) |*task, id|
         if (!task.completed and task.assigned_to == null and task.type == jobtypes.tasktype) {
             mob.ai.task_id = id;
             task.assigned_to = mob;
@@ -2006,7 +2009,7 @@ pub fn _Job_GRD_SweepRoom(mob: *Mob, job: *AIJob) AIJob.JStatus {
     const room_map = job.ctx.getPtr(CoordArrayList, CTX_ROOM_MAP, CoordArrayList.init(state.gpa.allocator()));
     const room_dst = job.ctx.get(Coord, CTX_ROOM_SWEEP_DEST, room.rect.middle());
 
-    for (mob.fov) |row, y| for (row) |cell, x| {
+    for (mob.fov, 0..) |row, y| for (row, 0..) |cell, x| {
         if (cell == 0) continue;
         const fitem = Coord.new2(mob.coord.z, x, y);
         room_map.append(fitem) catch err.wat();
@@ -2084,7 +2087,7 @@ pub fn _Job_SPC_NCAlignment(mob: *Mob, job: *AIJob) AIJob.JStatus {
     const CTX_DIALOG2_GIVEN = "dialog2_given";
 
     // If player pissed us off then we won't help them.
-    if (state.night_rep[@enumToInt(state.player.faction)] < 0) {
+    if (state.night_rep[@intFromEnum(state.player.faction)] < 0) {
         tryRest(mob);
         return .Complete;
     }
@@ -2116,7 +2119,7 @@ pub fn _Job_SPC_NCAlignment(mob: *Mob, job: *AIJob) AIJob.JStatus {
         mob.ai.work_phase = .NC_MoveTo;
         mob.tryMoveTo(path.?);
         mob.prisoner_status = null;
-        state.night_rep[@enumToInt(state.player.faction)] = 1;
+        state.night_rep[@intFromEnum(state.player.faction)] = 1;
         return .Complete;
     } else if (mob.canSeeMob(state.player) and state.player.canSeeMob(mob) and
         !job.ctx.get(bool, CTX_DIALOG1_GIVEN, false))
@@ -2138,8 +2141,10 @@ pub fn workJobs(mob: *Mob) bool {
     switch (r) {
         .Ongoing => return true,
         .Complete => {
-            if (!mob.is_dead) // Some jobs involve suicide (ie leaving floor)
-                (mob.jobs.orderedRemove(ind) catch err.wat()).deinit();
+            if (!mob.is_dead) { // Some jobs involve suicide (ie leaving floor)
+                var job = mob.jobs.orderedRemove(ind) catch err.wat();
+                job.deinit();
+            }
             return true;
         },
         .Defer => return false,

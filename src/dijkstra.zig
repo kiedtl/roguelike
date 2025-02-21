@@ -27,7 +27,7 @@ pub fn dijkRollUphill(
     var changes_made = true;
     while (changes_made) {
         changes_made = false;
-        for (map) |*row, y| for (row) |*cell, x| {
+        for (map, 0..) |*row, y| for (row, 0..) |*cell, x| {
             if (!walkability_map[y][x] or (cell.* != null and cell.*.? == 0)) {
                 continue;
             }
@@ -77,7 +77,7 @@ pub const Dijkstra = struct {
     current: Node,
     max: usize,
     limit: Coord,
-    is_valid: fn (Coord, state.IsWalkableOptions) bool,
+    is_valid: *const fn (Coord, state.IsWalkableOptions) bool,
     is_valid_opts: state.IsWalkableOptions,
     open: NodeArrayList,
     nodes: [HEIGHT][WIDTH]?Node = [_][WIDTH]?Node{[_]?Node{null} ** WIDTH} ** HEIGHT,
@@ -89,7 +89,7 @@ pub const Dijkstra = struct {
         start: Coord,
         limit: Coord,
         max_distance: usize,
-        is_valid: fn (Coord, state.IsWalkableOptions) bool,
+        is_valid: *const fn (Coord, state.IsWalkableOptions) bool,
         is_valid_opts: state.IsWalkableOptions,
         allocator: mem.Allocator,
     ) Self {
@@ -131,7 +131,7 @@ pub const Dijkstra = struct {
                 if (!self.is_valid(coord, self.is_valid_opts)) continue;
 
                 // FIXME: just append `new` directly, then no need for idiotic in_ol variable
-                var in_ol = if (self.nodes[coord.y][coord.x]) |_| true else false;
+                const in_ol = if (self.nodes[coord.y][coord.x]) |_| true else false;
                 self.nodes[coord.y][coord.x] = new;
                 if (!in_ol)
                     self.open.append(self.nodes[coord.y][coord.x].?) catch unreachable;

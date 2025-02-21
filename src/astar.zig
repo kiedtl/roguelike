@@ -49,7 +49,7 @@ const NodePriorityQueue = std.PriorityQueue(*Node, void, Node.betterThan);
 //
 // Thanks to /u/aotdev for pointing this trick out to me
 inline fn coordFromPtr(node: *Node, matrix_start: *Node, z: usize) Coord {
-    const off = (@ptrToInt(node) - @ptrToInt(matrix_start)) / @sizeOf(Node);
+    const off = (@intFromPtr(node) - @intFromPtr(matrix_start)) / @sizeOf(Node);
     const x = off % WIDTH;
     const y = off / WIDTH;
     return Coord.new2(z, x, y);
@@ -108,9 +108,9 @@ pub fn path(
     start: Coord,
     goal: Coord,
     limit: Coord,
-    is_walkable: fn (Coord, state.IsWalkableOptions) bool,
+    is_walkable: *const fn (Coord, state.IsWalkableOptions) bool,
     opts: state.IsWalkableOptions,
-    penaltyFunc: fn (Coord, state.IsWalkableOptions) usize,
+    penaltyFunc: *const fn (Coord, state.IsWalkableOptions) usize,
     directions: []const Direction,
     alloc: std.mem.Allocator,
 ) ?CoordArrayList {

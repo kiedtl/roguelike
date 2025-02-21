@@ -2,13 +2,14 @@ const std = @import("std");
 const math = std.math;
 const mem = std.mem;
 const meta = std.meta;
+const sort = std.sort;
 const fmt = std.fmt;
 const assert = std.debug.assert;
 const enums = std.enums;
 const testing = std.testing;
 
-const Generator = @import("generators.zig").Generator;
-const GeneratorCtx = @import("generators.zig").GeneratorCtx;
+// const Generator = @import("generators.zig").Generator;
+// const GeneratorCtx = @import("generators.zig").GeneratorCtx;
 const LinkedList = @import("list.zig").LinkedList;
 const RingBuffer = @import("ringbuffer.zig").RingBuffer;
 const StackBuffer = @import("buffer.zig").StackBuffer;
@@ -85,9 +86,9 @@ pub const ContainerList = LinkedList(Container);
 pub const SCEPTRE_VISION = 16;
 pub const MOB_CORRUPTION_CHANCE = 33;
 pub const TORMENT_UNDEAD_DAMAGE = 2;
-pub const DETECT_HEAT_RADIUS = math.min(ui.MAP_HEIGHT_R, ui.MAP_WIDTH_R);
-pub const DETECT_ELEC_RADIUS = math.min(ui.MAP_HEIGHT_R, ui.MAP_WIDTH_R);
-pub const DETECT_UNDEAD_RADIUS = math.min(ui.MAP_HEIGHT_R, ui.MAP_WIDTH_R);
+pub const DETECT_HEAT_RADIUS = @min(ui.MAP_HEIGHT_R, ui.MAP_WIDTH_R);
+pub const DETECT_ELEC_RADIUS = @min(ui.MAP_HEIGHT_R, ui.MAP_WIDTH_R);
+pub const DETECT_UNDEAD_RADIUS = @min(ui.MAP_HEIGHT_R, ui.MAP_WIDTH_R);
 pub const RECUPERATION_HEAL_CHANCE = 33;
 
 pub fn MinMax(comptime T: type) type {
@@ -117,8 +118,8 @@ pub const Direction = enum { // {{{
     const Self = @This();
 
     pub fn from(base: Coord, neighbor: Coord) ?Self {
-        const dx = @intCast(isize, neighbor.x) - @intCast(isize, base.x);
-        const dy = @intCast(isize, neighbor.y) - @intCast(isize, base.y);
+        const dx = @as(isize, @intCast(neighbor.x)) - @as(isize, @intCast(base.x));
+        const dy = @as(isize, @intCast(neighbor.y)) - @as(isize, @intCast(base.y));
 
         if (dx == 0 and dy == -1) {
             return .North;
@@ -268,32 +269,32 @@ pub const CoordIsize = struct { // {{{
     }
 
     pub inline fn newUsize(x: usize, y: usize) CoordIsize {
-        return .{ .z = 0, .x = @intCast(isize, x), .y = @intCast(isize, y) };
+        return .{ .z = 0, .x = @intCast(x), .y = @intCast(y) };
     }
 
     pub inline fn fromCoord(c: Coord) CoordIsize {
         return .{
-            .x = @intCast(isize, c.x),
-            .y = @intCast(isize, c.y),
-            .z = @intCast(isize, c.z),
+            .x = @intCast(c.x),
+            .y = @intCast(c.y),
+            .z = @intCast(c.z),
         };
     }
 
     pub inline fn difference(a: Self, b: Self) Self {
         return CoordIsize.new(
-            math.max(a.x, b.x) - math.min(a.x, b.x),
-            math.max(a.y, b.y) - math.min(a.y, b.y),
+            @max(a.x, b.x) - @min(a.x, b.x),
+            @max(a.y, b.y) - @min(a.y, b.y),
         );
     }
 
     pub inline fn distance(a: Self, b: Self) isize {
         const diff = a.difference(b);
-        return math.max(diff.x, diff.y);
+        return @max(diff.x, diff.y);
     }
 
     pub inline fn distanceEuclidean(a: Self, b: Self) f64 {
         const diff = a.difference(b);
-        return math.sqrt(@intToFloat(f64, diff.x * diff.x) + @intToFloat(f64, diff.y * diff.y));
+        return math.sqrt(@as(f64, @floatFromInt(diff.x * diff.x)) + @as(f64, @floatFromInt(diff.y * diff.y)));
     }
 }; // }}}
 
@@ -317,9 +318,9 @@ pub const Coord = struct { // {{{
     pub inline fn difference(a: Self, b: Self) Self {
         return Coord.new2(
             a.z,
-            math.max(a.x, b.x) - math.min(a.x, b.x),
-            math.max(a.y, b.y) -
-                math.min(a.y, b.y),
+            @max(a.x, b.x) - @min(a.x, b.x),
+            @max(a.y, b.y) -
+                @min(a.y, b.y),
         );
     }
 
@@ -334,7 +335,7 @@ pub const Coord = struct { // {{{
         // Manhattan: d = dx + dy return diff.x + diff.y;
 
         // Chebyshev: d = max(dx, dy)
-        return math.max(diff.x, diff.y);
+        return @max(diff.x, diff.y);
     }
 
     pub inline fn distanceManhattan(a: Self, b: Self) usize {
@@ -344,7 +345,7 @@ pub const Coord = struct { // {{{
 
     pub inline fn distanceEuclidean(a: Self, b: Self) f64 {
         const diff = a.difference(b);
-        return math.sqrt(@intToFloat(f64, diff.x * diff.x) + @intToFloat(f64, diff.y * diff.y));
+        return math.sqrt(@as(f64, @floatFromInt(diff.x * diff.x)) + @as(f64, @floatFromInt(diff.y * diff.y)));
     }
 
     // Sometimes we want to pass Coord.eq around, but we can't since an inline
@@ -434,10 +435,10 @@ pub const Coord = struct { // {{{
     fn insert_if_valid(z: usize, x: isize, y: isize, buf: *StackBuffer(Coord, 2048), limit: Coord) void {
         if (x < 0 or y < 0)
             return;
-        if (x > @intCast(isize, limit.x) or y > @intCast(isize, limit.y))
+        if (x > @as(isize, @intCast(limit.x)) or y > @as(isize, @intCast(limit.y)))
             return;
 
-        buf.append(Coord.new2(z, @intCast(usize, x), @intCast(usize, y))) catch err.wat();
+        buf.append(Coord.new2(z, @as(usize, @intCast(x)), @as(usize, @intCast(y)))) catch err.wat();
     }
 
     pub fn drawLine(from: Coord, to: Coord, limit: Coord, extra: usize) StackBuffer(Coord, 2048) {
@@ -445,18 +446,18 @@ pub const Coord = struct { // {{{
 
         var buf = StackBuffer(Coord, 2048).init(null);
 
-        const xstart = @intCast(isize, from.x);
-        const xend = @intCast(isize, to.x);
-        const ystart = @intCast(isize, from.y);
-        const yend = @intCast(isize, to.y);
+        const xstart = @as(isize, @intCast(from.x));
+        const xend = @as(isize, @intCast(to.x));
+        const ystart = @as(isize, @intCast(from.y));
+        const yend = @as(isize, @intCast(to.y));
         const stepx: isize = if (xstart < xend) 1 else -1;
         const stepy: isize = if (ystart < yend) 1 else -1;
-        const dx = @intToFloat(f64, math.absInt(xend - xstart) catch err.wat());
-        const dy = @intToFloat(f64, math.absInt(yend - ystart) catch err.wat());
+        const dx = @as(f64, @floatFromInt(@abs(xend - xstart)));
+        const dy = @as(f64, @floatFromInt(@abs(yend - ystart)));
 
         var errmarg: f64 = 0.0;
-        var x = @intCast(isize, from.x);
-        var y = @intCast(isize, from.y);
+        var x = @as(isize, @intCast(from.x));
+        var y = @as(isize, @intCast(from.y));
 
         var extra_ctr: usize = extra;
 
@@ -510,23 +511,23 @@ pub const Coord = struct { // {{{
     }
 
     pub fn draw_circle(center: Coord, radius: usize, limit: Coord, alloc: mem.Allocator) CoordArrayList {
-        //const circum = @floatToInt(usize, math.ceil(math.tau * @intToFloat(f64, radius)));
+        //const circum = @intFromFloat(usize, math.ceil(math.tau * @floatFromInt(f64, radius)));
 
         var buf = CoordArrayList.init(alloc);
 
-        const x: isize = @intCast(isize, center.x);
-        const y: isize = @intCast(isize, center.y);
+        const x: isize = @as(isize, @intCast(center.x));
+        const y: isize = @as(isize, @intCast(center.y));
 
-        var f: isize = 1 - @intCast(isize, radius);
+        var f: isize = 1 - @as(isize, @intCast(radius));
         var ddf_x: isize = 0;
-        var ddf_y: isize = -2 * @intCast(isize, radius);
+        var ddf_y: isize = -2 * @as(isize, @intCast(radius));
         var dx: isize = 0;
-        var dy: isize = @intCast(isize, radius);
+        var dy: isize = @as(isize, @intCast(radius));
 
-        insert_if_valid(x, y + @intCast(isize, radius), &buf, limit);
-        insert_if_valid(x, y - @intCast(isize, radius), &buf, limit);
-        insert_if_valid(x + @intCast(isize, radius), y, &buf, limit);
-        insert_if_valid(x - @intCast(isize, radius), y, &buf, limit);
+        insert_if_valid(x, y + @as(isize, @intCast(radius)), &buf, limit);
+        insert_if_valid(x, y - @as(isize, @intCast(radius)), &buf, limit);
+        insert_if_valid(x + @as(isize, @intCast(radius)), y, &buf, limit);
+        insert_if_valid(x - @as(isize, @intCast(radius)), y, &buf, limit);
 
         while (dx < dy) {
             if (f >= 0) {
@@ -552,21 +553,21 @@ pub const Coord = struct { // {{{
         return buf;
     }
 
-    pub fn iterNeighbors(ctx: *GeneratorCtx(Coord), self: Coord) void {
-        for (&DIRECTIONS) |d| if (self.move(d, state.mapgeometry)) |neighbor| {
-            ctx.yield(neighbor);
-        };
+    // pub fn iterNeighbors(ctx: *GeneratorCtx(Coord), self: Coord) void {
+    //     for (&DIRECTIONS) |d| if (self.move(d, state.mapgeometry)) |neighbor| {
+    //         ctx.yield(neighbor);
+    //     };
 
-        ctx.finish();
-    }
+    //     ctx.finish();
+    // }
 
-    pub fn iterCardinalNeighbors(ctx: *GeneratorCtx(Coord), self: Coord) void {
-        for (&CARDINAL_DIRECTIONS) |d| if (self.move(d, state.mapgeometry)) |neighbor| {
-            ctx.yield(neighbor);
-        };
+    // pub fn iterCardinalNeighbors(ctx: *GeneratorCtx(Coord), self: Coord) void {
+    //     for (&CARDINAL_DIRECTIONS) |d| if (self.move(d, state.mapgeometry)) |neighbor| {
+    //         ctx.yield(neighbor);
+    //     };
 
-        ctx.finish();
-    }
+    //     ctx.finish();
+    // }
 }; // }}}
 
 test "coord.drawLine straight lines" {
@@ -612,18 +613,18 @@ test "coord.drawLine straight lines" {
         },
     };
 
-    for (cases) |case, bi| {
+    for (cases, 0..) |case, bi| {
         _ = bi;
         // std.log.warn("testing case {}", .{bi});
 
-        const case_start = b: for (case) |row, y| {
-            for (row) |cell, x|
+        const case_start = b: for (case, 0..) |row, y| {
+            for (row, 0..) |cell, x|
                 if (cell == 'S')
                     break :b Coord.new(x, y);
         } else unreachable;
 
-        const case_end = b: for (case) |row, y| {
-            for (row) |cell, x|
+        const case_end = b: for (case, 0..) |row, y| {
+            for (row, 0..) |cell, x|
                 if (cell == 'E')
                     break :b Coord.new(x, y);
         } else unreachable;
@@ -654,7 +655,7 @@ test "coord.drawLine straight lines" {
         //     }
         // }
 
-        for (line.constSlice()) |path_coord, i| {
+        for (line.constSlice(), 0..) |path_coord, i| {
             try testing.expect(path_coord.x < t_width);
             try testing.expect(path_coord.y < t_height);
 
@@ -747,28 +748,50 @@ pub const Rect = struct {
         return Coord.new2(self.start.z, x, y);
     }
 
-    pub fn rectIter(ctx: *GeneratorCtx(Coord), rect: Rect) void {
-        var y: usize = rect.start.y;
-        while (y < rect.end().y) : (y += 1) {
-            var x: usize = rect.start.x;
-            while (x < rect.end().x) : (x += 1) {
-                ctx.yield(Coord.new2(rect.start.z, x, y));
-            }
-        }
+    // pub fn rectIter(ctx: *GeneratorCtx(Coord), rect: Rect) void {
+    //     var y: usize = rect.start.y;
+    //     while (y < rect.end().y) : (y += 1) {
+    //         var x: usize = rect.start.x;
+    //         while (x < rect.end().x) : (x += 1) {
+    //             ctx.yield(Coord.new2(rect.start.z, x, y));
+    //         }
+    //     }
 
-        ctx.finish();
+    //     ctx.finish();
+    // }
+
+    pub const IterPoints = struct {
+        rect: Rect,
+        y: usize,
+        x: usize,
+
+        pub fn next(self: *@This()) ?Coord {
+            if (self.y >= self.rect.end().y) return null;
+            defer {
+                self.x += 1;
+                if (self.x > self.rect.end().x) {
+                    self.x = 0;
+                    self.y += 1;
+                }
+            }
+            return Coord.new2(self.rect.start.z, self.y, self.x);
+        }
+    };
+
+    pub fn iter(rect: Rect) IterPoints {
+        return .{ .rect = rect, .x = 0, .y = 0 };
     }
 };
 
-// Tests that rectIter visits each coordinate exactly once.
-test "Rect.rectIter" {
+// Tests that iterPoints visits each coordinate exactly once.
+test "Rect.iterPoints" {
     const height = 100;
     const width = 70;
 
     var matrix = [_][width]usize{[_]usize{0} ** width} ** height;
     const matrix_rect = Rect{ .start = Coord.new(0, 0), .width = width, .height = height };
 
-    var gen = Generator(Rect.rectIter).init(matrix_rect);
+    var gen = matrix_rect.iterPoints();
     while (gen.next()) |coord| {
         matrix[coord.y][coord.x] += 1;
     }
@@ -1114,7 +1137,7 @@ pub const Activity = union(enum) {
 
     pub inline fn cost(self: Activity) isize {
         return switch (self) {
-            .Attack => |a| @intCast(isize, a.delay),
+            .Attack => |a| @as(isize, @intCast(a.delay)),
             else => 100,
         };
     }
@@ -1422,7 +1445,7 @@ pub const Status = enum {
 
     // }}}
 
-    pub const TOTAL = @typeInfo(@This()).Enum.fields.len;
+    pub const TOTAL = @typeInfo(@This()).@"enum".fields.len;
     pub const MAX_DURATION: usize = 20;
 
     pub fn string(self: Status, mob: *const Mob) []const u8 { // {{{
@@ -1460,8 +1483,9 @@ pub const Status = enum {
         };
     }
 
-    pub fn jsonStringify(val: Status, opts: std.json.StringifyOptions, stream: anytype) !void {
-        try std.json.stringify(val.string(state.player), opts, stream);
+    pub fn jsonStringify(val: Status, stream: anytype) !void {
+        //try std.json.stringify(val.string(state.player), opts, stream);
+        try stream.write(val.string(state.player));
     }
 
     // Tick functions {{{
@@ -1711,12 +1735,12 @@ pub const Status = enum {
 
         const st = state.player.isUnderStatus(.Echolocation).?;
 
-        const radius = @intCast(usize, state.player.stat(.Vision));
+        const radius = @as(usize, @intCast(state.player.stat(.Vision)));
         const z = state.player.coord.z;
         const ystart = state.player.coord.y -| radius;
-        const yend = math.min(state.player.coord.y + radius, HEIGHT);
+        const yend = @min(state.player.coord.y + radius, HEIGHT);
         const xstart = state.player.coord.x -| radius;
-        const xend = math.min(state.player.coord.x + radius, WIDTH);
+        const xend = @min(state.player.coord.x + radius, WIDTH);
 
         var tile: state.MemoryTile = .{
             .tile = .{
@@ -1808,28 +1832,37 @@ pub const StatusDataInfo = struct {
         Tmp: usize,
         Ctx: ?*const surfaces.Terrain,
 
-        pub fn jsonStringify(val: Duration, opts: std.json.StringifyOptions, stream: anytype) !void {
-            try stream.writeByte('{');
+        pub fn jsonStringify(val: Duration, stream: anytype) !void {
+            // MIGRATE
 
-            try stream.writeAll("\"duration_type\":");
-            try stream.writeByte('"');
-            try stream.writeAll(@tagName(val));
-            try stream.writeByte('"');
+            try stream.beginObject();
+            //try stream.writeByte('{');
+
+            try stream.objectField("duration_type");
+            // try stream.writeAll("\"duration_type\":");
+            // try stream.writeByte('"');
+            try stream.write(@tagName(val));
+            //try stream.writeAll(@tagName(val));
+            //try stream.writeByte('"');
 
             // val.Ctx should never be null, in theory, but it is an optional
             // for some reason... Just putting a check here to be safe...
             //
             if (val == .Tmp or (val == .Ctx and val.Ctx != null)) {
-                try stream.writeByte(',');
-                try stream.writeAll("\"duration_arg\":");
+                try stream.objectField("duration_arg");
+                //try stream.writeByte(',');
+                //try stream.writeAll("\"duration_arg\":");
                 if (val == .Tmp) {
-                    try std.json.stringify(val.Tmp, opts, stream);
+                    try stream.write(val.Tmp);
+                    //try std.json.stringify(val.Tmp, opts, stream);
                 } else {
-                    try std.json.stringify(val.Ctx.?.id, opts, stream);
+                    try stream.write(val.Ctx.?.id);
+                    //try std.json.stringify(val.Ctx.?.id, opts, stream);
                 }
             }
 
-            try stream.writeByte('}');
+            //try stream.writeByte('}');
+            try stream.endObject();
         }
     };
 };
@@ -1853,8 +1886,8 @@ pub const AI = struct {
     //     - work_fn:  on each tick when the mob is doing work.
     //     - fight_fn: on each tick when the mob is pursuing a hostile mob.
     //
-    work_fn: fn (*Mob, mem.Allocator) void,
-    fight_fn: fn (*Mob, mem.Allocator) void,
+    work_fn: *const fn (*Mob, mem.Allocator) void,
+    fight_fn: *const fn (*Mob, mem.Allocator) void,
 
     // Should the mob attack hostiles?
     is_combative: bool = true,
@@ -1958,7 +1991,7 @@ pub const AIJob = struct {
         ALM_PullAlarm,
         SPC_NCAlignment,
 
-        pub fn func(self: @This()) fn (*Mob, *AIJob) JStatus {
+        pub fn func(self: @This()) *const fn (*Mob, *AIJob) JStatus {
             return switch (self) {
                 .Dummy => unreachable,
                 .WRK_LeaveFloor => ai._Job_WRK_LeaveFloor,
@@ -2000,9 +2033,9 @@ pub const Ctx = struct {
     pub const Value = union(enum) {
         usize: usize,
         bool: bool,
-        Coord: Coord,
+        @"types.Coord": Coord,
         @"*types.Mob": *Mob,
-        @"std.array_list.ArrayListAligned(types.Coord,null)": CoordArrayList,
+        @"array_list.ArrayListAligned(types.Coord,null)": CoordArrayList,
     };
 
     pub fn init() @This() {
@@ -2012,7 +2045,7 @@ pub const Ctx = struct {
     pub fn deinit(self: *@This()) void {
         var iter = self.inner.iterator();
         while (iter.next()) |entry| switch (entry.value_ptr.*) {
-            .@"std.array_list.ArrayListAligned(types.Coord,null)" => |c| c.deinit(),
+            .@"array_list.ArrayListAligned(types.Coord,null)" => |c| c.deinit(),
             else => {},
         };
         self.inner.deinit();
@@ -2130,7 +2163,7 @@ pub const Squad = struct {
     }
 };
 
-pub const STAT_LIST = [@typeInfo(Stat).Enum.fields.len]Stat{ .Melee, .Missile, .Martial, .Evade, .Speed, .Vision, .Willpower, .Spikes, .Conjuration, .Potential };
+pub const STAT_LIST = [@typeInfo(Stat).@"enum".fields.len]Stat{ .Melee, .Missile, .Martial, .Evade, .Speed, .Vision, .Willpower, .Spikes, .Conjuration, .Potential };
 pub const Stat = enum {
     Melee,
     Missile,
@@ -2177,52 +2210,11 @@ pub const Stat = enum {
     }
 
     pub fn showMobStatFancy(self: Stat, stat_val_raw: isize, stat_val_real: isize) bool {
-        return self != .Speed and @intCast(usize, math.clamp(stat_val_raw, 0, 100)) != stat_val_real;
+        return self != .Speed and @as(usize, @intCast(math.clamp(stat_val_raw, 0, 100))) != stat_val_real;
     }
 };
 
 pub const Mob = struct { // {{{
-    pub const __SER_SKIP = [_][]const u8{ "id", "species", "slain_trigger", "spells" };
-
-    pub fn __SER_GET_ID(self: *const Mob) []const u8 {
-        return self.id;
-    }
-
-    pub fn __SER_GET_PROTO(id: []const u8) Mob {
-        return for (&mobs.MOBS) |template| {
-            if (mem.eql(u8, template.mob.id, id))
-                break template.mob;
-        } else err.bug("Deserialization: No proto for id {s}", .{id});
-    }
-
-    pub fn __SER_FIELDW_statuses(self: *const Mob, field: *const StatusArray, out: anytype) !void {
-        var item_count: u32 = 0;
-        var i: usize = 0;
-        while (i < StatusArray.Indexer.count) : (i += 1)
-            if (self.hasStatus(StatusArray.Indexer.keyForIndex(i))) {
-                item_count += 1;
-            };
-        try serializer.serialize(u32, item_count, out);
-        i = 0;
-        while (i < StatusArray.Indexer.count) : (i += 1) {
-            const key = StatusArray.Indexer.keyForIndex(i);
-            if (self.hasStatus(key)) {
-                try serializer.serialize(@TypeOf(key), key, out);
-                try serializer.serialize(@TypeOf(field.values[0]), field.values[i], out);
-            }
-        }
-    }
-
-    pub fn __SER_FIELDR_statuses(out: *StatusArray, in: anytype, alloc: mem.Allocator) !void {
-        out.* = StatusArray.initFill(.{});
-        var i: usize = try serializer.deserializeQ(u32, in, alloc);
-        while (i > 0) : (i -= 1) {
-            const k = try serializer.deserializeQ(StatusArray.Key, in, alloc);
-            const v = try serializer.deserializeQ(StatusArray.Value, in, alloc);
-            out.set(k, v);
-        }
-    }
-
     // linked list stuff
     __next: ?*Mob = null,
     __prev: ?*Mob = null,
@@ -2332,6 +2324,47 @@ pub const Mob = struct { // {{{
     MP: usize = 0,
     is_drained: bool = false,
 
+    pub const __SER_SKIP = [_][]const u8{ "id", "species", "slain_trigger", "spells" };
+
+    pub fn __SER_GET_ID(self: *const Mob) []const u8 {
+        return self.id;
+    }
+
+    pub fn __SER_GET_PROTO(id: []const u8) Mob {
+        return for (&mobs.MOBS) |template| {
+            if (mem.eql(u8, template.mob.id, id))
+                break template.mob;
+        } else err.bug("Deserialization: No proto for id {s}", .{id});
+    }
+
+    pub fn __SER_FIELDW_statuses(self: *const Mob, field: *const StatusArray, out: anytype) !void {
+        var item_count: u32 = 0;
+        var i: usize = 0;
+        while (i < StatusArray.Indexer.count) : (i += 1)
+            if (self.hasStatus(StatusArray.Indexer.keyForIndex(i))) {
+                item_count += 1;
+            };
+        try serializer.serialize(u32, item_count, out);
+        i = 0;
+        while (i < StatusArray.Indexer.count) : (i += 1) {
+            const key = StatusArray.Indexer.keyForIndex(i);
+            if (self.hasStatus(key)) {
+                try serializer.serialize(@TypeOf(key), key, out);
+                try serializer.serialize(@TypeOf(field.values[0]), field.values[i], out);
+            }
+        }
+    }
+
+    pub fn __SER_FIELDR_statuses(out: *StatusArray, in: anytype, alloc: mem.Allocator) !void {
+        out.* = StatusArray.initFill(.{});
+        var i: usize = try serializer.deserializeQ(u32, in, alloc);
+        while (i > 0) : (i -= 1) {
+            const k = try serializer.deserializeQ(StatusArray.Key, in, alloc);
+            const v = try serializer.deserializeQ(StatusArray.Value, in, alloc);
+            out.set(k, v);
+        }
+    }
+
     // Don't use EnumFieldStruct here because we want to provide per-field
     // defaults.
     pub const MobStat = struct {
@@ -2400,11 +2433,11 @@ pub const Mob = struct { // {{{
         pub const PackBuffer = StackBuffer(Item, PACK_SIZE);
 
         pub fn equipment(self: *Inventory, eq: EquSlot) *?Item {
-            return &self.equ_slots[@enumToInt(eq)];
+            return &self.equ_slots[@intFromEnum(eq)];
         }
 
         pub fn equipmentConst(self: *const Inventory, eq: EquSlot) *const ?Item {
-            return &self.equ_slots[@enumToInt(eq)];
+            return &self.equ_slots[@intFromEnum(eq)];
         }
     };
 
@@ -2466,7 +2499,7 @@ pub const Mob = struct { // {{{
         const m = ai.calculateMorale(self);
         if (m == self.morale) return;
 
-        const diff = math.absInt(m - self.morale) catch err.wat();
+        const diff: isize = @intCast(@abs(m - self.morale));
         const factor = if (m > self.morale) switch (diff) {
             0 => err.wat(),
             1...2 => diff,
@@ -2475,9 +2508,9 @@ pub const Mob = struct { // {{{
         } else diff;
 
         if (self.morale < m) {
-            self.morale = math.min(m, self.morale + factor);
+            self.morale = @min(m, self.morale + factor);
         } else if (self.morale > m) {
-            self.morale = math.max(m, self.morale - factor);
+            self.morale = @max(m, self.morale - factor);
         } else err.wat();
     }
 
@@ -2490,7 +2523,7 @@ pub const Mob = struct { // {{{
     }
 
     pub fn tickFOV(self: *Mob) void {
-        for (self.fov) |*row| for (row) |*cell| {
+        for (&self.fov) |*row| for (row) |*cell| {
             cell.* = 0;
         };
 
@@ -2500,7 +2533,7 @@ pub const Mob = struct { // {{{
         const light_needs = [_]bool{ self.canSeeInLight(false), self.canSeeInLight(true) };
 
         const perceptive = self.hasStatus(.Perceptive);
-        const vision = @intCast(usize, self.stat(.Vision));
+        const vision = @as(usize, @intCast(self.stat(.Vision)));
         const energy = math.clamp(vision * Dungeon.FLOOR_OPACITY, 0, 100);
         const direction = if (self.deg360_vision) null else self.facing;
 
@@ -2520,7 +2553,7 @@ pub const Mob = struct { // {{{
             };
         }
 
-        var gen = Generator(Rect.rectIter).init(eyes);
+        var gen = eyes.iter();
         while (gen.next()) |eye_coord|
             if (perceptive) {
                 const S = struct {
@@ -2534,7 +2567,7 @@ pub const Mob = struct { // {{{
                 fov.rayCast(eye_coord, vision, energy, Dungeon.tileOpacity, &self.fov, direction, self == state.player);
             };
 
-        for (self.fov) |row, y| for (row) |_, x| {
+        for (self.fov, 0..) |row, y| for (row, 0..) |_, x| {
             if (self.fov[y][x] > 0) {
                 const fc = Coord.new2(self.coord.z, x, y);
                 const light = state.dungeon.lightAt(fc).*;
@@ -2542,7 +2575,7 @@ pub const Mob = struct { // {{{
                 // If a tile is too dim to be seen by a mob and the tile isn't
                 // adjacent to that mob, mark it as unlit.
                 if (fc.distance(self.coordMT(fc)) > 1 and
-                    (!light_needs[@boolToInt(light)] or is_blinded))
+                    (!light_needs[@intFromBool(light)] or is_blinded))
                 {
                     self.fov[y][x] = 0;
                     continue;
@@ -2576,7 +2609,7 @@ pub const Mob = struct { // {{{
         }
 
         for (self.linked_fovs.constSlice()) |linked_fov_mob| {
-            for (linked_fov_mob.fov) |row, y| for (row) |_, x| {
+            for (linked_fov_mob.fov, 0..) |row, y| for (row, 0..) |_, x| {
                 if (linked_fov_mob.fov[y][x] > 0) {
                     self.fov[y][x] = 100;
                 }
@@ -2596,7 +2629,7 @@ pub const Mob = struct { // {{{
 
         // Gases
         const gases = state.dungeon.atGas(self.coord);
-        for (gases) |quantity, gasi| {
+        for (gases, 0..) |quantity, gasi| {
             if (quantity > 0 and
                 (rng.range(usize, 0, 100) < (100 - self.resistance(.rFume)) or
                 gas.Gases[gasi].not_breathed))
@@ -2618,7 +2651,7 @@ pub const Mob = struct { // {{{
                 self.corruption_ctr += 1;
 
                 if (self == state.player and self.hasStatus(.Sceptre) and rng.onein(10)) {
-                    self.corruption_ctr = @intCast(usize, self.stat(.Willpower));
+                    self.corruption_ctr = @intCast(self.stat(.Willpower));
                     state.message(.Info, "The Sceptre feels slightly heavier.", .{});
                 }
 
@@ -2683,7 +2716,7 @@ pub const Mob = struct { // {{{
             self.applyStatus(adj_effect, .{});
         }
 
-        inline for (@typeInfo(Status).Enum.fields) |status| {
+        inline for (@typeInfo(Status).@"enum".fields) |status| {
             const status_e = @field(Status, status.name);
 
             // Decrement
@@ -2888,7 +2921,7 @@ pub const Mob = struct { // {{{
                 state.machines.append(mach) catch err.wat();
                 state.dungeon.at(self.coord).surface = SurfaceItem{ .Machine = state.machines.last().? };
             },
-            .MaxMP => |change| self.max_MP = @intCast(usize, math.max(0, @intCast(isize, self.max_MP) + change)),
+            .MaxMP => |change| self.max_MP = @intCast(@max(0, @as(isize, @intCast(self.max_MP)) + change)),
             .Custom => |c| c(self, self.coord),
         };
     }
@@ -3013,7 +3046,7 @@ pub const Mob = struct { // {{{
     pub fn makeNoise(self: *Mob, s_type: SoundType, intensity: SoundIntensity) void {
         assert(!self.is_dead);
 
-        var gen = Generator(Rect.rectIter).init(self.areaRect());
+        var gen = self.areaRect().iter();
         while (gen.next()) |mobcoord| {
             if (state.dungeon.soundAt(mobcoord).intensity.radiusHeard() > intensity.radiusHeard())
                 continue;
@@ -3243,7 +3276,7 @@ pub const Mob = struct { // {{{
         }
 
         {
-            var gen = Generator(Rect.rectIter).init(self.areaRect());
+            var gen = self.areaRect().iter();
             while (gen.next()) |mobcoord|
                 state.dungeon.at(mobcoord).mob = null;
         }
@@ -3251,7 +3284,7 @@ pub const Mob = struct { // {{{
         self.coord = dest;
 
         {
-            var gen = Generator(Rect.rectIter).init(self.areaRect());
+            var gen = self.areaRect().iter();
             while (gen.next()) |mobcoord| {
                 assert(state.dungeon.at(mobcoord).mob == null);
 
@@ -3291,7 +3324,7 @@ pub const Mob = struct { // {{{
     // XXX: increase max stackbuffer size if adding bigger mobs
     pub fn coordListMT(self: *Mob) StackBuffer(Coord, 16) {
         var list = StackBuffer(Coord, 16).init(null);
-        var gen = Generator(Rect.rectIter).init(self.areaRect());
+        var gen = self.areaRect().iter();
         while (gen.next()) |mobcoord|
             list.append(mobcoord) catch err.wat();
         return list;
@@ -3301,7 +3334,7 @@ pub const Mob = struct { // {{{
     pub fn coordMT(self: *Mob, to: Coord) Coord {
         var closest = self.coord;
         {
-            var gen = Generator(Rect.rectIter).init(self.areaRect());
+            var gen = self.areaRect().iter();
             while (gen.next()) |mobcoord|
                 if (mobcoord.distance(to) < closest.distanceManhattan(to)) {
                     closest = mobcoord;
@@ -3390,7 +3423,7 @@ pub const Mob = struct { // {{{
     pub fn fight(attacker: *Mob, recipient: *Mob, opts: FightOptions) void {
         assert(!recipient.is_dead);
 
-        const martial = @intCast(usize, math.max(0, attacker.stat(.Martial)));
+        const martial: usize = @intCast(@max(0, attacker.stat(.Martial)));
         const weapons = attacker.listOfWeapons();
 
         var longest_delay: usize = 0;
@@ -3487,7 +3520,7 @@ pub const Mob = struct { // {{{
                     spells.willSucceedAgainstMob(recipient, attacker))
                 {
                     const d = acoord.closestDirectionTo(rcoord, state.mapgeometry).opposite();
-                    const w = @intCast(usize, recipient.stat(.Willpower));
+                    const w: usize = @intCast(recipient.stat(.Willpower));
                     combat.throwMob(recipient, attacker, d, w);
                 }
             }
@@ -3573,7 +3606,7 @@ pub const Mob = struct { // {{{
                 {
                     const new = recipient.duplicateIntoSpectral();
                     if (new) |new_mob| {
-                        new_mob.addStatus(.Lifespan, 0, .{ .Tmp = @intCast(usize, attacker.stat(.Willpower)) * 2 });
+                        new_mob.addStatus(.Lifespan, 0, .{ .Tmp = @as(usize, @intCast(attacker.stat(.Willpower))) * 2 });
                     }
                 }
             },
@@ -3598,7 +3631,7 @@ pub const Mob = struct { // {{{
             ui.Animation.blinkMob(&.{recipient}, 'S', colors.LIGHT_STEEL_BLUE, .{});
 
             attacker.takeDamage(.{
-                .amount = @intCast(usize, recipient.stat(.Spikes)),
+                .amount = @intCast(recipient.stat(.Spikes)),
                 .source = .Passive,
                 .by_mob = recipient,
             }, .{
@@ -3636,7 +3669,7 @@ pub const Mob = struct { // {{{
         const resist = if (d.kind.resist()) |r| self.resistance(r) else 0;
         const unshaved_amount = combat.shaveDamage(d.amount, resist); // TODO: change this variable name to "lethal_amount"
         const amount = if (!d.lethal and unshaved_amount >= self.HP) self.HP - 1 else unshaved_amount;
-        const dmg_percent = amount * 100 / math.max(1, self.HP);
+        const dmg_percent = amount * 100 / @max(1, self.HP);
 
         self.HP -|= amount;
 
@@ -3668,8 +3701,8 @@ pub const Mob = struct { // {{{
         }
 
         // Make animations
-        const clamped_dmg = math.clamp(@intCast(u21, amount), 0, 9);
-        const damage_char = if (self.should_be_dead()) '∞' else '0' + clamped_dmg;
+        const clamped_dmg = math.clamp(@as(u21, @intCast(amount)), 0, 9);
+        const damage_char: u21 = if (self.should_be_dead()) '∞' else '0' + clamped_dmg;
         ui.Animation.blinkMob(&.{self}, damage_char, colors.PALE_VIOLET_RED, .{});
 
         // Print message
@@ -3690,7 +3723,7 @@ pub const Mob = struct { // {{{
                 }
             }
 
-            const resisted = @intCast(isize, d.amount) - @intCast(isize, amount);
+            const resisted = @as(isize, @intCast(d.amount)) - @as(isize, @intCast(amount));
             const resist_str = if (d.kind == .Physical) "armor" else "resist";
 
             if (msg.basic) {
@@ -4064,7 +4097,7 @@ pub const Mob = struct { // {{{
 
         self.is_dead = true;
 
-        var gen = Generator(Rect.rectIter).init(self.areaRect());
+        var gen = self.areaRect().iter();
         while (gen.next()) |mobcoord|
             state.dungeon.at(mobcoord).mob = null;
     }
@@ -4117,7 +4150,7 @@ pub const Mob = struct { // {{{
 
     pub fn assertIsAtLocation(self: *const Mob) void {
         if (state.dungeon.at(self.coord).mob == null) {
-            err.bug("Nothing at mob {f} location. ({}, last activity: {})", .{
+            err.bug("Nothing at mob {f} location. ({}, last activity: {any})", .{
                 self, self.coord, self.activities.current(),
             });
         }
@@ -4270,8 +4303,8 @@ pub const Mob = struct { // {{{
         const has_status_now = self.isUnderStatus(s.status) != null;
 
         var got: ?bool = null;
-        var ministring = s.status.miniString();
-        var string = s.status.string(self);
+        const ministring = s.status.miniString();
+        const string = s.status.string(self);
 
         if (had_status_before and !has_status_now) {
             got = false;
@@ -4404,8 +4437,8 @@ pub const Mob = struct { // {{{
             };
 
         if (self.faction == .Night and
-            state.night_rep[@enumToInt(othermob.faction)] > -5 and
-            (state.night_rep[@enumToInt(othermob.faction)] > 0 or
+            state.night_rep[@intFromEnum(othermob.faction)] > -5 and
+            (state.night_rep[@intFromEnum(othermob.faction)] > 0 or
             state.dungeon.terrainAt(othermob.coord) != &surfaces.SladeTerrain))
         {
             hostile = false;
@@ -4433,7 +4466,7 @@ pub const Mob = struct { // {{{
             return false;
         }
 
-        var gen = Generator(Rect.rectIter).init(mob.areaRect());
+        var gen = mob.areaRect().iter();
         return while (gen.next()) |mobcoord| {
             if (self.cansee(mobcoord)) break true;
         } else false;
@@ -4509,12 +4542,12 @@ pub const Mob = struct { // {{{
         switch (_stat) {
             .Melee => {
                 if (self.hasStatus(.RingRetaliation)) {
-                    val -= 10 * @intCast(isize, utils.adjacentHostiles(self));
+                    val -= 10 * @as(isize, @intCast(utils.adjacentHostiles(self)));
                 }
             },
             .Spikes => {
                 if (self.hasStatus(.RingRetaliation)) {
-                    val += @intCast(isize, utils.adjacentHostiles(self));
+                    val += @as(isize, @intCast(utils.adjacentHostiles(self)));
                 }
             },
             .Speed => {
@@ -4573,7 +4606,7 @@ pub const Mob = struct { // {{{
         // Clamp value.
         val = switch (_stat) {
             // Should never be below 0
-            .Vision, .Spikes, .Potential => math.max(0, val),
+            .Vision, .Spikes, .Potential => @max(0, val),
             .Willpower => math.clamp(val, 1, 10),
             else => val,
         };
@@ -4701,27 +4734,6 @@ pub const Mob = struct { // {{{
 }; // }}}
 
 pub const Machine = struct {
-    pub const __SER_SKIP = [_][]const u8{
-        "id",
-        "name",
-        "announce",
-        "spells",
-        "on_power",
-        "on_place",
-        "player_interact",
-    };
-
-    pub fn __SER_GET_ID(self: *const @This()) []const u8 {
-        return self.id;
-    }
-
-    pub fn __SER_GET_PROTO(id: []const u8) @This() {
-        return for (&surfaces.MACHINES) |template| {
-            if (mem.eql(u8, template.id, id))
-                break template;
-        } else err.bug("Deserialization: No proto for id {s}", .{id});
-    }
-
     // linked list stuff
     __next: ?*Machine = null,
     __prev: ?*Machine = null,
@@ -4771,8 +4783,8 @@ pub const Machine = struct {
     pathfinding_penalty: usize = 0,
 
     coord: Coord = Coord.new(0, 0),
-    on_power: fn (*Machine) void, // Called on each turn when the machine is powered
-    on_place: ?fn (*Machine) void = null, // Called when placed by mapgen
+    on_power: *const fn (*Machine) void, // Called on each turn when the machine is powered
+    on_place: ?*const fn (*Machine) void = null, // Called when placed by mapgen
     power: usize = 0, // percentage (0..100)
     last_interaction: ?*Mob = null,
     ctx: Ctx = undefined,
@@ -4795,6 +4807,27 @@ pub const Machine = struct {
     // for fuel in the second area.
     areas: StackBuffer(Coord, 16) = StackBuffer(Coord, 16).init(null),
 
+    pub const __SER_SKIP = [_][]const u8{
+        "id",
+        "name",
+        "announce",
+        "spells",
+        "on_power",
+        "on_place",
+        "player_interact",
+    };
+
+    pub fn __SER_GET_ID(self: *const @This()) []const u8 {
+        return self.id;
+    }
+
+    pub fn __SER_GET_PROTO(id: []const u8) @This() {
+        return for (&surfaces.MACHINES) |template| {
+            if (mem.eql(u8, template.id, id))
+                break template;
+        } else err.bug("Deserialization: No proto for id {s}", .{id});
+    }
+
     pub const CTX_ETH_BARRIER_OWNER = "ctx_eth_barrier_owner";
     pub const CTX_ETH_BARRIER_AGE = "ctx_eth_barrier_age";
 
@@ -4812,7 +4845,7 @@ pub const Machine = struct {
         needs_power: bool = true,
         used: usize = 0,
         max_use: usize, // 0 for infinite uses
-        func: fn (*Machine, *Mob) bool,
+        func: *const fn (*Machine, *Mob) bool,
     };
 
     pub fn canBeInteracted(self: *Machine, _: *Mob, interaction: *const MachInteract) bool {
@@ -4832,7 +4865,7 @@ pub const Machine = struct {
 
     pub fn canBePoweredBy(self: *Machine, by: *const Mob) bool {
         if (self.restricted_to) |restriction|
-            if ((restriction == .Night and state.night_rep[@enumToInt(by.faction)] > 0) or
+            if ((restriction == .Night and state.night_rep[@intFromEnum(by.faction)] > 0) or
                 restriction == by.faction)
             {
                 return true;
@@ -4844,7 +4877,7 @@ pub const Machine = struct {
         if (!self.canBePoweredBy(by))
             return false;
 
-        self.power = math.min(self.power + 100, 100);
+        self.power = @min(self.power + 100, 100);
         self.last_interaction = by;
 
         return true;
@@ -5227,26 +5260,41 @@ pub const Ring = struct {
     requires_nopain: bool = false,
     requires_noglow: bool = false,
     drained: bool = false,
-    effect: fn () bool,
+    effect: *const fn () bool,
 };
 
-pub const ItemType = enum { Ring, Consumable, Vial, Projectile, Armor, Cloak, Head, Shoe, Aux, Weapon, Boulder, Prop, Evocable, Key };
+pub const ItemType = enum {
+    Armor,
+    Aux,
+    Boulder,
+    Cloak,
+    Consumable,
+    Evocable,
+    Head,
+    Key,
+    Projectile,
+    Prop,
+    Ring,
+    Shoe,
+    Vial,
+    Weapon,
+};
 
 pub const Item = union(ItemType) {
-    Weapon: *const Weapon,
     Armor: *Armor,
     Aux: *const Aux,
-    Ring: *Ring,
-    Cloak: *const Cloak,
-    Head: *const Headgear,
-    Shoe: *const Shoe,
-    Evocable: *Evocable,
-    Consumable: *const Consumable,
-    Projectile: *const Projectile,
     Boulder: *const Material,
-    Prop: *const Prop,
-    Vial: Vial,
+    Cloak: *const Cloak,
+    Consumable: *const Consumable,
+    Evocable: *Evocable,
+    Head: *const Headgear,
     Key: items.Key,
+    Projectile: *const Projectile,
+    Prop: *const Prop,
+    Ring: *Ring,
+    Shoe: *const Shoe,
+    Vial: Vial,
+    Weapon: *const Weapon,
 
     pub fn isUseful(self: Item) bool {
         return switch (self) {
@@ -5329,7 +5377,7 @@ pub const Item = union(ItemType) {
             .Prop => |b| try fmt.format(fbs.writer(), "{s}", .{b.name}),
             .Evocable => |v| try fmt.format(fbs.writer(), "}}{s}", .{v.name}),
         }
-        buf.resizeTo(@intCast(usize, fbs.getPos() catch err.wat()));
+        buf.resizeTo(@as(usize, @intCast(fbs.getPos() catch err.wat())));
         return buf;
     }
 
@@ -5355,7 +5403,7 @@ pub const Item = union(ItemType) {
             .Prop => |b| try fmt.format(fbs.writer(), "{s}", .{b.name}),
             .Evocable => |v| try fmt.format(fbs.writer(), "{s}", .{v.name}),
         }
-        buf.resizeTo(@intCast(usize, fbs.getPos() catch err.wat()));
+        buf.resizeTo(@as(usize, @intCast(fbs.getPos() catch err.wat())));
         return buf;
     }
 
@@ -5402,7 +5450,7 @@ pub const Tile = struct {
     rand: usize = 0,
 
     pub fn displayAs(coord: Coord, ignore_lights: bool, ignore_mobs: bool) display.Cell {
-        var self = state.dungeon.at(coord);
+        const self = state.dungeon.at(coord);
         var cell = display.Cell{};
 
         switch (self.type) {
@@ -5433,7 +5481,7 @@ pub const Tile = struct {
         }
 
         const gases = state.dungeon.atGas(coord);
-        for (gases) |q, g| {
+        for (gases, 0..) |q, g| {
             const gcolor = gas.Gases[g].color;
             // const aq = 1 - math.clamp(q, 0.19, 1);
             if (q > 0) {
@@ -5464,7 +5512,7 @@ pub const Tile = struct {
 
             // const hp_loss_percent = 100 - (mob.HP * 100 / mob.max_HP);
             // if (hp_loss_percent > 0) {
-            //     const red = @floatToInt(u32, (255 * (hp_loss_percent / 2)) / 100) + 0x22;
+            //     const red = @intFromFloat(u32, (255 * (hp_loss_percent / 2)) / 100) + 0x22;
             //     cell.bg = math.clamp(red, 0x66, 0xff) << 16;
             // }
 
@@ -5588,7 +5636,7 @@ pub const Tile = struct {
         //     const spatter = entry.key;
         //     const num = entry.value.*;
         //     const sp_color = spatter.color();
-        //     const q = @intToFloat(f64, num / 10);
+        //     const q = @floatFromInt(f64, num / 10);
         //     const aq = 1 - math.clamp(q, 0.19, 0.40);
         //     if (num > 0) cell.bg = colors.mix(sp_color, cell.bg, aq);
         // }
@@ -5638,7 +5686,7 @@ pub const Dungeon = struct {
         }
 
         const gases = state.dungeon.atGas(coord);
-        for (gases) |q, g| {
+        for (gases, 0..) |q, g| {
             if (q > 0 and gas.Gases[g].opacity >= 1.0) return true;
         }
 
@@ -5650,7 +5698,7 @@ pub const Dungeon = struct {
         var o: usize = FLOOR_OPACITY;
 
         if (tile.type == .Wall)
-            return @floatToInt(usize, tile.material.opacity * 100);
+            return @intFromFloat(tile.material.opacity * 100);
 
         o += state.dungeon.terrainAt(coord).opacity;
 
@@ -5659,15 +5707,15 @@ pub const Dungeon = struct {
 
         if (tile.surface) |surface| {
             switch (surface) {
-                .Machine => |m| o += @floatToInt(usize, m.opacity() * 100),
-                .Prop => |p| o += @floatToInt(usize, p.opacity * 100),
+                .Machine => |m| o += @intFromFloat(m.opacity() * 100),
+                .Prop => |p| o += @intFromFloat(p.opacity * 100),
                 else => {},
             }
         }
 
         const gases = state.dungeon.atGas(coord);
-        for (gases) |q, g| {
-            if (q > 0) o += @floatToInt(usize, gas.Gases[g].opacity * 100);
+        for (gases, 0..) |q, g| {
+            if (q > 0) o += @intFromFloat(gas.Gases[g].opacity * 100);
         }
 
         o += fire.fireOpacity(state.dungeon.fireAt(coord).*);
@@ -5768,14 +5816,14 @@ pub const Dungeon = struct {
 
             if (c.move(d, state.mapgeometry)) |neighbor| {
                 const prev = self.at(neighbor).spatter.get(what);
-                const new = math.min(prev + rng.range(usize, 0, 4), 10);
+                const new = @min(prev + rng.range(usize, 0, 4), 10);
                 self.at(neighbor).spatter.set(what, new);
             }
         }
 
         if (rng.boolean()) {
             const prev = self.at(c).spatter.get(what);
-            const new = math.min(prev + rng.range(usize, 0, 5), 10);
+            const new = @min(prev + rng.range(usize, 0, 5), 10);
             self.at(c).spatter.set(what, new);
         }
     }

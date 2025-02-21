@@ -53,7 +53,7 @@ pub fn reportTask(level: usize, newtask: TaskType) void {
     var reuse_task_slot: ?usize = null;
 
     // Check if task has already been reported
-    for (state.tasks.items) |task, id| {
+    for (state.tasks.items, 0..) |task, id| {
         if (@as(meta.Tag(TaskType), task.type) == newtask) {
             const is_same = task.level == level and switch (task.type) {
                 .Clean => |c| c.eq(newtask.Clean),
@@ -242,7 +242,7 @@ pub fn tickTasks(level: usize) void {
             worker_count.set(task.type, worker_count.get(task.type) + 1);
 
     // Now go through orders again and dispatch workers if necessary.
-    for (state.tasks.items) |*task, id|
+    for (state.tasks.items, 0..) |*task, id|
         if (task.assigned_to == null and !task.completed and
             worker_count.get(task.type) <= 2)
         {
@@ -268,7 +268,7 @@ pub fn tickTasks(level: usize) void {
 pub fn scanForCorpses(mob: *Mob) void {
     if (mob.faction != .Necromancer) return;
 
-    for (mob.fov) |row, y| for (row) |cell, x| {
+    for (mob.fov, 0..) |row, y| for (row, 0..) |cell, x| {
         if (cell == 0) continue;
         const coord = Coord.new2(mob.coord.z, x, y);
 
@@ -293,7 +293,7 @@ pub fn scanForCorpses(mob: *Mob) void {
 }
 
 pub fn scanForCleaningJobs(mob: *Mob) void {
-    for (mob.fov) |row, y| for (row) |cell, x| {
+    for (mob.fov, 0..) |row, y| for (row, 0..) |cell, x| {
         if (cell == 0) continue;
         const coord = Coord.new2(mob.coord.z, x, y);
 

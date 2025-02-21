@@ -21,6 +21,7 @@
 // - Support for async
 
 const std = @import("std");
+const sort = std.sort;
 const builtin = @import("builtin");
 
 // TODO: *don't* encode this in here
@@ -52,20 +53,26 @@ pub const SentryEvent = struct {
             value: []const u8,
         };
 
-        pub fn jsonStringify(val: TagSet, _: std.json.StringifyOptions, stream: anytype) !void {
-            try stream.writeByte('{');
-            for (val.inner.items) |tag, i| {
-                try stream.writeByte('"');
-                try stream.writeAll(tag.name);
-                try stream.writeByte('"');
-                try stream.writeByte(':');
-                try stream.writeByte('"');
-                try stream.writeAll(tag.value);
-                try stream.writeByte('"');
-                if (i < val.inner.items.len - 1)
-                    try stream.writeByte(',');
+        pub fn jsonStringify(val: TagSet, stream: anytype) !void {
+            // try stream.write('{');
+            // for (val.inner.items, 0..) |tag, i| {
+            //     try stream.write('"');
+            //     try stream.write(tag.name);
+            //     try stream.write('"');
+            //     try stream.write(':');
+            //     try stream.write('"');
+            //     try stream.write(tag.value);
+            //     try stream.write('"');
+            //     if (i < val.inner.items.len - 1)
+            //         try stream.write(',');
+            // }
+            // try stream.write('}');
+            try stream.beginObject();
+            for (val.inner.items) |tag| {
+                try stream.objectField(tag.name);
+                try stream.write(tag.value);
             }
-            try stream.writeByte('}');
+            try stream.endObject();
         }
     };
 
@@ -94,7 +101,7 @@ pub const SentryEvent = struct {
         Info,
         Debug,
 
-        pub fn jsonStringify(val: Level, _: std.json.StringifyOptions, stream: anytype) !void {
+        pub fn jsonStringify(val: Level, stream: anytype) !void {
             const s = switch (val) {
                 .Fatal => "fatal",
                 .Error => "error",
@@ -102,9 +109,9 @@ pub const SentryEvent = struct {
                 .Info => "info",
                 .Debug => "debug",
             };
-            try stream.writeByte('"');
-            try stream.writeAll(s);
-            try stream.writeByte('"');
+            try stream.write('"');
+            try stream.write(s);
+            try stream.write('"');
         }
     };
 };
@@ -119,7 +126,7 @@ pub fn captureError(
     addr: ?usize,
     alloc: std.mem.Allocator,
 ) !void {
-    var rng = std.rand.DefaultPrng.init(@intCast(u64, std.time.timestamp()));
+    var rng = std.Random.DefaultPrng.init(@intCast(std.time.timestamp()));
     const uuid = rng.random().int(u128);
 
     std.log.info("*** zig-sentry: uploading crash report", .{});
@@ -140,7 +147,7 @@ fn uploadError(ev: *const SentryEvent, alloc: std.mem.Allocator) !void {
 
     var buf: [65535]u8 = undefined;
     var fbs = std.io.fixedBufferStream(&buf);
-    try std.json.stringify(ev.sentry_event, .{ .string = .{ .String = .{} } }, fbs.writer());
+    try std.json.stringify(ev.sentry_event, .{}, fbs.writer());
 
     std.log.debug("zig-sentry: sending content...", .{});
     try stream.writer().print("POST /api/{}/store/ HTTP/1.1\r\n", .{DSN_ID});
@@ -159,7 +166,7 @@ fn uploadError(ev: *const SentryEvent, alloc: std.mem.Allocator) !void {
     std.log.debug("zig-sentry: waiting for response...", .{});
     var response: [2048]u8 = undefined;
     if (stream.read(&response)) |ret| {
-        var lines = std.mem.tokenize(u8, response[0..ret], "\n");
+        var lines = std.mem.tokenizeScalar(u8, response[0..ret], '\n');
         while (lines.next()) |line|
             std.log.debug("zig-sentry: response: > {s}", .{line});
     } else |err| {
@@ -190,7 +197,7 @@ pub fn createEvent(
 
         var y: usize = 0;
         while (x > 0) : (x /= 16) {
-            const v = @intCast(u8, (uuid / x) % 16);
+            const v: u8 = @intCast((uuid / x) % 16);
             uuid_buf[y] = if (v > 9) @as(u8, 'a') + (v - 10) else '0' + v;
             y += 1;
         }
@@ -198,12 +205,12 @@ pub fn createEvent(
             uuid_buf[y] = '0';
     }
 
-    const timestamp = @intCast(u64, std.time.timestamp());
+    const timestamp: u64 = @intCast(std.time.timestamp());
 
     var values = std.ArrayList(SentryEvent.Value).init(alloc);
     var frames = std.ArrayList(SentryEvent.Frame).init(alloc);
 
-    const debug_info: ?*std.debug.DebugInfo = std.debug.getSelfDebugInfo() catch null;
+    const debug_info = std.debug.getSelfDebugInfo() catch null;
     if (!builtin.strip_debug_info and debug_info != null and builtin.os.tag != .windows) {
         if (error_trace) |trace| {
             try values.append(try recordError(&frames, debug_info.?, error_name, msg, trace));
@@ -255,7 +262,7 @@ pub fn createEvent(
 
 pub fn recordError(
     frames: *std.ArrayList(SentryEvent.Frame),
-    debug_info: *std.debug.DebugInfo,
+    debug_info: *std.debug.SelfInfo,
     ename: []const u8,
     emsg: []const u8,
     trace: *std.builtin.StackTrace,
@@ -263,9 +270,12 @@ pub fn recordError(
     std.debug.assert(builtin.os.tag != .windows);
     std.debug.assert(!builtin.strip_debug_info);
 
+    var membuf: [8192]u8 = undefined;
+    var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
+
     var frame_index: usize = 0;
-    var frame_buf_start_index = frames.items.len;
-    var frames_left: usize = std.math.min(trace.index, trace.instruction_addresses.len);
+    const frame_buf_start_index = frames.items.len;
+    var frames_left: usize = @min(trace.index, trace.instruction_addresses.len);
     var v: SentryEvent.Value = .{ .type = ename, .value = emsg };
 
     while (frames_left != 0) : ({
@@ -277,12 +287,12 @@ pub fn recordError(
         var frame: SentryEvent.Frame = .{};
 
         if (debug_info.getModuleForAddress(address)) |module| {
-            const symb_info = try module.getSymbolAtAddress(address);
-            defer symb_info.deinit();
-            frame.function = symb_info.symbol_name;
+            const symb_info = try module.getSymbolAtAddress(fba.allocator(), address);
+            // MIGRATION defer symb_info.deinit(fba.allocator());
+            frame.function = symb_info.name;
             std.log.info("function: {s}", .{frame.function});
-            if (symb_info.line_info) |li| {
-                std.mem.copy(u8, &frame.filename, li.file_name);
+            if (symb_info.source_location) |li| {
+                std.mem.copyForwards(u8, &frame.filename, li.file_name);
                 frame.lineno = li.line;
                 frame.colno = li.column;
             }

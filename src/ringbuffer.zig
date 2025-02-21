@@ -27,7 +27,7 @@ pub fn RingBuffer(comptime T: type, size: usize) type {
 
         pub fn init(self: *Self) void {
             self.len = size;
-            for (self.buffer) |*i| i.* = null;
+            for (&self.buffer) |*i| i.* = null;
             self.top = 0;
         }
 
@@ -56,7 +56,7 @@ pub fn RingBuffer(comptime T: type, size: usize) type {
             _ = fmt;
             _ = options;
             try writer.print("rb({}):[", .{value.len});
-            for (value.buffer) |val, i| {
+            for (value.buffer, 0..) |val, i| {
                 if (i == value.top) {
                     try writer.print("\x1b[1m", .{});
                 }

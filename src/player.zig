@@ -1,6 +1,7 @@
 const std = @import("std");
 const math = std.math;
 const assert = std.debug.assert;
+const sort = std.sort;
 const mem = std.mem;
 const meta = std.meta;
 
@@ -211,7 +212,7 @@ pub fn choosePlayerUpgrades() void {
     };
 
     var augments = StackBuffer(ConjAugmentEntry, ConjAugment.TOTAL).init(&CONJ_AUGMENT_DROPS);
-    for (state.player_conj_augments) |*entry| {
+    for (&state.player_conj_augments) |*entry| {
         // Choose an augment...
         //
         const augment = rng.choose2(ConjAugmentEntry, augments.constSlice(), "w") catch err.wat();
@@ -247,7 +248,7 @@ pub fn hasAlignedNC() bool {
 }
 
 pub fn repPtr() *isize {
-    return &state.night_rep[@enumToInt(state.player.faction)];
+    return &state.night_rep[@intFromEnum(state.player.faction)];
 }
 
 pub fn triggerPoster(coord: Coord) bool {
@@ -267,7 +268,7 @@ pub fn triggerStair(stair: surfaces.Stair, cur_stair: Coord) bool {
 
     if (stair.locked) {
         assert(stair.stairtype != .Down);
-        stair_key = for (state.player.inventory.pack.constSlice()) |item, ind| {
+        stair_key = for (state.player.inventory.pack.constSlice(), 0..) |item, ind| {
             if (item == .Key and item.Key.level == cur_stair.z and
                 item.Key.lock == @as(meta.Tag(surfaces.Stair.Type), stair.stairtype) and
                 (item.Key.lock != .Up or item.Key.lock.Up == stair.stairtype.Up))
@@ -318,7 +319,7 @@ pub fn triggerStair(stair: surfaces.Stair, cur_stair: Coord) bool {
     if (state.levelinfo[state.player.coord.z].upgr) {
         state.player.max_HP += 2;
 
-        const upgrade = for (state.player_upgrades) |*u| {
+        const upgrade = for (&state.player_upgrades) |*u| {
             if (!u.recieved)
                 break u;
         } else err.bug("Cannot find upgrade to grant! (upgrades: {} {} {})", .{
@@ -330,7 +331,7 @@ pub fn triggerStair(stair: surfaces.Stair, cur_stair: Coord) bool {
         upgrade.upgrade.implement();
     }
 
-    const rep = &state.night_rep[@enumToInt(state.player.faction)];
+    const rep = &state.night_rep[@intFromEnum(state.player.faction)];
     if (rep.* < 0) rep.* += 1;
 
     combat.disruptAllUndead(dest_stair.z);
@@ -422,7 +423,7 @@ pub fn executeWizardFun(w: WizardFun) void {
             // state.player.addStatus(.RingTeleportation, 0, .{ .Tmp = 5 });
             // state.player.addStatus(.RingElectrocution, 0, .{ .Tmp = 5 });
             // state.player.addStatus(.RingConjuration, 0, .{ .Tmp = 2 });
-            // state.night_rep[@enumToInt(state.player.faction)] += 10;
+            // state.night_rep[@intFromEnum(state.player.faction)] += 10;
             // state.player.HP = 0;
             // for (state.player_conj_augments) |aug, i| {
             //     if (!aug.received) {
@@ -527,7 +528,7 @@ pub fn checkForGarbage() void {
 // - If they haven't existed in memory before as an .Immediate tile, check for
 //   things of interest (items, machines, etc) and announce their presence.
 pub fn bookkeepingFOV() void {
-    for (state.player.fov) |row, y| for (row) |_, x| {
+    for (state.player.fov, 0..) |row, y| for (row, 0..) |_, x| {
         if (state.player.fov[y][x] > 0) {
             const fc = Coord.new2(state.player.coord.z, x, y);
 
@@ -1041,7 +1042,7 @@ pub fn isPlayerMartial() bool {
 
 // Returns ring slot number
 pub fn isAuxUpgradable(index: usize) ?Inventory.EquSlot {
-    const slot = @intToEnum(Inventory.EquSlot, index);
+    const slot: Inventory.EquSlot = @enumFromInt(index);
     const item = state.player.inventory.equipment(slot).*.?;
 
     if (item == .Aux)
@@ -1057,7 +1058,7 @@ pub fn isAuxUpgradable(index: usize) ?Inventory.EquSlot {
 }
 
 pub fn upgradeAux(index: usize, ring_slot: Inventory.EquSlot) void {
-    const slot = @intToEnum(Inventory.EquSlot, index);
+    const slot: Inventory.EquSlot = @enumFromInt(index);
     const i = state.player.inventory.equipment(slot).*.?;
     assert(i == .Aux and i.Aux.ring_upgrade_name != null);
     state.player.dequipItem(slot, null);
@@ -1082,7 +1083,7 @@ pub fn dropItem(index: usize, is_inventory: bool) UserActionResult {
     if (is_inventory)
         assert(state.player.inventory.pack.len > index);
 
-    if (!is_inventory and @intToEnum(Inventory.EquSlot, index) == .Shoe)
+    if (!is_inventory and @as(Inventory.EquSlot, @enumFromInt(index)) == .Shoe)
         return .{ .Failure = "Sorry, you need shoes." };
 
     if (state.nextAvailableSpaceForItem(state.player.coord, state.gpa.allocator())) |coord| {
@@ -1092,7 +1093,7 @@ pub fn dropItem(index: usize, is_inventory: bool) UserActionResult {
             assert(dropped);
             break :b i;
         } else b: {
-            const slot = @intToEnum(Inventory.EquSlot, index);
+            const slot: Inventory.EquSlot = @enumFromInt(index);
             const i = state.player.inventory.equipment(slot).*.?;
             state.player.dequipItem(slot, coord);
             break :b i;
@@ -1222,7 +1223,7 @@ pub fn beginUsingRing(index: usize) void {
 }
 
 pub fn getRingIndexBySlot(slot: Mob.Inventory.EquSlot) usize {
-    return for (Mob.Inventory.RING_SLOTS) |item, i| {
+    return for (Mob.Inventory.RING_SLOTS, 0..) |item, i| {
         if (item == slot) break i + state.default_patterns.len;
     } else err.bug("Tried to get ring index from non-ring slot", .{});
 }
@@ -1240,7 +1241,7 @@ pub fn getRingByIndex(index: usize) ?*Ring {
 pub fn calculateDrainableMana(total: usize) usize {
     const S = struct {
         pub fn _helper(a: usize, pot: usize) usize {
-            const pot1 = math.min(pot, 100);
+            const pot1 = @min(pot, 100);
             const pot2 = pot -| 100;
             var n: usize = 0;
             var ctr = a;
@@ -1252,7 +1253,7 @@ pub fn calculateDrainableMana(total: usize) usize {
         }
     };
 
-    const pot = @intCast(usize, state.player.stat(.Potential));
+    const pot: usize = @intCast(state.player.stat(.Potential));
     return (S._helper(total, pot) + S._helper(total, pot) + S._helper(total, pot)) / 3;
 }
 
@@ -1260,10 +1261,10 @@ pub fn calculateDrainableMana(total: usize) usize {
 //
 pub fn drainMob(mob: *Mob) void {
     if (!mob.is_drained and mob.max_drainable_MP > 0) {
-        const pot = @intCast(usize, state.player.stat(.Potential));
+        const pot: usize = @intCast(state.player.stat(.Potential));
         const amount = calculateDrainableMana(mob.max_drainable_MP);
 
-        state.player.MP = math.min(state.player.max_MP, state.player.MP + amount);
+        state.player.MP = @min(state.player.max_MP, state.player.MP + amount);
         mob.is_drained = true;
         mob.MP = 0;
         mob.max_MP = 0;
@@ -1281,10 +1282,10 @@ pub fn drainMob(mob: *Mob) void {
 pub fn drainRing(ring: *Ring) void {
     if (!ring.drained) {
         const max_drainable_MP = ring.required_MP * 3;
-        const pot = @intCast(usize, state.player.stat(.Potential));
+        const pot: usize = @intCast(state.player.stat(.Potential));
         const amount = calculateDrainableMana(max_drainable_MP);
 
-        state.player.MP = math.min(state.player.max_MP, state.player.MP + amount);
+        state.player.MP = @min(state.player.max_MP, state.player.MP + amount);
         ring.drained = true;
 
         state.message(.Drain, "You absorbed $o{}$. / $g{}$. mana ($o{}% potential$.).", .{ amount, max_drainable_MP, pot });
@@ -1293,7 +1294,7 @@ pub fn drainRing(ring: *Ring) void {
 }
 
 pub fn formatActivityList(activities: []const Activity, writer: anytype) void {
-    for (activities) |activity, i| {
+    for (activities, 0..) |activity, i| {
         if (i != 0 and i < activities.len - 1)
             writer.print(", ", .{}) catch err.wat()
         else if (i != 0 and i == activities.len - 1)

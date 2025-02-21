@@ -16,7 +16,7 @@ pub fn ensure(expr: bool, comptime err_message: []const u8, args: anytype) !void
 }
 
 pub fn bug(comptime fmt: []const u8, args: anytype) noreturn {
-    @setCold(true);
+    @branchHint(.cold);
 
     // ui.deinit() catch {}; // Panic already deinits UI
     std.log.err("Fatal bug encountered. (Seed: {})", .{state.seed});
@@ -25,7 +25,7 @@ pub fn bug(comptime fmt: []const u8, args: anytype) noreturn {
     if (!state.sentry_disabled) {
         var membuf: [65535]u8 = undefined;
         var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
-        var alloc = fba.allocator();
+        const alloc = fba.allocator();
 
         sentry.captureError(
             build_options.release,
@@ -48,22 +48,22 @@ pub fn bug(comptime fmt: []const u8, args: anytype) noreturn {
 }
 
 pub fn fatal(comptime fmt: []const u8, args: anytype) noreturn {
-    @setCold(true);
+    @branchHint(.cold);
 
     ui.deinit() catch {};
     std.log.err(fmt, args);
 
-    std.os.abort();
+    std.posix.abort();
     unreachable;
 }
 
 pub fn oom() noreturn {
-    @setCold(true);
+    @branchHint(.cold);
     @panic("Out of memory! Please close a few browser tabs.");
 }
 
 pub fn todo() noreturn {
-    @setCold(true);
+    @branchHint(.cold);
     @panic("TODO");
 }
 
@@ -72,6 +72,6 @@ pub fn todo() noreturn {
 //
 // Plus it gives the opportunity to print out a goofy message.
 pub fn wat() noreturn {
-    @setCold(true);
+    @branchHint(.cold);
     @panic("Pigs are flying! The sky is falling! Unreachable code entered!");
 }

@@ -17,7 +17,6 @@ pub const TSVSchemaItem = struct {
     parse_fn: @TypeOf(_dummy_parse),
     is_array: ?usize = null,
     optional: bool = false,
-    default_val: anytype = undefined, // Only applicable if schema.optional == true
 
     fn _dummy_parse(comptime T: type, _: *T, _: []const u8, _: mem.Allocator) bool {
         return false;
@@ -66,7 +65,7 @@ pub const TSVParseError = struct {
 
 pub fn parseCharacter(comptime T: type, result: *T, input: []const u8, _: mem.Allocator) bool {
     switch (@typeInfo(T)) {
-        .Int => {},
+        .int => {},
         else => @compileError("Expected int for parsing result type, found '" ++ @typeName(T) ++ "'"),
     }
 
@@ -174,7 +173,7 @@ pub fn parseUtf8String(comptime T: type, result: *T, input: []const u8, alloc: m
                 }
 
                 result.* = alloc.alloc(u8, buf_i) catch return false; // ERROR: OOM
-                mem.copy(u8, result.*, tmpbuf[0..buf_i]);
+                std.mem.copyForwards(u8, result.*, tmpbuf[0..buf_i]);
                 alloc.free(tmpbuf);
 
                 return true;
@@ -212,7 +211,7 @@ pub fn parseUtf8String(comptime T: type, result: *T, input: []const u8, alloc: m
 
 pub fn parsePrimitive(comptime T: type, result: *T, input: []const u8, alloc: mem.Allocator) bool {
     switch (@typeInfo(T)) {
-        .Int => {
+        .int => {
             var inp_start: usize = 0;
             var base: u8 = 0;
 
@@ -234,15 +233,15 @@ pub fn parsePrimitive(comptime T: type, result: *T, input: []const u8, alloc: me
 
             result.* = std.fmt.parseInt(T, input[inp_start..], base) catch return false;
         },
-        .Float => result.* = std.fmt.parseFloat(T, input) catch return false,
-        .Bool => {
+        .float => result.* = std.fmt.parseFloat(T, input) catch return false,
+        .bool => {
             if (mem.eql(u8, input, "yea")) {
                 result.* = true;
             } else if (mem.eql(u8, input, "nay")) {
                 result.* = false;
             } else return false;
         },
-        .Optional => |optional| {
+        .optional => |optional| {
             if (mem.eql(u8, input, "nil")) {
                 result.* = null;
             } else {
@@ -252,13 +251,13 @@ pub fn parsePrimitive(comptime T: type, result: *T, input: []const u8, alloc: me
                 return r;
             }
         },
-        .Enum => |enum_info| {
+        .@"enum" => |enum_info| {
             if (input[0] != '.') return false;
 
             var found = false;
             inline for (enum_info.fields) |enum_field| {
                 if (mem.eql(u8, enum_field.name, input[1..])) {
-                    result.* = @intToEnum(T, enum_field.value);
+                    result.* = @enumFromInt(enum_field.value);
                     found = true;
                     //break; // FIXME: Wait for that bug to be fixed, then uncomment
                 }
@@ -266,9 +265,9 @@ pub fn parsePrimitive(comptime T: type, result: *T, input: []const u8, alloc: me
 
             if (!found) return false;
         },
-        .Union => |union_info| {
+        .@"union" => |union_info| {
             if (union_info.tag_type) |_| {
-                var input_split = mem.split(u8, input, "=");
+                var input_split = mem.splitScalar(u8, input, '=');
                 const input_field1 = input_split.next() orelse return false;
                 const input_field2 = input_split.next() orelse return false;
 
@@ -277,8 +276,8 @@ pub fn parsePrimitive(comptime T: type, result: *T, input: []const u8, alloc: me
                 var found = false;
                 inline for (union_info.fields) |union_field| {
                     if (mem.eql(u8, union_field.name, input_field1[1..])) {
-                        var value: union_field.field_type = undefined;
-                        if (!parsePrimitive(union_field.field_type, &value, input_field2, alloc))
+                        var value: union_field.type = undefined;
+                        if (!parsePrimitive(union_field.type, &value, input_field2, alloc))
                             return false;
                         result.* = @unionInit(T, union_field.name, value);
                         found = true;
@@ -317,13 +316,13 @@ pub fn parse(
     };
 
     switch (@typeInfo(T)) {
-        .Struct => {},
+        .@"struct" => {},
         else => @compileError("Expected struct for parsing result type, found '" ++ @typeName(T) ++ "'"),
     }
 
     var results = std.ArrayList(T).init(alloc);
 
-    var lines = mem.split(u8, input, "\n");
+    var lines = mem.splitScalar(u8, input, '\n');
     var lineno: usize = 0;
 
     while (lines.next()) |line| {
@@ -336,16 +335,16 @@ pub fn parse(
             continue;
         }
 
-        var input_fields = mem.split(u8, line, "\t");
+        var input_fields = mem.splitScalar(u8, line, '\t');
 
-        inline for (schema) |schema_item, i| {
+        inline for (schema, 0..) |schema_item, i| {
             if (schema_item.is_array) |array_len| {
                 var arr_i: usize = 0;
                 while (arr_i < array_len) : (arr_i += 1) {
-                    var input_field = mem.trim(u8, input_fields.next() orelse "", " ");
+                    const input_field = mem.trim(u8, input_fields.next() orelse "", " ");
 
                     if (input_field.len == 0 or input_field[0] == '-') {
-                        @field(result, schema_item.field_name)[arr_i] = schema_item.default_val;
+                        //@field(result, schema_item.field_name)[arr_i] = schema_item.default_val;
                         continue;
                     }
 
@@ -360,12 +359,12 @@ pub fn parse(
                     }
                 }
             } else {
-                var input_field = mem.trim(u8, input_fields.next() orelse "", " ");
+                const input_field = mem.trim(u8, input_fields.next() orelse "", " ");
 
                 // Handle empty fields
                 if (input_field.len == 0 or input_field[0] == '-') {
                     if (schema_item.optional) {
-                        @field(result, schema_item.field_name) = schema_item.default_val;
+                        //@field(result, schema_item.field_name) = schema_item.default_val;
                     } else {
                         return S._err(.MissingField, lineno, i);
                     }

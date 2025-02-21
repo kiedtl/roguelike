@@ -1,8 +1,7 @@
-// TODO: add state to machines
-
 const std = @import("std");
 const assert = std.debug.assert;
 const mem = std.mem;
+const sort = std.sort;
 const meta = std.meta;
 const math = std.math;
 const enums = std.enums;
@@ -53,8 +52,8 @@ const LEVELS = state.LEVELS;
 const HEIGHT = state.HEIGHT;
 const WIDTH = state.WIDTH;
 
-const Generator = @import("generators.zig").Generator;
-const GeneratorCtx = @import("generators.zig").GeneratorCtx;
+// const Generator = @import("generators.zig").Generator;
+// const GeneratorCtx = @import("generators.zig").GeneratorCtx;
 
 const StackBuffer = @import("buffer.zig").StackBuffer;
 
@@ -906,7 +905,7 @@ pub const Candle = Machine{
                 self.unpowered_fg = self.bg;
                 self.power = 0;
 
-                var gen = Generator(Rect.rectIter).init(state.mapRect(by.coord.z));
+                var gen = state.mapRect(by.coord.z).iter();
                 while (gen.next()) |coord| if (state.player.cansee(coord)) {
                     if (utils.getHostileAt(state.player, coord)) |hostile| {
                         if (mem.startsWith(u8, hostile.id, "hulk_")) {
@@ -969,9 +968,9 @@ pub const Shrine = Machine{
 
                 state.player.max_MP += if (state.player.hasStatus(.Absorbing)) @as(usize, 5) else 2;
                 const total = rng.range(usize, state.player.max_MP / 2, state.player.max_MP * 15 / 10);
-                const pot = @intCast(usize, state.player.stat(.Potential));
+                const pot: usize = @intCast(state.player.stat(.Potential));
                 const amount = player.calculateDrainableMana(total);
-                state.player.MP = math.min(state.player.max_MP, state.player.MP + amount);
+                state.player.MP = @min(state.player.max_MP, state.player.MP + amount);
 
                 ui.Animation.apply(.{ .Particle = .{ .name = "explosion-bluegold", .coord = self.coord, .target = .{ .Z = 0 } } });
                 state.message(.Drain, "You absorbed $o{}$. / $g{}$. mana ($o{}% potential$.).", .{ amount, total, pot });
@@ -1169,7 +1168,7 @@ fn powerResearchCore(machine: *Machine) void {
     if ((state.ticks % 32) != 0 or rng.onein(3)) return;
 
     for (&DIRECTIONS) |direction| if (machine.coord.move(direction, state.mapgeometry)) |neighbor| {
-        for (state.dungeon.itemsAt(neighbor).constSlice()) |item, i| switch (item) {
+        for (state.dungeon.itemsAt(neighbor).constSlice(), 0..) |item, i| switch (item) {
             .Vial => {
                 _ = state.dungeon.itemsAt(neighbor).orderedRemove(i) catch unreachable;
                 return;
@@ -1206,8 +1205,8 @@ fn powerExtractor(machine: *Machine) void {
     // a while to extract more vials
     if ((state.ticks % 32) != 0) return;
 
-    var input = machine.areas.data[0];
-    var output = machine.areas.data[1];
+    const input = machine.areas.data[0];
+    const output = machine.areas.data[1];
 
     if (state.dungeon.itemsAt(output).isFull())
         return;
@@ -1390,8 +1389,9 @@ fn interact1RechargingStation(_: *Machine, by: *Mob) bool {
 fn interact1Drain(machine: *Machine, mob: *Mob) bool {
     assert(mob == state.player);
 
+    // FIXME: CLEANUP
     var drains = StackBuffer(*Machine, 32).init(null);
-    for (state.dungeon.map[state.player.coord.z]) |*row| {
+    for (&state.dungeon.map[state.player.coord.z]) |*row| {
         for (row) |*tile| {
             if (tile.surface) |s|
                 if (meta.activeTag(s) == .Machine and
@@ -1422,7 +1422,7 @@ fn interact1FirstAidStation(m: *Machine, mob: *Mob) bool {
     assert(mob == state.player);
 
     const HP = state.player.HP;
-    const heal_amount = math.min(rng.range(usize, 3, 5), state.player.max_HP - HP);
+    const heal_amount = @min(rng.range(usize, 3, 5), state.player.max_HP - HP);
     state.player.takeHealing(heal_amount);
 
     // Remove some harmful statuses.
@@ -1445,14 +1445,14 @@ pub fn readProps(alloc: mem.Allocator) void {
         id: []u8 = undefined,
         name: []u8 = undefined,
         tile: u21 = undefined,
-        sprite: ?font.Sprite = undefined,
-        fg: ?u32 = undefined,
-        bg: ?u32 = undefined,
-        walkable: bool = undefined,
-        opacity: f64 = undefined,
-        flammability: usize = undefined,
-        function: Prop.Function = undefined,
-        holder: bool = undefined,
+        sprite: ?font.Sprite,
+        fg: ?u32,
+        bg: ?u32,
+        walkable: bool,
+        opacity: f64,
+        flammability: usize,
+        function: Prop.Function,
+        holder: bool,
     };
 
     props = PropArrayList.init(alloc);
@@ -1467,10 +1467,7 @@ pub fn readProps(alloc: mem.Allocator) void {
     armors_props = PropPtrAList.init(alloc);
 
     const data_dir = std.fs.cwd().openDir("data", .{}) catch unreachable;
-    const data_file = data_dir.openFile("props.tsv", .{
-        .read = true,
-        .lock = .None,
-    }) catch unreachable;
+    const data_file = data_dir.openFile("props.tsv", .{}) catch unreachable;
 
     var rbuf: [65535]u8 = undefined;
     const read = data_file.readAll(rbuf[0..]) catch unreachable;
@@ -1481,16 +1478,25 @@ pub fn readProps(alloc: mem.Allocator) void {
             .{ .field_name = "id", .parse_to = []u8, .parse_fn = tsv.parseUtf8String },
             .{ .field_name = "name", .parse_to = []u8, .parse_fn = tsv.parseUtf8String },
             .{ .field_name = "tile", .parse_to = u21, .parse_fn = tsv.parseCharacter },
-            .{ .field_name = "sprite", .parse_to = ?font.Sprite, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = null },
-            .{ .field_name = "fg", .parse_to = ?u32, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = null },
-            .{ .field_name = "bg", .parse_to = ?u32, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = null },
-            .{ .field_name = "walkable", .parse_to = bool, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = true },
-            .{ .field_name = "opacity", .parse_to = f64, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = 0.0 },
-            .{ .field_name = "flammability", .parse_to = usize, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = 0 },
-            .{ .field_name = "function", .parse_to = Prop.Function, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = .None },
-            .{ .field_name = "holder", .parse_to = bool, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = false },
+            .{ .field_name = "sprite", .parse_to = ?font.Sprite, .parse_fn = tsv.parsePrimitive, .optional = true },
+            .{ .field_name = "fg", .parse_to = ?u32, .parse_fn = tsv.parsePrimitive, .optional = true },
+            .{ .field_name = "bg", .parse_to = ?u32, .parse_fn = tsv.parsePrimitive, .optional = true },
+            .{ .field_name = "walkable", .parse_to = bool, .parse_fn = tsv.parsePrimitive, .optional = true },
+            .{ .field_name = "opacity", .parse_to = f64, .parse_fn = tsv.parsePrimitive, .optional = true },
+            .{ .field_name = "flammability", .parse_to = usize, .parse_fn = tsv.parsePrimitive, .optional = true },
+            .{ .field_name = "function", .parse_to = Prop.Function, .parse_fn = tsv.parsePrimitive, .optional = true },
+            .{ .field_name = "holder", .parse_to = bool, .parse_fn = tsv.parsePrimitive, .optional = true },
         },
-        .{},
+        .{
+            .sprite = null,
+            .fg = null,
+            .bg = null,
+            .walkable = true,
+            .opacity = 0.0,
+            .flammability = 0,
+            .function = .None,
+            .holder = false,
+        },
         rbuf[0..read],
         alloc,
     );

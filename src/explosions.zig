@@ -1,5 +1,6 @@
 const std = @import("std");
 const meta = std.meta;
+const sort = std.sort;
 const math = std.math;
 
 const colors = @import("colors.zig");
@@ -50,7 +51,7 @@ pub fn fireBurst(ground0: Coord, max_radius: usize, opts: FireBurstOpts) void {
     };
 
     var result: [HEIGHT][WIDTH]usize = undefined;
-    for (result) |*row| for (row) |*cell| {
+    for (&result) |*row| for (row) |*cell| {
         cell.* = 0;
     };
 
@@ -64,7 +65,7 @@ pub fn fireBurst(ground0: Coord, max_radius: usize, opts: FireBurstOpts) void {
     var mob_cache = std.AutoHashMap(*Mob, void).init(state.gpa.allocator());
     defer mob_cache.deinit();
 
-    for (result) |row, y| for (row) |cell, x| {
+    for (&result, 0..) |row, y| for (row, 0..) |cell, x| {
         if (cell > 0) {
             const cellc = Coord.new2(ground0.z, x, y);
             if (state.dungeon.at(cellc).mob) |mob| {
@@ -88,7 +89,7 @@ pub fn fireBurst(ground0: Coord, max_radius: usize, opts: FireBurstOpts) void {
                     });
                 }
             }
-            fire.setTileOnFire(cellc, math.max(opts.min_fire, fire.tileFlammability(cellc)));
+            fire.setTileOnFire(cellc, @max(opts.min_fire, fire.tileFlammability(cellc)));
         }
     };
 }
@@ -127,7 +128,7 @@ pub fn elecBurst(ground0: Coord, max_damage: usize, by: ?*Mob) void {
     state.message(.Info, "KABOOM!", .{});
 
     var result: [HEIGHT][WIDTH]usize = undefined;
-    for (result) |*row| for (row) |*cell| {
+    for (&result) |*row| for (row) |*cell| {
         cell.* = 0;
     };
 
@@ -138,7 +139,7 @@ pub fn elecBurst(ground0: Coord, max_damage: usize, by: ?*Mob) void {
     }
 
     result[ground0.y][ground0.x] = 100; // Ground zero is always harmed
-    for (result) |row, y| for (row) |cell, x| {
+    for (result, 0..) |row, y| for (row, 0..) |cell, x| {
         if (cell > 0) {
             const coord = Coord.new2(ground0.z, x, y);
             const dmg = max_damage * cell / 100;
@@ -202,7 +203,7 @@ pub fn kaboom(ground0: Coord, opts: ExplosionOpts) void {
                         .Container => hind += rng.range(usize, 60, 80),
                         else => {},
                     };
-                    break :b math.max(20, hind);
+                    break :b @max(20, hind);
                 },
             };
         }
@@ -211,7 +212,7 @@ pub fn kaboom(ground0: Coord, opts: ExplosionOpts) void {
     sound.makeNoise(ground0, .Explosion, .Loudest);
 
     var result: [HEIGHT][WIDTH]usize = undefined;
-    for (result) |*row| for (row) |*cell| {
+    for (&result) |*row| for (row) |*cell| {
         cell.* = 0;
     };
 
@@ -224,7 +225,7 @@ pub fn kaboom(ground0: Coord, opts: ExplosionOpts) void {
     var animation_coords = StackBuffer(Coord, 256).init(null);
 
     result[ground0.y][ground0.x] = 100; // Ground zero is always harmed
-    for (result) |row, y| for (row) |cell, x| {
+    for (result, 0..) |row, y| for (row, 0..) |cell, x| {
         // Leave edge of map alone.
         if (y == 0 or x == 0 or y == (HEIGHT - 1) or x == (WIDTH - 1)) {
             continue;
@@ -235,7 +236,7 @@ pub fn kaboom(ground0: Coord, opts: ExplosionOpts) void {
 
             animation_coords.append(coord) catch {};
 
-            const max_range = math.max(1, opts.strength / 100);
+            const max_range = @max(1, opts.strength / 100);
             const chance_for_fire = 100 - (coord.distance(ground0) * 100 / max_range);
             if (rng.percent(chance_for_fire)) {
                 fire.setTileOnFire(coord, null);

@@ -95,7 +95,7 @@ pub fn readSpawnTables(alloc: mem.Allocator) void {
     // We need `inline for` because the schema needs to be comptime...
     //
     inline for (spawn_table_files) |sptable_file| {
-        const data_file = data_dir.openFile(sptable_file.filename, .{ .read = true }) catch unreachable;
+        const data_file = data_dir.openFile(sptable_file.filename, .{}) catch unreachable;
         const len = sptable_file.sptable.len;
 
         const read = data_file.readAll(rbuf[0..]) catch unreachable;
@@ -103,8 +103,10 @@ pub fn readSpawnTables(alloc: mem.Allocator) void {
         const result = tsv.parse(TmpMobSpawnData, &[_]tsv.TSVSchemaItem{
             .{ .field_name = "id", .parse_to = []u8, .parse_fn = tsv.parseUtf8String },
             .{ .field_name = "classtype", .parse_to = []u8, .parse_fn = tsv.parseUtf8String },
-            .{ .field_name = "levels", .parse_to = usize, .is_array = len, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = 0 },
-        }, .{}, rbuf[0..read], alloc);
+            .{ .field_name = "levels", .parse_to = usize, .is_array = len, .parse_fn = tsv.parsePrimitive, .optional = true },
+        }, .{
+            .levels = [_]usize{0} ** LEVELS,
+        }, rbuf[0..read], alloc);
 
         if (!result.is_ok()) {
             err.bug("Can't load {s}: {} (line {}, field {})", .{
@@ -118,7 +120,7 @@ pub fn readSpawnTables(alloc: mem.Allocator) void {
         const spawndatas = result.unwrap();
         defer spawndatas.deinit();
 
-        for (sptable_file.sptable) |*table, i| {
+        for (sptable_file.sptable, 0..) |*table, i| {
             table.* = @TypeOf(table.*).init(alloc);
             for (spawndatas.items) |spawndata| {
                 table.append(.{

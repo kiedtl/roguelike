@@ -3,18 +3,18 @@
 
 const std = @import("std");
 const assert = std.debug.assert;
-const rand = std.rand;
+const sort = std.sort;
 const math = std.math;
 
-var rng: rand.Isaac64 = undefined;
-var rng2: rand.Isaac64 = undefined;
+var rng: std.Random.DefaultPrng = undefined;
+var rng2: std.Random.DefaultPrng = undefined;
 pub var using_temp = false;
 pub const seed = &@import("state.zig").seed;
 
 //seed = 0xdefaced_cafe;
 
 pub fn init() void {
-    rng = rand.Isaac64.init(seed.*);
+    rng = @TypeOf(rng).init(seed.*);
 }
 
 pub fn useTemp(tseed: u64) void {
@@ -22,7 +22,7 @@ pub fn useTemp(tseed: u64) void {
     const t = rng;
     rng = rng2;
     rng2 = t;
-    rng = rand.Isaac64.init(tseed);
+    rng = @TypeOf(rng).init(tseed);
     using_temp = true;
 }
 
@@ -36,8 +36,8 @@ pub fn useNorm() void {
 
 pub fn int(comptime T: type) T {
     return switch (@typeInfo(T)) {
-        .Int => rng.random().int(T),
-        .Float => rng.random().float(T),
+        .int => rng.random().int(T),
+        .float => rng.random().float(T),
         else => @compileError("Expected int or float, got " ++ @typeName(T)),
     };
 }
@@ -48,7 +48,7 @@ pub fn boolean() bool {
 
 pub fn percent(number: anytype) bool {
     const n = if (@TypeOf(number) == comptime_int) @as(usize, number) else number;
-    return range(@TypeOf(n), 1, 100) < math.min(100, n);
+    return range(@TypeOf(n), 1, 100) < @min(100, n);
 }
 
 // TODO: make generic
@@ -85,7 +85,19 @@ pub fn range(comptime T: type, min: T, max: T) T {
 }
 
 pub fn shuffle(comptime T: type, arr: []T) void {
-    rng.random().shuffle(T, arr);
+    // Commented out: As of Zig 0.13.0-dev (close to release of Zig 0.14.0),
+    // this hangs indefinitely while shuffling list of Prefabs (which are large
+    // structs, dunno if that has anything to do with this).
+    //
+    //rng.random().shuffle(T, arr);
+
+    var i: usize = arr.len - 1;
+    while (i > 0) : (i -= 1) {
+        const j = range(usize, 0, i);
+        const temp = arr[i];
+        arr[i] = arr[j];
+        arr[j] = temp;
+    }
 }
 
 pub fn chooseUnweighted(comptime T: type, arr: []const T) T {
@@ -99,7 +111,7 @@ pub fn choose(comptime T: type, arr: []const T, weights: []const usize) !T {
     var weight_total: usize = 0;
     var selected = arr[0];
 
-    for (arr) |item, index| {
+    for (arr, 0..) |item, index| {
         const weight = weights[index];
         if (weight == 0) continue;
 

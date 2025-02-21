@@ -1,5 +1,6 @@
 const std = @import("std");
 const math = std.math;
+const sort = std.sort;
 const mem = std.mem;
 
 const state = @import("state.zig");
@@ -49,7 +50,7 @@ pub fn setTileOnFire(c: Coord, amount: ?usize) void {
         return;
 
     const flammability = tileFlammability(c);
-    const newfire = amount orelse math.max(flammability, 5);
+    const newfire = amount orelse @max(flammability, 5);
     state.dungeon.fireAt(c).* = newfire;
 }
 
