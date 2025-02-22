@@ -1,3 +1,11 @@
+% TODO: actually create items that the hauler can move around and so on. You
+% know, living dungeon.
+%
+% (2025-02-22: I could swear I had already implemented this, but no, a look at
+% git blame and git log shows that I never did. The original commit is labeled
+% "WIP", so maybe I planned to do it in the next commit but got sidetracked?)
+%
+
 % Θ═╕
 %  ¼≡
 % φ {
