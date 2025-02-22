@@ -92,7 +92,7 @@ pub fn calculateMorale(self: *Mob) isize {
     var base: isize = 5;
 
     // Bonuses depending on self's condition {{{
-    if (self.hasStatus(.Enraged)) base += 10;
+    if (self.hasStatus(.Enraged)) base += 12;
     if (self.hasStatus(.Fast)) base += 4;
     if (self.hasStatus(.Invigorate)) base += 4;
     // }}}
