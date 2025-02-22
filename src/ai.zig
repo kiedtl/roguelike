@@ -973,65 +973,18 @@ pub fn watcherWork(mob: *Mob, _: mem.Allocator) void {
     }
 }
 
+// Fallback AI for when a worker doesn't have any jobs.
+//
+// All it does is make the worker scan for jobs, and leave the floor after
+// a few turns if it didn't find anything.
+//
 pub fn workerWork(mob: *Mob, _: mem.Allocator) void {
     assert(mob.jobs.len == 0);
-
     mob.newJob(.WRK_LeaveFloor);
     mob.newJob(.WRK_ScanJobs);
-
-    // switch (mob.ai.work_phase) {
-    //     .CleanerScan => {
-    //         if (mob.ai.work_area.items.len > 0 and
-    //             mob.coord.distance(mob.ai.work_area.items[0]) > 1)
-    //         {
-    //             mob.tryMoveTo(mob.ai.work_area.items[0]);
-    //         } else {
-    //             tryRest(mob);
-    //         }
-
-    //         for (state.tasks.items) |*task, id|
-    //             if (!task.completed and task.assigned_to == null) {
-    //                 switch (task.type) {
-    //                     .Clean => |_| {
-    //                         mob.ai.task_id = id;
-    //                         task.assigned_to = mob;
-    //                         mob.ai.work_phase = .CleanerClean;
-    //                         break;
-    //                     },
-    //                     else => {},
-    //                 }
-    //             };
-    //     },
-    //     .CleanerClean => {
-    //         const task = state.tasks.items[mob.ai.task_id.?];
-    //         const target = task.type.Clean;
-
-    //         if (target.distance(mob.coord) > 1) {
-    //             mob.tryMoveTo(target);
-    //         } else {
-    //             tryRest(mob);
-
-    //             var was_clean = true;
-    //             var spattering = state.dungeon.at(target).spatter.iterator();
-
-    //             while (spattering.next()) |entry| {
-    //                 const spatter = entry.key;
-    //                 const num = entry.value.*;
-    //                 if (num > 0) {
-    //                     was_clean = false;
-    //                     state.dungeon.at(target).spatter.set(spatter, num - 1);
-    //                 }
-    //             }
-
-    //             if (was_clean) {
-    //                 mob.ai.work_phase = .CleanerScan;
-    //                 state.tasks.items[mob.ai.task_id.?].completed = true;
-    //                 mob.ai.task_id = null;
-    //             }
-    //         }
-    //     },
-    //     else => unreachable,
-    // }
+    // Kinda silly, we should get started working on this very turn.
+    // Dunno if that might introduce any bugs though.
+    tryRest(mob);
 }
 
 pub fn haulerWork(mob: *Mob, alloc: mem.Allocator) void {
@@ -1753,9 +1706,17 @@ pub fn _Job_WRK_LeaveFloor(mob: *Mob, job: *AIJob) AIJob.JStatus {
 // Do some theatrical glancing around for a bit, then check for available tasks
 // and complete them.
 //
+// NOTE: when workers first enter the floor, they DON'T have this job. Instead
+// they spawn with zero jobs, and then execute workerWork(), which adds this job
+// for them.
+//
+// This means that it takes around 2-3 turns for a worker to actually begin the
+// job for which they were spawned onto the floor. (Yeah, I should fix it at
+// some point... but it works, and the delay isn't really a huge issue.)
+//
 pub fn _Job_WRK_ScanJobs(mob: *Mob, job: *AIJob) AIJob.JStatus {
     const CTX_TURNS_LEFT_SCANNING = "ctx_turns_left_scanning";
-    const turns_left = job.ctx.get(usize, CTX_TURNS_LEFT_SCANNING, rng.range(usize, 4, 7));
+    const turns_left = job.ctx.get(usize, CTX_TURNS_LEFT_SCANNING, rng.range(usize, 5, 9));
 
     const jobtypes = tasks.getJobTypesForWorker(mob);
 
@@ -2152,28 +2113,24 @@ pub fn workJobs(mob: *Mob) bool {
 }
 
 pub fn work(mob: *Mob, alloc: mem.Allocator) void {
-    var work_fn = mob.ai.work_fn;
     if (mob.hasStatus(.Insane)) {
-        work_fn = struct {
-            pub fn f(p_mob: *Mob, _: mem.Allocator) void {
-                if (p_mob.immobile or
-                    !p_mob.moveInDirection(rng.chooseUnweighted(Direction, &DIRECTIONS)))
-                {
-                    tryRest(p_mob);
-                }
-            }
-        }.f;
+        if (mob.immobile or
+            !mob.moveInDirection(rng.chooseUnweighted(Direction, &DIRECTIONS)))
+        {
+            tryRest(mob);
+        }
+        return;
     }
 
-    if (!mob.hasStatus(.Insane)) {
-        if (mob.ai.flag(.ScansForJobs))
-            tasks.scanForCleaningJobs(mob);
-    }
+    if (mob.ai.flag(.ScansForJobs))
+        tasks.scanForCleaningJobs(mob);
 
     if (mob.jobs.len > 0) {
         if (workJobs(mob))
             return;
     }
+
+    var work_fn = mob.ai.work_fn;
 
     if (!mob.isAloneOrLeader() and !mob.ai.flag(.ForceNormalWork)) {
         work_fn = stayNearLeaderWork;
