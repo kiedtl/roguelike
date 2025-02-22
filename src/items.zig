@@ -264,13 +264,13 @@ pub const RINGS = [_]ItemTemplate{
     .{ .w = 9, .i = .{ .r = CremationRing } },
     .{ .w = 9, .i = .{ .r = DistractionRing } },
     .{ .w = 9, .i = .{ .r = DamnationRing } },
-    .{ .w = 9, .i = .{ .r = TeleportationRing } },
     .{ .w = 9, .i = .{ .r = MagnetizationRing } },
     .{ .w = 9, .i = .{ .r = AccelerationRing } },
     .{ .w = 9, .i = .{ .r = TransformationRing } },
     .{ .w = 9, .i = .{ .r = DetonationRing } },
     .{ .w = 9, .i = .{ .r = CondemnationRing } },
     .{ .w = 2, .i = .{ .r = ConcentrationRing } },
+    .{ .w = 2, .i = .{ .r = TeleportationRing } },
     .{ .w = 9, .i = .{ .r = ObscurationRing } },
     .{ .w = 9, .i = .{ .r = RetaliationRing } },
     .{ .w = 9, .i = .{ .r = ExclusionRing } },
@@ -889,10 +889,10 @@ pub const DamnationRing = Ring{ // {{{
 
 pub const TeleportationRing = Ring{ // {{{
     .name = "teleportation",
-    .required_MP = 4,
+    .required_MP = 5,
     .effect = struct {
         pub fn f() bool {
-            state.player.addStatus(.RingTeleportation, 0, .{ .Tmp = 5 });
+            state.player.addStatus(.RingTeleportation, 0, .{ .Tmp = 4 });
             return true;
         }
     }.f,
