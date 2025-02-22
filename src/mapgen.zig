@@ -2407,7 +2407,7 @@ pub fn placeMobs(level: usize, alloc: mem.Allocator) void {
         else
             &mobs.spawns.spawn_tables[level];
 
-        loop: while (room.mob_count < max_crowd) {
+        while (room.mob_count < max_crowd) {
             const mob_spawn_info = rng.choose2(MobSpawnInfo, sptable.items, "weight") catch err.wat();
             const mob = mobs.findMobById(mob_spawn_info.id) orelse err.bug(
                 "Mob {s} specified in spawn tables couldn't be found.",
@@ -2420,9 +2420,12 @@ pub fn placeMobs(level: usize, alloc: mem.Allocator) void {
 
                 {
                     var gen = mob.mobAreaRect(post_coord).iter();
-                    while (gen.next()) |mobcoord|
+                    const all_tiles_free = while (gen.next()) |mobcoord| {
                         if (!isTileAvailable(mobcoord) or state.dungeon.at(mobcoord).prison)
-                            continue :loop;
+                            break false;
+                    } else true;
+                    if (!all_tiles_free)
+                        continue;
                 }
 
                 const m = mobs.placeMob(alloc, mob, post_coord, .{

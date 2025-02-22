@@ -770,7 +770,7 @@ pub const Rect = struct {
             defer {
                 self.x += 1;
                 if (self.x >= self.rect.end().x) {
-                    self.x = 0;
+                    self.x = self.rect.start.x;
                     self.y += 1;
                 }
             }
