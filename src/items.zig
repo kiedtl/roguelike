@@ -800,8 +800,10 @@ pub const SymbolEvoc = Evocable{
 
             for (coordlist.items) |coord|
                 if (state.dungeon.at(coord).mob) |mob| {
-                    if (mob != state.player and mob.life_type == .Living) {
-                        assert(mob.corpse == .Normal);
+                    if (mob != state.player and
+                        mob.life_type == .Living and
+                        mob.corpse == .Normal)
+                    {
                         mob.kill();
                         _ = mob.raiseAsUndead(mob.coord);
                     }

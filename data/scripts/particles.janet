@@ -510,9 +510,10 @@
                :bounds (new-rect)
                :particles @[]
                :emitters @[]
+               :initial (new-coord)
                })
-(defn new-context [target area-size emitters]
-  (table/setproto @{ :bounds area-size :target target :emitters emitters} Context))
+(defn new-context [initial target area-size emitters]
+  (table/setproto @{ :initial initial :bounds area-size :target target :emitters emitters} Context))
 
 (defn template-chargeover [chars color1 color2 &named direction speed lifetime which maxdist mindist style stopshort]
   (default direction                          :out)
@@ -1378,7 +1379,7 @@
     (if (and (= (type target) :table) (target :x) (target :y))
       (put (emitter :particle) :target target)))
 
-  (new-context target area-size emitters))
+  (new-context initial target area-size emitters))
 
 (defn animation-tick [ctx ticks]
 
