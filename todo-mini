@@ -1,3 +1,21 @@
+- Spectral items should somehow give MP
+    - Visit lairs to instantly fill up on MP?
+- Event: flooded level, engineers trying to un-flood it
+  - level is evacuated (except for prisoners)
+  - lairs not flooded
+- Sigil of Hiding
+  - Hide corpse, make it invisible until it's stepped on enough times (or enough
+    time has passed).
+- Sigil of Disarming
+  - Anything that steps on it will be commanded to drop/throw their weapon. (They
+    can then be assigned a job to re-equip it again later.)
+- Flashing Z on mobs
+- Fix Sentry before calling for testers
+
+Rework incineration/ignition potions
+- Remove or comment out incineration (or make a very rare item)
+- Add "bottle of fuel" and related gas.
+- Update fire mechanics.
 - Differentiate searching for player and remembers
   - Tooltip
 
@@ -12,6 +30,14 @@
 
 Done
 ----
+- Just freaking upgrade already.
+  x "CLEANUP" tags
+  x "MIGRATION" tags
+  x "CHECK" tags
+  x Zig bug:
+    ~ Inability to do tail call properly?
+      - Can't reproduce
+    x Can't create array list if T's size is greater than 65kb?
 - add character for augers
 - borders around map in examine mode
 - draw screen after swapping weapons, using rings, exiting examine mode

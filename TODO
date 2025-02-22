@@ -364,16 +364,13 @@ x gambeson         15% armor   Sneak+
 - cuirass          35% armor   Sneak-  Martial-
 
 footwear:
-- won't be added just yet, need more ideas to justify new armor slot
-- sabatons:        15% armor
-- martial shoe:                Martial++
-- combat boots:    10% armor   +10% melee ("perfectly weighted for combat")
-- silus boots:                 rFire+
-- insulated boots:             rElec+
-- golden shoes:                Potential+5
-- ornate shoes:                Potential+10 Will-1
-~ scale shoes:      5% armor   +10% speed when moving over ground that gives speed, -10% speed
-                                on ground that slows down
+x sabatons:        15% armor
+x martial shoe:                Martial++
+x combat boots:    10% armor   +10% melee ("perfectly weighted for combat")
+x silus boots:                 rFire+
+x insulated boots:             rElec+
+x golden shoes:                Potential+5
+x ornate shoes:                Potential+10 Will-1
 
 headgear:
 - mining helmet:               Vision+ 
@@ -385,7 +382,7 @@ headgear:
 - thief's mask:                Vision-  infravision
 - gold headband:                        Potential+10     rElec-10 Will-1
 - gold tiara:                           Potential+20     Will-2
-- lightning helm:   5% armor            rElec+
+- insulated helm:   5% armor            rElec+
 - silus mask:                           rFire+
 - silus hood:      10% armor            rFire+
 - magalt mask:      5% armor            Will+            [holy] Suicide bomb status (hellfire blast)
@@ -456,7 +453,7 @@ x ring of deceleration: Adjacent mobs have their attack speeds slowed
   - Useful for firewings
   - What else?
 
-- ring of retaliation: +Spike and -10% Melee for each adjacent enemy.
+x ring of retaliation: +Spike and -10% Melee for each adjacent enemy.
 
 - ring of protection: shielding, more effective with increased willpower
   - also has +Armor% that lasts a bit longer than the shielding
@@ -496,23 +493,29 @@ x ring of deception: [anti-Holy] undead mistake you for ally unless non-undead
   boosts. Zombie will be immobile however, and will die if player moves more
   than 4 tiles away.
 
-- ring of determination: [anti-Holy] regenerates significant amount of MP, and
+x ring of determination: [anti-Holy] regenerates significant amount of MP, and
   massive boost to willpower
   - Massive MP requirement
   - Significant drop in willpower afterwards (say, set to 0 or 1) for 20 turns.
 
-- ring of suggestion: "suggest" a place to investigate to a mob that isn't aware of you
+x ring of exclusion: create line of special machine types that do will check
+  against mobs which try to bump into them. If succeeds, mob can walk through.
+
+- ring of suggestion: "suggest" a place to investigate to a mob that isn't
+  aware of you
   - After one use, the mob acquires the "suspicious" status for 20 turns (or
     permanently?) and cannot be affected.
+  - Alternatively, if you try to affect it again there's a 50% chance of it
+    coming to investigate a coord near you instead.
 
 - ring of execution: instantly kill a single living creature. Will-checked. If
   it succeeds, it "spreads" to adjacent living creatures, also will-checked.
-  - Noisy.
+  - Noisy (victims scream).
 
 - ring of constriction: choke a living creature, preventing it from shouting.
   - Unbreathing mobs (angelic, night creatures, undead) should be immune.
   - Medium-high MP cost, and themed as a continuing action on part of the player.
-  - Player gets to-hit debugg, target gets evasion/to-hit/martial debuff.
+  - Player gets to-hit debuff, target gets evasion/to-hit/martial debuff.
     - Target has 1/3 chance to spend a turn "gurgling"/"flails around in a panic"
 
 - ring of excavation: break open the floor, sending a mob careening down
@@ -1058,6 +1061,7 @@ x Use Manhattan distance for A* algorithm (overestimating heuristic might be bet
 - Use atan to calculate octant in which coord appears relative to mob's coord, instead
   of the slower method seen in Coord.closestDirectionTo()
 
+
 Code cleanups
 =============
 x Defined unimplemented(), todo(), and oom()
@@ -1071,6 +1075,8 @@ x Review usage of usize and change to u64/u32 where needed to prevent portabilit
   - levelFeature definitions (see mapgen.zig)
   - levelConfig (see mapgen.zig)
 - Cleanup/factorize container/item manipulation code for Machine AI.
+- Define an on_unpower machine callback, and cleanup sigil_exclusion machine
+
 
 Refactorings
 ============
@@ -1086,6 +1092,7 @@ x Use Chebyshev instead of Manhattan distance
 x Keep track of each connected room in mapgen, so that no room connects to the
   same room twice.
 
+
 Tests
 =====
 x Ensure that distance() treats diagonal moves as more expensive than cardinal moves, or
@@ -1093,6 +1100,7 @@ x Ensure that distance() treats diagonal moves as more expensive than cardinal m
 - Full tests for all Coord.* methods
 - Full tests for all Rect.* methods
 - Full tests for all Direction.* methods
+
 
 Roadmap
 =======
@@ -1493,6 +1501,13 @@ x Unholy temple map + faction
       - Note 2025-02-08: ???
     ~ Enh. Emberling event
       - Note 2025-02-08: No clue what this was supposed to be!
+- More rings
+  - Ring of suggestion
+  - Ring of contriction
+  - Ring of excavation
+  - Ring of execution
+  x Ring of exclusion
+  x Ring of retaliation
 - Holy temple map + faction
   - Shrine mechanics
     - Holy-themed shrine in temple map ("altar")
@@ -1501,10 +1516,12 @@ x Unholy temple map + faction
     - Ring of fustigation, abjuration
     - Ring of fortification: +Will
     - Mark ring of concentration, condemnation as holy
+      - Move them exclusively to Holy temple
     - Inability to use holy items w/ evil ones equipped
       - Symbol is destroyed (since it's an item)
     - Dispel Undead
     - Bread of life: +max_HP, -Pot
+    - Magalt mask: +Will (see headgear)
     - Living water: +Will
     - Potion of regeneration
       - +2 max_MP (permanent), -10% Potential (permanent)
@@ -1513,6 +1530,8 @@ x Unholy temple map + faction
     - Hellfire spell (irresist damage)
     - Disintegration (punch through walls, same as ring)
     - Dispelling bolt (dispell undead, will-checked)
+    - Torment undead
+      - Different from dispelling bolt somehow
     - Abjure earth demon (anti-revgenunkim)
     - Rolling boulder
     - Martial, Spikes/riposte
@@ -1549,7 +1568,7 @@ x Unholy temple map + faction
   - Holy artifact prefabs + lore
   - Timekeeper's pendant
   - Revgenuhelkim: acid claws, acid damage and resistance
-  - Lever room and subsequent crypt event
+  - Lever room and subsequent Necropolis event
   - Make potions of corrosion actually useful
   - Add Vozgum armor prefab to Laboratory
 - Fix prisoner hostility issues (with Revgen)
@@ -1562,8 +1581,8 @@ x Unholy temple map + faction
     - Pitchblende statues
     - Skeletal arbalists
   - Garrison inset prefabs
-  - 1/Crypt/3 prefab(?)
-  - Ability to gain MP/HP
+  - 1/Necropolis/3 prefab(?)
+  - Ability to gain MP/HP somehow
   - Prefabs:
     - Paralysed+dormant arbalists/blademasters behind bars
     - Arbalists shooting at targets (DM observing)
@@ -1571,8 +1590,6 @@ x Unholy temple map + faction
     - DM failing to resurrect dead revgen, cinder brute
   - Hall map at end
     - Win condition
-- More rings
-  - Ring of suggestion
 - Add "character" to game
   x Names for goblins and humans
     x Surnames (Humans have no family names)
@@ -1660,12 +1677,27 @@ x Unholy temple map + faction
   - Decreased rep for:
     - Killing NC
     - Throwing fire/illuminations potions at NC
+  - More "ethereal" feeling
+    - When standing on slade, nothing outside lair can be seen (player-only?)
+    - When not on slade, vision into lair is sharply decreased
+    - Night reaper drives enemies insane, then knocks them several tiles into
+      other enemies, then goes on minding its business
+    - When night creatures travel, they "hop" (teleport) from one dark tile to
+      another, only walking if the next dark tile is too far away
+  - Items
+    - Make illumination/glow potions useful for raiding lairs
+      - Aggroes all NC in vicinity
+      - Corona/glowing damages NC, causes fleeing if wounded
+      - Increased rarity + novel prefab for 7/ and 8/
+    - Special, rare NC-blasting items in Shrine/Necropolis/Crypt/Lab
+      - Destroys slade tiles, aggroes all NC, instant -10 rep
+- Night Creatures, part three
   - Creeping Death
     - Inject venom spell
     - Dijkstra vision
     - Stalking enemy AI
   - Infestation abilities
-    - Cherbs, actual spell
+    - Cherbs/night beatles, actual spell
     - Winged terrors
     - Ring of Infestation
     - Exterminator specialists
@@ -1690,9 +1722,8 @@ x Unholy temple map + faction
       - 1/10 chance of hitting wall when moving towards it (otherwise no hit)
       - barrels/pools of sludge
       - potion of slimification (rare) [recipe: disorient]
-  - Set burning brute life_type to Angelic
   - Quicklime Brutes
-    - Acid bolt spell
+    - Acid bolt spell, animation
     - Acid bolt animation
   - Revgenuhelkim
     - Digging abilities
@@ -1701,15 +1732,14 @@ x Unholy temple map + faction
     - Reworked burnt offering spell(?)
     x Make multitile
     - Add ground triggers to multitile code
+  - Set burning/quicklime brute life_type to Angelic
   - Cinder Brutes
     - Renaming (to "cinder beast")
     - Unsure if any other changes needed
-- Make illumination/glow potions useful for raiding lairs
-  - Corona/glowing damages NC, causes fleeing if wounded
-  - Increased rarity + novel prefab for 7/ and 8/
-  - Special, rare NC-blasting items in Shrine/Temple/Workshop
 - Living dungeon: execution sessions
 - Living dungeon: spire cleanup
+  - Engineer shows up to clean and oil spires
+  - Engineer shows up to repair spires (just theater, spires aren't actually broken)
 - Living dungeon: scheduled prisoner transport
 *** Untriaged/obsolete ***
 - Add bookshelves and book types
