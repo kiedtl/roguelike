@@ -1008,7 +1008,7 @@ fn _getMonsSpellsDescription(self: *Console, starty: usize, mob: *Mob, _: usize)
                 y += self.drawTextAtf(0, y, "· $gTmp$. {s} ({})", .{
                     s.string(state.player), spellcfg.duration,
                 }, .{});
-                self.addTooltipForText("{s}", .{s.string(state.player)}, "nonplayer_{}", .{s});
+                self.addTooltipForText("{s}", .{s.string(state.player)}, "nonplayer_{s}", .{@tagName(s)});
             },
             .Heal => {
                 y += self.drawTextAtf(0, y, "· $gIns$. Heal <{}>", .{spellcfg.power}, .{});
@@ -1608,7 +1608,7 @@ fn drawHUD(moblist: []const *Mob) void {
             } else {
                 y += hud_win.main.drawBarAt(0, endx, y, Status.MAX_DURATION, Status.MAX_DURATION, sname, 0x054c20, 0x69fcd0, .{ .detail = false });
             }
-            hud_win.main.addTooltipForText("{s}", .{sname}, "player_{}", .{entry.key});
+            hud_win.main.addTooltipForText("{s}", .{sname}, "player_{s}", .{@tagName(entry.key)});
 
             //y += hud_win.main.drawTextAtf(startx, y, endx, "{s} ({} turns)", .{ sname, duration }, .{ .fg = 0x8019ac, .bg = null });
 
@@ -1793,7 +1793,7 @@ fn drawHUD(moblist: []const *Mob) void {
                 const sname = statusinfo.status.string(state.player);
 
                 y += hud_win.main.drawBarAt(0, endx, y, duration, Status.MAX_DURATION, sname, 0x30055c, 0xd069fc, .{});
-                hud_win.main.addTooltipForText("{s}", .{sname}, "nonplayer_{}", .{entry.key});
+                hud_win.main.addTooltipForText("{s}", .{sname}, "nonplayer_{s}", .{@tagName(entry.key)});
                 status_drawn = true;
             }
             if (status_drawn) y += 1;
