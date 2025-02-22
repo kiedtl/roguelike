@@ -36,6 +36,7 @@ const MinMax = types.MinMax;
 const minmax = types.minmax;
 const Prop = types.Prop;
 const Mob = types.Mob;
+const MobTemplate = mobs.MobTemplate;
 const Machine = types.Machine;
 const Container = types.Container;
 const SurfaceItem = types.SurfaceItem;
@@ -946,39 +947,24 @@ pub fn excavatePrefab(
         }
     }
 
-    for (fab.mobs) |maybe_mob| {
-        if (maybe_mob) |mob_f| {
-            if (mobs.findMobById(mob_f.id)) |mob_template| {
-                const coord = Coord.new2(
-                    room.rect.start.z,
-                    mob_f.spawn_at.x + room.rect.start.x + startx,
-                    mob_f.spawn_at.y + room.rect.start.y + starty,
-                );
+    for (fab.mobs.constSlice()) |mob_f| {
+        const coord = Coord.new2(
+            room.rect.start.z,
+            mob_f.spawn_at.x + room.rect.start.x + startx,
+            mob_f.spawn_at.y + room.rect.start.y + starty,
+        );
 
-                if (state.dungeon.at(coord).type == .Wall) {
-                    std.log.err(
-                        "{s}: Tried to place mob in wall. (this is a bug.)",
-                        .{fab.name.constSlice()},
-                    );
-                    continue;
-                }
+        err.ensure(state.dungeon.at(coord).type != .Wall, "{s}: Tried to place mob in wall.", .{fab.name.constSlice()}) catch continue;
 
-                const work_area = Coord.new2(
-                    room.rect.start.z,
-                    (mob_f.work_at orelse mob_f.spawn_at).x + room.rect.start.x + startx,
-                    (mob_f.work_at orelse mob_f.spawn_at).y + room.rect.start.y + starty,
-                );
+        const work_area = Coord.new2(
+            room.rect.start.z,
+            (mob_f.work_at orelse mob_f.spawn_at).x + room.rect.start.x + startx,
+            (mob_f.work_at orelse mob_f.spawn_at).y + room.rect.start.y + starty,
+        );
 
-                _ = mobs.placeMob(allocator, mob_template, coord, .{
-                    .work_area = work_area,
-                });
-            } else {
-                std.log.err(
-                    "{s}: Couldn't load mob {s}, skipping.",
-                    .{ fab.name.constSlice(), utils.used(mob_f.id) },
-                );
-            }
-        }
+        _ = mobs.placeMob(allocator, mob_f.template, coord, .{
+            .work_area = work_area,
+        });
     }
 
     for (fab.prisons.constSlice()) |prison_area| {
@@ -3789,7 +3775,7 @@ pub const Prefab = struct {
     connections: [30]?Connection = undefined,
     features: [128]?Feature = [_]?Feature{null} ** 128,
     features_global: [128]bool = [_]bool{false} ** 128,
-    mobs: [16]?FeatureMob = [_]?FeatureMob{null} ** 16,
+    mobs: StackBuffer(FeatureMob, 16) = StackBuffer(FeatureMob, 16).init(null),
     prisons: StackBuffer(Rect, 16) = StackBuffer(Rect, 16).init(null),
     subroom_areas: StackBuffer(SubroomArea, 4) = StackBuffer(SubroomArea, 4).init(null),
     whitelist: StackBuffer(usize, LEVELS) = StackBuffer(usize, LEVELS).init(null),
@@ -3843,17 +3829,17 @@ pub const Prefab = struct {
     };
 
     pub const FeatureMob = struct {
-        id: [16:0]u8,
+        template: *const MobTemplate,
         spawn_at: Coord,
         work_at: ?Coord,
     };
 
     pub const Feature = union(enum) {
         Item: items.ItemTemplate,
-        Mob: *const mobs.MobTemplate,
+        Mob: *const MobTemplate,
         // Same as Mob, but with more options
         CMob: struct {
-            t: *const mobs.MobTemplate,
+            t: *const MobTemplate,
             opts: mobs.PlaceMobOptions,
         },
         CCont: struct {
@@ -3917,7 +3903,7 @@ pub const Prefab = struct {
         var new = f.*;
 
         if (f.input != null or f.output != null or f.stockpile != null or
-            f.connections[0] != null or f.mobs[0] != null or
+            f.connections[0] != null or f.mobs.len != 0 or
             f.subroom_areas.len != 0 or f.prisons.len != 0)
         {
             return error.UnimplementedTransformation;
@@ -4044,7 +4030,6 @@ pub const Prefab = struct {
         @memset(&f.connections, null);
 
         var ci: usize = 0; // index for f.connections
-        var cm: usize = 0; // index for f.mobs
         var w: usize = 0;
         var y: usize = 0;
 
@@ -4060,7 +4045,6 @@ pub const Prefab = struct {
                     try _finishParsing(name, y, w, &f);
 
                     ci = 0;
-                    cm = 0;
                     w = 0;
                     y = 0;
                     f.player_position = null;
@@ -4074,7 +4058,7 @@ pub const Prefab = struct {
                         if (!f.features_global[i])
                             feat.* = null;
                     }
-                    @memset(&f.mobs, null);
+                    f.mobs.clear();
                     f.stockpile = null;
                     f.input = null;
                     f.output = null;
@@ -4171,13 +4155,12 @@ pub const Prefab = struct {
                         const spawn_at_str_b = spawn_at_tokens.next() orelse return error.InvalidMetadataValue;
                         spawn_at.x = std.fmt.parseInt(usize, spawn_at_str_a, 0) catch return error.InvalidMetadataValue;
                         spawn_at.y = std.fmt.parseInt(usize, spawn_at_str_b, 0) catch return error.InvalidMetadataValue;
-
-                        f.mobs[cm] = FeatureMob{
-                            .id = undefined,
+                        const mob_t = mobs.findMobById(val) orelse return error.NoSuchMob;
+                        f.mobs.append(FeatureMob{
+                            .template = mob_t,
                             .spawn_at = spawn_at,
                             .work_at = null,
-                        };
-                        utils.copyZ(&f.mobs[cm].?.id, val);
+                        }) catch err.bug("Prefab has to many :spawn statements", .{});
 
                         if (maybe_work_at_str) |work_at_str| {
                             var work_at = Coord.new(0, 0);
@@ -4186,10 +4169,8 @@ pub const Prefab = struct {
                             const work_at_str_b = work_at_tokens.next() orelse return error.InvalidMetadataValue;
                             work_at.x = std.fmt.parseInt(usize, work_at_str_a, 0) catch return error.InvalidMetadataValue;
                             work_at.y = std.fmt.parseInt(usize, work_at_str_b, 0) catch return error.InvalidMetadataValue;
-                            f.mobs[cm].?.work_at = work_at;
+                            f.mobs.lastPtr().?.work_at = work_at;
                         }
-
-                        cm += 1;
                     } else if (mem.eql(u8, key, "prison")) {
                         var rect_start = Coord.new(0, 0);
                         var width: usize = 0;
@@ -4701,11 +4682,11 @@ pub const LevelConfig = struct {
 
     pub const LevelFeatureFunc = *const fn (usize, Coord, *const Room, *const Prefab, mem.Allocator) void;
 
-    pub const RequiredMob = struct { count: usize, template: *const mobs.MobTemplate };
+    pub const RequiredMob = struct { count: usize, template: *const MobTemplate };
 
     pub const MobConfig = struct {
         chance: usize, // Ten in <chance>
-        template: *const mobs.MobTemplate,
+        template: *const MobTemplate,
     };
 };
 
