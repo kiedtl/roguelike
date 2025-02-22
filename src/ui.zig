@@ -451,8 +451,11 @@ pub fn dimensions(w: DisplayWindow) Dimension {
 
 // XXX: Uses a static internal buffer. Buffer must be consumed before next call,
 // not thread safe, etc.
+//
+// FIXME: convert this to a formatting struct
 fn _formatBool(val: bool) []const u8 {
-    var buf: [3]u8 = undefined;
+    // 4 control chars, max 3 for actual "yes" or "no"
+    var buf: [3 + 4]u8 = undefined;
     var fbs = std.io.fixedBufferStream(&buf);
     var w = fbs.writer();
 
@@ -465,6 +468,9 @@ fn _formatBool(val: bool) []const u8 {
 
 // XXX: Uses a static internal buffer. Buffer must be consumed before next call,
 // not thread safe, etc.
+//
+// FIXME: convert this to a formatting struct
+//
 fn _formatEffectNumber(val: spells.Effect.EffectNumber, spellcfg: spells.SpellOptions) []const u8 {
     var buf: [24]u8 = undefined;
     var fbs = std.io.fixedBufferStream(&buf);
@@ -481,6 +487,9 @@ fn _formatEffectNumber(val: spells.Effect.EffectNumber, spellcfg: spells.SpellOp
 
 // XXX: Uses a static internal buffer. Buffer must be consumed before next call,
 // not thread safe, etc.
+//
+// FIXME: convert this to a formatting struct
+//
 fn _formatStatusInfo(statusinfo: *const StatusDataInfo) []const u8 {
     const S = struct {
         var buf: [65535]u8 = undefined;
