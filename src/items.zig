@@ -319,7 +319,7 @@ pub const SpectralCloak = Cloak{ .id = "cloak_spectral", .name = "spectres", .st
 pub const SilCloak = Cloak{ .id = "cloak_silus", .name = "silus", .resists = .{ .rFire = 25 } };
 pub const FurCloak = Cloak{ .id = "cloak_fur", .name = "fur", .resists = .{ .rElec = 25 } };
 pub const GoldCloak = Cloak{ .id = "cloak_gold", .name = "gold", .stats = .{ .Potential = 10 } };
-pub const PureGoldCloak = Cloak{ .id = "cloak_gold_pure", .name = "pure gold", .stats = .{ .Potential = 25, .Willpower = -1 }, .resists = .{ .rElec = -25 } };
+pub const PureGoldCloak = Cloak{ .id = "cloak_gold_pure", .name = "pure gold", .stats = .{ .Potential = 20, .Willpower = -1 }, .resists = .{ .rElec = -25 } };
 pub const ThornyCloak = Cloak{ .id = "cloak_thorny", .name = "thorns", .stats = .{ .Spikes = 1 } };
 pub const AgilityCloak = Cloak{ .id = "cloak_agility", .name = "agility", .stats = .{ .Martial = 2 } };
 pub const WarringCloak = Cloak{ .id = "cloak_warring", .name = "warring", .stats = .{ .Melee = 20 } };
@@ -351,7 +351,7 @@ pub const BlackShoe = _mkShoe("shoe_black", "black boots", .{ .Evade = 10, .Mele
 pub const SilusShoe = _mkShoe("shoe_silus", "silus shoes", .{}, .{ .rFire = 10 });
 pub const InsulatedShoe = _mkShoe("shoe_insulated", "insulated boots", .{}, .{ .rElec = 10 });
 pub const GoldShoe = _mkShoe("shoe_gold", "golden shoes", .{ .Potential = 5 }, .{ .Armor = 10 });
-pub const OrnateGoldShoe = _mkShoe("shoe_gold_ornate", "golden shoes", .{ .Potential = 15, .Willpower = -1 }, .{});
+pub const OrnateGoldShoe = _mkShoe("shoe_gold_ornate", "golden shoes", .{ .Potential = 10, .Willpower = -1 }, .{});
 
 // }}}
 
@@ -405,14 +405,14 @@ pub const SpectralCrown = Headgear{
 pub const GoldHeadband = Headgear{
     .id = "head_headband_gold",
     .name = "gold headband",
-    .stats = .{ .Potential = 10, .Willpower = -1 },
+    .stats = .{ .Potential = 5, .Willpower = -1 },
     .resists = .{ .rElec = -25 },
 };
 
 pub const GoldTiara = Headgear{
     .id = "head_tiara_gold",
     .name = "gold tiara",
-    .stats = .{ .Potential = 20, .Willpower = -2 },
+    .stats = .{ .Potential = 10, .Willpower = -2 },
     .resists = .{ .rElec = -25 },
 };
 
@@ -566,7 +566,7 @@ pub const ShadowShieldAux = Aux{
     .id = "aux_shield_shadow",
     .name = "shadow shield",
 
-    .stats = .{ .Evade = 5, .Potential = -5 },
+    .stats = .{ .Evade = 5, .Potential = -15 },
 
     .night = true,
     .night_stats = .{ .Evade = 10 },
@@ -576,7 +576,7 @@ pub const EtherealShieldAux = Aux{
     .id = "aux_shield_ethereal",
     .name = "ethereal shield",
 
-    .stats = .{ .Willpower = 1, .Evade = -5, .Potential = -5 },
+    .stats = .{ .Willpower = 1, .Evade = -5, .Potential = -15 },
     .equip_effects = &[_]StatusDataInfo{
         .{ .status = .EtherealShield, .duration = .Equ },
     },
@@ -1497,7 +1497,7 @@ pub const GoldOrbConsumable = Consumable{
     .name = "gold orb",
     .effects = &[_]Consumable.Effect{
         .{ .Resist = .{ .r = .rElec, .change = 25 } },
-        .{ .Stat = .{ .s = .Potential, .change = 25 } },
+        .{ .Stat = .{ .s = .Potential, .change = 5 } },
     },
     .color = 0xffd700,
     .verbs_player = &[_][]const u8{"swallow"},
@@ -1508,7 +1508,7 @@ pub const GoldCakeConsumable = Consumable{
     .id = "cons_gold_cake",
     .name = "golden cake",
     .effects = &[_]Consumable.Effect{
-        .{ .Stat = .{ .s = .Potential, .change = 25 } },
+        .{ .Stat = .{ .s = .Potential, .change = 10 } },
         .{ .Stat = .{ .s = .Willpower, .change = -1 } },
         .{ .MaxMP = 5 },
     },
@@ -1914,15 +1914,15 @@ pub const SpikedLeatherArmor = Armor{
 pub const GoldArmor = Armor{
     .id = "gold_armor",
     .name = "golden armor",
-    .resists = .{ .Armor = 5 },
-    .stats = .{ .Potential = 10 },
+    .resists = .{ .Armor = 10 },
+    .stats = .{ .Potential = 5 },
 };
 
 pub const OrnateGoldArmor = Armor{
     .id = "ornate_gold_armor",
     .name = "ornate golden armor",
     .resists = .{ .Armor = 10 },
-    .stats = .{ .Potential = 25, .Willpower = -1, .Melee = 10 },
+    .stats = .{ .Potential = 10, .Willpower = -1, .Melee = 10 },
 };
 
 pub const ShadowMailArmor = Armor{
@@ -2178,7 +2178,7 @@ pub const GoldDaggerWeapon = Weapon{
     .id = "dagger_gold",
     .name = "golden dagger",
     .damage = 1,
-    .stats = .{ .Melee = -25, .Potential = 25 },
+    .stats = .{ .Melee = -25, .Potential = 10 },
     .ego = .Drain,
     .strs = &PIERCING_STRS,
 };
@@ -2187,7 +2187,7 @@ pub const SceptreWeapon = Weapon{
     .id = "sceptre",
     .name = "Ambassador's Sceptre",
     .damage = 1,
-    .stats = .{ .Melee = 25, .Evade = 10, .Martial = 1, .Potential = 45 },
+    .stats = .{ .Melee = 25, .Evade = 10, .Martial = 1, .Potential = 30 },
     .ego = .Drain,
     .is_cursed = true,
     .is_hated_by_nc = true,
@@ -2293,7 +2293,7 @@ pub const ShadowMaceWeapon = Weapon{
     .id = "shadow_mace",
     .name = "shadow mace",
     .damage = 1,
-    .stats = .{ .Potential = -10 },
+    .stats = .{ .Potential = -15 },
     .ego = .NC_MassPara,
     .strs = &CRUSHING_STRS,
 };
@@ -2302,7 +2302,7 @@ pub const ShadowMaulWeapon = Weapon{
     .id = "shadow_maul",
     .name = "shadow maul",
     .damage = 2,
-    .stats = .{ .Potential = -10 },
+    .stats = .{ .Potential = -15 },
     .ego = .NC_Duplicate,
     .strs = &CRUSHING_STRS,
 };
