@@ -125,6 +125,10 @@ pub fn debugPrintDirectCaller() void {
 }
 
 pub fn getRoomFromCoord(level: usize, coord: Coord) ?usize {
+    // FIXME: if this hasn't triggered by the next time I'm seeing this, remove
+    // the level arg. It's ridiculous
+    assert(level == coord.z);
+
     return switch (state.layout[level][coord.y][coord.x]) {
         .Unknown => null,
         .Room => |r| r,
@@ -261,6 +265,18 @@ pub fn walkableNeighbors(c: Coord, diagonals: bool, opts: state.IsWalkableOption
             ctr += 1;
     };
     return ctr;
+}
+
+pub fn getSpecificMobInRoom(coord: Coord, id: []const u8) ?*Mob {
+    const room_ind = getRoomFromCoord(coord.z, coord) orelse return null;
+    const room = state.rooms[coord.z].items[room_ind];
+
+    var iter = room.rect.iter();
+    return while (iter.next()) |roomcoord| {
+        if (state.dungeon.at(roomcoord).mob) |othermob|
+            if (mem.eql(u8, othermob.id, id))
+                break othermob;
+    } else null;
 }
 
 pub fn getMobInDirection(self: *Mob, d: Direction) !*Mob {

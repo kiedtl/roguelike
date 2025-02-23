@@ -47,6 +47,10 @@ const WIDTH = state.WIDTH;
 
 // ----------------------------------------------------------------------------
 
+pub const caverns = @import("ai/caverns.zig");
+
+// ----------------------------------------------------------------------------
+
 const NOISE_FORGET_AGE = 30;
 const NOISE_DONE_CHECKING = 5;
 
@@ -1349,7 +1353,7 @@ pub fn meleeFight(mob: *Mob, _: mem.Allocator) void {
     const target = closestEnemy(mob);
 
     if (mob.canMelee(target.mob)) {
-        _ = mob.fight(target.mob, .{});
+        mob.fight(target.mob, .{});
     } else if (!mob.immobile) {
         mob.tryMoveTo(target.last_seen orelse target.mob.coord);
     } else {

@@ -1962,6 +1962,7 @@ pub const AIJob = struct {
     pub const CTX_ROOM_ID = "ctx_room_id";
     pub const CTX_ALARM_TARGET = "ctx_alarm_target";
     pub const CTX_ALARM_COORD = "ctx_alarm_coord";
+    pub const CTX_ADVERTISE_KIND = "ctx_advertise_kind";
 
     pub const Type = enum {
         Dummy,
@@ -1977,6 +1978,11 @@ pub const AIJob = struct {
         GRD_SweepRoom,
         ALM_PullAlarm,
         SPC_NCAlignment,
+        CAV_RunDrillRoom,
+        CAV_OrganizeDrill,
+        CAV_Advertise,
+        CAV_FindJob,
+        CAV_BePuppeted,
 
         pub fn func(self: @This()) *const fn (*Mob, *AIJob) JStatus {
             return switch (self) {
@@ -1993,6 +1999,11 @@ pub const AIJob = struct {
                 .GRD_SweepRoom => ai._Job_GRD_SweepRoom,
                 .ALM_PullAlarm => ai._Job_ALM_PullAlarm,
                 .SPC_NCAlignment => ai._Job_SPC_NCAlignment,
+                .CAV_RunDrillRoom => ai.caverns._Job_CAV_RunDrillRoom,
+                .CAV_OrganizeDrill => ai.caverns._Job_CAV_OrganizeDrill,
+                .CAV_FindJob => ai.caverns._Job_CAV_FindJob,
+                .CAV_Advertise => ai.caverns._Job_CAV_Advertise,
+                .CAV_BePuppeted => ai.caverns._Job_CAV_BePuppeted,
             };
         }
     };
@@ -2020,6 +2031,7 @@ pub const Ctx = struct {
     pub const Value = union(enum) {
         usize: usize,
         bool: bool,
+        @"types.AIJob.Type": AIJob.Type,
         @"types.Coord": Coord,
         @"*types.Mob": *Mob,
         @"array_list.ArrayListAligned(types.Coord,null)": CoordArrayList,

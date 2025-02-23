@@ -97,10 +97,9 @@ pub const MobTemplate = struct {
     }
 };
 
-// Combat dummies for tutorial {{{
 pub const CombatDummyNormal = MobTemplate{
     .mob = .{
-        .id = "combat_dummy_normal",
+        .id = "combat_dummy",
         .species = &HumanSpecies, // Too lazy to create own species
         .tile = '0',
         .ai = AI{
@@ -108,35 +107,17 @@ pub const CombatDummyNormal = MobTemplate{
             .profession_description = "crying",
             .work_fn = ai.combatDummyWork,
             .fight_fn = ai.combatDummyFight,
+            .flags = &[_]AI.Flag{ .IgnoredByEnemies, .NoRaiseAllyMorale },
         },
         .deaf = true,
         .immobile = true,
         .life_type = .Construct,
-        .max_HP = 1,
-        .stats = .{ .Vision = 3 },
+        .max_HP = 6,
+        .blood = null,
+        .stats = .{ .Vision = 0 },
     },
+    .statuses = &[_]StatusDataInfo{.{ .status = .Sleeping, .duration = .Prm }},
 };
-pub const CombatDummyPrisoner = MobTemplate{
-    .mob = .{
-        .id = "combat_dummy_prisoner",
-        .species = &GoblinSpecies,
-        .tile = 'g',
-        .ai = AI{
-            .profession_name = "cave goblin",
-            .profession_description = "wandering",
-            .work_fn = ai.standStillAndGuardWork,
-            .fight_fn = ai.meleeFight,
-        },
-        .faction = .CaveGoblins,
-        .max_HP = 12,
-        .memory_duration = 8,
-        .stats = .{ .Willpower = 4, .Evade = 15, .Vision = 6 },
-        .prisoner_status = types.Prisoner{ .of = .Necromancer },
-    },
-    .weapon = &items.MaceWeapon,
-    .armor = items.GambesonArmor,
-};
-// }}}
 
 pub const WrithingHulkTemplate = MobTemplate{
     .mob = .{
@@ -665,7 +646,7 @@ pub const VapourMageTemplate = MobTemplate{
         .ai = AI{
             .profession_name = "vapour mage",
             .profession_description = "watching",
-            .work_fn = ai.patrolWork,
+            .work_fn = ai.caverns.vapourMageWork,
             .fight_fn = ai.mageFight,
             .spellcaster_backup_action = .KeepDistance,
             .flags = &[_]AI.Flag{.ScansForCorpses},
@@ -686,7 +667,7 @@ pub const VapourMageTemplate = MobTemplate{
     .armor = items.HauberkArmor,
     .squad = &[_][]const MobTemplate.SquadMember{
         &[_]MobTemplate.SquadMember{
-            .{ .mob = "dustling", .weight = 1, .count = minmax(usize, 2, 3) },
+            .{ .mob = "dustling", .weight = 1, .count = minmax(usize, 4, 4) },
         },
     },
 };
@@ -2374,7 +2355,6 @@ pub const BurningBruteTemplate = MobTemplate{
 
 pub const MOBS = [_]MobTemplate{
     CombatDummyNormal,
-    CombatDummyPrisoner,
     WrithingHulkTemplate,
     SwollenHulkTemplate,
     ThrashingHulkTemplate,
@@ -2408,6 +2388,7 @@ pub const MOBS = [_]MobTemplate{
     CrystalStatueTemplate,
     AlchemistTemplate,
     CleanerTemplate,
+    EngineerTemplate,
     HaulerTemplate,
     AncientMageTemplate,
     //SpectreMageTemplate,

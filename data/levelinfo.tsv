@@ -19,7 +19,7 @@
 #"CAV" 	     5 	     "Cav3" 	         "5/Caverns/3" 	 yea       	nay       	    yea 	               - 	        "4/Prison"
 #"CAV" 	     5 	     "Cav2" 	         "5/Caverns/2" 	 yea       	nay       	    yea 	               - 	     "5/Caverns/3"
 "CAV" 	     5 	      "Cav" 	           "5/Caverns" 	 yea       	nay       	    yea 	               - 	                 -
-"PRI" 	     5 	      "Pri" 	            "5/Prison" 	 yea       	yea       	    nay 	      "4/Prison" 	                 -
+"PRI" 	     5 	      "Pri" 	            "5/Prison" 	 yea       	yea       	    nay 	      "4/Prison" 	       "5/Caverns"
 "CRY" 	     6 	      "Cry" 	             "6/Crypt" 	 nay       	nay       	    yea 	      "5/Prison" 	                 -
 "WRK" 	     6 	     "Wrk3" 	        "6/Workshop/3" 	 yea       	nay       	    yea 	      "5/Prison" 	         "6/Crypt"
 "WRK" 	     6 	     "Wrk2" 	        "6/Workshop/2" 	 yea       	nay       	    yea 	               - 	    "6/Workshop/3"

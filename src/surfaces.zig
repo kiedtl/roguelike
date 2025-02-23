@@ -328,6 +328,7 @@ pub const MACHINES = [_]Machine{
     Drain,
     FirstAidStation,
     EtherealBarrier,
+    CombatDummyRepairLever,
 };
 
 pub const SteamVent = Machine{
@@ -1156,6 +1157,32 @@ pub const EtherealBarrier = Machine{
                     machine.powered_fg = colors.PALE_VIOLET_RED;
                 }
             }
+        }
+    }.f,
+};
+
+pub const CombatDummyRepairLever = Machine{
+    .id = "combat_dummy_repair_lever",
+    .name = "combat dummy repair lever",
+    .powered_tile = '/',
+    .unpowered_tile = '\\',
+    .powered_fg = colors.CONCRETE,
+    .unpowered_fg = colors.LIGHT_CONCRETE,
+    .power_drain = 100,
+    .powered_walkable = false,
+    .unpowered_walkable = false,
+
+    .on_power = struct {
+        fn f(machine: *Machine) void {
+            const dummy = utils.getSpecificMobInRoom(machine.coord, "combat_dummy") orelse {
+                // ??? Where did it go? Player killed it maybe? But if that's the case,
+                // engineer shouldn't be pulling the lever. (Maybe player did?)
+                return;
+            };
+            if (state.player.canSeeMob(dummy))
+                state.message(.Info, "The combat dummy suddenly re-inflates.", .{});
+            dummy.takeHealing(dummy.max_HP);
+            dummy.addStatus(.Sleeping, 0, .Prm);
         }
     }.f,
 };
