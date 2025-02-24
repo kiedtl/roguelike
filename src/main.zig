@@ -1323,12 +1323,21 @@ pub fn actualMain() anyerror!void {
             },
             .Lose => {
                 const msg = switch (rng.range(usize, 0, 99)) {
-                    0...60 => "You die...",
-                    61...70 => "You died. Not surprising given your playstyle.",
-                    71...80 => "Geez, you just died.",
-                    81...95 => "Congrats! You died!",
-                    96...99 => "You acquire Negative Health Syndrome!",
-                    else => err.wat(),
+                    0...90 => "You die...",
+                    95...99 => "You failed to escape.",
+                    else => if (rng.tenin(15)) b: {
+                        break :b "You received the penalty for treason: death.";
+                    } else b: {
+                        break :b switch (rng.range(usize, 0, 13)) {
+                            0...1 => "Uh, you just died.",
+                            2...3 => "You died. Unsurprising, given your playstyle.",
+                            4...5 => "You died. (Skill issue.)",
+                            6...7 => "Congrats! You died!",
+                            8...9 => "You acquire Negative Health Syndrome!",
+                            10...11 => "You acquire Negative Health Syndrome!",
+                            else => "You did the thing!! You died!!! Congrats!!!!",
+                        };
+                    },
                 };
                 _ = ui.drawContinuePrompt("{s}", .{msg});
                 break;
