@@ -5,19 +5,19 @@ b:
     zig build -Duse-sdl=true
 
 brun:
-    zig build -Duse-sdl=true && (RL_NO_SENTRY=1 RL_SEED={{seed}} RL_MODE=normal zig-out/bin/rl 2>| log || less log)
+    zig build --summary none -Duse-sdl=true && (RL_NO_SENTRY=1 RL_SEED={{seed}} RL_MODE=normal zig-out/bin/rl 2>| log || less log)
 
 brunv:
-    zig build && (RL_NO_SENTRY=1 RL_SEED={{seed}} RL_MODE=viewer zig-out/bin/rl 2>| log || less log)
+    zig build --summary none && (RL_NO_SENTRY=1 RL_SEED={{seed}} RL_MODE=viewer zig-out/bin/rl 2>| log || less log)
 
 brunt:
-    zig build -Duse-sdl=true && RL_NO_SENTRY=1 RL_SEED={{seed}} RL_MODE=tester zig-out/bin/rl
+    zig build --summary none -Duse-sdl=true && RL_NO_SENTRY=1 RL_SEED={{seed}} RL_MODE=tester zig-out/bin/rl
 
 brunvg:
-    zig build -Dtunneler-gif=true && (RL_NO_SENTRY=1 RL_SEED={{seed}} RL_MODE=viewer zig-out/bin/rl 2>| log || less log)
+    zig build --summary none -Dtunneler-gif=true && (RL_NO_SENTRY=1 RL_SEED={{seed}} RL_MODE=viewer zig-out/bin/rl 2>| log || less log)
 
 brun-term:
-    zig build -Duse-sdl=false && (RL_NO_SENTRY=1 RL_SEED={{seed}} RL_MODE=normal zig-out/bin/rl 2>| log || less log)
+    zig build --summary none -Duse-sdl=false && (RL_NO_SENTRY=1 RL_SEED={{seed}} RL_MODE=normal zig-out/bin/rl 2>| log || less log)
 
 an:
     RL_AN_ITERS={{iters}} RL_MODE=analyzer zig-out/bin/rl >| zig-out/output.json
