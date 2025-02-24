@@ -205,7 +205,9 @@ pub fn _Job_CAV_Advertise(mob: *Mob, job: *AIJob) AIJob.JStatus {
 }
 
 // Expects work area to be station place.
-pub fn _Job_CAV_RunDrillRoom(mob: *Mob, _: *AIJob) AIJob.JStatus {
+pub fn _Job_CAV_RunDrillRoom(mob: *Mob, job: *AIJob) AIJob.JStatus {
+    const CTX_REQUESTED_COMBAT_DUMMY = "ctx_requested_combat_dummy";
+
     // Return to work area
     const workplace = mob.ai.work_area.items[0];
     if (!mob.coord.eq(workplace)) {
@@ -221,11 +223,32 @@ pub fn _Job_CAV_RunDrillRoom(mob: *Mob, _: *AIJob) AIJob.JStatus {
         return .Ongoing;
     };
 
+    // Get the combat dummy, requesting it to be rebuilt if it doesn't exist (has died).
     const dummy = utils.getSpecificMobInRoom(mob.coord, "combat_dummy") orelse {
-        // Our combat dummy disappeared...?
-        mob.newJob(.WRK_LeaveFloor);
+        const room_ind = utils.getRoomFromCoord(mob.coord.z, mob.coord) orelse {
+            std.log.info("resigning in shame", .{});
+            // Somehow, we are where we are supposed to be, but not in a room...???
+            mob.newJob(.WRK_LeaveFloor);
+            tryRest(mob);
+            return .Complete;
+        };
+        const room = state.rooms[mob.coord.z].items[room_ind];
+
+        if (!job.ctx.get(bool, CTX_REQUESTED_COMBAT_DUMMY, false)) {
+            const coord = Coord.new2(
+                mob.coord.z,
+                room.rect.start.x + room.rect.width / 2,
+                room.rect.start.y + room.rect.height / 2,
+            );
+            tasks.reportTask(
+                mob.coord.z,
+                .{ .BuildMob = .{ .mob = &mobs.CombatDummyNormal, .coord = coord, .opts = .{} } },
+            );
+            job.ctx.set(bool, CTX_REQUESTED_COMBAT_DUMMY, true);
+        }
+
         tryRest(mob);
-        return .Complete;
+        return .Ongoing;
     };
 
     if (rng.onein(4)) {

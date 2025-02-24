@@ -9,6 +9,9 @@
 @l m combat_dummy_repair_lever
 @e Cmons engineer ([job]CAV_RunDrillRoom)
 
+% Do NOT modify layout without changing where engineers request combat dummies
+% to be rebuilt if destroyed (ai/caverns.zig)
+
 ##*****##
 #.......#
 *.......*

@@ -114,6 +114,7 @@ pub const CombatDummyNormal = MobTemplate{
         .life_type = .Construct,
         .max_HP = 6,
         .blood = null,
+        .corpse = .None,
         .stats = .{ .Vision = 0 },
     },
     .statuses = &[_]StatusDataInfo{.{ .status = .Sleeping, .duration = .Prm }},
