@@ -1,9 +1,9 @@
 :g_restriction 2
 :g_global_restriction 99
-:g_transform .Turn1
-:g_transform .Turn2
-:g_transform .Turn3
 :priority 40
+:noitems
+:noguards
+:nostairs
 
 @0 M combat_dummy
 @l m combat_dummy_repair_lever

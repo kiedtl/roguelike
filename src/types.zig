@@ -1979,6 +1979,8 @@ pub const AIJob = struct {
         ALM_PullAlarm,
         SPC_NCAlignment,
         CAV_RunDrillRoom,
+        CAV_RunSwimmingRoom,
+        CAV_OrganizeSwimming,
         CAV_OrganizeDrill,
         CAV_Advertise,
         CAV_FindJob,
@@ -2000,6 +2002,8 @@ pub const AIJob = struct {
                 .ALM_PullAlarm => ai._Job_ALM_PullAlarm,
                 .SPC_NCAlignment => ai._Job_SPC_NCAlignment,
                 .CAV_RunDrillRoom => ai.caverns._Job_CAV_RunDrillRoom,
+                .CAV_RunSwimmingRoom => ai.caverns._Job_CAV_RunSwimmingRoom,
+                .CAV_OrganizeSwimming => ai.caverns._Job_CAV_OrganizeSwimming,
                 .CAV_OrganizeDrill => ai.caverns._Job_CAV_OrganizeDrill,
                 .CAV_FindJob => ai.caverns._Job_CAV_FindJob,
                 .CAV_Advertise => ai.caverns._Job_CAV_Advertise,
@@ -2067,6 +2071,11 @@ pub const Ctx = struct {
         const default_v = @unionInit(Value, @typeName(T), default);
         const entry = self.inner.getOrPutValue(key, default_v) catch err.wat();
         return &@field(entry.value_ptr, @typeName(T));
+    }
+
+    pub fn getPtrOrNone(self: *@This(), comptime T: type, key: []const u8) ?*T {
+        const val = self.inner.getPtr(key) orelse return null;
+        return &@field(val, @typeName(T));
     }
 
     pub fn set(self: *@This(), comptime T: type, key: []const u8, val: T) void {
@@ -5838,6 +5847,8 @@ pub const Dungeon = struct {
         return null;
     }
 
+    // NOTE: this *must* return even if machine is disabled! (cavern ecosystem
+    // AI depends on this behaviour)
     pub fn machineAt(self: *Dungeon, c: Coord) ?*Machine {
         if (self.at(c).surface) |s|
             if (s == .Machine)

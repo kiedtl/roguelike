@@ -68,6 +68,9 @@ pub fn dummyPenaltyFunc(_: Coord, _: state.IsWalkableOptions) usize {
 pub fn basePenaltyFunc(coord: Coord, opts: state.IsWalkableOptions) usize {
     var c: usize = 0;
 
+    if (state.dungeon.at(coord).mob) |_|
+        c += 10;
+
     if (state.dungeon.at(coord).surface) |surface| switch (surface) {
         .Machine => |m| {
             c += m.pathfinding_penalty;

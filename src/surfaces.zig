@@ -9,6 +9,7 @@ const enums = std.enums;
 const ai = @import("ai.zig");
 const alert = @import("alert.zig");
 const colors = @import("colors.zig");
+const combat = @import("combat.zig");
 const dijkstra = @import("dijkstra.zig");
 const err = @import("err.zig");
 const explosions = @import("explosions.zig");
@@ -329,6 +330,7 @@ pub const MACHINES = [_]Machine{
     FirstAidStation,
     EtherealBarrier,
     CombatDummyRepairLever,
+    Piston,
 };
 
 pub const SteamVent = Machine{
@@ -1183,6 +1185,31 @@ pub const CombatDummyRepairLever = Machine{
                 state.message(.Info, "The combat dummy suddenly re-inflates.", .{});
             dummy.takeHealing(dummy.max_HP);
             dummy.addStatus(.Sleeping, 0, .Prm);
+        }
+    }.f,
+};
+
+// Mob pushy thing
+// Only knocks mobs around!
+pub const Piston = Machine{
+    .id = "piston",
+    .name = "piston",
+    .powered_tile = '○',
+    .unpowered_tile = '◙',
+    .powered_fg = colors.CONCRETE,
+    .unpowered_fg = colors.LIGHT_CONCRETE,
+    .power_drain = 100,
+    .powered_walkable = false,
+    .unpowered_walkable = true,
+
+    .on_power = struct {
+        fn f(machine: *Machine) void {
+            err.ensure(machine.areas.len == 1, "Piston has no associated areas", .{}) catch return;
+            const mob = state.dungeon.at(machine.coord).mob orelse return;
+            const target = machine.areas.constSlice()[0];
+            const direc = machine.coord.closestDirectionTo(target, state.mapgeometry);
+            const dist = machine.coord.distance(target);
+            combat.throwMob(null, mob, direc, dist);
         }
     }.f,
 };

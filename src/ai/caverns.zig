@@ -47,8 +47,50 @@ const LEVELS = state.LEVELS;
 const HEIGHT = state.HEIGHT;
 const WIDTH = state.WIDTH;
 
-fn findDustlingCaptain(mob: *Mob) ?*Mob {
-    return utils.getSpecificMobInRoom(mob.coord, "vapour_mage");
+fn goNearWorkplace(mob: *Mob) bool {
+    const workplace = mob.ai.work_area.items[0];
+    if (mob.distance2(workplace) > 1) {
+        mob.tryMoveTo(workplace);
+        return true;
+    }
+    return false;
+}
+
+fn goToWorkplace(mob: *Mob) bool {
+    const workplace = mob.ai.work_area.items[0];
+    if (!mob.coord.eq(workplace)) {
+        mob.tryMoveTo(workplace);
+        return true;
+    }
+    return false;
+}
+
+fn findDustlingCaptainOrAdvertise(mob: *Mob, advert: AIJob.Type) ?*Mob {
+    return utils.getSpecificMobInRoom(mob.coord, "vapour_mage") orelse b: {
+        mob.newJob(.CAV_Advertise);
+        mob.newestJob().?.ctx.set(AIJob.Type, AIJob.CTX_ADVERTISE_KIND, advert);
+        break :b null;
+    };
+}
+
+fn findPistons(mob: *Mob, job: *AIJob) ?*const CoordArrayList {
+    const CTX_PISTON_LIST = "ctx_pistons";
+
+    return @as(*const CoordArrayList, job.ctx.getPtrOrNone(CoordArrayList, CTX_PISTON_LIST) orelse b: {
+        const room_ind = utils.getRoomFromCoord(mob.coord.z, mob.coord) orelse return null;
+        const room = state.rooms[mob.coord.z].items[room_ind];
+
+        var list = CoordArrayList.init(state.gpa.allocator());
+        var iter = room.rect.iter();
+        while (iter.next()) |roomcoord| {
+            if (state.dungeon.machineAt(roomcoord)) |mach|
+                if (mem.eql(u8, mach.id, "piston"))
+                    list.append(roomcoord) catch err.wat();
+        }
+
+        job.ctx.set(CoordArrayList, CTX_PISTON_LIST, list);
+        break :b job.ctx.getPtrOrNone(CoordArrayList, CTX_PISTON_LIST).?;
+    });
 }
 
 // Stay still in one place and be puppeted by Dustling captain. Cancel job if
@@ -56,6 +98,10 @@ fn findDustlingCaptain(mob: *Mob) ?*Mob {
 //
 // Only for dustlings.
 pub fn _Job_CAV_BePuppeted(mob: *Mob, _: *AIJob) AIJob.JStatus {
+    // NOTE: swimming contest prefab relies on this to make dustlings
+    // automatically go back to dustling captain when they're launched
+    const DIST = 6;
+
     assert(mem.eql(u8, mob.id, "dustling"));
 
     tryRest(mob);
@@ -63,7 +109,7 @@ pub fn _Job_CAV_BePuppeted(mob: *Mob, _: *AIJob) AIJob.JStatus {
     if (mob.squad == null or
         mob.squad.?.leader == null or
         !mem.eql(u8, mob.squad.?.leader.?.id, "vapour_mage") or
-        mob.distance(mob.squad.?.leader.?) > 7)
+        mob.distance(mob.squad.?.leader.?) > DIST)
     {
         return .Complete;
     }
@@ -108,6 +154,8 @@ pub fn _Job_CAV_OrganizeDrill(mob: *Mob, job: *AIJob) AIJob.JStatus {
         } else break;
 
         for (squad.members.constSlice()) |member| {
+            if (member == mob)
+                continue;
             if (mem.eql(u8, member.id, "dustling")) // Should always be true, but just in case
                 if (member.coord.distanceManhattan(dummy.coord) > 1 and
                     member.coord.distance(spot) > 0)
@@ -125,6 +173,8 @@ pub fn _Job_CAV_OrganizeDrill(mob: *Mob, job: *AIJob) AIJob.JStatus {
 
     // Now attacc
     for (squad.members.constSlice()) |member| {
+        if (member == mob)
+            continue;
         if (dummy.HP == 1)
             break;
         if (member.distance(dummy) > 1)
@@ -135,17 +185,64 @@ pub fn _Job_CAV_OrganizeDrill(mob: *Mob, job: *AIJob) AIJob.JStatus {
     return job.checkTurnsLeft(28);
 }
 
+pub fn _Job_CAV_OrganizeSwimming(mob: *Mob, job: *AIJob) AIJob.JStatus {
+    const CTX_MOVED_INTO_PLACE = "ctx_moved_dustlings_into_place";
+
+    if (goNearWorkplace(mob))
+        return .Ongoing
+    else
+        tryRest(mob);
+
+    const pistons = findPistons(mob, job) orelse {
+        return .Complete;
+    };
+
+    if (!job.ctx.get(bool, CTX_MOVED_INTO_PLACE, false)) {
+        var all_in_place = true;
+        const squad = mob.squad orelse err.bug("Vapor mage has no squad", .{});
+        for (squad.members.constSlice()) |squadling| {
+            if (squadling == mob)
+                continue;
+            if (state.dungeon.machineAt(squadling.coord)) |mach|
+                if (mem.eql(u8, mach.id, "piston"))
+                    continue; // Already in place
+
+            for (pistons.items) |piston_coord| {
+                _ = state.dungeon.machineAt(piston_coord) orelse continue;
+                if (state.dungeon.at(piston_coord).mob == null) {
+                    if (squadling.hasJob(.CAV_BePuppeted) == null)
+                        squadling.newJob(.CAV_BePuppeted);
+                    squadling.tryMoveTo(piston_coord);
+                    all_in_place = false;
+                    break;
+                }
+            }
+        }
+        job.ctx.set(bool, CTX_MOVED_INTO_PLACE, all_in_place);
+    }
+
+    return job.checkTurnsLeft(14);
+}
+
 pub fn _Job_CAV_FindJob(mob: *Mob, job: *AIJob) AIJob.JStatus {
     const CTX_TARGET = "ctx_find_job_target_engineer";
+    const CTX_WAITED = "ctx_find_job_waited";
     const maybe_target = job.ctx.getOrNone(*Mob, CTX_TARGET);
 
     const _S = struct {
         pub fn mobIsAdvertising(m: *Mob) bool {
-            return mem.eql(u8, m.id, "engineer") and
+            return (mem.eql(u8, m.id, "engineer") or mem.eql(u8, m.id, "alchemist")) and
                 m.newestJob() != null and
                 m.newestJob().?.job == .CAV_Advertise;
         }
     };
+
+    const waited = job.ctx.get(usize, CTX_WAITED, 0);
+    if (waited < 7) {
+        job.ctx.set(usize, CTX_WAITED, waited + 1);
+        ai.patrolWork(mob, state.gpa.allocator());
+        return .Ongoing;
+    }
 
     if (maybe_target == null or !_S.mobIsAdvertising(maybe_target.?)) {
         var iter = state.mobs.iterator();
@@ -159,6 +256,7 @@ pub fn _Job_CAV_FindJob(mob: *Mob, job: *AIJob) AIJob.JStatus {
             ai.patrolWork(mob, state.gpa.allocator());
             return .Ongoing;
         };
+        mob.ai.work_area.items[0] = new_target.coord;
         job.ctx.set(*Mob, CTX_TARGET, new_target);
     }
 
@@ -170,12 +268,8 @@ pub fn _Job_CAV_FindJob(mob: *Mob, job: *AIJob) AIJob.JStatus {
 pub fn _Job_CAV_Advertise(mob: *Mob, job: *AIJob) AIJob.JStatus {
     const jobkind = job.ctx.getOrNone(AIJob.Type, AIJob.CTX_ADVERTISE_KIND).?;
 
-    // Return to work area
-    const workplace = mob.ai.work_area.items[0];
-    if (!mob.coord.eq(workplace)) {
-        mob.tryMoveTo(workplace);
+    if (goToWorkplace(mob))
         return .Ongoing;
-    }
 
     tryRest(mob);
 
@@ -208,17 +302,9 @@ pub fn _Job_CAV_Advertise(mob: *Mob, job: *AIJob) AIJob.JStatus {
 pub fn _Job_CAV_RunDrillRoom(mob: *Mob, job: *AIJob) AIJob.JStatus {
     const CTX_REQUESTED_COMBAT_DUMMY = "ctx_requested_combat_dummy";
 
-    // Return to work area
-    const workplace = mob.ai.work_area.items[0];
-    if (!mob.coord.eq(workplace)) {
-        mob.tryMoveTo(workplace);
-        return .Ongoing;
-    }
+    if (goToWorkplace(mob)) return .Ongoing;
 
-    const customer = findDustlingCaptain(mob) orelse {
-        // If no vapor mage, then start advertising
-        mob.newJob(.CAV_Advertise);
-        mob.newestJob().?.ctx.set(AIJob.Type, AIJob.CTX_ADVERTISE_KIND, .CAV_OrganizeDrill);
+    const customer = findDustlingCaptainOrAdvertise(mob, .CAV_OrganizeDrill) orelse {
         tryRest(mob);
         return .Ongoing;
     };
@@ -275,6 +361,52 @@ pub fn _Job_CAV_RunDrillRoom(mob: *Mob, job: *AIJob) AIJob.JStatus {
 
     if (!did_something)
         tryRest(mob);
+
+    return .Ongoing;
+}
+
+// Expects work area to be station place.
+pub fn _Job_CAV_RunSwimmingRoom(mob: *Mob, job: *AIJob) AIJob.JStatus {
+    if (goToWorkplace(mob))
+        return .Ongoing
+    else
+        tryRest(mob);
+
+    const customer = findDustlingCaptainOrAdvertise(mob, .CAV_OrganizeSwimming) orelse {
+        return .Ongoing;
+    };
+
+    const pistons = findPistons(mob, job) orelse {
+        mob.newJob(.WRK_LeaveFloor); // Leave in shame
+        return .Complete;
+    };
+
+    // Check if customer's squadlings are all neatly lined up.
+    //
+    var all_lined_up = true;
+    const squad = customer.squad orelse err.bug("Vapor mage has no squad", .{});
+    for (squad.members.constSlice()) |squadling| {
+        if (squadling == customer) continue;
+        if (state.dungeon.machineAt(squadling.coord)) |mach| {
+            if (!mem.eql(u8, mach.id, "piston"))
+                all_lined_up = false;
+        } else {
+            all_lined_up = false;
+        }
+    }
+
+    for (pistons.items) |piston_coord| {
+        const piston = state.dungeon.machineAt(piston_coord) orelse
+            continue; // Player destroyed it with fire? TODO: rebuild it then
+
+        if (all_lined_up) {
+            piston.disabled = false;
+            assert(piston.addPower(mob));
+        } else {
+            piston.disabled = true;
+            piston.power = 0;
+        }
+    }
 
     return .Ongoing;
 }
