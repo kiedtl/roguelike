@@ -130,11 +130,14 @@ pub fn _Job_CAV_OrganizeDrill(mob: *Mob, job: *AIJob) AIJob.JStatus {
     const squad = mob.squad orelse {
         // ???
         mob.newJob(.WRK_LeaveFloor); // Leave in shame
+        tryRest(mob);
         return .Complete;
     };
 
-    const dummy = utils.getSpecificMobInRoom(mob.coord, "combat_dummy") orelse
+    const dummy = utils.getSpecificMobInRoom(mob.coord, "combat_dummy") orelse {
+        tryRest(mob);
         return .Complete;
+    };
 
     if (mob.distance(dummy) > 2) {
         mob.tryMoveTo(dummy.coord);

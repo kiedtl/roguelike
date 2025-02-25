@@ -3667,7 +3667,8 @@ pub const Mob = struct { // {{{
         const verb: []const u8 = if (self == state.player) "are" else "is";
         const fully_adj: []const u8 = if (self.HP == self.max_HP) "fully " else "";
         const punc: []const u8 = if (self.HP == self.max_HP) "!" else ".";
-        state.message(.Info, "{c} {s} {s}healed{s} $g($c{}$g HP)", .{ self, verb, fully_adj, punc, h });
+        if (state.player.canSeeMob(self))
+            state.message(.Info, "{c} {s} {s}healed{s} $g($c{}$g HP)", .{ self, verb, fully_adj, punc, h });
     }
 
     pub fn takeDamage(self: *Mob, d: Damage, msg: DamageMessage) void {

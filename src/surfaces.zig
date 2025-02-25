@@ -1190,7 +1190,7 @@ pub const CombatDummyRepairLever = Machine{
 };
 
 // Mob pushy thing
-// Only knocks mobs around!
+// Only knocks mobs around, not props or items!
 pub const Piston = Machine{
     .id = "piston",
     .name = "piston",

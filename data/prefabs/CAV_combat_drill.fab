@@ -5,6 +5,13 @@
 :noguards
 :nostairs
 
+@p P
+$aDustling combat test room$.
+
+$cRequirements$. will be clarified after meeting with the Head of Research next
+week.
+END POSTER
+
 @0 M combat_dummy
 @l m combat_dummy_repair_lever
 @e Cmons engineer ([job]CAV_RunDrillRoom)
@@ -19,5 +26,5 @@
 *...0...*
 *.......*
 *.......*
-#el.....#
+#el....p#
 ###***###

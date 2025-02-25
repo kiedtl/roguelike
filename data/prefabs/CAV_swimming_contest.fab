@@ -6,6 +6,13 @@
 :noguards
 :nostairs
 
+@p P
+$aDustling swimming test room$.
+
+$cRequirements$.: min 15 n/tu swimming velocity; no visible damage on being pushed;
+max 30 tu delay before beginning swim.
+END POSTER
+
 @a Cmons alchemist ([job]CAV_RunSwimmingRoom)
 
 @0 m piston 2,9
@@ -13,8 +20,8 @@
 @2 m piston 4,9
 @3 m piston 5,9
 
-###***#
-#a....#
+###**##
+#a...p#
 *.....*
 #.0123#
 #˜˜˜˜˜#
