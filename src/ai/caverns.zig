@@ -154,7 +154,7 @@ pub fn _Job_CAV_OrganizeDrill(mob: *Mob, job: *AIJob) AIJob.JStatus {
         } else break;
 
         for (squad.members.constSlice()) |member| {
-            if (member == mob)
+            if (member == mob or member.is_dead)
                 continue;
             if (mem.eql(u8, member.id, "dustling")) // Should always be true, but just in case
                 if (member.coord.distanceManhattan(dummy.coord) > 1 and
@@ -173,7 +173,7 @@ pub fn _Job_CAV_OrganizeDrill(mob: *Mob, job: *AIJob) AIJob.JStatus {
 
     // Now attacc
     for (squad.members.constSlice()) |member| {
-        if (member == mob)
+        if (member == mob or member.is_dead)
             continue;
         if (dummy.HP == 1)
             break;
@@ -201,7 +201,7 @@ pub fn _Job_CAV_OrganizeSwimming(mob: *Mob, job: *AIJob) AIJob.JStatus {
         var all_in_place = true;
         const squad = mob.squad orelse err.bug("Vapor mage has no squad", .{});
         for (squad.members.constSlice()) |squadling| {
-            if (squadling == mob)
+            if (squadling == mob or squadling.is_dead)
                 continue;
             if (state.dungeon.machineAt(squadling.coord)) |mach|
                 if (mem.eql(u8, mach.id, "piston"))
@@ -386,7 +386,8 @@ pub fn _Job_CAV_RunSwimmingRoom(mob: *Mob, job: *AIJob) AIJob.JStatus {
     var all_lined_up = true;
     const squad = customer.squad orelse err.bug("Vapor mage has no squad", .{});
     for (squad.members.constSlice()) |squadling| {
-        if (squadling == customer) continue;
+        if (squadling == customer or squadling.is_dead)
+            continue;
         if (state.dungeon.machineAt(squadling.coord)) |mach| {
             if (!mem.eql(u8, mach.id, "piston"))
                 all_lined_up = false;
