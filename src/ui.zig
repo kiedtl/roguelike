@@ -4469,7 +4469,6 @@ pub const AnimationRevealUnreveal = struct {
             .a => |*iter| {
                 if (iter.next() == null)
                     self.stage = .{ .b = self.args.opts.rv_unrv_delay };
-                return {};
             },
             .b => |*ctr| {
                 ctr.* -= 1;
@@ -4477,19 +4476,15 @@ pub const AnimationRevealUnreveal = struct {
                     var cargs = self.args;
                     cargs.opts.reverse = true;
                     self.stage = .{ .c = animationReveal(cargs) };
-                    return self.next();
-                } else {
-                    return {};
                 }
             },
             .c => |*iter| {
-                if (iter.next() == null) {
+                if (iter.next() == null)
                     return null;
-                } else {
-                    return {};
-                }
             },
         }
+
+        return {};
     }
 };
 
@@ -4517,8 +4512,8 @@ pub fn animationRevealUnreveal(args: RevealAnimationArgs) AnimationRevealUnrevea
 
 pub const RevealAnimationOpts = struct {
     factor: usize = 3,
-    ydelay: usize = 4,
-    idelay: usize = 3,
+    ydelay: usize = 3,
+    idelay: usize = 2,
     rvtype: enum { TopDown, All } = .TopDown,
     reverse: bool = false,
     rv_unrv_delay: usize = 100,
@@ -4564,6 +4559,7 @@ pub const AnimationReveal = struct {
         const args = self.args;
 
         self._resetAnimLayer();
+        self.did_anything = false;
 
         var y: usize = 0;
         while (y < args.anim_layer.height) : (y += 1) {
