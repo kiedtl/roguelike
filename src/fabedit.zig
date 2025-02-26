@@ -174,15 +174,14 @@ pub fn applyCursorProp() void {
     const selected = &surfaces.props.items[st.cursor.Prop];
     const feature: u8 = for (st.fab.features, 0..) |maybe_feature, i| {
         if (maybe_feature) |feature|
-            if (feature == .Prop and mem.eql(u8, utils.used(feature.Prop), selected.id))
+            if (feature == .Prop and mem.eql(u8, feature.Prop.id, selected.id))
                 break @intCast(i);
     } else b: {
         if (blank == null) {
             std.log.err("Fab features are full", .{});
             return;
         }
-        st.fab.features[blank.?] = mapgen.Prefab.Feature{ .Prop = [_:0]u8{0} ** 32 };
-        mem.copy(u8, &st.fab.features[blank.?].?.Prop, selected.id);
+        st.fab.features[blank.?] = mapgen.Prefab.Feature{ .Prop = selected };
         break :b blank.?;
     };
 
@@ -230,8 +229,8 @@ fn _saveVariant(ind: usize, writer: anytype) void {
         const str: []const u8 = switch (feature) {
             .Item => |item| item.i.id() catch unreachable,
             .Mob => |m| m.mob.id,
-            .Machine => |m| utils.used(m.id),
-            .Prop => |p| utils.used(p),
+            .Machine => |m| m.mach.id,
+            .Prop => |p| p.id,
             else => {
                 std.log.err("Can only serialize i/M/m/p features. Aborting save.", .{});
                 return;
@@ -275,7 +274,7 @@ fn _saveVariant(ind: usize, writer: anytype) void {
 }
 
 pub fn saveFile() void {
-    var fab_f = std.fs.cwd().openFile(st.fab_path, .{ .write = true }) catch |e| {
+    var fab_f = std.fs.cwd().openFile(st.fab_path, .{}) catch |e| {
         std.log.err("Could not save file: {}", .{e});
         return;
     };
@@ -287,7 +286,7 @@ pub fn saveFile() void {
     fab_f.seekTo(0) catch err.wat();
     fab_f.setEndPos(0) catch err.wat();
 
-    var lines = mem.splitScalar(u8, buf[0..read], "\n");
+    var lines = mem.splitScalar(u8, buf[0..read], '\n');
     while (lines.next()) |line| {
         writer.writeAll(line) catch err.wat();
         writer.writeByte('\n') catch err.wat();
@@ -303,7 +302,7 @@ pub fn saveFile() void {
             writer.print("\n\\\n", .{}) catch err.wat();
     }
 
-    for (st.fab_info) |*inf| inf.unsaved = false;
+    for (&st.fab_info) |*inf| inf.unsaved = false;
     std.log.info("Saved file.", .{});
 }
 
@@ -337,11 +336,10 @@ pub fn main() anyerror!void {
 
     var args = std.process.args();
     _ = args.skip();
-    st.fab_path = try args.next(state.gpa.allocator()) orelse {
+    st.fab_path = args.next() orelse {
         std.log.err("Usage: rl_fabedit [path]", .{});
         return;
     };
-    defer state.gpa.allocator().free(st.fab_path);
 
     const trimmed = mem.trimRight(u8, st.fab_path, ".fab");
     const index = if (mem.lastIndexOfScalar(u8, trimmed, '/')) |sep| sep + 1 else 0;

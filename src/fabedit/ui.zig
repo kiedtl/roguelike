@@ -636,8 +636,8 @@ pub fn drawMap(st: *fabedit.EdState) void {
                         }),
                     .CCont => colors.GOLD,
                     .Poster => 0x0,
-                    .Prop => |pid| surfaces.props.items[utils.findById(surfaces.props.items, pid).?].fg orelse 0xffffff,
-                    .Machine => |mid| surfaces.MACHINES[utils.findById(&surfaces.MACHINES, mid.id).?].unpowered_fg orelse 0xffffff,
+                    .Prop => |prop| prop.fg orelse 0xffffff,
+                    .Machine => |machfeat| machfeat.mach.unpowered_fg orelse 0xffffff,
                     else => colors.LIGHT_CONCRETE,
                 },
                 .LevelFeature => colors.LIGHT_STEEL_BLUE,
@@ -656,8 +656,8 @@ pub fn drawMap(st: *fabedit.EdState) void {
 
             cell.bg = switch (st.fab.content[y][x]) {
                 .Feature => |f| switch (st.fab.features[f].?) {
-                    .Prop => |pid| surfaces.props.items[utils.findById(surfaces.props.items, pid).?].bg orelse colors.BG,
-                    .Machine => |mid| surfaces.MACHINES[utils.findById(&surfaces.MACHINES, mid.id).?].unpowered_bg orelse colors.BG,
+                    .Prop => |pid| pid.bg orelse colors.BG,
+                    .Machine => |mid| mid.mach.unpowered_bg orelse colors.BG,
                     .Poster => colors.GOLD,
                     else => cell.bg,
                 },
@@ -679,8 +679,8 @@ pub fn drawMap(st: *fabedit.EdState) void {
                     .CCont => |container_info| container_info.t.tile,
                     .Cpitem => '%',
                     .Poster => '=',
-                    .Prop => |pid| surfaces.props.items[utils.findById(surfaces.props.items, pid).?].tile,
-                    .Machine => |mid| surfaces.MACHINES[utils.findById(&surfaces.MACHINES, mid.id).?].powered_tile,
+                    .Prop => |pid| pid.tile,
+                    .Machine => |mid| mid.mach.powered_tile,
                 },
                 .HeavyLockedDoor => '±', // TODO: fg
                 .Brazier => '¤',
