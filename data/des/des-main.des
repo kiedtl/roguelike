@@ -483,12 +483,15 @@ Wooden boards. Creaky and flammable, but makes you resistant to electricity.
 % t_water
 Deep water. It would be wise to avoid.
 
+% t_water_glowing
+Polluted water, bubbling a strange-smelling and highly flammable gas.
+
 % t_water_shallow
 It's difficult to sneak through, and will make you very vulnerable to
 electricity. You are very resistant to fire though.
 
 % t_f_lumi
-Some kind of bluish fungi, glowing serenely in the dim light of the Dungeon.
+Some kind of bluish fungi, glowing serenely in the dim light.
 
 % t_f_dead
 Some dry, flammable fungi.

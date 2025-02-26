@@ -174,11 +174,15 @@ pub const Corrosive = Gas{
     .id = 11,
 };
 
+// Be careful when changing this, make sure ambience of caverns isn't affected
+// in a bad way. Also maybe change how much glowing water emits, how often, etc
 pub const Fire = Gas{
     .name = "flammable gas",
     .color = 0xfdc585,
     .dissipation_rate = 4,
-    .opacity = 0.2,
+    // If opacity >= 1.0, this causes massive lighting fluctuations in caverns,
+    // which is not desirable.
+    .opacity = 0.9,
     .trigger = struct {
         pub fn f(_: *Mob, _: usize) void {}
     }.f,
@@ -251,6 +255,10 @@ pub fn tickGasEmitters(level: usize) void {
                 },
                 else => {},
             }
+            if (state.dungeon.terrainAt(coord).gas) |terrain_gas|
+                if (rng.onein(terrain_gas.chance)) {
+                    c_gas[terrain_gas.id] += terrain_gas.amount;
+                };
         }
     }
 }

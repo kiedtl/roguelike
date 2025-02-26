@@ -757,6 +757,7 @@ pub fn isRoomInvalid(
                 if (state.dungeon.at(coord).type == .Lava or
                     state.dungeon.at(coord).type == .Water or
                     state.dungeon.terrainAt(coord) == &surfaces.ShallowWaterTerrain or
+                    state.dungeon.terrainAt(coord) == &surfaces.GlowingWaterTerrain or
                     state.dungeon.terrainAt(coord) == &surfaces.WaterTerrain)
                 {
                     return true;
@@ -3150,12 +3151,11 @@ fn placeBlob(cfg: BlobConfig, start: Coord) void {
 }
 
 pub fn placeBlobs(level: usize) void {
-    const blob_configs = Configs[level].blobs;
-    for (blob_configs) |cfg| {
+    for (Configs[level].blobs) |cfg| {
         var i: usize = rng.range(usize, cfg.number.min, cfg.number.max);
         while (i > 0) : (i -= 1) {
-            const start_y = rng.range(usize, 1, HEIGHT - 1);
-            const start_x = rng.range(usize, 1, WIDTH - 1);
+            const start_y = rng.rangeClumping(usize, 1, HEIGHT - cfg.min_blob_height.min - 1, 2);
+            const start_x = rng.rangeClumping(usize, 1, WIDTH - cfg.min_blob_height.min - 1, 2);
             const start = Coord.new2(level, start_x, start_y);
             placeBlob(cfg, start);
         }
@@ -5032,7 +5032,7 @@ pub const CAV_BASE_LEVELCONFIG = LevelConfig{
     .blobs = &[_]BlobConfig{
         .{
             .number = MinMax(usize){ .min = 10, .max = 15 },
-            .type = null,
+            .type = null, // Don't overwrite walls
             .terrain = &surfaces.DeadFungiTerrain,
             .min_blob_width = minmax(usize, 2, 8),
             .min_blob_height = minmax(usize, 2, 8),
@@ -5044,14 +5044,15 @@ pub const CAV_BASE_LEVELCONFIG = LevelConfig{
             .ca_survival_params = "ffftttttt",
         },
         .{
-            .number = MinMax(usize){ .min = 2, .max = 3 },
-            .type = .Lava,
-            .min_blob_width = minmax(usize, 10, 12),
-            .min_blob_height = minmax(usize, 8, 9),
-            .max_blob_width = minmax(usize, 18, 19),
-            .max_blob_height = minmax(usize, 14, 15),
+            .number = MinMax(usize){ .min = 3, .max = 4 },
+            .type = .Floor,
+            .terrain = &surfaces.GlowingWaterTerrain,
+            .min_blob_width = minmax(usize, 8, 10),
+            .min_blob_height = minmax(usize, 12, 14),
+            .max_blob_width = minmax(usize, 14, 16),
+            .max_blob_height = minmax(usize, 18, 20),
             .ca_rounds = 5,
-            .ca_percent_seeded = 55,
+            .ca_percent_seeded = 54,
             .ca_birth_params = "ffffffttt",
             .ca_survival_params = "ffffttttt",
         },

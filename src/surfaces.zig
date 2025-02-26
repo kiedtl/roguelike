@@ -101,6 +101,11 @@ pub const Terrain = struct {
     is_path_penalized: bool = false,
     repairable: bool = true,
     luminescence: usize = 0,
+    gas: ?struct {
+        id: usize,
+        amount: usize,
+        chance: usize, // One in X, so higher is less often. Lava emitting smoke is one in 300
+    } = null,
     opacity: usize = 0,
 
     for_levels: []const []const u8,
@@ -241,6 +246,25 @@ pub const WaterTerrain = Terrain{
     },
     .fire_retardant = true,
     .is_path_penalized = true,
+
+    .for_levels = &[_][]const u8{},
+    .placement = .RoomBlob,
+    .weight = 0,
+};
+
+pub const GlowingWaterTerrain = Terrain{
+    .id = "t_water_glowing",
+    .name = "glowing water",
+    .color = 0x108341, // medium blue
+    .tile = '≈',
+    .resists = .{ .rFire = 25, .rElec = -50, .rAcid = -50 },
+    .effects = &[_]StatusDataInfo{
+        .{ .status = .Noisy, .duration = .{ .Ctx = null } },
+        .{ .status = .Water, .duration = .{ .Ctx = null } },
+    },
+    .is_path_penalized = true,
+    .luminescence = 60,
+    .gas = .{ .id = gas.Fire.id, .amount = 50, .chance = 200 },
 
     .for_levels = &[_][]const u8{},
     .placement = .RoomBlob,
