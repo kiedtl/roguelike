@@ -25,16 +25,17 @@ const types = @import("../types.zig");
 const ui = @import("../ui.zig");
 const utils = @import("../utils.zig");
 
-const tryRest = ai.tryRest;
 const AIJob = types.AIJob;
-const Dungeon = types.Dungeon;
-const Mob = types.Mob;
-const EnemyRecord = types.EnemyRecord;
-const SuspiciousTileRecord = types.SuspiciousTileRecord;
-const Coord = types.Coord;
 const CoordArrayList = types.CoordArrayList;
+const Coord = types.Coord;
 const Direction = types.Direction;
+const Dungeon = types.Dungeon;
+const EnemyRecord = types.EnemyRecord;
+const Machine = types.Machine;
+const Mob = types.Mob;
 const Status = types.Status;
+const SuspiciousTileRecord = types.SuspiciousTileRecord;
+const tryRest = ai.tryRest;
 
 const StackBuffer = buffer.StackBuffer;
 const SpellOptions = spells.SpellOptions;
@@ -46,6 +47,14 @@ const DIRECTIONS = types.DIRECTIONS;
 const LEVELS = state.LEVELS;
 const HEIGHT = state.HEIGHT;
 const WIDTH = state.WIDTH;
+
+fn cancelJobIf(mob: *Mob, kind: AIJob.Type) void {
+    if (mob.newestJob()) |j|
+        if (j.job == kind) {
+            var old_job = mob.jobs.pop() catch err.wat();
+            old_job.deinit();
+        };
+}
 
 fn goNearWorkplace(mob: *Mob) bool {
     const workplace = mob.ai.work_area.items[0];
@@ -63,6 +72,23 @@ fn goToWorkplace(mob: *Mob) bool {
         return true;
     }
     return false;
+}
+
+fn leaveInShame(mob: *Mob) AIJob.JStatus {
+    if (mob.energy > 0) // This energy check is hacky, dunno if it helps or not
+        tryRest(mob);
+    mob.newJob(.WRK_LeaveFloor);
+    return .Complete;
+}
+
+fn useAdjacentMachine(mob: *Mob, id: []const u8) !bool {
+    const origcoord = mob.coord;
+    const mach = utils.getSpecificMachineInRoom(mob.coord, id) orelse return error.NotFound;
+    err.ensure(mob.distance2(mach.coord) == 1, "{cf}: Machine {s} isn't adjacent", .{ mob, mach.id }) catch return error.NotAdjacent;
+    const r = mob.moveInDirection(mob.nextDirectionTo(mach.coord).?);
+    err.ensure(r, "{cf}: Powering lever failed", .{mob}) catch {};
+    err.ensure(mob.coord.eq(origcoord), "{cf}: Attempt to power {s} caused movement", .{ mob, mach.id }) catch {};
+    return r;
 }
 
 fn findDustlingCaptainOrAdvertise(mob: *Mob, advert: AIJob.Type) ?*Mob {
@@ -127,12 +153,7 @@ pub fn _Job_CAV_BePuppeted(mob: *Mob, _: *AIJob) AIJob.JStatus {
 // taking part of the combat drill with the rest...
 //
 pub fn _Job_CAV_OrganizeDrill(mob: *Mob, job: *AIJob) AIJob.JStatus {
-    const squad = mob.squad orelse {
-        // ???
-        mob.newJob(.WRK_LeaveFloor); // Leave in shame
-        tryRest(mob);
-        return .Complete;
-    };
+    const squad = mob.squad orelse return leaveInShame(mob);
 
     const dummy = utils.getSpecificMobInRoom(mob.coord, "combat_dummy") orelse {
         tryRest(mob);
@@ -146,7 +167,7 @@ pub fn _Job_CAV_OrganizeDrill(mob: *Mob, job: *AIJob) AIJob.JStatus {
     }
 
     // Check position of dustlings
-    check_loop: while (true) {
+    while (true) {
         const spot = for (&CARDINAL_DIRECTIONS) |d| {
             if (dummy.coord.move(d, state.mapgeometry)) |spot| {
                 if (state.is_walkable(spot, .{ .right_now = true })) {
@@ -166,7 +187,7 @@ pub fn _Job_CAV_OrganizeDrill(mob: *Mob, job: *AIJob) AIJob.JStatus {
                     if (member.hasJob(.CAV_BePuppeted) == null)
                         member.newJob(.CAV_BePuppeted);
                     member.tryMoveTo(spot);
-                    continue :check_loop;
+                    return .Ongoing;
                 };
         }
 
@@ -186,6 +207,19 @@ pub fn _Job_CAV_OrganizeDrill(mob: *Mob, job: *AIJob) AIJob.JStatus {
     }
 
     return job.checkTurnsLeft(28);
+}
+
+// The engineer does all the work, vapour mage just sits there and gets
+// puppeted.
+pub fn _Job_CAV_OrganizeFireTest(mob: *Mob, job: *AIJob) AIJob.JStatus {
+    _ = mob.squad orelse return leaveInShame(mob);
+
+    if (goNearWorkplace(mob))
+        return .Ongoing
+    else
+        tryRest(mob);
+
+    return job.checkTurnsLeft(35);
 }
 
 pub fn _Job_CAV_OrganizeSwimming(mob: *Mob, job: *AIJob) AIJob.JStatus {
@@ -241,7 +275,7 @@ pub fn _Job_CAV_FindJob(mob: *Mob, job: *AIJob) AIJob.JStatus {
     };
 
     const waited = job.ctx.get(usize, CTX_WAITED, 0);
-    if (waited < 7) {
+    if (waited < 14) {
         job.ctx.set(usize, CTX_WAITED, waited + 1);
         ai.patrolWork(mob, state.gpa.allocator());
         return .Ongoing;
@@ -249,16 +283,19 @@ pub fn _Job_CAV_FindJob(mob: *Mob, job: *AIJob) AIJob.JStatus {
 
     if (maybe_target == null or !_S.mobIsAdvertising(maybe_target.?)) {
         var iter = state.mobs.iterator();
-        const new_target = while (iter.next()) |mapmob| {
+        var targets = StackBuffer(*Mob, 8).init(null);
+        while (iter.next()) |mapmob| {
             if (mapmob.coord.z == mob.coord.z and !mapmob.is_dead and
                 _S.mobIsAdvertising(mapmob))
             {
-                break mapmob;
+                targets.append(mapmob) catch break;
             }
-        } else {
+        }
+        if (targets.len == 0) {
             ai.patrolWork(mob, state.gpa.allocator());
             return .Ongoing;
-        };
+        }
+        const new_target = rng.chooseUnweighted(*Mob, targets.constSlice());
         mob.ai.work_area.items[0] = new_target.coord;
         job.ctx.set(*Mob, CTX_TARGET, new_target);
     }
@@ -269,18 +306,23 @@ pub fn _Job_CAV_FindJob(mob: *Mob, job: *AIJob) AIJob.JStatus {
 }
 
 pub fn _Job_CAV_Advertise(mob: *Mob, job: *AIJob) AIJob.JStatus {
+    const CTX_WAITED = "ctx_find_job_waited";
+
+    const waited = job.ctx.get(usize, CTX_WAITED, 0);
     const jobkind = job.ctx.getOrNone(AIJob.Type, AIJob.CTX_ADVERTISE_KIND).?;
+
+    job.ctx.set(usize, CTX_WAITED, waited + 1);
 
     if (goToWorkplace(mob))
         return .Ongoing;
 
     tryRest(mob);
 
-    const room_ind = utils.getRoomFromCoord(mob.coord.z, mob.coord) orelse {
-        mob.newJob(.WRK_LeaveFloor);
-        tryRest(mob);
-        return .Complete;
-    };
+    if (waited < 5)
+        return .Ongoing;
+
+    const room_ind = utils.getRoomFromCoord(mob.coord.z, mob.coord) orelse
+        return leaveInShame(mob);
     const room = state.rooms[mob.coord.z].items[room_ind];
 
     // lol at indentation
@@ -302,6 +344,144 @@ pub fn _Job_CAV_Advertise(mob: *Mob, job: *AIJob) AIJob.JStatus {
 }
 
 // Expects work area to be station place.
+pub fn _Job_CAV_RunFireRoom(mob: *Mob, job: *AIJob) AIJob.JStatus {
+    // Stage of fire testing.
+    //
+    // (1) Dustlings are lining up. Check each turn that they are lined up.
+    // Those that are lined up are fireproofed.
+    //
+    // If they're all lined up, then pull the lever and move to stage 2.
+    //
+    // (2) Dustlings are roasting inside. Check each turn if fire has gone out,
+    // and if so, then pull the lever again and reset to stage 1.
+    //
+    const CTX_STAGE = "ctx_stage";
+    var stage = job.ctx.get(usize, CTX_STAGE, 1);
+
+    //const CTX_DOOR = "ctx_door";
+    //const door = job.ctx.get(*Machine, CTX_DOOR, utils.getSpecificMachineInRoom(mob.coord, "door_locked_heavy") orelse return leaveInShame(mob));
+
+    if (goToWorkplace(mob)) return .Ongoing;
+
+    const customer = findDustlingCaptainOrAdvertise(mob, .CAV_OrganizeFireTest) orelse {
+        job.ctx.set(usize, CTX_STAGE, 1);
+        tryRest(mob);
+        return .Ongoing;
+    };
+
+    const room_ind = utils.getRoomFromCoord(mob.coord.z, mob.coord) orelse
+        // Somehow, we are where we are supposed to be, but not in a room...???
+        return leaveInShame(mob);
+    const room = &state.rooms[mob.coord.z].items[room_ind];
+
+    var did_something = false;
+
+    switch (stage) {
+        1 => {
+            const _S = struct {
+                // Get an empty spot, ideally the *farthest* one from the mob's
+                // coord. This is so that dustlings don't push each other out
+                // of the room while trying to get in.
+                pub fn getEmptySpot(m: *Mob, r: *const mapgen.Room) ?Coord {
+                    var ret: ?Coord = null;
+                    var iter = r.rect.iter();
+                    while (iter.next()) |coord|
+                        if (state.dungeon.at(coord).prison and
+                            state.is_walkable(coord, .{ .right_now = true }) and
+                            (ret == null or m.distance2(coord) > m.distance2(ret.?)))
+                        {
+                            assert(state.dungeon.at(coord).mob == null);
+                            ret = coord;
+                        };
+                    return ret;
+                }
+            };
+
+            // Check if customer's squadlings are all in the prison area.
+            //
+            var all_lined_up = true;
+            const squad = customer.squad orelse err.bug("Vapor mage has no squad", .{});
+
+            // We have to do this silly thing, again to prevent dustlings from pushing
+            // each other forever instead of moving.
+            var squadlings = StackBuffer(*Mob, 8).init(squad.members.constSlice());
+            std.sort.insertion(*Mob, squadlings.slice(), mob, struct {
+                fn f(me: *Mob, a: *Mob, b: *Mob) bool {
+                    return a.distance(me) < b.distance(me);
+                }
+            }.f);
+
+            for (squadlings.constSlice()) |squadling| {
+                if (squadling == customer or squadling.is_dead)
+                    continue;
+
+                if (!state.dungeon.at(squadling.coord).prison) {
+                    all_lined_up = false;
+
+                    if (_S.getEmptySpot(squadling, room)) |spot| {
+                        if (squadling.hasJob(.CAV_BePuppeted) == null)
+                            squadling.newJob(.CAV_BePuppeted);
+                        squadling.ai.work_area.items[0] = spot;
+                    }
+                }
+
+                // Yes, dustlings need to move to work area regardless of
+                // whether they're inside the enclosure... Again to prevent
+                // blocking the entrance
+                _ = goToWorkplace(squadling);
+
+                if (!squadling.hasStatus(.Fireproof))
+                    spells.CAST_FIREPROOF_DUSTLING.use(customer, customer.coord, squadling.coord, .{
+                        .spell = &spells.CAST_FIREPROOF_DUSTLING,
+                        .duration = 20,
+                        .power = 0,
+                        .free = true,
+                        .MP_cost = 0,
+                    });
+            }
+
+            if (all_lined_up) {
+                did_something = useAdjacentMachine(mob, "fire_test_lever") catch
+                    return leaveInShame(mob);
+
+                if (did_something)
+                    stage = 2;
+            }
+        },
+        2 => {
+            var any_left = false;
+
+            var iter = room.rect.iter();
+            while (iter.next()) |coord|
+                if (state.dungeon.at(coord).prison and state.dungeon.fireAt(coord).* > 0) {
+                    any_left = true;
+                };
+
+            std.log.info("not done yet!", .{});
+            if (!any_left) {
+                customer.squad.?.trimMembers();
+                cancelJobIf(customer, .CAV_OrganizeFireTest);
+                for (customer.squad.?.members.constSlice()) |squadling|
+                    if (!squadling.is_dead and squadling != customer)
+                        cancelJobIf(squadling, .CAV_BePuppeted);
+
+                stage = 1;
+            }
+        },
+        else => {
+            err.ensure(stage == 1 or stage == 2, "Stage is {}", .{stage}) catch {};
+            stage = 1;
+        },
+    }
+
+    if (!did_something)
+        tryRest(mob);
+
+    job.ctx.set(usize, CTX_STAGE, stage);
+    return .Ongoing;
+}
+
+// Expects work area to be station place.
 pub fn _Job_CAV_RunDrillRoom(mob: *Mob, job: *AIJob) AIJob.JStatus {
     const CTX_REQUESTED_COMBAT_DUMMY = "ctx_requested_combat_dummy";
 
@@ -314,13 +494,9 @@ pub fn _Job_CAV_RunDrillRoom(mob: *Mob, job: *AIJob) AIJob.JStatus {
 
     // Get the combat dummy, requesting it to be rebuilt if it doesn't exist (has died).
     const dummy = utils.getSpecificMobInRoom(mob.coord, "combat_dummy") orelse {
-        const room_ind = utils.getRoomFromCoord(mob.coord.z, mob.coord) orelse {
-            std.log.info("resigning in shame", .{});
+        const room_ind = utils.getRoomFromCoord(mob.coord.z, mob.coord) orelse
             // Somehow, we are where we are supposed to be, but not in a room...???
-            mob.newJob(.WRK_LeaveFloor);
-            tryRest(mob);
-            return .Complete;
-        };
+            return leaveInShame(mob);
         const room = state.rooms[mob.coord.z].items[room_ind];
 
         if (!job.ctx.get(bool, CTX_REQUESTED_COMBAT_DUMMY, false)) {
@@ -348,18 +524,8 @@ pub fn _Job_CAV_RunDrillRoom(mob: *Mob, job: *AIJob) AIJob.JStatus {
     var did_something = false;
 
     if (dummy.HP <= 2) {
-        const origcoord = mob.coord;
-        for (&DIRECTIONS) |d| if (mob.coord.move(d, state.mapgeometry)) |neighbor| {
-            if (state.dungeon.machineAt(neighbor)) |machine|
-                if (machine.power == 0 and mem.eql(u8, machine.id, "combat_dummy_repair_lever")) {
-                    // TODO: refactor and deduplicate this (with ai.zig's
-                    // BusyWork job implementation)
-                    did_something = mob.moveInDirection(d);
-                    err.ensure(did_something, "{cf}: Powering lever failed", .{mob}) catch {};
-                    err.ensure(mob.coord.eq(origcoord), "{cf}: Attempt to power lever caused movement", .{mob}) catch {};
-                    break;
-                };
-        };
+        did_something = useAdjacentMachine(mob, "combat_dummy_repair_lever") catch
+            return leaveInShame(mob);
     }
 
     if (!did_something)
@@ -379,10 +545,7 @@ pub fn _Job_CAV_RunSwimmingRoom(mob: *Mob, job: *AIJob) AIJob.JStatus {
         return .Ongoing;
     };
 
-    const pistons = findPistons(mob, job) orelse {
-        mob.newJob(.WRK_LeaveFloor); // Leave in shame
-        return .Complete;
-    };
+    const pistons = findPistons(mob, job) orelse return leaveInShame(mob);
 
     // Check if customer's squadlings are all neatly lined up.
     //

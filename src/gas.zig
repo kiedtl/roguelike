@@ -25,6 +25,7 @@ pub const Gas = struct {
     opacity: f64 = 0.0,
     trigger: *const fn (*Mob, usize) void,
     not_breathed: bool = false, // if true, will affect nonbreathing mobs
+    flammable: bool = false, // if true, creates fiery explosions
     id: usize,
     residue: ?Spatter = null,
 };
@@ -173,10 +174,23 @@ pub const Corrosive = Gas{
     .id = 11,
 };
 
+pub const Fire = Gas{
+    .name = "flammable gas",
+    .color = 0xfdc585,
+    .dissipation_rate = 4,
+    .opacity = 0.2,
+    .trigger = struct {
+        pub fn f(_: *Mob, _: usize) void {}
+    }.f,
+    .not_breathed = true,
+    .id = 12,
+};
+
 pub const Gases = [_]Gas{
     Paralysis, SmokeGas, Disorient, Slow,
     Healing,   Dust,     Steam,     Miasma,
     Seizure,   Blinding, Darkness,  Corrosive,
+    Fire,
 };
 pub const GAS_NUM: usize = Gases.len;
 

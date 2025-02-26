@@ -7,6 +7,7 @@ const colors = @import("colors.zig");
 const err = @import("err.zig");
 const fire = @import("fire.zig");
 const fov = @import("fov.zig");
+const gas = @import("gas.zig");
 const items = @import("items.zig");
 const rng = @import("rng.zig");
 const sound = @import("sound.zig");
@@ -33,6 +34,10 @@ pub const FireBurstOpts = struct {
 
     // Who created the explosion, and is thus responsible for the damage to mobs?
     culprit: ?*Mob = null,
+
+    // Used to prevent mobs from taking damage multiple times when recursive
+    // explosions take place.
+    mob_cache: ?*std.AutoHashMap(*Mob, void) = null,
 };
 
 pub fn fireBurst(ground0: Coord, max_radius: usize, opts: FireBurstOpts) void {
@@ -62,8 +67,9 @@ pub fn fireBurst(ground0: Coord, max_radius: usize, opts: FireBurstOpts) void {
     }
     result[ground0.y][ground0.x] = 100; // Ground zero is always incinerated
 
-    var mob_cache = std.AutoHashMap(*Mob, void).init(state.gpa.allocator());
-    defer mob_cache.deinit();
+    var mob_cache_backing = if (opts.mob_cache == null) std.AutoHashMap(*Mob, void).init(state.gpa.allocator()) else undefined;
+    const mob_cache = opts.mob_cache orelse &mob_cache_backing;
+    defer if (opts.mob_cache == null) mob_cache_backing.deinit();
 
     for (&result, 0..) |row, y| for (row, 0..) |cell, x| {
         if (cell > 0) {
@@ -90,6 +96,13 @@ pub fn fireBurst(ground0: Coord, max_radius: usize, opts: FireBurstOpts) void {
                 }
             }
             fire.setTileOnFire(cellc, @max(opts.min_fire, fire.tileFlammability(cellc)));
+
+            if (state.dungeon.atGas(cellc)[gas.Fire.id] > 0) {
+                state.dungeon.atGas(cellc)[gas.Fire.id] = 0;
+                var copts = opts;
+                copts.mob_cache = mob_cache;
+                fireBurst(cellc, 1, copts);
+            }
         }
     };
 }

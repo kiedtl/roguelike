@@ -1,0 +1,33 @@
+% Mispelled "fire_dustling_test", thought it would be funny.
+
+:g_restriction 1
+:g_global_restriction 99
+:priority 100
+:noitems
+:noguards
+:nostairs
+:g_terrain t_metal_fireproof
+
+@p P
+$aDustling fireproofing test room$.
+
+$cRequirements$.: Minimum 3 seconds of exposure without significant visual
+damage. Combat effectiveness must be evaluated immediately after.
+END POSTER
+
+@0 m pump_fire_gas
+@1 m sparkplug
+@e Cmons engineer ([job]CAV_RunFireRoom)
+@l m fire_test_lever
+@d m door_locked_heavy
+
+:prison 2,0 6 5
+
+##########
+*.#0..1#.*
+#.#....#.#
+#.#....#.#
+#.#d&&&#.#
+*........*
+#el.....p#
+###****###

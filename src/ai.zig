@@ -1166,6 +1166,7 @@ pub fn tortureWork(mob: *Mob, _: mem.Allocator) void {
             continue;
 
         spells.CAST_PAIN.use(mob, mob.coord, prisoner.coord, .{
+            .MP_cost = 0,
             .spell = &spells.CAST_PAIN,
             .duration = rng.range(usize, 10, 20),
             .power = 0,

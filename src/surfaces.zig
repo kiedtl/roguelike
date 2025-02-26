@@ -13,6 +13,7 @@ const combat = @import("combat.zig");
 const dijkstra = @import("dijkstra.zig");
 const err = @import("err.zig");
 const explosions = @import("explosions.zig");
+const fire = @import("fire.zig");
 const font = @import("font.zig");
 const gas = @import("gas.zig");
 const main = @import("root");
@@ -29,23 +30,23 @@ const ui = @import("ui.zig");
 const utils = @import("utils.zig");
 
 const AIJob = types.AIJob;
-const Rect = types.Rect;
+const Container = types.Container;
 const Coord = types.Coord;
 const Direction = types.Direction;
 const Item = types.Item;
-const Weapon = types.Weapon;
-const Mob = types.Mob;
-const Squad = types.Squad;
 const Machine = types.Machine;
+const Material = types.Material;
+const Mob = types.Mob;
 const PropArrayList = types.PropArrayList;
 const PropPtrAList = std.ArrayList(*Prop);
-const Container = types.Container;
-const Material = types.Material;
-const Vial = types.Vial;
 const Prop = types.Prop;
-const Stat = types.Stat;
+const Rect = types.Rect;
 const Resistance = types.Resistance;
+const Squad = types.Squad;
+const Stat = types.Stat;
 const StatusDataInfo = types.StatusDataInfo;
+const Vial = types.Vial;
+const Weapon = types.Weapon;
 
 const DIRECTIONS = types.DIRECTIONS;
 const CARDINAL_DIRECTIONS = types.CARDINAL_DIRECTIONS;
@@ -168,6 +169,21 @@ pub const MetalTerrain = Terrain{
     .weight = 6,
 };
 
+pub const FireproofMetalTerrain = Terrain{
+    .id = "t_metal_fireproof",
+    .name = "fireproofed metal",
+    .color = 0xa0849e,
+    .tile = '∷',
+    .sprite = .S_G_T_Metal,
+    .resists = .{ .rElec = -25, .rFire = 50 },
+    .effects = &[_]StatusDataInfo{
+        .{ .status = .Conductive, .duration = .{ .Ctx = null } },
+    },
+    .for_levels = &[_][]const u8{}, // Only appears in some prefabs
+    .placement = .EntireRoom,
+    .weight = 0,
+};
+
 pub const CopperTerrain = Terrain{
     .id = "t_copper",
     .name = "copper",
@@ -279,6 +295,7 @@ pub const TERRAIN = [_]*const Terrain{
     &SladeTerrain,
     // &CarpetTerrain,
     &MetalTerrain,
+    &FireproofMetalTerrain,
     &CopperTerrain,
     &WoodTerrain,
     &ShallowWaterTerrain,
@@ -330,6 +347,9 @@ pub const MACHINES = [_]Machine{
     FirstAidStation,
     EtherealBarrier,
     CombatDummyRepairLever,
+    FireTestLever,
+    Sparkplug,
+    FireGasPump,
     Piston,
 };
 
@@ -625,6 +645,7 @@ pub const LabDoor = Machine{
     .powered_opacity = 1.0,
     .unpowered_opacity = 0.0,
     .flammability = 0, // metal door not flammable
+    .fireproof = true,
     .porous = true,
     .detect_with_elec = true,
     .on_power = powerLabDoor,
@@ -653,6 +674,7 @@ pub const VaultDoor = Machine{ // TODO: rename to QuartersDoor
     .powered_opacity = 0.0,
     .unpowered_opacity = 1.0,
     .flammability = 0, // metal door, not flammable
+    .fireproof = true,
     .porous = true,
     .on_power = powerNone,
 };
@@ -810,7 +832,8 @@ pub const HeavyLockedDoor = Machine{
     .powered_opacity = 0,
     .unpowered_opacity = 1.0,
     .flammability = 0, // not a wooden door at all
-    .porous = true,
+    .fireproof = true, // CAV_fried_dustling relies on this
+    .porous = false, // CAV_fried_dustling relies on this.
     .on_power = powerNone,
     .pathfinding_penalty = 5,
 };
@@ -1168,8 +1191,8 @@ pub const CombatDummyRepairLever = Machine{
     .name = "combat dummy repair lever",
     .powered_tile = '/',
     .unpowered_tile = '\\',
-    .powered_fg = colors.CONCRETE,
-    .unpowered_fg = colors.LIGHT_CONCRETE,
+    .powered_fg = colors.LIGHT_CONCRETE,
+    .unpowered_fg = colors.CONCRETE,
     .power_drain = 100,
     .powered_walkable = false,
     .unpowered_walkable = false,
@@ -1185,6 +1208,79 @@ pub const CombatDummyRepairLever = Machine{
                 state.message(.Info, "The combat dummy suddenly re-inflates.", .{});
             dummy.takeHealing(dummy.max_HP);
             dummy.addStatus(.Sleeping, 0, .Prm);
+        }
+    }.f,
+};
+
+pub const FireTestLever = Machine{
+    .id = "fire_test_lever",
+    .name = "fireproof-test lever",
+    .powered_tile = '/',
+    .unpowered_tile = '\\',
+    .powered_fg = colors.LIGHT_CONCRETE,
+    .unpowered_fg = colors.CONCRETE,
+    .power_drain = 100,
+    .powered_walkable = false,
+    .unpowered_walkable = false,
+
+    .on_power = struct {
+        fn f(machine: *Machine) void {
+            const CTX_PUMP = "ctx_pump";
+            const CTX_PLUG = "ctx_plug";
+
+            const pump = machine.ctx.get(*Machine, CTX_PUMP, utils.getSpecificMachineInRoom(machine.coord, "pump_fire_gas") orelse return);
+            const plug = machine.ctx.get(*Machine, CTX_PLUG, utils.getSpecificMachineInRoom(machine.coord, "sparkplug") orelse return);
+
+            pump.power = 100;
+            plug.power = 100;
+        }
+    }.f,
+};
+
+pub const Sparkplug = Machine{
+    .id = "sparkplug",
+    .name = "sparkplug",
+    .powered_tile = '#',
+    .unpowered_tile = '#',
+    .powered_fg = colors.PALE_VIOLET_RED,
+    .unpowered_fg = colors.LIGHT_CONCRETE,
+    .power_drain = 20, // Five turns of power
+    .powered_walkable = false,
+    .unpowered_walkable = false,
+    .fireproof = true,
+
+    .on_power = struct {
+        fn f(machine: *Machine) void {
+            for (&CARDINAL_DIRECTIONS) |d| if (machine.coord.move(d, state.mapgeometry)) |neighbor| {
+                // Simplified is_walkable checks. We want to make sure surface item
+                // is null, and we don't care if there's a mob in the tile.
+                if (state.dungeon.at(neighbor).type == .Floor and
+                    state.dungeon.at(neighbor).surface == null and
+                    rng.onein(3))
+                {
+                    fire.setTileOnFire(neighbor, 3);
+                    break;
+                }
+            };
+        }
+    }.f,
+};
+
+pub const FireGasPump = Machine{
+    .id = "pump_fire_gas",
+    .name = "flammable gas pump",
+    .powered_tile = 'X',
+    .unpowered_tile = 'I',
+    .powered_fg = colors.PALE_VIOLET_RED,
+    .unpowered_fg = colors.LIGHT_CONCRETE,
+    .power_drain = 34, // Three turns of power
+    .powered_walkable = false,
+    .unpowered_walkable = false,
+    .fireproof = true,
+
+    .on_power = struct {
+        fn f(machine: *Machine) void {
+            state.dungeon.atGas(machine.coord)[gas.Fire.id] = 100;
         }
     }.f,
 };

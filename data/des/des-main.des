@@ -469,6 +469,10 @@ Very noisy to walk on.
 % t_metal
 Metal plates have been bolted onto the floor for some reason.
 
+% t_metal_fireproof
+Metal plates have been bolted onto the floor, and then covered in a thin layer
+of fire retardant.
+
 % t_copper
 Copper plates have been bolted onto the floor for some reason. While standing on
 this, you share electricity damage with nearby monsters.

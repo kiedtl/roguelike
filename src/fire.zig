@@ -48,6 +48,9 @@ pub fn setTileOnFire(c: Coord, amount: ?usize) void {
         return;
     if (state.dungeon.terrainAt(c).fire_retardant)
         return;
+    if (state.dungeon.machineAt(c)) |mach|
+        if (mach.fireproof and !mach.porous)
+            return;
 
     const flammability = tileFlammability(c);
     const newfire = amount orelse @max(flammability, 5);
@@ -117,6 +120,14 @@ pub fn tickFire(level: usize) void {
             if (oldfire == 0) continue;
             var newfire = oldfire;
 
+            // Create explosions if needed.
+            // Return if that's the case, since this will create more fire.
+            if (state.dungeon.atGas(coord)[gas.Fire.id] > 0) {
+                state.dungeon.atGas(coord)[gas.Fire.id] = 0;
+                explosions.fireBurst(coord, 1, .{ .min_fire = 8 });
+                return;
+            }
+
             // Set mob on fire
             if (oldfire > 3) {
                 if (state.dungeon.at(coord).mob) |mob| {
@@ -147,7 +158,10 @@ pub fn tickFire(level: usize) void {
             // Destroy surface items
             if (state.dungeon.at(coord).surface) |s| {
                 switch (s) {
-                    .Poster, .Machine, .Corpse => state.dungeon.at(coord).surface = null,
+                    .Machine => |m| if (!m.fireproof) {
+                        state.dungeon.at(coord).surface = null;
+                    },
+                    .Poster, .Corpse => state.dungeon.at(coord).surface = null,
                     else => {},
                 }
             }

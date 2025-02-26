@@ -1980,8 +1980,10 @@ pub const AIJob = struct {
         SPC_NCAlignment,
         CAV_RunDrillRoom,
         CAV_RunSwimmingRoom,
+        CAV_RunFireRoom,
         CAV_OrganizeSwimming,
         CAV_OrganizeDrill,
+        CAV_OrganizeFireTest,
         CAV_Advertise,
         CAV_FindJob,
         CAV_BePuppeted,
@@ -2003,8 +2005,10 @@ pub const AIJob = struct {
                 .SPC_NCAlignment => ai._Job_SPC_NCAlignment,
                 .CAV_RunDrillRoom => ai.caverns._Job_CAV_RunDrillRoom,
                 .CAV_RunSwimmingRoom => ai.caverns._Job_CAV_RunSwimmingRoom,
+                .CAV_RunFireRoom => ai.caverns._Job_CAV_RunFireRoom,
                 .CAV_OrganizeSwimming => ai.caverns._Job_CAV_OrganizeSwimming,
                 .CAV_OrganizeDrill => ai.caverns._Job_CAV_OrganizeDrill,
+                .CAV_OrganizeFireTest => ai.caverns._Job_CAV_OrganizeFireTest,
                 .CAV_FindJob => ai.caverns._Job_CAV_FindJob,
                 .CAV_Advertise => ai.caverns._Job_CAV_Advertise,
                 .CAV_BePuppeted => ai.caverns._Job_CAV_BePuppeted,
@@ -2038,6 +2042,7 @@ pub const Ctx = struct {
         @"types.AIJob.Type": AIJob.Type,
         @"types.Coord": Coord,
         @"*types.Mob": *Mob,
+        @"*types.Machine": *Machine,
         @"array_list.ArrayListAligned(types.Coord,null)": CoordArrayList,
     };
 
@@ -4681,7 +4686,7 @@ pub const Mob = struct { // {{{
                 }
 
                 if (self.isUnderStatus(.Fireproof) != null) {
-                    r += 25;
+                    r += 75;
                 }
             },
             else => {},
@@ -4785,6 +4790,7 @@ pub const Machine = struct {
 
     porous: bool = false,
     flammability: usize = 0,
+    fireproof: bool = false,
     detect_with_heat: bool = false,
     detect_with_elec: bool = false,
 
@@ -4873,6 +4879,8 @@ pub const Machine = struct {
     }
 
     pub fn canBePoweredBy(self: *Machine, by: *const Mob) bool {
+        if (self.disabled)
+            return false;
         if (self.restricted_to) |restriction|
             if ((restriction == .Night and state.night_rep[@intFromEnum(by.faction)] > 0) or
                 restriction == by.faction)

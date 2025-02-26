@@ -21,6 +21,7 @@ const Direction = types.Direction;
 const Tile = types.Tile;
 const TileType = types.TileType;
 const Mob = types.Mob;
+const Machine = types.Machine;
 
 const LEVELS = state.LEVELS;
 const HEIGHT = state.HEIGHT;
@@ -265,6 +266,18 @@ pub fn walkableNeighbors(c: Coord, diagonals: bool, opts: state.IsWalkableOption
             ctr += 1;
     };
     return ctr;
+}
+
+pub fn getSpecificMachineInRoom(coord: Coord, id: []const u8) ?*Machine {
+    const room_ind = getRoomFromCoord(coord.z, coord) orelse return null;
+    const room = state.rooms[coord.z].items[room_ind];
+
+    var iter = room.rect.iter();
+    return while (iter.next()) |roomcoord| {
+        if (state.dungeon.machineAt(roomcoord)) |mach|
+            if (mem.eql(u8, mach.id, id))
+                break mach;
+    } else null;
 }
 
 pub fn getSpecificMobInRoom(coord: Coord, id: []const u8) ?*Mob {
