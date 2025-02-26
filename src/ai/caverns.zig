@@ -343,6 +343,53 @@ pub fn _Job_CAV_Advertise(mob: *Mob, job: *AIJob) AIJob.JStatus {
     return if (found_someone) .Complete else .Ongoing;
 }
 
+pub fn _Job_CAV_ProduceDustlings(alchemist: *Mob, job: *AIJob) AIJob.JStatus {
+    const CTX_NEED_TO_WAIT = "ctx_need_to_wait";
+
+    if (goToWorkplace(alchemist))
+        return .Ongoing;
+
+    const wait_period_left = job.ctx.get(usize, CTX_NEED_TO_WAIT, 0);
+    if (wait_period_left > 0) {
+        job.ctx.set(usize, CTX_NEED_TO_WAIT, wait_period_left - 1);
+        tryRest(alchemist);
+        return .Ongoing;
+    }
+
+    var potential_leaders = StackBuffer(*Mob, 16).init(null);
+    var iter = state.mobs.iterator();
+    while (iter.next()) |mob| {
+        if (mob.is_dead or mob.coord.z != alchemist.coord.z or !mob.isAloneOrLeader())
+            continue;
+
+        if (mob.squad == null)
+            continue;
+
+        if (mem.eql(u8, mob.id, "vapour_mage") and mob.squad.?.members.len < 5)
+            potential_leaders.append(mob) catch break;
+
+        if (mem.eql(u8, mob.id, "dustling") and mob.squad.?.members.len < 10)
+            potential_leaders.append(mob) catch break;
+    }
+
+    if (potential_leaders.len == 0) {
+        tryRest(alchemist);
+        return .Ongoing;
+    }
+
+    const leader = rng.chooseUnweighted(*Mob, potential_leaders.constSlice());
+    const machine = utils.getSpecificMachineInRoom(alchemist.coord, "dustling_producer") orelse
+        return leaveInShame(alchemist);
+    machine.ctx.set(*Mob, "ctx_leader_for_dustling", leader);
+    const did_something = useAdjacentMachine(alchemist, "dustling_producer") catch
+        return leaveInShame(alchemist);
+    if (!did_something)
+        tryRest(alchemist);
+
+    job.ctx.set(usize, CTX_NEED_TO_WAIT, 7);
+    return .Ongoing;
+}
+
 // Expects work area to be station place.
 pub fn _Job_CAV_RunFireRoom(mob: *Mob, job: *AIJob) AIJob.JStatus {
     // Stage of fire testing.
@@ -457,7 +504,6 @@ pub fn _Job_CAV_RunFireRoom(mob: *Mob, job: *AIJob) AIJob.JStatus {
                     any_left = true;
                 };
 
-            std.log.info("not done yet!", .{});
             if (!any_left) {
                 customer.squad.?.trimMembers();
                 cancelJobIf(customer, .CAV_OrganizeFireTest);

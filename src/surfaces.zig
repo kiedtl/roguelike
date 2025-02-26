@@ -351,6 +351,7 @@ pub const MACHINES = [_]Machine{
     Sparkplug,
     FireGasPump,
     Piston,
+    DustlingProducer,
 };
 
 pub const SteamVent = Machine{
@@ -1306,6 +1307,36 @@ pub const Piston = Machine{
             const direc = machine.coord.closestDirectionTo(target, state.mapgeometry);
             const dist = machine.coord.distance(target);
             combat.throwMob(null, mob, direc, dist);
+        }
+    }.f,
+};
+
+pub const DustlingProducer = Machine{
+    .id = "dustling_producer",
+    .name = "dustling workshop",
+    .powered_tile = '○',
+    .unpowered_tile = '◙',
+    .powered_fg = colors.CONCRETE,
+    .unpowered_fg = colors.LIGHT_CONCRETE,
+    .power_drain = 50,
+    .powered_walkable = false,
+    .unpowered_walkable = false,
+
+    .on_power = struct {
+        fn f(machine: *Machine) void {
+            err.ensure(machine.areas.len == 1, "Dustling machine w/ no areas!", .{}) catch return;
+            const area = machine.areas.constSlice()[0];
+            const leader = machine.ctx.getOrNone(*Mob, "ctx_leader_for_dustling");
+            if (state.dungeon.at(area).mob == null and leader != null) {
+                const dustling = mobs.placeMob(state.gpa.allocator(), &mobs.DustlingTemplate, area, .{ .no_squads = true });
+                dustling.addStatus(.Paralysis, 0, .{ .Tmp = 3 });
+                leader.?.addUnderling(dustling);
+
+                if (state.player.canSeeMob(dustling) or state.player.cansee(machine.coord))
+                    state.message(.Info, "{c} emerges from the machinery.", .{dustling});
+
+                machine.ctx.unset("ctx_leader_for_dustling");
+            }
         }
     }.f,
 };

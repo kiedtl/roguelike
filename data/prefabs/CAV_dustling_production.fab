@@ -1,0 +1,48 @@
+:g_restriction 1
+:g_global_restriction 99
+:g_material dobalene
+:priority 100
+:noitems
+:noguards
+:nostairs
+
+@x Cmons alchemist ([job]CAV_ProduceDustlings)
+@z m dustling_producer 2,2
+@p P
+$aDustling production room$.
+
+DO NOT USE without written permission from the Head of Research. ENFORCED BY
+UNSCHEDULED CHECKS.
+END POSTER
+
+% FABEDIT_REPLACE
+
+@0 p steel_spt_n1s1e1w1
+@1 p steel_spt_n1s1w2
+@2 p steel_spt_n2e1w1
+@3 p steel_spt_n1s1
+@4 p wall_n1s1
+@5 p wall_n1w1
+@6 p wall_e1w1
+@7 p wall_n1s1_slt
+@8 p wire_e1w1
+@9 p wire_n1s1
+@a p wire_n1s1e1w1
+@b p wire_n1w1
+@c p gearbox
+@d p wire_s1e1w1
+@e p wire_n1e1
+@f p small_transformer
+@g p control_panel
+@h p wall_n1e1
+@i p wall_s1e1
+
+********
+*.......
+*..1c#±#
+..20a#x#
+.gc3edz4
+.i93faa4
+.7939.94
+.7a8a8b4
+.h666665

@@ -668,7 +668,7 @@ pub const VapourMageTemplate = MobTemplate{
     .armor = items.HauberkArmor,
     .squad = &[_][]const MobTemplate.SquadMember{
         &[_]MobTemplate.SquadMember{
-            .{ .mob = "dustling", .weight = 1, .count = minmax(usize, 4, 4) },
+            .{ .mob = "dustling", .weight = 1, .count = minmax(usize, 2, 3) },
         },
     },
 };

@@ -274,7 +274,7 @@ fn _saveVariant(ind: usize, writer: anytype) void {
 }
 
 pub fn saveFile() void {
-    var fab_f = std.fs.cwd().openFile(st.fab_path, .{}) catch |e| {
+    var fab_f = std.fs.cwd().openFile(st.fab_path, .{ .mode = .read_write }) catch |e| {
         std.log.err("Could not save file: {}", .{e});
         return;
     };

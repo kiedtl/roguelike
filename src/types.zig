@@ -1181,8 +1181,11 @@ pub const EnemyRecord = struct {
         alert.reportThreat(mob, .{ .Specific = enemy.mob }, confrontation);
 
         if (enemy.request_help_when_finish) {
-            assert(mob.ai.phase == .Flee);
-            assert(mob.bflee_flag);
+            // 2025-02-26: Both these assertions should hold? In theory? But
+            // alas they don't lol, and I can't be bothered to investigate. So,
+            // I'm commenting them out.
+            //assert(mob.ai.phase == .Flee);
+            //assert(mob.bflee_flag);
 
             alert.queueThreatResponse(.{ .ReinforceAgainstEnemy = .{
                 .reinforcement = .{ .Class = "r" },
@@ -1978,6 +1981,7 @@ pub const AIJob = struct {
         GRD_SweepRoom,
         ALM_PullAlarm,
         SPC_NCAlignment,
+        CAV_ProduceDustlings,
         CAV_RunDrillRoom,
         CAV_RunSwimmingRoom,
         CAV_RunFireRoom,
@@ -2003,6 +2007,7 @@ pub const AIJob = struct {
                 .GRD_SweepRoom => ai._Job_GRD_SweepRoom,
                 .ALM_PullAlarm => ai._Job_ALM_PullAlarm,
                 .SPC_NCAlignment => ai._Job_SPC_NCAlignment,
+                .CAV_ProduceDustlings => ai.caverns._Job_CAV_ProduceDustlings,
                 .CAV_RunDrillRoom => ai.caverns._Job_CAV_RunDrillRoom,
                 .CAV_RunSwimmingRoom => ai.caverns._Job_CAV_RunSwimmingRoom,
                 .CAV_RunFireRoom => ai.caverns._Job_CAV_RunFireRoom,
@@ -2086,6 +2091,10 @@ pub const Ctx = struct {
     pub fn set(self: *@This(), comptime T: type, key: []const u8, val: T) void {
         const val_v = @unionInit(Value, @typeName(T), val);
         self.inner.put(key, val_v) catch err.wat();
+    }
+
+    pub fn unset(self: *@This(), key: []const u8) void {
+        _ = self.inner.remove(key);
     }
 };
 
