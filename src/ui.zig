@@ -145,6 +145,7 @@ pub var map_win: struct {
 
     // For border around map, blinking chars on mobs, etc
     grid_annotations: Console = undefined,
+    grid_animations: []?CellAnimation = undefined, // This is a grid, btw
 
     // For particle animations and such.
     animations: Console = undefined,
@@ -168,6 +169,8 @@ pub var map_win: struct {
         self.grid_annotations = Console.init(state.gpa.allocator(), d.width(), d.height());
         self.grid_annotations.default_transparent = true;
         self.grid_annotations.clear();
+        self.grid_animations = state.gpa.allocator().alloc(?CellAnimation, d.width() * d.height()) catch err.oom();
+        @memset(self.grid_animations, null);
 
         self.animations = Console.init(state.gpa.allocator(), d.width(), d.height());
         self.animations.default_transparent = true;
@@ -179,11 +182,35 @@ pub var map_win: struct {
         self.map.addSubconsole(&self.animations, 0, 0);
     }
 
+    pub fn gridAnimAt(self: *@This(), x: usize, y: usize) *?CellAnimation {
+        return &self.grid_animations[y * self.grid_annotations.width + x];
+    }
+
+    pub fn gridAnimAt2(self: *@This(), x: usize, y: usize) ?*CellAnimation {
+        return if (self.grid_animations[y * self.grid_annotations.width + x]) |*anim|
+            anim
+        else
+            null;
+    }
+
+    pub fn stepGridAnimations(self: *@This()) void {
+        var y: usize = 0;
+        while (y < self.grid_annotations.height) : (y += 1) {
+            var x: usize = 0;
+            while (x < self.grid_annotations.width) : (x += 1) {
+                if (map_win.gridAnimAt2(x, y)) |anim| {
+                    anim.step();
+                    map_win.grid_annotations.setCell(x, y, anim.get());
+                }
+            }
+        }
+    }
+
+    // Clear grid_annotations before this.
     pub fn stepBorderAnimations(self: *@This(), refpoint: Coord) void {
         const S = struct {
             var ctr: usize = 0;
         };
-        self.grid_annotations.clear();
         const f = (1 + math.sin(@as(f64, @floatFromInt(S.ctr)) * math.pi / 180.0)) / 4;
         const c = colors.mix(colors.BG, colors.CONCRETE, math.clamp(f, 0.1, 0.7));
         const a = Rect.new(Coord.new(0, 0), WIDTH + 2, HEIGHT + 2);
@@ -1949,6 +1976,15 @@ fn modifyTile(moblist: []const *Mob, coord: Coord, p_tile: display.Cell) display
     return tile;
 }
 
+// FIXME: Refactor this into 2-3 functions, one which just provides an iterator
+// over the area to be drawn over, one which gets the tile to be drawn, and one
+// which modifies the console.
+//
+// This function draws onto map_win.map usually, but is also used for other
+// things. So we have to check if console==map_win.map before doing mouse
+// triggers and other map_win.map-only things, which is kinda yucky and
+// fragile.
+//
 pub fn drawMap(console: *Console, moblist: []const *Mob, refpoint: Coord) void {
     const refpointy: isize = @intCast(refpoint.y);
     const refpointx: isize = @intCast(refpoint.x);
@@ -1980,6 +2016,9 @@ pub fn drawMap(console: *Console, moblist: []const *Mob, refpoint: Coord) void {
         }) {
             // if out of bounds on the map, draw a black tile
             if (y < 0 or x < 0 or y >= HEIGHT or x >= WIDTH) {
+                if (console == &map_win.map) // yuck
+                    map_win.gridAnimAt(cursorx, cursory).* = null;
+
                 console.setCell(cursorx, cursory, .{ .bg = colors.BG, .fl = .{ .wide = true } });
                 console.setCell(cursorx + 1, cursory, .{ .fl = .{ .skip = true } });
                 continue;
@@ -1992,9 +2031,11 @@ pub fn drawMap(console: *Console, moblist: []const *Mob, refpoint: Coord) void {
 
             var tile: display.Cell = undefined;
 
+            const cansee = state.player.cansee(coord);
+
             // if player can't see area, draw a blank/blue tile, depending on
             // what they saw last there
-            if (!state.player.cansee(coord)) {
+            if (!cansee) {
                 tile = .{ .fg = 0, .bg = colors.BG, .ch = ' ' };
 
                 if (state.memory.contains(coord)) {
@@ -2020,6 +2061,9 @@ pub fn drawMap(console: *Console, moblist: []const *Mob, refpoint: Coord) void {
                     tile.ch = if (noise.intensity.radiusHeard() > 6) '♫' else '♩';
                     tile.sch = null;
                 };
+
+                if (console == &map_win.map) // yuck
+                    map_win.gridAnimAt(cursorx, cursory).* = null;
             } else {
                 tile = modifyTile(moblist, coord, Tile.displayAs(coord, false, false));
             }
@@ -2028,11 +2072,15 @@ pub fn drawMap(console: *Console, moblist: []const *Mob, refpoint: Coord) void {
             console.setCell(cursorx, cursory, tile);
             console.setCell(cursorx + 1, cursory, .{ .fl = .{ .skip = true } });
 
-            if (state.player.cansee(coord) and
+            if (cansee and
                 console == &map_win.map) // yuck
             {
                 console.addMouseTrigger(cursor_coord.asRect(), .Hover, .{ .RecordElem = &map_win.annotations });
                 console.addMouseTrigger(cursor_coord.asRect(), .Click, .{ .ExamineScreen = .{ .start_coord = coord } });
+
+                map_win.gridAnimAt(cursorx, cursory).* = Tile.animateAs(coord);
+                if (map_win.gridAnimAt2(cursorx, cursory)) |anim|
+                    map_win.grid_annotations.setCell(cursorx, cursory, anim.get());
             }
         }
     }
@@ -2047,8 +2095,10 @@ pub fn drawAnimationNoPresentTimeout(timeout: ?usize) void {
         drawLabels();
         hud_win.main.stepRevealAnimation();
         log_win.stepAnimations();
+        map_win.grid_annotations.clear();
         map_win.stepBorderAnimations(state.player.coord);
         map_win.stepTextLineAnimations();
+        map_win.stepGridAnimations();
 
         if (timeout == null) return;
 
@@ -4110,6 +4160,43 @@ fn _evToMEvType(ev: display.Event) Console.MouseTrigger.Kind {
 }
 
 // Animations {{{
+
+pub const CellAnimation = struct {
+    kind: Kind,
+
+    // Options
+    //
+    // Not constant, can also be used as state by poorly-written animations :P
+    interval: usize,
+
+    // State, used internally
+    lifetime: usize = 0,
+    ctr: usize = 0, // Only incremented if lifetime % interval == 0
+
+    pub const Kind = union(enum) {
+        RotateCells: struct {
+            cells: StackBuffer(display.Cell, 4),
+
+            pub fn get(self: *@This(), anim: *CellAnimation) display.Cell {
+                var c = self.cells.slice()[anim.ctr % self.cells.len];
+                c.fl.wide = true;
+                return c;
+            }
+        },
+    };
+
+    pub fn get(self: *CellAnimation) display.Cell {
+        return switch (self.kind) {
+            .RotateCells => |*r| r.get(self),
+        };
+    }
+
+    pub fn step(self: *CellAnimation) void {
+        self.lifetime += 1;
+        if (self.lifetime % self.interval == 0)
+            self.ctr += 1;
+    }
+};
 
 pub const Animation = union(enum) {
     PopChar: struct {

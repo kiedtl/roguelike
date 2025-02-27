@@ -352,6 +352,7 @@ pub fn getCell(self: *const Self, x: usize, y: usize) display.Cell {
 }
 
 pub fn setCell(self: *const Self, x: usize, y: usize, c: display.Cell) void {
+    assert(c.ch < 2059254);
     if (x >= self.width or y >= self.height)
         return;
     self.grid[self.width * y + x] = c;

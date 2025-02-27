@@ -5669,6 +5669,33 @@ pub const Tile = struct {
 
         return cell;
     }
+
+    pub fn animateAs(coord: Coord) ?ui.CellAnimation {
+        if (state.dungeon.at(coord).mob) |mob| {
+            var ch: ?u21 = null;
+            var interval: usize = 25;
+
+            if (mob.hasStatus(.Sleeping)) {
+                ch = 'Z';
+            } else if (mob.ai.phase == .Flee) {
+                ch = '!';
+                interval = if (mob.bflee_flag) 10 else interval;
+            }
+
+            if (ch != null)
+                return ui.CellAnimation{
+                    .kind = ui.CellAnimation.Kind{
+                        .RotateCells = .{ .cells = StackBuffer(display.Cell, 4).init(&.{
+                            .{ .trans = true },
+                            .{ .fg = colors.GREY, .ch = ch.? },
+                        }) },
+                    },
+                    .interval = interval,
+                };
+        }
+
+        return null;
+    }
 };
 
 pub const Dungeon = struct {
