@@ -3594,7 +3594,9 @@ pub const Mob = struct { // {{{
                 player.drainMob(recipient);
             },
             .Swap => {
-                if (attacker.canSwapWith(recipient, .{ .ignore_hostility = true })) {
+                if (!recipient.should_be_dead() and
+                    attacker.canSwapWith(recipient, .{ .ignore_hostility = true }))
+                {
                     _ = attacker.teleportTo(recipient.coord, null, true, true);
                 }
             },
@@ -3636,7 +3638,7 @@ pub const Mob = struct { // {{{
         }
 
         // Daze stabbed mobs.
-        if (is_stab) {
+        if (is_stab and !recipient.should_be_dead()) {
             recipient.addStatus(.Daze, 0, .{ .Tmp = rng.range(usize, 3, 5) });
         }
 
@@ -3672,6 +3674,12 @@ pub const Mob = struct { // {{{
             ui.Animation.blinkMob(&.{attacker}, 'M', colors.LIGHT_STEEL_BLUE, .{});
 
             _fightWithWeapon(attacker, recipient, attacker_weapon, newopts, remaining_bonus_attacks - 1);
+        }
+
+        // Kill instantly and step over enemy if this is a stab by player
+        if (is_stab and recipient.should_be_dead() and attacker == state.player) {
+            recipient.kill();
+            _ = attacker.teleportTo(recipient.coord, null, true, true);
         }
     }
 
@@ -3724,9 +3732,11 @@ pub const Mob = struct { // {{{
         }
 
         // Make animations
-        const clamped_dmg = math.clamp(@as(u21, @intCast(amount)), 0, 9);
-        const damage_char: u21 = if (self.should_be_dead()) '∞' else '0' + clamped_dmg;
-        ui.Animation.blinkMob(&.{self}, damage_char, colors.PALE_VIOLET_RED, .{});
+        if (!msg.is_surprise or d.by_mob != state.player) {
+            const clamped_dmg = math.clamp(@as(u21, @intCast(amount)), 0, 9);
+            const damage_char: u21 = if (self.should_be_dead()) '∞' else '0' + clamped_dmg;
+            ui.Animation.blinkMob(&.{self}, damage_char, colors.PALE_VIOLET_RED, .{});
+        }
 
         // Print message
         if (state.player.cansee(self.coord) or (d.by_mob != null and state.player.cansee(d.by_mob.?.coord))) {
