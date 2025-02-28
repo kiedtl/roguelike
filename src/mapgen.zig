@@ -1117,6 +1117,7 @@ pub fn resetLevel(level: usize) void {
 
             state.layout[level][y][x] = .Unknown;
             state.dungeon.itemsAt(coord).clear();
+            state.dungeon.at(coord).terrain = &surfaces.DefaultTerrain;
         }
     }
 
@@ -1871,7 +1872,7 @@ pub fn placeRandomRooms(
 }
 
 pub fn placeDrunkenWalkerCave(level: usize, alloc: mem.Allocator) void {
-    const MIN_OPEN_SPACE = 50;
+    const MIN_OPEN_SPACE = 70;
 
     var tiles_made_floors: usize = 0;
     var visited_stack = CoordArrayList.init(alloc);
@@ -3155,7 +3156,7 @@ pub fn placeBlobs(level: usize) void {
         var i: usize = rng.range(usize, cfg.number.min, cfg.number.max);
         while (i > 0) : (i -= 1) {
             const start_y = rng.rangeClumping(usize, 1, HEIGHT - cfg.min_blob_height.min - 1, 2);
-            const start_x = rng.rangeClumping(usize, 1, WIDTH - cfg.min_blob_height.min - 1, 2);
+            const start_x = rng.rangeClumping(usize, 1, WIDTH - cfg.min_blob_width.min - 1, 2);
             const start = Coord.new2(level, start_x, start_y);
             placeBlob(cfg, start);
         }
@@ -4991,12 +4992,24 @@ pub fn createLevelConfig_WRK(crowd: usize, comptime prefabs: []const []const u8)
 pub const CAV_BASE_LEVELCONFIG = LevelConfig{
     .distances = [2][10]usize{
         .{ 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 },
-        .{ 1, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
+        .{ 2, 3, 3, 3, 3, 5, 2, 2, 2, 1 },
     },
     .shrink_corridors_to_fit = true,
-    .prefab_chance = 33,
+    .prefab_chance = 80,
     .mapgen_func = placeDrunkenWalkerCave,
-    .mapgen_iters = 64,
+    .randroom_opts = .{
+        .starting_fabs = &[_]RandomRoomOpts.StartingFab{
+            .{
+                .n = "CAV_dustling_production",
+                .y = MinMax(usize){ .min = 1, .max = 15 },
+            },
+            .{
+                .n = "CAV_combat_drill",
+                .y = MinMax(usize){ .min = HEIGHT - 20, .max = HEIGHT - 10 },
+            },
+        },
+    },
+    .mapgen_iters = 256,
 
     .min_room_width = 4,
     .min_room_height = 4,
@@ -5031,22 +5044,35 @@ pub const CAV_BASE_LEVELCONFIG = LevelConfig{
 
     .blobs = &[_]BlobConfig{
         .{
-            .number = MinMax(usize){ .min = 10, .max = 15 },
+            .number = minmax(usize, 10, 15),
             .type = null, // Don't overwrite walls
             .terrain = &surfaces.DeadFungiTerrain,
-            .min_blob_width = minmax(usize, 2, 8),
-            .min_blob_height = minmax(usize, 2, 8),
-            .max_blob_width = minmax(usize, 9, 20),
-            .max_blob_height = minmax(usize, 9, 20),
+            .min_blob_width = minmax(usize, 2, 4),
+            .min_blob_height = minmax(usize, 2, 4),
+            .max_blob_width = minmax(usize, 9, 12),
+            .max_blob_height = minmax(usize, 9, 12),
             .ca_rounds = 10,
             .ca_percent_seeded = 55,
             .ca_birth_params = "ffffffftt",
             .ca_survival_params = "ffftttttt",
         },
         .{
-            .number = MinMax(usize){ .min = 3, .max = 4 },
+            .number = minmax(usize, 1, 2),
             .type = .Floor,
             .terrain = &surfaces.GlowingWaterTerrain,
+            .min_blob_height = minmax(usize, 6, 8),
+            .min_blob_width = minmax(usize, WIDTH / 3 * 2, WIDTH / 3 * 2),
+            .max_blob_height = minmax(usize, 14, 16),
+            .max_blob_width = minmax(usize, WIDTH / 4 * 3, WIDTH / 6 * 5),
+            .ca_rounds = 5,
+            .ca_percent_seeded = 55,
+            .ca_birth_params = "ffffftttt",
+            .ca_survival_params = "ffffttttt",
+        },
+        .{
+            .number = minmax(usize, 2, 3),
+            .type = .Floor,
+            .terrain = &surfaces.WaterTerrain,
             .min_blob_width = minmax(usize, 8, 10),
             .min_blob_height = minmax(usize, 12, 14),
             .max_blob_width = minmax(usize, 14, 16),

@@ -282,7 +282,7 @@ pub const GlowingWaterTerrain = Terrain{
     },
     .is_path_penalized = true,
     .luminescence = 60,
-    .gas = .{ .id = gas.Fire.id, .amount = 50, .chance = 200 },
+    .gas = .{ .id = gas.Fire.id, .amount = 200, .chance = 1200 },
 
     .for_levels = &[_][]const u8{},
     .placement = .RoomBlob,
