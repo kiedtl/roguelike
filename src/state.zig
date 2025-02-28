@@ -63,7 +63,7 @@ pub const GameState = union(enum) { Game, Win, Lose, Quit, Viewer };
 pub const Layout = union(enum) { Unknown, Room: usize };
 
 pub const HEIGHT = 90;
-pub const WIDTH = 45;
+pub const WIDTH = 55;
 pub const LEVELS = 20; //21;
 pub const PLAYER_STARTING_LEVEL = 19; // TODO: define in data file
 
