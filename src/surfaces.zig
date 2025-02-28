@@ -90,7 +90,10 @@ pub const Stair = struct {
 pub const Terrain = struct {
     id: []const u8,
     name: []const u8,
-    color: u32,
+    fg: u32,
+    fg_dance: ?colors.ColorDance = null,
+    bg: u32 = colors.BG,
+    bg_dance: ?colors.ColorDance = null,
     tile: u21,
     sprite: ?font.Sprite = null,
     stats: enums.EnumFieldStruct(Stat, isize, 0) = .{},
@@ -123,7 +126,7 @@ pub const Terrain = struct {
 pub const DefaultTerrain = Terrain{
     .id = "t_default",
     .name = "",
-    .color = colors.DOBALENE_BLUE,
+    .fg = colors.DOBALENE_BLUE,
     .tile = '·',
 
     // for_levels and placement have no effect, since this is the default
@@ -137,7 +140,7 @@ pub const DefaultTerrain = Terrain{
 pub const SladeTerrain = Terrain{
     .id = "t_slade",
     .name = "slade",
-    .color = 0xb00bb0, // polished slade
+    .fg = 0xb00bb0, // polished slade
     .tile = '·',
     .stats = .{},
 
@@ -149,7 +152,7 @@ pub const SladeTerrain = Terrain{
 // pub const CarpetTerrain = Terrain{
 //     .id = "t_carpet",
 //     .name = "carpet",
-//     .color = 0xdaa520, // goldenish
+//     .fg = 0xdaa520, // goldenish
 //     .tile = '÷',
 //     .flammability = 30,
 
@@ -161,7 +164,7 @@ pub const SladeTerrain = Terrain{
 pub const MetalTerrain = Terrain{
     .id = "t_metal",
     .name = "metal",
-    .color = 0x8094ae, // steel blue
+    .fg = 0x8094ae, // steel blue
     .tile = '∷',
     .sprite = .S_G_T_Metal,
     .resists = .{ .rElec = -25 },
@@ -177,7 +180,7 @@ pub const MetalTerrain = Terrain{
 pub const FireproofMetalTerrain = Terrain{
     .id = "t_metal_fireproof",
     .name = "fireproofed metal",
-    .color = 0xa0849e,
+    .fg = 0xa0849e,
     .tile = '∷',
     .sprite = .S_G_T_Metal,
     .resists = .{ .rElec = -25, .rFire = 50 },
@@ -192,7 +195,7 @@ pub const FireproofMetalTerrain = Terrain{
 pub const CopperTerrain = Terrain{
     .id = "t_copper",
     .name = "copper",
-    .color = 0x998883,
+    .fg = 0x998883,
     .tile = ':',
     .resists = .{ .rElec = -25 },
     .effects = &[_]StatusDataInfo{
@@ -207,7 +210,7 @@ pub const CopperTerrain = Terrain{
 pub const WoodTerrain = Terrain{
     .id = "t_wood",
     .name = "wood",
-    .color = 0xdaa520, // wood
+    .fg = 0xdaa520, // wood
     .tile = '·',
     .resists = .{ .rFire = -25, .rElec = 25 },
     .flammability = 40,
@@ -220,8 +223,13 @@ pub const WoodTerrain = Terrain{
 pub const ShallowWaterTerrain = Terrain{
     .id = "t_water_shallow",
     .name = "shallow water",
-    .color = 0x3c73b1, // medium blue
+
+    .fg = 0x4c4c7c,
+    .fg_dance = .{ .each = 0x000415, .all = 10 },
+    .bg = 0x34347c, // medium blue
+    .bg_dance = .{ .each = 0x050505, .all = 6 },
     .tile = '≈',
+
     .resists = .{ .rFire = 25, .rElec = -25 },
     .effects = &[_]StatusDataInfo{
         .{ .status = .Conductive, .duration = .{ .Ctx = null } },
@@ -236,8 +244,13 @@ pub const ShallowWaterTerrain = Terrain{
 pub const WaterTerrain = Terrain{
     .id = "t_water",
     .name = "deep water",
-    .color = 0x104381, // medium blue
+
+    .fg = 0x454854,
+    .fg_dance = .{ .each = 0x000415, .all = 10 }, // Stolen from Brogue lol
+    .bg = 0x252a50,
+    .bg_dance = .{ .each = 0x050505, .all = 6 }, // Stolen from Brogue. Seeing a pattern?
     .tile = '≈',
+
     .resists = .{ .rFire = 50, .rElec = -50 },
     .effects = &[_]StatusDataInfo{
         .{ .status = .Conductive, .duration = .{ .Ctx = null } },
@@ -255,8 +268,13 @@ pub const WaterTerrain = Terrain{
 pub const GlowingWaterTerrain = Terrain{
     .id = "t_water_glowing",
     .name = "glowing water",
-    .color = 0x108341, // medium blue
+
+    .fg = 0x108341,
+    .fg_dance = .{ .each = 0x001808, .all = 10 },
+    .bg = 0x25502a,
+    .bg_dance = .{ .each = 0x060907, .all = 6 },
     .tile = '≈',
+
     .resists = .{ .rFire = 25, .rElec = -50, .rAcid = -50 },
     .effects = &[_]StatusDataInfo{
         .{ .status = .Noisy, .duration = .{ .Ctx = null } },
@@ -274,7 +292,7 @@ pub const GlowingWaterTerrain = Terrain{
 pub const DeadFungiTerrain = Terrain{
     .id = "t_f_dead",
     .name = "dead fungi",
-    .color = 0xaaaaaa,
+    .fg = 0xaaaaaa,
     .tile = '"',
     .opacity = 60,
     .resists = .{ .rFire = -25 },
@@ -289,7 +307,7 @@ pub const DeadFungiTerrain = Terrain{
 pub const TallFungiTerrain = Terrain{
     .id = "t_f_tall",
     .name = "tall fungi",
-    .color = 0x0a8505,
+    .fg = 0x0a8505,
     .tile = '&',
     .opacity = 100,
     .flammability = 20,
@@ -303,7 +321,7 @@ pub const TallFungiTerrain = Terrain{
 pub const PillarTerrain = Terrain{
     .id = "t_pillar",
     .name = "pillar",
-    .color = 0xffffff,
+    .fg = 0xffffff,
     .tile = '8',
     .stats = .{ .Evade = 25 },
     .opacity = 50,

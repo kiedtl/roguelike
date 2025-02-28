@@ -69,6 +69,8 @@ pub const MAP_WIDTH_R = 20;
 pub const MIN_HEIGHT = (MAP_HEIGHT_R * 2) + LOG_HEIGHT + 2;
 pub const MIN_WIDTH = (MAP_WIDTH_R * 4) + LEFT_INFO_WIDTH + 2 + 1;
 
+pub var uirng: std.Random.DefaultPrng = undefined;
+
 pub var log_win: struct {
     main: Console,
     last_message: ?usize = null,
@@ -324,6 +326,8 @@ pub var wiz_win: ModalWindow(0, .Zap) = undefined;
 
 pub fn init(scale: f32) !void {
     try display.init(MIN_WIDTH, MIN_HEIGHT, scale);
+
+    uirng = @TypeOf(uirng).init(@intCast(std.time.milliTimestamp()));
 
     zap_win.init();
     pinfo_win.init();

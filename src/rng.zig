@@ -42,6 +42,14 @@ pub fn int(comptime T: type) T {
     };
 }
 
+pub fn intManaged(myrng: anytype, comptime T: type) T {
+    return switch (@typeInfo(T)) {
+        .int => myrng.int(T),
+        .float => myrng.float(T),
+        else => @compileError("Expected int or float, got " ++ @typeName(T)),
+    };
+}
+
 pub fn boolean() bool {
     return rng.random().int(u1) == 1;
 }
@@ -82,6 +90,12 @@ pub fn range(comptime T: type, min: T, max: T) T {
     std.debug.assert(max >= min);
     const diff = (max + 1) - min;
     return if (diff > 0) @mod(int(T), diff) + min else min;
+}
+
+pub fn rangeManaged(myrng: anytype, comptime T: type, min: T, max: T) T {
+    std.debug.assert(max >= min);
+    const diff = (max + 1) - min;
+    return if (diff > 0) @mod(intManaged(myrng, T), diff) + min else min;
 }
 
 pub fn shuffle(comptime T: type, arr: []T) void {

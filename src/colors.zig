@@ -3,6 +3,8 @@ const math = std.math;
 const sort = std.sort;
 const assert = std.debug.assert;
 
+const rng = @import("rng.zig");
+
 pub const GREY: u32 = 0xafafaf;
 pub const DARK_GREY: u32 = 0x8a8a8a;
 pub const OFF_WHITE: u32 = 0xe6e6e6;
@@ -26,6 +28,19 @@ pub const BG: u32 = percentageOf(CONCRETE, 10);
 pub const BG_L: u32 = percentageOf(CONCRETE, 30);
 pub const ABG: u32 = percentageOf(LIGHT_STEEL_BLUE, 20);
 pub const ABG_L: u32 = percentageOf(LIGHT_STEEL_BLUE, 40);
+
+pub const ColorDance = struct {
+    each: u24,
+    all: u8,
+
+    pub fn apply(self: @This(), to: u32, n: anytype) u32 {
+        const common = rng.rangeManaged(n, u24, 0, self.all);
+        const r = (to >> 16) + rng.rangeManaged(n, u24, 0, self.each >> 16) + common;
+        const g = ((to >> 8) & 0xFF) + rng.rangeManaged(n, u24, 0, (self.each >> 8) & 0xFF) + common;
+        const b = (to & 0xFF) + rng.rangeManaged(n, u24, 0, (self.each) & 0xFF) + common;
+        return r << 16 | g << 8 | b;
+    }
+};
 
 // Interpolate linearly between two vals.
 fn interpolate(a: u32, b: u32, f: f64) u32 {

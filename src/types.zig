@@ -5501,8 +5501,8 @@ pub const Tile = struct {
             .Floor => {
                 cell.ch = self.terrain.tile;
                 cell.sch = self.terrain.sprite;
-                cell.fg = self.terrain.color;
-                cell.bg = colors.BG;
+                cell.fg = self.terrain.fg;
+                cell.bg = self.terrain.bg;
             },
         }
 
@@ -5671,6 +5671,8 @@ pub const Tile = struct {
     }
 
     pub fn animateAs(coord: Coord) ?ui.CellAnimation {
+        const terrain = state.dungeon.terrainAt(coord);
+
         if (state.dungeon.at(coord).mob) |mob| {
             var ch: ?u21 = null;
             var interval: usize = 25;
@@ -5692,6 +5694,29 @@ pub const Tile = struct {
                     },
                     .interval = interval,
                 };
+        } else if (terrain.fg_dance != null or terrain.bg_dance != null) {
+            const rand = ui.uirng.random();
+            var cells = StackBuffer(display.Cell, 4).init(null);
+            const count: usize = if (rng.onein(20)) 2 else 1;
+
+            for (0..count) |_| {
+                const fg = if (terrain.fg_dance) |d| d.apply(terrain.fg, rand) else terrain.fg;
+                const bg = if (terrain.bg_dance) |d| d.apply(terrain.bg, rand) else terrain.bg;
+
+                cells.append(.{
+                    .ch = terrain.tile,
+                    .sch = terrain.sprite,
+                    .fg = fg,
+                    .bg = bg,
+                }) catch err.wat();
+            }
+
+            return ui.CellAnimation{
+                .kind = ui.CellAnimation.Kind{
+                    .RotateCells = .{ .cells = cells },
+                },
+                .interval = 15,
+            };
         }
 
         return null;
