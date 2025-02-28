@@ -707,6 +707,10 @@ fn viewerMain() void {
                 } else if (ev.ch != 0) {
                     switch (ev.ch) {
                         '.' => tickGame(state.current_level) catch {},
+                        'r' => {
+                            state.floor_seeds[state.current_level] = rng.int(u64);
+                            mapgen.initLevel(state.current_level);
+                        },
                         'a' => running = !running,
                         'j' => if (y < HEIGHT) {
                             y = @min(y + (tty_height / 2), HEIGHT - 1);
@@ -1266,6 +1270,7 @@ pub fn actualMain() anyerror!void {
     } else |_| {
         state.seed = @intCast(std.time.milliTimestamp());
     }
+    std.log.info("Seed: {}", .{state.seed});
 
     if (use_tester) {
         testerMain();
