@@ -4482,7 +4482,7 @@ pub const Mob = struct { // {{{
                 break true;
         } else false;
 
-        if (attacked_me)
+        if (attacked_me and self.faction == .Night)
             hostile = true;
 
         return hostile;
