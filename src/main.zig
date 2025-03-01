@@ -186,6 +186,7 @@ fn initGameState() void {
     events.init();
     player.choosePlayerUpgrades();
     events.executeGlobalEvents();
+    mapgen.fungi.generateSingle();
 
     for (&state.dungeon.map, 0..) |*map, level| {
         state.stockpiles[level] = StockpileArrayList.init(state.gpa.allocator());

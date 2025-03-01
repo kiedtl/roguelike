@@ -104,11 +104,7 @@ pub const Terrain = struct {
     is_path_penalized: bool = false,
     repairable: bool = true,
     luminescence: usize = 0,
-    gas: ?struct {
-        id: usize,
-        amount: usize,
-        chance: usize, // One in X, so higher is less often. Lava emitting smoke is one in 300
-    } = null,
+    gas: ?gas.GasCreationOpts = null,
     opacity: usize = 0,
 
     for_levels: []const []const u8,

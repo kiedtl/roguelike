@@ -18,6 +18,12 @@ const LEVELS = state.LEVELS;
 const HEIGHT = state.HEIGHT;
 const WIDTH = state.WIDTH;
 
+pub const GasCreationOpts = struct {
+    id: usize,
+    amount: usize,
+    chance: usize, // One in X, so higher is less often. Lava emitting smoke is one in 300
+};
+
 pub const Gas = struct {
     name: []const u8,
     color: u32,

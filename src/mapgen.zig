@@ -22,7 +22,8 @@ const tsv = @import("tsv.zig");
 const types = @import("types.zig");
 const utils = @import("utils.zig");
 
-const tunneler = @import("mapgen/tunneler.zig");
+pub const tunneler = @import("mapgen/tunneler.zig");
+pub const fungi = @import("mapgen/fungi.zig");
 
 const LinkedList = @import("list.zig").LinkedList;
 // const Generator = @import("generators.zig").Generator;

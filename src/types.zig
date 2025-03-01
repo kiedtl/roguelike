@@ -4482,6 +4482,8 @@ pub const Mob = struct { // {{{
                 break true;
         } else false;
 
+        // 2025-02-28: For future me who's implementing Angel hostility
+        // mechanics: see commit message for a578181
         if (attacked_me and self.faction == .Night)
             hostile = true;
 

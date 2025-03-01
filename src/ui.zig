@@ -289,6 +289,7 @@ pub var map_win: struct {
 
     pub fn deinit(self: *@This()) void {
         self.map.deinit();
+        state.gpa.allocator().free(self.grid_animations);
         // if (self.text_line_anim) |ptr|
         //     state.gpa.allocator().destroy(ptr);
     }
