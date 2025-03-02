@@ -5718,6 +5718,10 @@ pub const Tile = struct {
     pub fn animateAs(coord: Coord) ?ui.CellAnimation {
         const terrain = state.dungeon.terrainAt(coord);
 
+        const there_is_gas = for (state.dungeon.atGas(coord)) |q| {
+            if (q > 0) break true;
+        } else false;
+
         if (state.dungeon.at(coord).mob) |mob| {
             var ch: ?u21 = null;
             var interval: usize = 25;
@@ -5739,6 +5743,12 @@ pub const Tile = struct {
                     },
                     .interval = interval,
                 };
+        } else if (there_is_gas) {
+            // Nothing
+        } else if (state.dungeon.fireAt(coord).* > 0) {
+            // Also nothing
+            //
+            // Although... there could be a color dance here... in the future
         } else if (terrain.fg_dance != null or terrain.bg_dance != null) {
             const rand = ui.uirng.random();
             var cells = StackBuffer(display.Cell, 4).init(null);
