@@ -102,10 +102,15 @@ pub const Terrain = struct {
     flammability: usize = 0,
     fire_retardant: bool = false,
     is_path_penalized: bool = false,
-    repairable: bool = true,
+    trample_cloud: ?gas.GasCreationOpts = null,
+    trample_into: ?*const Terrain = null,
     luminescence: usize = 0,
     gas: ?gas.GasCreationOpts = null,
     opacity: usize = 0,
+
+    // 2025-03-01: Apparently not used anywhere, dunno what it was for I should
+    // check git history at some point.
+    repairable: bool = true,
 
     for_levels: []const []const u8,
     placement: TerrainPlacement,
@@ -118,6 +123,11 @@ pub const Terrain = struct {
         RoomPortion,
     };
 };
+
+pub var CavernsTerrain1 = Terrain{ .id = "t_caverns_1", .for_levels = &[_][]const u8{"CAV"}, .placement = .RoomBlob, .weight = 3, .flammability = 5, .fg = undefined, .tile = undefined, .name = undefined };
+pub var CavernsTerrain2 = Terrain{ .id = "t_caverns_2", .for_levels = &[_][]const u8{"CAV"}, .placement = .RoomBlob, .weight = 3, .flammability = 5, .fg = undefined, .tile = undefined, .name = undefined };
+pub var CavernsTerrain3 = Terrain{ .id = "t_caverns_3", .for_levels = &[_][]const u8{"CAV"}, .placement = .RoomBlob, .weight = 3, .flammability = 5, .fg = undefined, .tile = undefined, .name = undefined };
+pub var CavernsTerrain4 = Terrain{ .id = "t_caverns_4", .for_levels = &[_][]const u8{"CAV"}, .placement = .RoomBlob, .weight = 3, .flammability = 5, .fg = undefined, .tile = undefined, .name = undefined };
 
 pub const DefaultTerrain = Terrain{
     .id = "t_default",

@@ -4990,6 +4990,22 @@ pub fn createLevelConfig_WRK(crowd: usize, comptime prefabs: []const []const u8)
     };
 }
 
+pub fn _fungiBlob(f: *const surfaces.Terrain, nmin: usize, nmax: usize) BlobConfig {
+    return .{
+        .number = minmax(usize, nmin, nmax),
+        .type = null, // Don't overwrite walls
+        .terrain = f,
+        .min_blob_width = minmax(usize, 2, 4),
+        .min_blob_height = minmax(usize, 2, 4),
+        .max_blob_width = minmax(usize, 9, 12),
+        .max_blob_height = minmax(usize, 9, 12),
+        .ca_rounds = 10,
+        .ca_percent_seeded = 55,
+        .ca_birth_params = "ffffffftt",
+        .ca_survival_params = "ffftttttt",
+    };
+}
+
 pub const CAV_BASE_LEVELCONFIG = LevelConfig{
     .distances = [2][10]usize{
         .{ 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 },
@@ -5044,19 +5060,11 @@ pub const CAV_BASE_LEVELCONFIG = LevelConfig{
     .door = &surfaces.VaultDoor,
 
     .blobs = &[_]BlobConfig{
-        .{
-            .number = minmax(usize, 10, 15),
-            .type = null, // Don't overwrite walls
-            .terrain = &surfaces.DeadFungiTerrain,
-            .min_blob_width = minmax(usize, 2, 4),
-            .min_blob_height = minmax(usize, 2, 4),
-            .max_blob_width = minmax(usize, 9, 12),
-            .max_blob_height = minmax(usize, 9, 12),
-            .ca_rounds = 10,
-            .ca_percent_seeded = 55,
-            .ca_birth_params = "ffffffftt",
-            .ca_survival_params = "ffftttttt",
-        },
+        _fungiBlob(&surfaces.CavernsTerrain1, 2, 5),
+        _fungiBlob(&surfaces.CavernsTerrain2, 2, 5),
+        _fungiBlob(&surfaces.CavernsTerrain3, 2, 5),
+        _fungiBlob(&surfaces.CavernsTerrain4, 2, 5),
+        _fungiBlob(&surfaces.DeadFungiTerrain, 3, 4),
         .{
             .number = minmax(usize, 1, 2),
             .type = .Floor,

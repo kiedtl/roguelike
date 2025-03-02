@@ -182,11 +182,11 @@ fn initGameState() void {
     state.evocables = EvocableList.init(state.gpa.allocator());
     state.messages = MessageArrayList.init(state.gpa.allocator());
 
+    mapgen.fungi.init();
     alert.init();
     events.init();
     player.choosePlayerUpgrades();
     events.executeGlobalEvents();
-    mapgen.fungi.generateSingle();
 
     for (&state.dungeon.map, 0..) |*map, level| {
         state.stockpiles[level] = StockpileArrayList.init(state.gpa.allocator());
@@ -272,6 +272,7 @@ fn deinitGameState() void {
     state.containers.deinit();
     state.evocables.deinit();
 
+    mapgen.fungi.deinit();
     alert.deinit();
     events.deinit();
 

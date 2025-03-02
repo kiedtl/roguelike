@@ -1829,11 +1829,26 @@ pub const StatusDataInfo = struct {
     // Whether to give the .Exhaust status after the effect is over.
     exhausting: bool = false,
 
+    // Add .Tmp durations together, instead of replacing it.
+    //
+    // Only used when actually applying the status, irrelevant in mob.statuses
+    add_duration: bool = true,
+
     pub const Duration = union(enum) {
         Prm,
         Equ,
         Tmp: usize,
         Ctx: ?*const surfaces.Terrain,
+
+        pub fn format(self: @This(), comptime f: []const u8, _: std.fmt.FormatOptions, writer: anytype) !void {
+            _ = f;
+            try writer.writeAll(@tagName(self));
+            switch (self) {
+                .Tmp => |d| try writer.print("({})", .{d}),
+                .Ctx => |mt| if (mt) |t| try writer.print("({s})", .{t.id}),
+                else => {},
+            }
+        }
 
         pub fn jsonStringify(val: Duration, stream: anytype) !void {
             try stream.beginObject();
@@ -2731,8 +2746,13 @@ pub const Mob = struct { // {{{
 
             // Set the dummy .Ctx durations' values.
             //
-            if (meta.activeTag(effect.duration) == .Ctx) {
+            if (effect.duration == .Ctx) {
                 adj_effect.duration = .{ .Ctx = terrain };
+            }
+
+            // If the status is a .Tmp status and we already have it, skip
+            if (effect.duration == .Tmp and self.hasStatus(effect.status)) {
+                continue;
             }
 
             self.applyStatus(adj_effect, .{});
@@ -2747,8 +2767,8 @@ pub const Mob = struct { // {{{
                 if (status_type == .Tmp) {
                     var n_status_data = status_data.*;
                     n_status_data.duration = .{ .Tmp = n_status_data.duration.Tmp -| 1 };
+                    n_status_data.add_duration = false;
                     self.applyStatus(n_status_data, .{
-                        .add_duration = false,
                         .replace_duration = true,
                     });
                 } else if (status_type == .Ctx) {
@@ -2891,7 +2911,8 @@ pub const Mob = struct { // {{{
                 .status = .Held,
                 .power = 0,
                 .duration = .{ .Tmp = new_duration },
-            }, .{ .replace_duration = true, .add_duration = false });
+                .add_duration = false,
+            }, .{ .replace_duration = true });
 
             if (self.isUnderStatus(.Held)) |_| {
                 state.messageAboutMob(self, self.coord, .Info, "flail around helplessly.", .{}, "flails around helplessly.", .{});
@@ -3264,6 +3285,16 @@ pub const Mob = struct { // {{{
 
         if (self.hasStatus(.FumesVest) and direction != null) {
             state.dungeon.atGas(coord)[gas.Darkness.id] += 2;
+        }
+
+        if (state.dungeon.terrainAt(dest).trample_cloud) |gas_opts| {
+            if (rng.onein(gas_opts.chance)) {
+                state.dungeon.atGas(coord)[gas_opts.id] += gas_opts.amount;
+            }
+        }
+
+        if (state.dungeon.terrainAt(dest).trample_into) |new| {
+            state.dungeon.at(dest).terrain = new;
         }
 
         if (state.dungeon.at(dest).surface) |surface| {
@@ -4273,10 +4304,12 @@ pub const Mob = struct { // {{{
     pub fn applyStatus(
         self: *Mob,
         s: StatusDataInfo,
+        // FIXME: This should be a part of StatusDataInfo. One field has been
+        // moved so far (add_duration), two more to go. (This is to simplify
+        // terrain definitions, esp ones which add, say, 3 non-stacking turns
+        // of Held.)
         opts: struct {
             add_power: bool = false,
-            // Add .Tmp durations together, instead of replacing it.
-            add_duration: bool = true,
             // Force the duration to be set to the new one.
             replace_duration: bool = false,
         },
@@ -4316,7 +4349,7 @@ pub const Mob = struct { // {{{
             },
             .Tmp => |dur| {
                 if (replace_anyway or new_dur_type == .Prm or new_dur_type == .Tmp) {
-                    if (opts.add_duration and new_dur_type == .Tmp) {
+                    if (s.add_duration and new_dur_type == .Tmp) {
                         var newdur = dur + s.duration.Tmp;
                         newdur = math.clamp(newdur, 0, Status.MAX_DURATION);
 

@@ -140,6 +140,7 @@ pub fn choose(comptime T: type, arr: []const T, weights: []const usize) !T {
 }
 
 // TODO: reduce duplicate code between choose2 and choose
+// FIXME: this can never return an error, fix the return type.
 pub fn choose2(comptime T: type, arr: []const T, comptime weight_field: []const u8) !T {
     var weight_total: usize = 0;
     var selected = arr[0];
@@ -151,6 +152,25 @@ pub fn choose2(comptime T: type, arr: []const T, comptime weight_field: []const 
         const rnd = rng.random().int(usize) % (weight_total + weight);
         if (rnd >= weight_total) // probability is weight/(total+weight)
             selected = item;
+
+        weight_total += weight;
+    }
+
+    return selected;
+}
+
+// TODO: reduce duplicate code between choose2 and choose
+pub fn chooseInd2(comptime T: type, arr: []const T, comptime weight_field: []const u8) usize {
+    var weight_total: usize = 0;
+    var selected: usize = 0;
+
+    for (arr, 0..) |item, ind| {
+        const weight = @field(item, weight_field);
+        if (weight == 0) continue;
+
+        const rnd = rng.random().int(usize) % (weight_total + weight);
+        if (rnd >= weight_total) // probability is weight/(total+weight)
+            selected = ind;
 
         weight_total += weight;
     }
