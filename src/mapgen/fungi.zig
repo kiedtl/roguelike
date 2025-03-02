@@ -20,7 +20,8 @@ const Filter = enum { Mob, Machine, Terrain };
 
 const Char = struct {
     ch: u21,
-    weight: usize,
+    original_weight: usize,
+    weight: usize = 0,
 };
 
 const PresetColor = struct {
@@ -37,7 +38,8 @@ const PresetColor = struct {
     },
     variation: colors.ColorDance,
 
-    weight: usize = 1,
+    original_weight: usize = 1,
+    weight: usize = 0,
 };
 
 const Name = struct {
@@ -45,7 +47,10 @@ const Name = struct {
     string: []const u8,
     prefer_color: ?[]const u8 = null,
     forbid: ?[]const u8 = null,
-    weight: usize = 10,
+    original_weight: usize = 10,
+
+    // Reset after generation process
+    weight: usize = 0,
 
     pub const Kind = enum { Adj, Noun };
 };
@@ -106,8 +111,8 @@ const Trait = struct {
                     // Can't assign directly because onto.effects is const
                     onto.effects = effects;
                 },
-                .TrampleCloud => {},
-                .TrampleInto => {},
+                .TrampleCloud => |g| onto.trample_cloud = g,
+                .TrampleInto => |t| onto.trample_into = t,
                 .Fragile => {},
                 .Luminescent => |_| onto.luminescence = 50,
                 .Opacity => |o| onto.opacity = o,
@@ -131,22 +136,22 @@ const COLORS = [_]PresetColor{
 };
 
 const CHARS = [_]Char{
-    .{ .ch = '"', .weight = 10 },
-    .{ .ch = '&', .weight = 0 },
-    .{ .ch = '%', .weight = 0 },
-    .{ .ch = '$', .weight = 5 },
-    .{ .ch = '*', .weight = 0 },
+    .{ .ch = '"', .original_weight = 10 },
+    .{ .ch = '&', .original_weight = 0 },
+    .{ .ch = '%', .original_weight = 0 },
+    .{ .ch = '$', .original_weight = 5 },
+    .{ .ch = '*', .original_weight = 0 },
 };
 
 const NAMES = [_]Name{
-    .{ .kind = .Adj, .string = "blood", .prefer_color = "blood red", .weight = 0 },
+    .{ .kind = .Adj, .string = "blood", .prefer_color = "blood red", .original_weight = 0 },
     .{ .kind = .Adj, .string = "red", .prefer_color = "red" },
     .{ .kind = .Adj, .string = "ember", .prefer_color = "red" },
     .{ .kind = .Adj, .string = "cinder", .prefer_color = "red" },
     .{ .kind = .Adj, .string = "crimson", .prefer_color = "blood red" },
     .{ .kind = .Adj, .string = "rusty", .forbid = "rust", .prefer_color = "reddish brown" },
     .{ .kind = .Adj, .string = "green", .prefer_color = "green" },
-    .{ .kind = .Adj, .string = "slimy", .weight = 0 },
+    .{ .kind = .Adj, .string = "slimy", .original_weight = 0 },
     .{ .kind = .Adj, .string = "honey", .prefer_color = "gold" },
     .{ .kind = .Adj, .string = "golden" },
     .{ .kind = .Adj, .string = "oily" },
@@ -157,27 +162,27 @@ const NAMES = [_]Name{
     .{ .kind = .Adj, .string = "dimpled" },
     .{ .kind = .Adj, .string = "pitted" },
     .{ .kind = .Adj, .string = "patchy" },
-    .{ .kind = .Adj, .string = "weeping", .forbid = "weep", .weight = 0 },
-    .{ .kind = .Adj, .string = "clinging", .forbid = "clinger", .weight = 0 },
-    .{ .kind = .Adj, .string = "sticky", .weight = 0 },
+    .{ .kind = .Adj, .string = "weeping", .forbid = "weep", .original_weight = 0 },
+    .{ .kind = .Adj, .string = "clinging", .forbid = "clinger", .original_weight = 0 },
+    .{ .kind = .Adj, .string = "sticky", .original_weight = 0 },
 
-    .{ .kind = .Noun, .string = "clinger", .forbid = "clinging", .weight = 0 },
+    .{ .kind = .Noun, .string = "clinger", .forbid = "clinging", .original_weight = 0 },
     .{ .kind = .Noun, .string = "cap" },
-    .{ .kind = .Noun, .string = "thorn", .weight = 0 },
+    .{ .kind = .Noun, .string = "thorn", .original_weight = 0 },
     .{ .kind = .Noun, .string = "plate" },
     .{ .kind = .Noun, .string = "bulb" },
     .{ .kind = .Noun, .string = "bowl" },
     .{ .kind = .Noun, .string = "cup" },
-    .{ .kind = .Noun, .string = "weep", .forbid = "weeping", .weight = 0 },
-    .{ .kind = .Noun, .string = "puff", .weight = 0 },
+    .{ .kind = .Noun, .string = "weep", .forbid = "weeping", .original_weight = 0 },
+    .{ .kind = .Noun, .string = "puff", .original_weight = 0 },
     .{ .kind = .Noun, .string = "cherub" },
-    .{ .kind = .Noun, .string = "tower", .weight = 0 },
+    .{ .kind = .Noun, .string = "tower", .original_weight = 0 },
     .{ .kind = .Noun, .string = "lichen" },
     .{ .kind = .Noun, .string = "moss" },
     .{ .kind = .Noun, .string = "stoneberry" },
     .{ .kind = .Noun, .string = "gemfruit" },
     .{ .kind = .Noun, .string = "gemcap" },
-    .{ .kind = .Noun, .string = "gemthorn", .weight = 0 },
+    .{ .kind = .Noun, .string = "gemthorn", .original_weight = 0 },
     .{ .kind = .Noun, .string = "stonecap" },
     .{ .kind = .Noun, .string = "pipe" },
     .{ .kind = .Noun, .string = "tube" },
@@ -185,10 +190,10 @@ const NAMES = [_]Name{
     .{ .kind = .Noun, .string = "tuber" },
     .{ .kind = .Noun, .string = "mushroom" },
     .{ .kind = .Noun, .string = "fungi" },
-    .{ .kind = .Noun, .string = "toadstool", .weight = 0 },
+    .{ .kind = .Noun, .string = "toadstool", .original_weight = 0 },
     .{ .kind = .Noun, .string = "rust", .forbid = "rusty" },
     .{ .kind = .Noun, .string = "mycelium" },
-    .{ .kind = .Noun, .string = "rot", .weight = 0 },
+    .{ .kind = .Noun, .string = "rot", .original_weight = 0 },
 };
 
 const TRAITS = [_]Trait{
@@ -207,6 +212,19 @@ const TRAITS = [_]Trait{
     .{
         .kind = .{ .Status = s(.Recuperate, .{ .Tmp = 3 }) },
         .attached = &Trait{ .kind = .Fragile },
+    },
+    .{
+        .kind = .{ .Status = s(.Nausea, .{ .Ctx = null }) },
+        .prefer_names = &[1]Trait.Preference{.{ .n = "rot", .w = 20 }},
+    },
+    .{
+        .kind = .{ .Status = s(.Pain, .{ .Ctx = null }) },
+        .prefer_names = &[4]Trait.Preference{
+            .{ .n = "thorn", .w = 30 },
+            .{ .n = "blood", .w = 30 },
+            .{ .n = "gemthorn", .w = 10 },
+            .{ .n = "toadstool", .w = 20 },
+        },
     },
     .{
         .kind = .{ .TrampleInto = &surfaces.ShallowWaterTerrain },
@@ -238,30 +256,17 @@ const TRAITS = [_]Trait{
     .{
         .kind = .{ .Luminescent = .{} },
     },
-    .{
-        .kind = .{ .Status = s(.Nausea, .{ .Ctx = null }) },
-        .prefer_names = &[1]Trait.Preference{.{ .n = "rot", .w = 20 }},
-    },
-    .{
-        .kind = .{ .Status = s(.Pain, .{ .Ctx = null }) },
-        .prefer_names = &[4]Trait.Preference{
-            .{ .n = "thorn", .w = 30 },
-            .{ .n = "blood", .w = 30 },
-            .{ .n = "gemthorn", .w = 10 },
-            .{ .n = "toadstool", .w = 20 },
-        },
-    },
-    .{
-        .kind = .{ .Opacity = 100 },
-        .prefer_names = &[5]Trait.Preference{
-            .{ .n = "tube", .w = 30 },
-            .{ .n = "pipe", .w = 30 },
-            .{ .n = "tower", .w = 20 },
-            .{ .n = "moss", .w = -999 },
-            .{ .n = "lichen", .w = -999 },
-        },
-        .prefer_tile = '&',
-    },
+    // .{
+    //     .kind = .{ .Opacity = 100 },
+    //     .prefer_names = &[5]Trait.Preference{
+    //         .{ .n = "tube", .w = 30 },
+    //         .{ .n = "pipe", .w = 30 },
+    //         .{ .n = "tower", .w = 20 },
+    //         .{ .n = "moss", .w = -999 },
+    //         .{ .n = "lichen", .w = -999 },
+    //     },
+    //     .prefer_tile = '&',
+    // },
 };
 
 // Generates a single fungi into a given terrain, and removes its name and
@@ -273,6 +278,9 @@ fn generateSingle(
     names: *StackBuffer(Name, NAMES.len),
     clrs: *StackBuffer(PresetColor, COLORS.len),
 ) void {
+    for (names.slice()) |*i| i.weight = i.original_weight;
+    for (clrs.slice()) |*i| i.weight = i.original_weight;
+
     var tiles = StackBuffer(Char, CHARS.len).init(&CHARS);
 
     var chosen_traits = StackBuffer(Trait, 2).init(null);
