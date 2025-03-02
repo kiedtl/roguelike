@@ -145,12 +145,12 @@ pub var map_win: struct {
     // For Examine mode, directional choose, labels, etc.
     annotations: Console = undefined,
 
-    // For border around map, blinking chars on mobs, etc
+    // For border around map, labels, etc.
     grid_annotations: Console = undefined,
-    grid_animations: []?CellAnimation = undefined, // This is a grid, btw
 
     // For particle animations and such.
     animations: Console = undefined,
+    cell_animation_grid: []?CellAnimation = undefined, // This is a grid, btw
 
     pub fn init(self: *@This()) void {
         const d = dimensions(.Main);
@@ -171,25 +171,26 @@ pub var map_win: struct {
         self.grid_annotations = Console.init(state.gpa.allocator(), d.width(), d.height());
         self.grid_annotations.default_transparent = true;
         self.grid_annotations.clear();
-        self.grid_animations = state.gpa.allocator().alloc(?CellAnimation, d.width() * d.height()) catch err.oom();
-        @memset(self.grid_animations, null);
 
         self.animations = Console.init(state.gpa.allocator(), d.width(), d.height());
         self.animations.default_transparent = true;
         self.animations.clear();
 
+        self.cell_animation_grid = state.gpa.allocator().alloc(?CellAnimation, d.width() * d.height()) catch err.oom();
+        @memset(self.cell_animation_grid, null);
+
         self.map.addSubconsole(&self.text_line, 0, 0);
-        self.map.addSubconsole(&self.annotations, 0, 0);
         self.map.addSubconsole(&self.grid_annotations, 0, 0);
+        self.map.addSubconsole(&self.annotations, 0, 0);
         self.map.addSubconsole(&self.animations, 0, 0);
     }
 
     pub fn gridAnimAt(self: *@This(), x: usize, y: usize) *?CellAnimation {
-        return &self.grid_animations[y * self.grid_annotations.width + x];
+        return &self.cell_animation_grid[y * self.grid_annotations.width + x];
     }
 
     pub fn gridAnimAt2(self: *@This(), x: usize, y: usize) ?*CellAnimation {
-        return if (self.grid_animations[y * self.grid_annotations.width + x]) |*anim|
+        return if (self.cell_animation_grid[y * self.grid_annotations.width + x]) |*anim|
             anim
         else
             null;
@@ -289,7 +290,7 @@ pub var map_win: struct {
 
     pub fn deinit(self: *@This()) void {
         self.map.deinit();
-        state.gpa.allocator().free(self.grid_animations);
+        state.gpa.allocator().free(self.cell_animation_grid);
         // if (self.text_line_anim) |ptr|
         //     state.gpa.allocator().destroy(ptr);
     }
@@ -714,12 +715,6 @@ fn _getTerrDescription(self: *Console, starty: usize, terrain: *const surfaces.T
     y += self.drawTextAt(0, y, "terrain", .{});
     y += self.drawTextAt(0, y, "\n", .{});
 
-    if (terrain.fire_retardant) {
-        y += self.drawTextAt(0, y, "It will put out fires.\n\n", .{});
-    } else if (terrain.flammability > 0) {
-        y += self.drawTextAt(0, y, "It is flammable.\n\n", .{});
-    }
-
     y += _writerHeader(self, y, linewidth, "stats", .{});
     y += _writerSobStats(self, y, linewidth, terrain.stats, terrain.resists);
     y += self.drawTextAt(0, y, "\n", .{});
@@ -729,6 +724,31 @@ fn _getTerrDescription(self: *Console, starty: usize, terrain: *const surfaces.T
         for (terrain.effects) |effect| {
             y += self.drawTextAtf(0, y, "{s}", .{_formatStatusInfo(&effect)}, .{});
         }
+        y += 1;
+    }
+
+    y += _writerHeader(self, y, linewidth, "info", .{});
+
+    if (terrain.fire_retardant) {
+        y += self.drawTextAt(0, y, "$c·$. It will put out fires.\n", .{});
+    } else if (terrain.flammability > 0) {
+        y += self.drawTextAt(0, y, "$c·$. It is flammable.\n", .{});
+    }
+
+    if (terrain.trample_cloud) |gas_opts| {
+        y += self.drawTextAtf(0, y, "$c·$. Trample: $b{s}$. (1$g/$.{} chance)\n", .{
+            gas.Gases[gas_opts.id].name, gas_opts.chance,
+        }, .{});
+    }
+
+    if (terrain.trample_into) |terr| {
+        y += self.drawTextAtf(0, y, "$c·$. Trample: $b{s}$.\n", .{terr.name}, .{});
+    }
+
+    if (terrain.gas) |gas_opts| {
+        y += self.drawTextAtf(0, y, "$c·$. Creates $b{s}$. (1$g/$.{} chance)\n", .{
+            gas.Gases[gas_opts.id].name, gas_opts.chance,
+        }, .{});
     }
 
     return y - starty;
