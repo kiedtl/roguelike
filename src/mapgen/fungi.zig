@@ -106,8 +106,11 @@ const Trait = struct {
         pub fn apply(self: @This(), onto: *surfaces.Terrain) void {
             switch (self) {
                 .Status => |st| {
-                    const effects = state.gpa.allocator().alloc(types.StatusDataInfo, 1) catch err.oom();
-                    effects[0] = st;
+                    const effects = if (onto.effects.len == 0)
+                        state.gpa.allocator().alloc(types.StatusDataInfo, 1) catch err.oom()
+                    else
+                        state.gpa.allocator().realloc(@constCast(onto.effects), onto.effects.len + 1) catch err.oom();
+                    effects[effects.len - 1] = st;
                     // Can't assign directly because onto.effects is const
                     onto.effects = effects;
                 },
@@ -339,11 +342,11 @@ fn generateSingle(
     const chosen_clr_ind = rng.chooseInd2(PresetColor, clrs.constSlice(), "weight");
     const chosen_clr = clrs.orderedRemove(chosen_clr_ind) catch err.wat();
 
-    std.log.info("*** {s} {s}", .{ adj.?.string, noun.?.string });
-    std.log.info("  - Trait: {}", .{chosen_traits.constSlice()[0].kind});
-    if (chosen_traits.len > 1)
-        std.log.info("  - Trait: {}", .{chosen_traits.constSlice()[1].kind});
-    std.log.info("  - Color: {s}", .{chosen_clr.name});
+    // std.log.info("*** {s} {s}", .{ adj.?.string, noun.?.string });
+    // std.log.info("  - Trait: {}", .{chosen_traits.constSlice()[0].kind});
+    // if (chosen_traits.len > 1)
+    //     std.log.info("  - Trait: {}", .{chosen_traits.constSlice()[1].kind});
+    // std.log.info("  - Color: {s}", .{chosen_clr.name});
 
     const chosen_tile = rng.choose2(Char, tiles.constSlice(), "weight") catch err.wat();
 
