@@ -1508,6 +1508,10 @@ x Unholy temple map + faction
   - Ring of execution
   x Ring of exclusion
   x Ring of retaliation
+- Ring identification (only if finalized, just putting it here so I don't forget)
+  - Artwork
+  - Traits & categories
+  - Auto-identification
 - Holy temple map + faction
   - Shrine mechanics
     - Holy-themed shrine in temple map ("altar")
@@ -1530,9 +1534,14 @@ x Unholy temple map + faction
     - Hellfire spell (irresist damage)
     - Disintegration (punch through walls, same as ring)
     - Dispelling bolt (dispell undead, will-checked)
-    - Torment undead
-      - Different from dispelling bolt somehow
-    - Abjure earth demon (anti-revgenunkim)
+    - Torment undead (different from dispelling bolt somehow)
+    - Turn undead (fear, AoE)
+    - Abjure earth demon (anti-revgenunkim). Irresist damage; effects:
+      - Limbs exploding into gore (fewer claw/innate attacks)
+      - Skin blistering horribly (loss of rArmor and rAcid)
+      - Head explodes into gore (instant death, 10% chance)
+      - Torment (HP is cut in half; no damage otherwise; only if HP > 1)
+    - Abjure Night creature
     - Rolling boulder
     - Martial, Spikes/riposte
     - Frozen fiend living ice ability (basalt themed, like basalt fiend)
@@ -1546,19 +1555,29 @@ x Unholy temple map + faction
     - Name generation
     - Strength rating, tweaking
     - Simulation testing
-  - Caverns rework
-    - Lava rework
-      - Lava -> Glowing water
-      - Glowing water mist
-    - Environment
-      - Multi-colored and scintillating lichen
-      - Water animations
-      - Water ringed with shallow water
-    - Living dungeon
-      - Alchemist + dustling analyzer prefabs
-      - Dustling production machines
-      - Event: dustling components brought in and assembled, new dustling squads formed
-    - Vapor mage throwing/blowing dustlings at enemies
+  - Caverns rework (pt 2)
+    x Lava rework
+      x Lava -> Glowing water
+      x Glowing water mist
+    x Environment
+      x Multi-colored and scintillating lichen (need UI support)
+      x Water animations
+      x Water ringed with shallow water
+    x Living dungeon
+      x Dustling swimming room
+      x Combat dummy testing room
+      x Dustling fire test room
+      x Dustling production machines
+    - Guaranteed border around map
+- Caverns (pt 3)
+  - Procgen descriptions for fungi
+    - Nothing fancy like with angels; each trait should have a piece of text
+      that's tacked onto a very basic description.
+  - Trees or fungi towers/groups
+    - Placed in the middle(ish) of fungi blobs
+  - Dustling analyzer prefabs
+  - Dustling storage areas
+  - Vapor mage throwing/blowing dustlings at enemies
 - Fix particle effects
   x Shrine-blowup effect (rework, simplify and speedup)
   - Lightning mage static discharge (speedup/rework)
@@ -1581,13 +1600,15 @@ x Unholy temple map + faction
     - Pitchblende statues
     - Skeletal arbalists
   - Garrison inset prefabs
-  - 1/Necropolis/3 prefab(?)
-  - Ability to gain MP/HP somehow
+  - Ability to gain MP/HP somehow (or not? maybe that's the challenge :P)
   - Prefabs:
     - Paralysed+dormant arbalists/blademasters behind bars
     - Arbalists shooting at targets (DM observing)
     - Blademasters practicing formations (DM observing)
     - DM failing to resurrect dead revgen, cinder brute
+  - Swollen growth, osseous ash, deathly weepers (see ~/doc/notes/necropolis.txt)
+  - Gravestones (see ~/doc/notes/necropolis.txt)
+  - 1/Necropolis/3 prefab(?)
   - Hall map at end
     - Win condition
 - Add "character" to game
@@ -1622,6 +1643,7 @@ x Unholy temple map + faction
       and repetition patterns to determine how to cause specific effects
     - Various other statuses: disoriented, debil, fear, enraged
   - Necropolis + Marble room: Death mage trying (and failing) to resurrect Revgen.
+    - "The Revgenunkim corpse shudders slightly. Nothing happens."
   - Laboratory: potions of corrosion being analysed
     - Somehow far stronger than any pure acid or pure compound
     - Poster should mention attempts to "milk" paralysed Revgenunkim for
@@ -1656,6 +1678,15 @@ x Unholy temple map + faction
 - Scoresheet uploading (to where?)
 - Basic save system, replaying of saves
 - Vaults pt 2
+  - Add number of vaults defeated to scoresheet
+    - Some kind of mechanism to "know" when player has truly defeated vault,
+      or just opened it and ran away like a coward.
+  - Remove regular monsters from vaults
+    - Iron vaults: entirely remove?
+      - Alternatively, mix of bone rats mobs and weak constructs
+    - Dobalene vaults: should contain ONLY constructs
+    - Golden rooms: bunch of undead.
+    - Marble: theming & monsters are okay.
   - Marble vaults: pure gold cloak prefab
   - Marble vaults: ornate gold armor prefab (rare, usually in unholy temple)
   - Marble vaults: tactic rooms, combat dummies, skeletal arbalists
@@ -1663,7 +1694,15 @@ x Unholy temple map + faction
     - Potion of extermination
     - See glow potion buf item below
   - Dobalene rooms
-- Rework -1/Prison to -1/Hub
+  - Level "feels" message when entering.
+    - Ensure all vault types are sufficiently rare (can stuff it into map
+      prefab frequency analysis)
+    - Golden: "you feel death in the air."
+    - Dobalene: "you recall a squad of constructs passing this way."
+    - Marble: "this floor is unusually silent."
+- Rework 1/Prison to 1/Hub
+  - Possibly create a new level, and shift other levels downward?
+    - Is shifting necessary? Can just make it 0/Hub instead of 1/Hub
   - Exiting staircase to "outside" on top
   - Doorway to Crypt on bottom side
   - Entry points and (unavailable) staircase to "0/Dining" in center

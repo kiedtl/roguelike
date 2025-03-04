@@ -1,8 +1,30 @@
+- Stabbing
+
+- Visual filters
+  - Water: blue filter
+  - Bubbling water: green filter
+  - Fire: red filter
+
+- Water
+  - Restricts vision, along with slade
+  - Allows seeing through shallow water though.
+  - Causes random movement like in Brogue (implemented in .Water status)? Would be nice.
+
+- Grues should be more scary
+  - Always emit insane gas?
+  - Emit blinding gas as well?
+- Hide lairs behind walls
+  - 50% chance only for there to be a door
+  - If aligned with NC, then you can see through the wall, and can pass through.
+  - Otherwise, you have to get lucky with disintegration.
+    - There will be hints, like in TGGW's "mysterious vein"
+- Workshop
+  - Needs to be harder? Still too easy to just pass through massive corridors
+  - Chance for alchemist to "end shift" and leave the level. Another alchemist
+    shows up and replaces them.
+  - Coffeebreak rooms (see living dungeon in ~/doc/notes)
 - Spectral items should somehow give MP
     - Visit lairs to instantly fill up on MP?
-- Event: flooded level, engineers trying to un-flood it
-  - level is evacuated (except for prisoners)
-  - lairs not flooded
 - Sigil of Hiding
   - Hide corpse, make it invisible until it's stepped on enough times (or enough
     time has passed).
@@ -15,7 +37,11 @@
 Rework incineration/ignition potions
 - Remove or comment out incineration (or make a very rare item)
 - Add "bottle of fuel" and related gas.
-- Update fire mechanics.
+  - Update fire mechanics.
+- Fireplace that player can take advantage of, in the Prison and maybe
+  Workshop. *Maybe* other levels, like Necropolis. Maybe.
+  - In coffeebreak rooms
+
 - Differentiate searching for player and remembers
   - Tooltip
 
