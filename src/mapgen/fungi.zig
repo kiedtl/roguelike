@@ -73,7 +73,6 @@ const Trait = struct {
         TrampleInto: *const Terrain,
         Luminescent: struct {},
         Opacity: usize,
-        Fragile,
 
         // Mob only
         //BloodCloud: usize, // gas id
@@ -98,7 +97,7 @@ const Trait = struct {
                 .Status => |st| writer.print("{s} {}", .{ @tagName(st.status), st.duration }),
                 .TrampleCloud => |g| writer.print("{s} 1/{}, {}u", .{ gas.Gases[g.id].name, g.chance, g.amount }),
                 .TrampleInto => |t| writer.print("{s}", .{t.name}),
-                .Fragile, .Luminescent => writer.writeAll(""),
+                .Luminescent => writer.writeAll(""),
                 .Opacity => |o| writer.print("{}", .{o}),
             };
         }
@@ -116,7 +115,6 @@ const Trait = struct {
                 },
                 .TrampleCloud => |g| onto.trample_cloud = g,
                 .TrampleInto => |t| onto.trample_into = t,
-                .Fragile => {},
                 .Luminescent => |_| onto.luminescence = 50,
                 .Opacity => |o| onto.opacity = o,
             }
@@ -214,7 +212,13 @@ const TRAITS = [_]Trait{
     },
     .{
         .kind = .{ .Status = s(.Recuperate, .{ .Tmp = 3 }) },
-        .attached = &Trait{ .kind = .Fragile },
+        // Fragility concept doesn't work
+        //
+        // - Moving onto: terrain breaks as soon as it's stepped on, so no time
+        //   for effect to happen
+        // - Moving off: no point, player can stay as long as they want on
+        //   terrain to recuperate
+        //.attached = &Trait{ .kind = .Fragile },
     },
     .{
         .kind = .{ .Status = s(.Nausea, .{ .Ctx = null }) },
