@@ -65,7 +65,7 @@ pub fn addAtf(coord: Coord, comptime fmt: []const u8, args: anytype, opts: Label
     add(.{ .Coord = coord }, s, opts, true);
 }
 
-fn add(loc: std.meta.fieldInfo(MapLabel, .loc).type, text: []const u8, opts: LabelOpts, malloced: bool) void {
+fn add(loc: @FieldType(MapLabel, "loc"), text: []const u8, opts: LabelOpts, malloced: bool) void {
     labels.append(.{
         .text = text,
         .loc = loc,
