@@ -106,9 +106,9 @@ const Trait = struct {
             switch (self) {
                 .Status => |st| {
                     const effects = if (onto.effects.len == 0)
-                        state.gpa.allocator().alloc(types.StatusDataInfo, 1) catch err.oom()
+                        state.alloc.alloc(types.StatusDataInfo, 1) catch err.oom()
                     else
-                        state.gpa.allocator().realloc(@constCast(onto.effects), onto.effects.len + 1) catch err.oom();
+                        state.alloc.realloc(@constCast(onto.effects), onto.effects.len + 1) catch err.oom();
                     effects[effects.len - 1] = st;
                     // Can't assign directly because onto.effects is const
                     onto.effects = effects;
@@ -362,7 +362,7 @@ fn generateSingle(
             attached.kind.apply(onto);
     }
 
-    onto.name = std.fmt.allocPrint(state.gpa.allocator(), "{s} {s}", .{ adj.?.string, noun.?.string }) catch err.oom();
+    onto.name = std.fmt.allocPrint(state.alloc, "{s} {s}", .{ adj.?.string, noun.?.string }) catch err.oom();
     onto.fg = @intFromEnum(chosen_clr.base);
     onto.fg_dance = chosen_clr.variation;
     onto.tile = chosen_tile.ch;
@@ -380,17 +380,17 @@ pub fn init() void {
 }
 
 pub fn deinit() void {
-    state.gpa.allocator().free(surfaces.CavernsTerrain1.name);
-    state.gpa.allocator().free(surfaces.CavernsTerrain2.name);
-    state.gpa.allocator().free(surfaces.CavernsTerrain3.name);
-    state.gpa.allocator().free(surfaces.CavernsTerrain4.name);
+    state.alloc.free(surfaces.CavernsTerrain1.name);
+    state.alloc.free(surfaces.CavernsTerrain2.name);
+    state.alloc.free(surfaces.CavernsTerrain3.name);
+    state.alloc.free(surfaces.CavernsTerrain4.name);
 
     if (surfaces.CavernsTerrain1.effects.len > 0)
-        state.gpa.allocator().free(surfaces.CavernsTerrain1.effects);
+        state.alloc.free(surfaces.CavernsTerrain1.effects);
     if (surfaces.CavernsTerrain2.effects.len > 0)
-        state.gpa.allocator().free(surfaces.CavernsTerrain2.effects);
+        state.alloc.free(surfaces.CavernsTerrain2.effects);
     if (surfaces.CavernsTerrain3.effects.len > 0)
-        state.gpa.allocator().free(surfaces.CavernsTerrain3.effects);
+        state.alloc.free(surfaces.CavernsTerrain3.effects);
     if (surfaces.CavernsTerrain4.effects.len > 0)
-        state.gpa.allocator().free(surfaces.CavernsTerrain4.effects);
+        state.alloc.free(surfaces.CavernsTerrain4.effects);
 }

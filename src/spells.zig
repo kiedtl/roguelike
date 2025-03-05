@@ -86,7 +86,7 @@ fn newCorpseSpell(
                     } else null;
 
                     if (spawn_loc) |loc| {
-                        const m = mobs.placeMob(state.gpa.allocator(), template, loc, .{});
+                        const m = mobs.placeMob(state.alloc, template, loc, .{});
 
                         if (caster.squad) |caster_squad| {
                             caster_squad.members.append(m) catch {};
@@ -605,7 +605,7 @@ fn _effectAuraDispersal(caster: Coord, _: SpellOptions, _: Coord) void {
 //                 for (&CARDINAL_DIRECTIONS) |d| if (coord.move(d, state.mapgeometry)) |neighbor| {
 //                     if (state.is_walkable(neighbor, .{ .right_now = true })) {
 //                         // FIXME: passing allocator directly is anti-pattern?
-//                         _ = mobs.placeMob(state.gpa.allocator(), &mobs.SpectralSwordTemplate, neighbor, .{});
+//                         _ = mobs.placeMob(state.alloc, &mobs.SpectralSwordTemplate, neighbor, .{});
 //                     }
 //                 };
 //             }
@@ -625,7 +625,7 @@ pub fn spawnSabreSingle(caster: *Mob, coord: Coord) void {
     const Evade = @as(usize, 0) +
         (if (caster == state.player and player.hasAugment(.Evade)) @as(usize, 25) else 0);
 
-    const ss = mobs.placeMob(state.gpa.allocator(), &mobs.SpectralSabreTemplate, coord, .{});
+    const ss = mobs.placeMob(state.alloc, &mobs.SpectralSabreTemplate, coord, .{});
     ss.innate_resists.rFire += @intCast(rFire);
     ss.innate_resists.rElec += @intCast(rElec);
     ss.stats.Melee += @intCast(Melee);
@@ -719,7 +719,7 @@ fn _effectConjureBL(_: Coord, opts: SpellOptions, coord: Coord) void {
     for (&DIRECTIONS) |d| if (coord.move(d, state.mapgeometry)) |neighbor| {
         if (state.is_walkable(neighbor, .{ .right_now = true })) {
             // FIXME: passing allocator directly is anti-pattern?
-            const w = mobs.placeMob(state.gpa.allocator(), &mobs.BallLightningTemplate, neighbor, .{});
+            const w = mobs.placeMob(state.alloc, &mobs.BallLightningTemplate, neighbor, .{});
             w.addStatus(.Lifespan, 0, .{ .Tmp = opts.power });
             return;
         }
@@ -1058,7 +1058,7 @@ fn _effectPolarLayer(_: Coord, opts: SpellOptions, coord: Coord) void {
         if (state.dungeon.at(neighbor).type == .Wall) {
             state.dungeon.at(neighbor).type = .Floor;
             // FIXME: passing allocator directly is anti-pattern?
-            const w = mobs.placeMob(state.gpa.allocator(), &mobs.LivingIceTemplate, neighbor, .{});
+            const w = mobs.placeMob(state.alloc, &mobs.LivingIceTemplate, neighbor, .{});
             w.addStatus(.Lifespan, 0, .{ .Tmp = opts.power });
         }
     };

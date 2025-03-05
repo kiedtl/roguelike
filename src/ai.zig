@@ -660,7 +660,7 @@ pub fn checkForNoises(mob: *Mob) void {
     }
 
     // Increment counters, remove dead ones
-    var new_sustiles = std.ArrayList(SuspiciousTileRecord).init(state.gpa.allocator());
+    var new_sustiles = std.ArrayList(SuspiciousTileRecord).init(state.alloc);
     for (mob.sustiles.items) |*record| {
         record.age += 1;
 
@@ -1228,7 +1228,7 @@ pub fn nightCreatureWork(mob: *Mob, alloc: mem.Allocator) void {
             // begin moving to the closest wall.
             if (mob.ai.flag(.WallLover) and state.dungeon.neighboringWalls(mob.coord, true) == 0) {
                 assert(!mob.immobile);
-                var dijk = dijkstra.Dijkstra.init(mob.coord, state.mapgeometry, 9999, state.is_walkable, .{}, state.gpa.allocator());
+                var dijk = dijkstra.Dijkstra.init(mob.coord, state.mapgeometry, 9999, state.is_walkable, .{}, state.alloc);
                 defer dijk.deinit();
                 while (dijk.next()) |item|
                     if (state.dungeon.neighboringWalls(item, true) > 0) {
@@ -1917,7 +1917,7 @@ pub fn _Job_WRK_BuildMob(mob: *Mob, _: *AIJob) AIJob.JStatus {
                 return .Ongoing;
             }
         } else {
-            _ = mobs.placeMob(state.gpa.allocator(), task.type.BuildMob.mob, coord, task.type.BuildMob.opts);
+            _ = mobs.placeMob(state.alloc, task.type.BuildMob.mob, coord, task.type.BuildMob.opts);
             mob.ai.task_id = null;
             task.completed = true;
             return .Complete;
@@ -1972,7 +1972,7 @@ pub fn _Job_GRD_SweepRoom(mob: *Mob, job: *AIJob) AIJob.JStatus {
 
     const room_id = job.ctx.get(usize, AIJob.CTX_ROOM_ID, getCurrentRoom(mob) orelse undefined);
     const room = state.rooms[mob.coord.z].items[room_id];
-    const room_map = job.ctx.getPtr(CoordArrayList, CTX_ROOM_MAP, CoordArrayList.init(state.gpa.allocator()));
+    const room_map = job.ctx.getPtr(CoordArrayList, CTX_ROOM_MAP, CoordArrayList.init(state.alloc));
     const room_dst = job.ctx.get(Coord, CTX_ROOM_SWEEP_DEST, room.rect.middle());
 
     for (mob.fov, 0..) |row, y| for (row, 0..) |cell, x| {
@@ -2015,7 +2015,7 @@ pub fn _Job_ALM_PullAlarm(mob: *Mob, job: *AIJob) AIJob.JStatus {
         var closest: ?Coord = null;
         var closest_dist: usize = 0xFFFF;
         for (state.alarm_locations[mob.coord.z].constSlice()) |alarm_loc| {
-            const path = astar.path(mob.coord, alarm_loc, state.mapgeometry, state.is_walkable, .{ .ignore_mobs = true }, astar.basePenaltyFunc, mob.availableDirections(), state.gpa.allocator()) orelse continue;
+            const path = astar.path(mob.coord, alarm_loc, state.mapgeometry, state.is_walkable, .{ .ignore_mobs = true }, astar.basePenaltyFunc, mob.availableDirections(), state.alloc) orelse continue;
             defer path.deinit();
             if (path.items.len < closest_dist) {
                 closest_dist = path.items.len;

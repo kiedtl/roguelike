@@ -234,7 +234,7 @@ pub fn deserialize(comptime T: type, out: *T, in: anytype, alloc: mem.Allocator)
     if (comptime mem.startsWith(u8, @typeName(T), "std.hash_map.HashMap(")) {
         const K = _fieldType(@field(T, "KV"), "key");
         const V = _fieldType(@field(T, "KV"), "value");
-        var obj = T.init(state.gpa.allocator());
+        var obj = T.init(state.alloc);
         var i = try deserializeQ(usize, in, alloc);
         while (i > 0) : (i -= 1) {
             const k = try deserializeQ(K, in, alloc);
@@ -426,7 +426,7 @@ pub fn deserializeWE(comptime T: type, out: *T, in: anytype, alloc: mem.Allocato
 }
 
 pub fn buildPointerTable() void {
-    ptrtable = @TypeOf(ptrtable).init(state.gpa.allocator());
+    ptrtable = @TypeOf(ptrtable).init(state.alloc);
 
     inline for (@typeInfo(state).@"struct".decls) |declinfo| {
         const decl = @field(state, declinfo.name);
@@ -524,7 +524,7 @@ pub fn serializeWorld() !void {
 }
 
 pub fn deserializeWorld() !void {
-    const alloc = state.gpa.allocator();
+    const alloc = state.alloc;
 
     // var tar = try microtar.MTar.init("dump.tar", "w");
     // defer tar.deinit();

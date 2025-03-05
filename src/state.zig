@@ -69,7 +69,7 @@ pub const PLAYER_STARTING_LEVEL = 19; // TODO: define in data file
 
 // Should only be used directly by functions in main.zig. For other applications,
 // should be passed as a parameter by caller.
-pub var gpa = std.heap.GeneralPurposeAllocator(.{
+pub var gpa = std.heap.DebugAllocator(.{
     // Probably should enable this later on to track memory usage, if
     // allocations become too much
     .enable_memory_limit = false,
@@ -83,6 +83,11 @@ pub var gpa = std.heap.GeneralPurposeAllocator(.{
 
     .stack_trace_frames = 10,
 }){};
+
+pub var alloc = if (@import("builtin").mode == .Debug)
+    gpa.allocator()
+else
+    std.heap.smp_allocator;
 
 pub var sentry_disabled = false;
 pub var log_disabled = false;
@@ -202,7 +207,7 @@ pub var status_str_infos: std.enums.EnumArray(Status, ?StatusStringInfo) =
 //
 // Will *not* return crd.
 //
-// Uses state.gpa.allocator()
+// Uses state.alloc
 //
 pub fn nextSpotForMob(crd: Coord, mob: ?*Mob) ?Coord {
     var dijk = dijkstra.Dijkstra.init(crd, mapgeometry, 3, is_walkable, .{
@@ -228,7 +233,7 @@ pub fn nextSpotForMob(crd: Coord, mob: ?*Mob) ?Coord {
 //
 pub fn nextAvailableSpaceForItem(c: Coord, a: mem.Allocator) ?Coord {
     const S = struct {
-        pub fn _helper(strict: bool, crd: Coord, alloc: mem.Allocator) ?Coord {
+        pub fn _helper(strict: bool, crd: Coord, myalloc: mem.Allocator) ?Coord {
             const S = struct {
                 pub fn _isFull(strict_: bool, coord: Coord) bool {
                     if (dungeon.at(coord).surface) |_| {
@@ -249,7 +254,7 @@ pub fn nextAvailableSpaceForItem(c: Coord, a: mem.Allocator) ?Coord {
             if (is_walkable(crd, .{ .right_now = true }) and !S._isFull(strict, crd))
                 return crd;
 
-            var dijk = dijkstra.Dijkstra.init(crd, mapgeometry, 3, is_walkable, .{ .right_now = true }, alloc);
+            var dijk = dijkstra.Dijkstra.init(crd, mapgeometry, 3, is_walkable, .{ .right_now = true }, myalloc);
             defer dijk.deinit();
 
             return while (dijk.next()) |child| {
@@ -352,8 +357,8 @@ pub fn is_walkable(coord: Coord, opts: IsWalkableOptions) bool {
 
 // TODO: move this to utils.zig?
 // TODO: actually no, move this to player.zig
-pub fn createMobList(include_player: bool, only_if_infov: bool, level: usize, alloc: mem.Allocator) MobArrayList {
-    var moblist = std.ArrayList(*Mob).init(alloc);
+pub fn createMobList(include_player: bool, only_if_infov: bool, level: usize, myalloc: mem.Allocator) MobArrayList {
+    var moblist = std.ArrayList(*Mob).init(myalloc);
     var y: usize = 0;
     while (y < HEIGHT) : (y += 1) {
         var x: usize = 0;
@@ -439,8 +444,6 @@ pub fn tickSound(cur_lev: usize) void {
 }
 
 pub fn loadStatusStringInfo() void {
-    const alloc = gpa.allocator();
-
     var rbuf: [65535]u8 = undefined;
     const data_dir = std.fs.cwd().openDir("data", .{}) catch unreachable;
     const data_file = data_dir.openFile("status_help.tsv", .{}) catch unreachable;
@@ -479,8 +482,6 @@ pub fn loadStatusStringInfo() void {
 }
 
 pub fn freeStatusStringInfo() void {
-    const alloc = gpa.allocator();
-
     var iter = status_str_infos.iterator();
     while (iter.next()) |info| {
         alloc.free(info.value.*.?.name);
@@ -492,8 +493,6 @@ pub fn freeStatusStringInfo() void {
 }
 
 pub fn loadLevelInfo() void {
-    const alloc = gpa.allocator();
-
     var rbuf: [65535]u8 = undefined;
     const data_dir = std.fs.cwd().openDir("data", .{}) catch unreachable;
     const data_file = data_dir.openFile("levelinfo.tsv", .{}) catch unreachable;
@@ -548,8 +547,6 @@ pub fn findLevelByName(name: []const u8) ?usize {
 }
 
 pub fn freeLevelInfo() void {
-    const alloc = gpa.allocator();
-
     for (levelinfo) |info| {
         alloc.free(info.id);
         alloc.free(info.shortname);

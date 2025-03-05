@@ -371,7 +371,7 @@ pub fn addRevealAnimation(self: *Self, opts: ui.RevealAnimationOpts) void {
     }
 
     // if (self._reveal_animation) |oldanim| {
-    //     state.gpa.allocator().destroy(oldanim);
+    //     state.alloc.destroy(oldanim);
     // }
 
     //self._reveal_animation = self.alloc.create(Generator(ui.animationReveal)) catch err.oom();
@@ -469,8 +469,8 @@ pub fn drawCapturedDisplay(self: *const Self, startx: usize, starty: usize) void
 }
 
 pub fn drawTextAtf(self: *Self, startx: usize, starty: usize, comptime format: []const u8, args: anytype, opts: ui.DrawStrOpts) usize {
-    const str = std.fmt.allocPrint(state.gpa.allocator(), format, args) catch err.oom();
-    defer state.gpa.allocator().free(str);
+    const str = std.fmt.allocPrint(state.alloc, format, args) catch err.oom();
+    defer state.alloc.free(str);
     return self.drawTextAt(startx, starty, str, opts);
 }
 

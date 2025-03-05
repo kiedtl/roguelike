@@ -27,8 +27,8 @@ pub var map_win: struct {
     lyr1: Console = undefined,
 
     pub fn init(self: *@This()) void {
-        self.main = Console.init(state.gpa.allocator(), 40 * 2, 40);
-        self.lyr1 = Console.init(state.gpa.allocator(), 40 * 2, 40);
+        self.main = Console.init(state.alloc, 40 * 2, 40);
+        self.lyr1 = Console.init(state.alloc, 40 * 2, 40);
         self.lyr1.default_transparent = true;
         self.lyr1.clear();
         self.lyr1.addMouseTrigger(self.main.dimensionsRect(), .Click, .Coord);
@@ -81,7 +81,7 @@ pub var hud_win: struct {
     main: Console = undefined,
 
     pub fn init(self: *@This()) void {
-        self.main = Console.init(state.gpa.allocator(), HUD_WIDTH, 40);
+        self.main = Console.init(state.alloc, HUD_WIDTH, 40);
     }
 
     pub fn handleMouseEvent(self: *@This(), ev: display.Event, st: *fabedit.EdState) bool {
@@ -166,7 +166,7 @@ pub var bar_win: struct {
     main: Console = undefined,
 
     pub fn init(self: *@This()) void {
-        self.main = Console.init(state.gpa.allocator(), 40 * 2, 1);
+        self.main = Console.init(state.alloc, 40 * 2, 1);
     }
 
     pub fn handleMouseEvent(self: *@This(), ev: display.Event, _: *fabedit.EdState) bool {
@@ -197,7 +197,7 @@ pub var container: struct {
     main: Console = undefined,
 
     pub fn init(self: *@This()) void {
-        self.main = Console.init(state.gpa.allocator(), (40 * 2) + HUD_WIDTH + 1, 40 + 1);
+        self.main = Console.init(state.alloc, (40 * 2) + HUD_WIDTH + 1, 40 + 1);
         self.main.addSubconsole(&map_win.main, 0, 0);
         self.main.addSubconsole(&hud_win.main, 40 * 2 + 1, 0);
         self.main.addSubconsole(&bar_win.main, 0, 40);

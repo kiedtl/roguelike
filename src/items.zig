@@ -784,10 +784,10 @@ pub const SymbolEvoc = Evocable{
                 } },
             }) orelse return error.BadPosition;
 
-            var coordlist = types.CoordArrayList.init(state.gpa.allocator());
+            var coordlist = types.CoordArrayList.init(state.alloc);
             defer coordlist.deinit();
 
-            var dijk = dijkstra.Dijkstra.init(dest, state.mapgeometry, DIST, state.is_walkable, OPTS, state.gpa.allocator());
+            var dijk = dijkstra.Dijkstra.init(dest, state.mapgeometry, DIST, state.is_walkable, OPTS, state.alloc);
             defer dijk.deinit();
 
             while (dijk.next()) |child|
@@ -856,7 +856,7 @@ pub const DistractionRing = Ring{ // {{{
             const RADIUS = 4;
 
             var anim_buf = StackBuffer(Coord, (RADIUS * 2) * (RADIUS * 2)).init(null);
-            var dijk = dijkstra.Dijkstra.init(state.player.coord, state.mapgeometry, RADIUS, state.is_walkable, .{ .ignore_mobs = true, .only_if_breaks_lof = true }, state.gpa.allocator());
+            var dijk = dijkstra.Dijkstra.init(state.player.coord, state.mapgeometry, RADIUS, state.is_walkable, .{ .ignore_mobs = true, .only_if_breaks_lof = true }, state.alloc);
             defer dijk.deinit();
             while (dijk.next()) |coord2| {
                 if (utils.getHostileAt(state.player, coord2)) |hostile| {
@@ -1302,7 +1302,7 @@ pub const ExclusionRing = Ring{ // {{{
             }) orelse return false;
             assert(state.player.cansee(chosen));
 
-            var coords = CoordArrayList.init(state.gpa.allocator());
+            var coords = CoordArrayList.init(state.alloc);
             coords.append(chosen) catch unreachable;
 
             // XXX Duplicated from UI Exclusion targeter code
@@ -1335,7 +1335,7 @@ pub const ExclusionRing = Ring{ // {{{
                 const items = state.dungeon.itemsAt(coord);
                 var i: usize = 0;
                 while (i < items.len) {
-                    if (state.nextAvailableSpaceForItem(coord, state.gpa.allocator())) |new| {
+                    if (state.nextAvailableSpaceForItem(coord, state.alloc)) |new| {
                         const item = items.orderedRemove(i) catch unreachable;
                         state.dungeon.itemsAt(new).append(item) catch unreachable;
                     } else {
@@ -1355,7 +1355,7 @@ pub const ExcisionRing = Ring{ // {{{
     .effect = struct {
         pub fn f() bool {
             const n = ui.chooseCell(.{ .max_distance = 1, .require_walkable = .{} }) orelse return false;
-            const s = mobs.placeMob(state.gpa.allocator(), &mobs.SpectralSwordTemplate, n, .{});
+            const s = mobs.placeMob(state.alloc, &mobs.SpectralSwordTemplate, n, .{});
             state.player.addUnderling(s);
             state.message(.Info, "A spectral blade appears mid-air, hovering precariously.", .{});
 

@@ -112,8 +112,8 @@ pub const ThreatResponse = struct {
 };
 
 pub fn init() void {
-    state.threats = @TypeOf(state.threats).init(state.gpa.allocator());
-    state.responses = @TypeOf(state.responses).init(state.gpa.allocator());
+    state.threats = @TypeOf(state.threats).init(state.alloc);
+    state.responses = @TypeOf(state.responses).init(state.alloc);
 }
 
 pub fn deinit() void {
@@ -266,7 +266,7 @@ fn executeResponse(response: ThreatResponse, level: usize) !void {
                     hunter.deinitEntirelyNoCorpse();
                     return error.NoSpace;
                 };
-                const squadl = mobs.placeMob(state.gpa.allocator(), squad_template, squad_coord, .{});
+                const squadl = mobs.placeMob(state.alloc, squad_template, squad_coord, .{});
                 if (squadl.squad) |squad| {
                     squad.mergeInto(hunter.squad.?);
                 } else {

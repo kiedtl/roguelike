@@ -178,11 +178,11 @@ pub const Ctx = struct {
 
             if (prefab) |fab| {
                 room.prefab = fab;
-                mapgen.excavatePrefab(&room, fab, state.gpa.allocator(), 0, 0);
+                mapgen.excavatePrefab(&room, fab, state.alloc, 0, 0);
                 door = Roomie.getRandomDoorCoord(room, roomie.parent);
                 fab.incrementRecord(level);
             } else if (bsp) {
-                mapgen.placeBSPRooms(roomie.rect, 6, 6, 7, 7, state.gpa.allocator());
+                mapgen.placeBSPRooms(roomie.rect, 6, 6, 7, 7, state.alloc);
                 door = Roomie.getRandomDoorCoord(room, roomie.parent);
             } else {
                 mapgen.excavateRect(&roomie.rect);
@@ -202,7 +202,7 @@ pub const Ctx = struct {
                     .start = Coord.new(0, 0),
                     .width = room.rect.width,
                     .height = room.rect.height,
-                }, state.gpa.allocator(), .{});
+                }, state.alloc, .{});
             }
 
             if (!bsp)
@@ -268,7 +268,7 @@ pub const Ctx = struct {
                         .start = Coord.new(0, 0),
                         .width = new.rect.width,
                         .height = new.rect.height,
-                    }, state.gpa.allocator(), .{});
+                    }, state.alloc, .{});
                 }
                 state.rooms[level].append(new) catch err.wat();
             }
@@ -327,7 +327,7 @@ pub const Ctx = struct {
                         .max_w = room.rect.width,
                     })) |fab| {
                         assert(!fab.tunneler_inset);
-                        mapgen.excavatePrefab(&room, fab, state.gpa.allocator(), 0, 0);
+                        mapgen.excavatePrefab(&room, fab, state.alloc, 0, 0);
                         fab.incrementRecord(level);
                         did_something = true;
                         // XXX: we don't register this room, maybe we should? It's
@@ -392,13 +392,13 @@ pub const Ctx = struct {
                 if (room.prefab != null and room.prefab.?.player_position != null) {
                     const player_pos = room.prefab.?.player_position.?;
                     const p = Coord.new2(self.level, room.rect.start.x + player_pos.x, room.rect.start.y + player_pos.y);
-                    mapgen.placePlayer(p, state.gpa.allocator());
+                    mapgen.placePlayer(p, state.alloc);
                     return;
                 }
             }
             for (state.rooms[self.level].items) |room| {
                 const p = room.rect.randomCoord();
-                mapgen.placePlayer(p, state.gpa.allocator());
+                mapgen.placePlayer(p, state.alloc);
                 return;
             }
             err.bug("Unable to place player anywhere on starting level", .{});

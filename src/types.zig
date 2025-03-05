@@ -1633,14 +1633,14 @@ pub const Status = enum {
             chance += 2;
 
         if (rng.percent(chance)) {
-            var possible_tiles = CoordArrayList.init(state.gpa.allocator());
+            var possible_tiles = CoordArrayList.init(state.alloc);
 
             const dist = SCEPTRE_VISION + 4;
             var dijk = dijkstra.Dijkstra.init(state.player.coord, state.mapgeometry, dist, struct {
                 pub fn f(c: Coord, _: state.IsWalkableOptions) bool {
                     return !Dungeon.isTileOpaque(c);
                 }
-            }.f, .{}, state.gpa.allocator());
+            }.f, .{}, state.alloc);
             defer dijk.deinit();
 
             while (dijk.next()) |child| {
@@ -1656,7 +1656,7 @@ pub const Status = enum {
                 return;
 
             const chosen = rng.chooseUnweighted(Coord, possible_tiles.items);
-            const rat = mobs.placeMob(state.gpa.allocator(), &mobs.BoneRatTemplate, chosen, .{
+            const rat = mobs.placeMob(state.alloc, &mobs.BoneRatTemplate, chosen, .{
                 .no_squads = true,
             });
             ai.updateEnemyKnowledge(rat, state.player, null);
@@ -2067,7 +2067,7 @@ pub const Ctx = struct {
     };
 
     pub fn init() @This() {
-        return .{ .inner = std.StringHashMap(Value).init(state.gpa.allocator()) };
+        return .{ .inner = std.StringHashMap(Value).init(state.alloc) };
     }
 
     pub fn deinit(self: *@This()) void {
@@ -2159,8 +2159,8 @@ pub const Squad = struct {
 
     pub fn allocNew() *Squad {
         const squad = Squad{
-            //.members = MobArrayList.init(state.gpa.allocator()),
-            .enemies = EnemyRecord.AList.init(state.gpa.allocator()),
+            //.members = MobArrayList.init(state.alloc),
+            .enemies = EnemyRecord.AList.init(state.alloc),
         };
         state.squads.append(squad) catch err.wat();
         return state.squads.last().?;
@@ -2628,7 +2628,7 @@ pub const Mob = struct { // {{{
                 pub fn f(c: Coord, _: state.IsWalkableOptions) bool {
                     return !Dungeon.isTileOpaque(c);
                 }
-            }.f, .{}, state.gpa.allocator());
+            }.f, .{}, state.alloc);
             defer dijk.deinit();
 
             while (dijk.next()) |child| {
@@ -3950,7 +3950,7 @@ pub const Mob = struct { // {{{
     // Returns null if there wasn't any nearby walkable spot to put the new
     // spectral creature
     pub fn duplicateIntoSpectral(self: *Mob) ?*Mob {
-        var dijk = dijkstra.Dijkstra.init(self.coord, state.mapgeometry, 5, state.is_walkable, .{}, state.gpa.allocator());
+        var dijk = dijkstra.Dijkstra.init(self.coord, state.mapgeometry, 5, state.is_walkable, .{}, state.alloc);
         defer dijk.deinit();
 
         const newcoord = while (dijk.next()) |child| {
@@ -3958,7 +3958,7 @@ pub const Mob = struct { // {{{
         } else return null;
 
         var new = self.*;
-        new.init(state.gpa.allocator());
+        new.init(state.alloc);
         new.coord = newcoord;
         new.prefix = .Spectral;
 
@@ -4015,7 +4015,7 @@ pub const Mob = struct { // {{{
 
         self.is_dead = false;
         self.corpse_info = .{};
-        self.init(state.gpa.allocator());
+        self.init(state.alloc);
 
         self.tile = 'z';
         self.prefix = .Former;
@@ -4128,7 +4128,7 @@ pub const Mob = struct { // {{{
                 for (coords.constSlice()) |coord| {
                     if (list_i >= list.len) break;
                     if (!state.is_walkable(coord, .{})) continue;
-                    _ = mobs.placeMob(state.gpa.allocator(), list[list_i], coord, .{});
+                    _ = mobs.placeMob(state.alloc, list[list_i], coord, .{});
                     list_i += 1;
                 }
 
@@ -4257,7 +4257,7 @@ pub const Mob = struct { // {{{
         const pathobj = Path{ .from = self.coord, .to = to, .confused_state = is_disoriented };
 
         if (!self.path_cache.contains(pathobj)) {
-            const pth = astar.path(self.coord, to, state.mapgeometry, state.is_walkable, .{ .mob = self }, astar.basePenaltyFunc, self.availableDirections(), state.gpa.allocator()) orelse return null;
+            const pth = astar.path(self.coord, to, state.mapgeometry, state.is_walkable, .{ .mob = self }, astar.basePenaltyFunc, self.availableDirections(), state.alloc) orelse return null;
             defer pth.deinit();
 
             assert(pth.items[0].eq(self.coord));

@@ -36,7 +36,7 @@ pub const MapLabel = struct {
 
     pub fn deinit(self: @This()) void {
         if (self.malloced)
-            state.gpa.allocator().free(self.text);
+            state.alloc.free(self.text);
     }
 };
 pub var labels: std.ArrayList(MapLabel) = undefined;
@@ -52,7 +52,7 @@ pub fn addFor(mob: *Mob, text: []const u8, opts: LabelOpts) void {
 }
 
 pub fn addForf(mob: *Mob, comptime fmt: []const u8, args: anytype, opts: LabelOpts) void {
-    const s = @call(.always_inline, std.fmt.allocPrint, .{ state.gpa.allocator(), fmt, args }) catch unreachable;
+    const s = @call(.always_inline, std.fmt.allocPrint, .{ state.alloc, fmt, args }) catch unreachable;
     add(.{ .Mob = mob }, s, opts, true);
 }
 
@@ -61,7 +61,7 @@ pub fn addAt(coord: Coord, text: []const u8, opts: LabelOpts) void {
 }
 
 pub fn addAtf(coord: Coord, comptime fmt: []const u8, args: anytype, opts: LabelOpts) void {
-    const s = @call(.{ .modifier = .always_inline }, std.fmt.allocPrint, .{ state.gpa.allocator(), fmt, args }) catch unreachable;
+    const s = @call(.{ .modifier = .always_inline }, std.fmt.allocPrint, .{ state.alloc, fmt, args }) catch unreachable;
     add(.{ .Coord = coord }, s, opts, true);
 }
 
@@ -116,7 +116,7 @@ pub fn drawLabels() void {
 
     ui.map_win.annotations.clear();
 
-    var new_labels = @TypeOf(labels).init(state.gpa.allocator());
+    var new_labels = @TypeOf(labels).init(state.alloc);
     while (labels.pop()) |label|
         if (label.age < label.max_age and ui.coordToScreen(label.getLoc()) != null) {
             new_labels.append(label) catch unreachable;

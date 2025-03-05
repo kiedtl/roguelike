@@ -67,7 +67,7 @@ pub fn fireBurst(ground0: Coord, max_radius: usize, opts: FireBurstOpts) void {
     }
     result[ground0.y][ground0.x] = 100; // Ground zero is always incinerated
 
-    var mob_cache_backing = if (opts.mob_cache == null) std.AutoHashMap(*Mob, void).init(state.gpa.allocator()) else undefined;
+    var mob_cache_backing = if (opts.mob_cache == null) std.AutoHashMap(*Mob, void).init(state.alloc) else undefined;
     const mob_cache = opts.mob_cache orelse &mob_cache_backing;
     defer if (opts.mob_cache == null) mob_cache_backing.deinit();
 

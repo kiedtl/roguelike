@@ -64,7 +64,7 @@ fn loadFontData(path: [*c]const u8, databuf: *[]u8) void {
     const width = c_imp.png_get_image_width(png_ctx, png_info);
     const height = c_imp.png_get_image_height(png_ctx, png_info);
 
-    databuf.* = state.gpa.allocator().alloc(u8, width * height) catch err.oom();
+    databuf.* = state.alloc.alloc(u8, width * height) catch err.oom();
 
     const rows = c_imp.png_get_rows(png_ctx, png_info);
     var y: usize = 0;
@@ -81,6 +81,6 @@ fn loadFontData(path: [*c]const u8, databuf: *[]u8) void {
 }
 
 pub fn freeFontData() void {
-    state.gpa.allocator().free(font_data);
-    state.gpa.allocator().free(font_w_data);
+    state.alloc.free(font_data);
+    state.alloc.free(font_w_data);
 }

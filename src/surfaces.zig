@@ -1376,7 +1376,7 @@ pub const DustlingProducer = Machine{
             const area = machine.areas.constSlice()[0];
             const leader = machine.ctx.getOrNone(*Mob, "ctx_leader_for_dustling");
             if (state.dungeon.at(area).mob == null and leader != null) {
-                const dustling = mobs.placeMob(state.gpa.allocator(), &mobs.DustlingTemplate, area, .{ .no_squads = true });
+                const dustling = mobs.placeMob(state.alloc, &mobs.DustlingTemplate, area, .{ .no_squads = true });
                 dustling.addStatus(.Paralysis, 0, .{ .Tmp = 3 });
                 leader.?.addUnderling(dustling);
 

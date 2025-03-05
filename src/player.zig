@@ -489,7 +489,7 @@ pub fn executeWizardFun(w: WizardFun) void {
             //@panic("nooooooooooooo");
         },
         .Particles => {
-            _ = janet.loadFile("scripts/particles.janet", state.gpa.allocator()) catch return;
+            _ = janet.loadFile("scripts/particles.janet", state.alloc) catch return;
             const target = ui.chooseCell(.{}) orelse return;
             ui.Animation.apply(.{ .Particle = .{ .name = "test", .coord = state.player.coord, .target = .{ .C = target } } });
         },
@@ -728,7 +728,7 @@ pub fn rummageContainer(coord: Coord) bool {
         if (item.isUseful())
             found_goodies = true;
 
-        if (state.nextAvailableSpaceForItem(coord, state.gpa.allocator())) |spot| {
+        if (state.nextAvailableSpaceForItem(coord, state.alloc)) |spot| {
             state.dungeon.itemsAt(spot).append(item) catch err.wat();
         } else {
             // FIXME: an item gets swallowed up here!
@@ -903,7 +903,7 @@ pub fn throwItem(index: usize) bool {
 
     const dest = ui.chooseCell(.{ .require_seen = true, .targeter = targeter }) orelse return false;
 
-    state.player.throwItem(&item, dest, state.gpa.allocator());
+    state.player.throwItem(&item, dest, state.alloc);
     _ = state.player.removeItem(index) catch err.wat();
     return true;
 }
@@ -1086,7 +1086,7 @@ pub fn dropItem(index: usize, is_inventory: bool) UserActionResult {
     if (!is_inventory and @as(Inventory.EquSlot, @enumFromInt(index)) == .Shoe)
         return .{ .Failure = "Sorry, you need shoes." };
 
-    if (state.nextAvailableSpaceForItem(state.player.coord, state.gpa.allocator())) |coord| {
+    if (state.nextAvailableSpaceForItem(state.player.coord, state.alloc)) |coord| {
         const item = if (is_inventory) b: {
             const i = state.player.removeItem(index) catch err.wat();
             const dropped = state.player.dropItem(i, coord);
@@ -1114,7 +1114,7 @@ pub fn memorizeTile(fc: Coord, mtype: state.MemoryTile.Type) void {
 }
 
 pub fn enemiesCanSee(coord: Coord) bool {
-    const moblist = state.createMobList(false, true, state.player.coord.z, state.gpa.allocator());
+    const moblist = state.createMobList(false, true, state.player.coord.z, state.alloc);
     defer moblist.deinit();
 
     return b: for (moblist.items) |mob| {
@@ -1132,7 +1132,7 @@ pub fn isPlayerSpotted() bool {
         return state.player_is_spotted.is_spotted;
     }
 
-    const moblist = state.createMobList(false, true, state.player.coord.z, state.gpa.allocator());
+    const moblist = state.createMobList(false, true, state.player.coord.z, state.alloc);
     defer moblist.deinit();
 
     const is_spotted = enemiesCanSee(state.player.coord) or (b: for (moblist.items) |mob| {

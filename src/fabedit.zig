@@ -312,9 +312,9 @@ pub fn main() anyerror!void {
     font.loadFontsData();
     state.loadStatusStringInfo();
     state.loadLevelInfo();
-    surfaces.readProps(state.gpa.allocator());
-    literature.readPosters(state.gpa.allocator());
-    mapgen.readPrefabs(state.gpa.allocator());
+    surfaces.readProps(state.alloc);
+    literature.readPosters(state.alloc);
+    mapgen.readPrefabs(state.alloc);
 
     defer _ = state.gpa.deinit();
 
@@ -325,14 +325,14 @@ pub fn main() anyerror!void {
     defer {
         var iter = literature.posters.iterator();
         while (iter.next()) |poster|
-            poster.deinit(state.gpa.allocator());
+            poster.deinit(state.alloc);
         literature.posters.deinit();
     }
 
     defer font.freeFontData();
     defer state.freeStatusStringInfo();
     defer state.freeLevelInfo();
-    defer surfaces.freeProps(state.gpa.allocator());
+    defer surfaces.freeProps(state.alloc);
 
     var args = std.process.args();
     _ = args.skip();
@@ -413,8 +413,8 @@ pub fn main() anyerror!void {
                         '[' => prevFab(),
                         ']' => nextFab(),
                         'r' => {
-                            surfaces.freeProps(state.gpa.allocator());
-                            surfaces.readProps(state.gpa.allocator());
+                            surfaces.freeProps(state.alloc);
+                            surfaces.readProps(state.alloc);
                         },
                         else => {},
                     }

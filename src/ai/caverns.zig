@@ -106,7 +106,7 @@ fn findPistons(mob: *Mob, job: *AIJob) ?*const CoordArrayList {
         const room_ind = utils.getRoomFromCoord(mob.coord.z, mob.coord) orelse return null;
         const room = state.rooms[mob.coord.z].items[room_ind];
 
-        var list = CoordArrayList.init(state.gpa.allocator());
+        var list = CoordArrayList.init(state.alloc);
         var iter = room.rect.iter();
         while (iter.next()) |roomcoord| {
             if (state.dungeon.machineAt(roomcoord)) |mach|
@@ -277,7 +277,7 @@ pub fn _Job_CAV_FindJob(mob: *Mob, job: *AIJob) AIJob.JStatus {
     const waited = job.ctx.get(usize, CTX_WAITED, 0);
     if (waited < 14) {
         job.ctx.set(usize, CTX_WAITED, waited + 1);
-        ai.patrolWork(mob, state.gpa.allocator());
+        ai.patrolWork(mob, state.alloc);
         return .Ongoing;
     }
 
@@ -292,7 +292,7 @@ pub fn _Job_CAV_FindJob(mob: *Mob, job: *AIJob) AIJob.JStatus {
             }
         }
         if (targets.len == 0) {
-            ai.patrolWork(mob, state.gpa.allocator());
+            ai.patrolWork(mob, state.alloc);
             return .Ongoing;
         }
         const new_target = rng.chooseUnweighted(*Mob, targets.constSlice());

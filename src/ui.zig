@@ -77,7 +77,7 @@ pub var log_win: struct {
 
     pub fn init(self: *@This()) void {
         const d = dimensions(.Log);
-        self.main = Console.init(state.gpa.allocator(), d.width(), 0);
+        self.main = Console.init(state.alloc, d.width(), 0);
         self.last_message = null;
     }
 
@@ -115,7 +115,7 @@ pub var hud_win: struct {
 
     pub fn init(self: *@This()) void {
         const d = dimensions(.PlayerInfo);
-        self.main = Console.init(state.gpa.allocator(), d.width(), d.height());
+        self.main = Console.init(state.alloc, d.width(), d.height());
         self.main.addRevealAnimation(.{});
     }
 
@@ -154,29 +154,29 @@ pub var map_win: struct {
 
     pub fn init(self: *@This()) void {
         const d = dimensions(.Main);
-        self.map = Console.init(state.gpa.allocator(), d.width(), d.height());
+        self.map = Console.init(state.alloc, d.width(), d.height());
 
-        self.text_line = Console.init(state.gpa.allocator(), d.width(), 2);
+        self.text_line = Console.init(state.alloc, d.width(), 2);
         self.text_line.default_transparent = true;
         self.text_line.clear();
-        self.text_line_anim_layer = Console.init(state.gpa.allocator(), d.width(), 2);
+        self.text_line_anim_layer = Console.init(state.alloc, d.width(), 2);
         self.text_line_anim_layer.default_transparent = true;
         self.text_line_anim_layer.clear();
         self.text_line.addSubconsole(&self.text_line_anim_layer, 0, 0);
 
-        self.annotations = Console.init(state.gpa.allocator(), d.width(), d.height());
+        self.annotations = Console.init(state.alloc, d.width(), d.height());
         self.annotations.default_transparent = true;
         self.annotations.clear();
 
-        self.grid_annotations = Console.init(state.gpa.allocator(), d.width(), d.height());
+        self.grid_annotations = Console.init(state.alloc, d.width(), d.height());
         self.grid_annotations.default_transparent = true;
         self.grid_annotations.clear();
 
-        self.animations = Console.init(state.gpa.allocator(), d.width(), d.height());
+        self.animations = Console.init(state.alloc, d.width(), d.height());
         self.animations.default_transparent = true;
         self.animations.clear();
 
-        self.cell_animation_grid = state.gpa.allocator().alloc(?CellAnimation, d.width() * d.height()) catch err.oom();
+        self.cell_animation_grid = state.alloc.alloc(?CellAnimation, d.width() * d.height()) catch err.oom();
         @memset(self.cell_animation_grid, null);
 
         self.map.addSubconsole(&self.text_line, 0, 0);
@@ -237,8 +237,8 @@ pub var map_win: struct {
 
     fn _addTextLineReveal(self: *@This(), duration: usize) void {
         //if (self.text_line_anim) |ptr|
-        //state.gpa.allocator().destroy(ptr);
-        //self.text_line_anim = state.gpa.allocator().create(Generator(animationRevealUnreveal)) catch err.oom();
+        //state.alloc.destroy(ptr);
+        //self.text_line_anim = state.alloc.create(Generator(animationRevealUnreveal)) catch err.oom();
         // self.text_line_anim.?.* = Generator(animationRevealUnreveal).init(.{
         //     .main_layer = &self.text_line,
         //     .anim_layer = &self.text_line_anim_layer,
@@ -252,8 +252,8 @@ pub var map_win: struct {
     }
 
     pub fn drawTextLinef(self: *@This(), comptime fmt: []const u8, args: anytype, opts: DrawStrOpts) void {
-        const str = std.fmt.allocPrint(state.gpa.allocator(), fmt, args) catch err.oom();
-        defer state.gpa.allocator().free(str);
+        const str = std.fmt.allocPrint(state.alloc, fmt, args) catch err.oom();
+        defer state.alloc.free(str);
 
         var y: usize = 0;
         var fibuf = StackBuffer(u8, 4096).init(null);
@@ -271,7 +271,7 @@ pub var map_win: struct {
             if (anim.next() == null) {
                 self.text_line.clear();
                 self.text_line_anim_layer.clear();
-                //state.gpa.allocator().destroy(self.text_line_anim.?);
+                //state.alloc.destroy(self.text_line_anim.?);
                 self.text_line_anim = null;
             };
     }
@@ -290,9 +290,9 @@ pub var map_win: struct {
 
     pub fn deinit(self: *@This()) void {
         self.map.deinit();
-        state.gpa.allocator().free(self.cell_animation_grid);
+        state.alloc.free(self.cell_animation_grid);
         // if (self.text_line_anim) |ptr|
-        //     state.gpa.allocator().destroy(ptr);
+        //     state.alloc.destroy(ptr);
     }
 } = .{};
 
@@ -307,9 +307,9 @@ fn ModalWindow(comptime left_width: usize, comptime dim: DisplayWindow) type {
         pub fn init(self: *@This()) void {
             const d = dimensions(dim);
 
-            self.container = Console.init(state.gpa.allocator(), d.width(), d.height());
-            self.left = Console.init(state.gpa.allocator(), LEFT_WIDTH, d.height() - 2);
-            self.right = Console.init(state.gpa.allocator(), d.width() - LEFT_WIDTH - 3, d.height() - 2);
+            self.container = Console.init(state.alloc, d.width(), d.height());
+            self.left = Console.init(state.alloc, LEFT_WIDTH, d.height() - 2);
+            self.right = Console.init(state.alloc, d.width() - LEFT_WIDTH - 3, d.height() - 2);
 
             self.container.addSubconsole(&self.left, 1, 1);
             self.container.addSubconsole(&self.right, LEFT_WIDTH + 2, 1);
@@ -339,7 +339,7 @@ pub fn init(scale: f32) !void {
     log_win.init();
     clearScreen();
 
-    labels.labels = @TypeOf(labels.labels).init(state.gpa.allocator());
+    labels.labels = @TypeOf(labels.labels).init(state.alloc);
 }
 
 // Check that the window is the minimum size.
@@ -827,10 +827,18 @@ fn _getSurfDescription(self: *Console, starty: usize, surface: SurfaceItem, line
 
 const MobInfoLine = struct {
     char: u21,
-    color: u21 = '.',
-    string: std.ArrayList(u8) = std.ArrayList(u8).init(state.gpa.allocator()),
+    color: u21,
+    string: std.ArrayList(u8),
 
     pub const ArrayList = std.ArrayList(@This());
+
+    pub fn new(ch: u21) @This() {
+        return .{ .char = ch, .color = '.', .string = std.ArrayList(u8).init(state.alloc) };
+    }
+
+    pub fn newColored(ch: u21, color: u21) @This() {
+        return .{ .char = ch, .color = color, .string = std.ArrayList(u8).init(state.alloc) };
+    }
 
     pub fn deinitList(list: ArrayList) void {
         for (list.items) |item| item.string.deinit();
@@ -839,42 +847,42 @@ const MobInfoLine = struct {
 };
 
 fn _getMonsInfoSet(mob: *Mob) MobInfoLine.ArrayList {
-    var list = MobInfoLine.ArrayList.init(state.gpa.allocator());
+    var list = MobInfoLine.ArrayList.init(state.alloc);
 
     {
-        var i = MobInfoLine{ .char = '*' };
+        var i = MobInfoLine.new('*');
         i.color = if (mob.HP <= (mob.max_HP / 5)) @as(u21, 'r') else '.';
         i.string.writer().print("{}/{} HP, {} MP", .{ mob.HP, mob.max_HP, mob.MP }) catch err.wat();
         list.append(i) catch err.wat();
     }
 
     if (mob.prisoner_status) |ps| {
-        var i = MobInfoLine{ .char = 'p' };
+        var i = MobInfoLine.new('p');
         const str = if (ps.held_by) |_| "chained" else "prisoner";
         i.string.writer().print("{s}", .{str}) catch err.wat();
         list.append(i) catch err.wat();
     }
 
     if (mob.resistance(.rFume) == 100) {
-        var i = MobInfoLine{ .char = 'u' };
+        var i = MobInfoLine.new('u');
         i.string.writer().print("unbreathing $g(100% rFume)$.", .{}) catch err.wat();
         list.append(i) catch err.wat();
     }
 
     if (mob.immobile) {
-        var i = MobInfoLine{ .char = 'i' };
+        var i = MobInfoLine.new('i');
         i.string.writer().print("immobile", .{}) catch err.wat();
         list.append(i) catch err.wat();
     }
 
     if (mob.isMobMartial()) {
-        var i = MobInfoLine{ .char = 'M', .color = 'r' };
+        var i = MobInfoLine.newColored('M', 'r');
         i.string.writer().print("uses martial attacks <$b+{}$.>", .{mob.stat(.Martial)}) catch err.wat();
         list.append(i) catch err.wat();
     }
 
     if (mob.isUnderStatus(.CopperWeapon) != null and mob.hasWeaponOfEgo(.Copper)) {
-        var i = MobInfoLine{ .char = 'C', .color = 'r' };
+        var i = MobInfoLine.newColored('C', 'r');
         i.string.writer().print("has copper weapon", .{}) catch err.wat();
         list.append(i) catch err.wat();
     }
@@ -882,7 +890,7 @@ fn _getMonsInfoSet(mob: *Mob) MobInfoLine.ArrayList {
     const mobspeed = mob.stat(.Speed);
     const youspeed = state.player.stat(.Speed);
     if (mobspeed != youspeed) {
-        var i = MobInfoLine{ .char = if (mobspeed < youspeed) @as(u21, 'f') else 's' };
+        var i = MobInfoLine.new(if (mobspeed < youspeed) @as(u21, 'f') else 's');
         i.color = if (mobspeed < youspeed) @as(u21, 'p') else 'b';
         const str = if (mobspeed < youspeed) "faster than you" else "slower than you";
         i.string.writer().print("{s}", .{str}) catch err.wat();
@@ -892,7 +900,7 @@ fn _getMonsInfoSet(mob: *Mob) MobInfoLine.ArrayList {
     if (mob.ai.phase == .Investigate) {
         assert(mob.sustiles.items.len > 0);
 
-        var i = MobInfoLine{ .char = '?' };
+        var i = MobInfoLine.new('?');
         var you_str: []const u8 = "";
         {
             const cur_sustile = mob.sustiles.items[mob.sustiles.items.len - 1].coord;
@@ -906,13 +914,13 @@ fn _getMonsInfoSet(mob: *Mob) MobInfoLine.ArrayList {
 
         list.append(i) catch err.wat();
     } else if (mob.ai.phase == .Flee) {
-        var i = MobInfoLine{ .char = '!' };
+        var i = MobInfoLine.new('!');
         i.string.writer().print("fleeing", .{}) catch err.wat();
         list.append(i) catch err.wat();
     }
 
     {
-        var i = MobInfoLine{ .char = '@' };
+        var i = MobInfoLine.new('@');
 
         if (mob.isHostileTo(state.player) and mob.ai.is_combative) {
             const Awareness = union(enum) { Seeing, Remember: usize, None };
@@ -959,7 +967,7 @@ fn _getMonsInfoSet(mob: *Mob) MobInfoLine.ArrayList {
     }
 
     if (mob.isUnderStatus(.Sleeping) != null) {
-        var i = MobInfoLine{ .char = 'Z' };
+        var i = MobInfoLine.new('Z');
         i.string.writer().print("{s}", .{Status.string(.Sleeping, mob)}) catch err.wat();
         list.append(i) catch err.wat();
     }
@@ -1444,8 +1452,8 @@ pub const DrawStrOpts = struct {
 };
 
 fn _drawStrf(_x: usize, _y: usize, endx: usize, comptime format: []const u8, args: anytype, opts: DrawStrOpts) usize {
-    const str = std.fmt.allocPrint(state.gpa.allocator(), format, args) catch err.oom();
-    defer state.gpa.allocator().free(str);
+    const str = std.fmt.allocPrint(state.alloc, format, args) catch err.oom();
+    defer state.alloc.free(str);
     return _drawStr(_x, _y, endx, str, opts);
 }
 
@@ -1697,7 +1705,7 @@ fn drawHUD(moblist: []const *Mob) void {
             player: bool,
         };
 
-        var features = std.ArrayList(FeatureInfo).init(state.gpa.allocator());
+        var features = std.ArrayList(FeatureInfo).init(state.alloc);
         defer features.deinit();
 
         var dijk = dijkstra.Dijkstra.init(
@@ -1706,7 +1714,7 @@ fn drawHUD(moblist: []const *Mob) void {
             @intCast(state.player.stat(.Vision)),
             dijkstra.dummyIsValid,
             .{},
-            state.gpa.allocator(),
+            state.alloc,
         );
         defer dijk.deinit();
 
@@ -1900,7 +1908,7 @@ fn drawLog() void {
         var fibuf = StackBuffer(u8, 4096).init(null);
         var fold_iter = utils.FoldedTextIterator.init(str.constSlice(), linewidth + 1);
         while (fold_iter.next(&fibuf)) |text_line| : (y += 1) {
-            var console = Console.initHeap(state.gpa.allocator(), linewidth, 1);
+            var console = Console.initHeap(state.alloc, linewidth, 1);
             _ = console.drawTextAt(0, 0, text_line, .{ .fg = col });
             console.addRevealAnimation(.{ .factor = 6 });
             log_win.main.addSubconsole(console, 0, y);
@@ -2286,7 +2294,7 @@ pub const ChooseCellOpts = struct {
                     pub fn f(targeter: Targeter, _: bool, coord: Coord, buf: *Result.AList) Error!void {
                         // First do the squares that the player can see
                         {
-                            var dijk = dijkstra.Dijkstra.init(coord, state.mapgeometry, targeter.AoE1.dist, state.is_walkable, targeter.AoE1.opts, state.gpa.allocator());
+                            var dijk = dijkstra.Dijkstra.init(coord, state.mapgeometry, targeter.AoE1.dist, state.is_walkable, targeter.AoE1.opts, state.alloc);
                             defer dijk.deinit();
 
                             while (dijk.next()) |child| if (state.player.cansee(child)) {
@@ -2303,7 +2311,7 @@ pub const ChooseCellOpts = struct {
                                     if (state.player.cansee(c)) return state.is_walkable(c, opts);
                                     return true;
                                 }
-                            }.f, targeter.AoE1.opts, state.gpa.allocator());
+                            }.f, targeter.AoE1.opts, state.alloc);
                             defer dijk.deinit();
 
                             while (dijk.next()) |child| if (!state.player.cansee(child)) {
@@ -2335,7 +2343,7 @@ pub fn chooseCell(opts: ChooseCellOpts) ?Coord {
 
     var terror: ?ChooseCellOpts.Targeter.Error = null;
     var coord: Coord = state.player.coord;
-    var coords = ChooseCellOpts.Targeter.Result.AList.init(state.gpa.allocator());
+    var coords = ChooseCellOpts.Targeter.Result.AList.init(state.alloc);
     defer coords.deinit();
 
     map_win.annotations.clear();
@@ -2343,7 +2351,7 @@ pub fn chooseCell(opts: ChooseCellOpts) ?Coord {
     defer map_win.annotations.clear();
     defer map_win.map.renderFullyW(.Main);
 
-    const moblist = state.createMobList(false, true, state.player.coord.z, state.gpa.allocator());
+    const moblist = state.createMobList(false, true, state.player.coord.z, state.alloc);
     defer moblist.deinit();
 
     while (true) {
@@ -2512,12 +2520,12 @@ pub fn initLoadingScreen() LoadingScreen {
     const win = dimensions(.Whole);
     var win_c: LoadingScreen = undefined;
 
-    const map = RexMap.initFromFile(state.gpa.allocator(), "data/logo.xp") catch err.wat();
+    const map = RexMap.initFromFile(state.alloc, "data/logo.xp") catch err.wat();
     defer map.deinit();
 
-    win_c.main_con = Console.init(state.gpa.allocator(), win.width(), win.height());
-    win_c.logo_con = Console.initHeap(state.gpa.allocator(), map.width, map.height + 1); // +1 padding
-    win_c.text_con = Console.initHeap(state.gpa.allocator(), LoadingScreen.TEXT_CON_WIDTH, LoadingScreen.TEXT_CON_HEIGHT);
+    win_c.main_con = Console.init(state.alloc, win.width(), win.height());
+    win_c.logo_con = Console.initHeap(state.alloc, map.width, map.height + 1); // +1 padding
+    win_c.text_con = Console.initHeap(state.alloc, LoadingScreen.TEXT_CON_WIDTH, LoadingScreen.TEXT_CON_HEIGHT);
 
     const starty = (win.height() / 2) - ((map.height + LoadingScreen.TEXT_CON_HEIGHT + 2) / 2) - 4;
 
@@ -2601,10 +2609,10 @@ pub fn drawGameOverScreen(scoreinfo: scores.Info) void {
     display.present();
 
     const win_d = dimensions(.Whole);
-    var container_c = Console.init(state.gpa.allocator(), win_d.width(), win_d.height());
+    var container_c = Console.init(state.alloc, win_d.width(), win_d.height());
     defer container_c.deinit();
 
-    var layer1_c = Console.init(state.gpa.allocator(), win_d.width(), win_d.height());
+    var layer1_c = Console.init(state.alloc, win_d.width(), win_d.height());
     layer1_c.drawCapturedDisplay(1, 1);
     container_c.addSubconsole(&layer1_c, 0, 0);
 
@@ -2745,10 +2753,10 @@ pub fn drawGameOverScreen(scoreinfo: scores.Info) void {
 pub fn drawTextScreen(comptime fmt: []const u8, args: anytype) void {
     const mainw = dimensions(.Main);
 
-    const text = std.fmt.allocPrint(state.gpa.allocator(), fmt, args) catch err.wat();
-    defer state.gpa.allocator().free(text);
+    const text = std.fmt.allocPrint(state.alloc, fmt, args) catch err.wat();
+    defer state.alloc.free(text);
 
-    var con = Console.init(state.gpa.allocator(), mainw.width(), mainw.height());
+    var con = Console.init(state.alloc, mainw.width(), mainw.height());
     defer con.deinit();
 
     var y: usize = 0;
@@ -3221,14 +3229,14 @@ pub fn drawZapScreen() void {
 pub const ExamineTileFocus = enum(usize) { Mob = 0, Surface = 1, Item = 2 };
 
 pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus, start_coord: ?Coord) bool {
-    var container = Console.init(state.gpa.allocator(), MIN_WIDTH, MIN_HEIGHT);
+    var container = Console.init(state.alloc, MIN_WIDTH, MIN_HEIGHT);
     var log_d = dimensions(.Log);
-    var lgg_win = Console.init(state.gpa.allocator(), log_d.width(), log_d.height());
+    var lgg_win = Console.init(state.alloc, log_d.width(), log_d.height());
     var inf_d = dimensions(.PlayerInfo);
-    var inf_win = Console.init(state.gpa.allocator(), inf_d.width(), inf_d.height());
+    var inf_win = Console.init(state.alloc, inf_d.width(), inf_d.height());
     var map_d = dimensions(.Main);
-    var mpp_win = Console.init(state.gpa.allocator(), map_d.width(), map_d.height());
-    var mp3_win = Console.init(state.gpa.allocator(), map_d.width(), map_d.height());
+    var mpp_win = Console.init(state.alloc, map_d.width(), map_d.height());
+    var mp3_win = Console.init(state.alloc, map_d.width(), map_d.height());
     mp3_win.default_transparent = true;
 
     container.addSubconsole(&lgg_win, log_d.startx, log_d.starty);
@@ -3264,7 +3272,7 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus, start_coord: ?Coord)
 
     var kbd_s = false;
 
-    const moblist = state.createMobList(false, true, state.player.coord.z, state.gpa.allocator());
+    const moblist = state.createMobList(false, true, state.player.coord.z, state.alloc);
     defer moblist.deinit();
 
     var prev_coord = coord;
@@ -3530,16 +3538,16 @@ pub fn drawEscapeMenu() void {
     clearScreen();
 
     const main_c_dim = dimensions(.Main);
-    var main_c = Console.init(state.gpa.allocator(), main_c_dim.width(), main_c_dim.height());
+    var main_c = Console.init(state.alloc, main_c_dim.width(), main_c_dim.height());
     main_c.addRevealAnimation(.{ .rvtype = .All });
     defer main_c.deinit();
 
     const menu_c_dim = dimensions(.PlayerInfo);
-    var menu_c = Console.init(state.gpa.allocator(), menu_c_dim.width(), menu_c_dim.height());
+    var menu_c = Console.init(state.alloc, menu_c_dim.width(), menu_c_dim.height());
     menu_c.addRevealAnimation(.{});
     defer menu_c.deinit();
 
-    const movement = RexMap.initFromFile(state.gpa.allocator(), "data/keybinds_movement.xp") catch err.wat();
+    const movement = RexMap.initFromFile(state.alloc, "data/keybinds_movement.xp") catch err.wat();
     defer movement.deinit();
 
     const pad = 11; // Padding between two columns
@@ -3668,13 +3676,13 @@ pub fn waitForInput(default_input: ?u8) ?u32 {
 }
 
 pub fn drawInventoryScreen() bool {
-    var container = Console.init(state.gpa.allocator(), MIN_WIDTH, MIN_HEIGHT);
+    var container = Console.init(state.alloc, MIN_WIDTH, MIN_HEIGHT);
     var log_d = dimensions(.Log);
-    var lgg_win = Console.init(state.gpa.allocator(), log_d.width(), log_d.height());
+    var lgg_win = Console.init(state.alloc, log_d.width(), log_d.height());
     var inf_d = dimensions(.PlayerInfo);
-    var inf_win = Console.init(state.gpa.allocator(), inf_d.width(), inf_d.height());
+    var inf_win = Console.init(state.alloc, inf_d.width(), inf_d.height());
     var map_d = dimensions(.Main);
-    var inv_win = Console.init(state.gpa.allocator(), map_d.width(), map_d.height());
+    var inv_win = Console.init(state.alloc, map_d.width(), map_d.height());
 
     container.addSubconsole(&lgg_win, log_d.startx, log_d.starty);
     container.addSubconsole(&inf_win, inf_d.startx, inf_d.starty);
@@ -3951,8 +3959,8 @@ pub fn drawAlertThenLog(comptime fmt: []const u8, args: anytype) void {
 }
 
 fn _setupTextModal(comptime fmt: []const u8, args: anytype) Console {
-    const str = std.fmt.allocPrint(state.gpa.allocator(), fmt, args) catch err.oom();
-    defer state.gpa.allocator().free(str);
+    const str = std.fmt.allocPrint(state.alloc, fmt, args) catch err.oom();
+    defer state.alloc.free(str);
 
     const width = if (str.len < 200) @as(usize, 30) else 50;
 
@@ -3961,8 +3969,8 @@ fn _setupTextModal(comptime fmt: []const u8, args: anytype) Console {
     var fold_iter = utils.FoldedTextIterator.init(str, width);
     while (fold_iter.next(&fibuf)) |_| text_height += 1;
 
-    var container_c = Console.init(state.gpa.allocator(), width + 4, text_height + 4);
-    var text_c = Console.initHeap(state.gpa.allocator(), width, text_height);
+    var container_c = Console.init(state.alloc, width + 4, text_height + 4);
+    var text_c = Console.initHeap(state.alloc, width, text_height);
 
     container_c.addSubconsole(text_c, 2, 2);
 
@@ -4021,18 +4029,18 @@ pub fn drawChoicePrompt(comptime fmt: []const u8, args: anytype, options: []cons
 
     assert(options.len > 0);
 
-    const str = std.fmt.allocPrint(state.gpa.allocator(), fmt, args) catch err.oom();
-    defer state.gpa.allocator().free(str);
+    const str = std.fmt.allocPrint(state.alloc, fmt, args) catch err.oom();
+    defer state.alloc.free(str);
 
     var text_height: usize = 0;
     var fibuf = StackBuffer(u8, 4096).init(null);
     var fold_iter = utils.FoldedTextIterator.init(str, W_WIDTH);
     while (fold_iter.next(&fibuf)) |_| text_height += 1;
 
-    var container_c = Console.init(state.gpa.allocator(), W_WIDTH + 4, text_height + 4 + options.len + 2);
-    var text_c = Console.init(state.gpa.allocator(), W_WIDTH, text_height);
-    var options_c = Console.init(state.gpa.allocator(), W_WIDTH, options.len);
-    var hint_c = Console.init(state.gpa.allocator(), W_WIDTH, 2);
+    var container_c = Console.init(state.alloc, W_WIDTH + 4, text_height + 4 + options.len + 2);
+    var text_c = Console.init(state.alloc, W_WIDTH, text_height);
+    var options_c = Console.init(state.alloc, W_WIDTH, options.len);
+    var hint_c = Console.init(state.alloc, W_WIDTH, 2);
     var hint_used = false;
 
     container_c.addSubconsole(&text_c, 2, 2);
@@ -4159,15 +4167,15 @@ pub fn drawItemChoicePrompt(comptime fmt: []const u8, args: anytype, items: []co
     assert(items.len > 0); // This should have been handled previously.
 
     // A bit messy.
-    var namebuf = std.ArrayList([]const u8).init(state.gpa.allocator());
+    var namebuf = std.ArrayList([]const u8).init(state.alloc);
     defer {
-        for (namebuf.items) |str| state.gpa.allocator().free(str);
+        for (namebuf.items) |str| state.alloc.free(str);
         namebuf.deinit();
     }
 
     for (items) |item| {
         const itemname = item.longName() catch err.wat();
-        const string = state.gpa.allocator().alloc(u8, itemname.len) catch err.wat();
+        const string = state.alloc.alloc(u8, itemname.len) catch err.wat();
         std.mem.copy(u8, string, itemname.constSlice());
         namebuf.append(string) catch err.wat();
     }
