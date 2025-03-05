@@ -262,6 +262,26 @@ pub const CAST_ENGINE = Spell{
     .effects = &[_]Effect{.{ .Status = .Fast }},
 };
 
+pub const CAST_DIVINE_REGEN = Spell{
+    .id = "sp_regen_divine",
+    .name = "divine regeneration",
+    .cast_type = .Smite,
+    .smite_target_type = .HolyAngel,
+    .check_has_effect = struct {
+        // Only use the spell if the target's HP is below
+        // the (regeneration_amount * 2).
+        //
+        // TODO: we should have a way to flag this spell as an "emergency"
+        // spell, ensuring it's only used when the caster is clearly losing a
+        // fight
+        fn f(_: *Mob, opts: SpellOptions, target: Coord) bool {
+            return state.dungeon.at(target).mob.?.HP <= (opts.power * 2);
+        }
+    }.f,
+    .noise = .Loud,
+    .effects = &[_]Effect{.Heal},
+};
+
 // TODO: generalize into a healing spell?
 pub const CAST_REGEN = Spell{
     .id = "sp_regen",
@@ -270,7 +290,7 @@ pub const CAST_REGEN = Spell{
     .smite_target_type = .Self,
     .check_has_effect = struct {
         // Only use the spell if the caster's HP is below
-        // the (regeneration_amount * 2).
+        // the (regeneration_amount * 3).
         //
         // TODO: we should have a way to flag this spell as an "emergency"
         // spell, ensuring it's only used when the caster is clearly losing a
@@ -378,6 +398,71 @@ pub const BOLT_FIERY_JAVELIN = Spell{
         .{ .Damage = .{ .msg = .{ .noun = "The blazing javelin", .strs = &items.PIERCING_STRS } } },
         .{ .Damage = .{ .kind = .Fire, .msg = .{ .noun = "The blazing javelin", .strs = &items.PIERCING_STRS } } },
     },
+};
+
+pub const BOLT_DISINTEGRATE = Spell{
+    .id = "sp_disintegration",
+    .name = "disintegrating bolt",
+    .cast_type = .Smite,
+    .smite_target_type = .AnyTile,
+    .animation = .{ .Particles = .{ .name = "zap-disintegrate" } },
+    .noise = .Silent,
+    .needs_visible_target = false,
+    .effects = &[_]Effect{.{
+        .Custom = struct {
+            pub fn f(caster_coord: Coord, _: SpellOptions, dest: Coord) void {
+                const caster = state.dungeon.at(caster_coord).mob.?;
+
+                const will: usize = @intCast(caster.stat(.Willpower));
+                const overhang = will - caster.coord.distance(dest);
+                const path = caster.coord.drawLine(dest, state.mapgeometry, overhang);
+
+                var i: usize = will;
+                var d: usize = 2; // damage
+                var v: usize = 0; // victims so far
+                for (path.constSlice()) |coord| {
+                    if (coord.eq(caster.coord)) continue;
+
+                    if (state.is_walkable(coord, .{ .only_if_breaks_lof = true })) {
+                        if (v > 0)
+                            d -|= 1;
+                    } else {
+                        if (state.dungeon.at(coord).mob) |mob| {
+                            mob.takeDamage(.{
+                                .amount = d,
+                                .by_mob = caster,
+                                .kind = .Irresistible,
+                                .blood = false,
+                                .source = .RangedAttack,
+                                .stealth = v == 0,
+                            }, .{
+                                .strs = &[_]types.DamageStr{
+                                    items._dmgstr(10, "zap", "zaps", ""),
+                                    items._dmgstr(99, "disintegrate", "disintegrates", ""),
+                                    items._dmgstr(200, "annihilate", "annihilates", ""),
+                                },
+                            });
+                            v += 1;
+                        } else if (state.dungeon.at(coord).surface) |surface| {
+                            // It's not walkable
+                            if (surface != .Stair) {
+                                surface.destroy(coord);
+                                if (v == 0)
+                                    d += 1;
+                            }
+                        } else if (state.dungeon.at(coord).type == .Wall) {
+                            state.dungeon.at(coord).type = .Floor;
+                            if (v == 0)
+                                d += 3;
+                        }
+                    }
+
+                    i -= 1;
+                    if (i == 0 or d == 0) break;
+                }
+            }
+        }.f,
+    }},
 };
 
 pub const BOLT_JAVELIN = Spell{
@@ -673,6 +758,39 @@ pub const BOLT_CONJURE = Spell{
             }
         }.f,
     }},
+};
+
+pub const BOLT_HELLFIRE_ELECTRIC = Spell{
+    .id = "sp_hellfire_electric",
+    .name = "electric hellfire",
+    .cast_type = .Bolt,
+    .bolt_avoids_allies = true,
+    .animation = .{ .Particles = .{ .name = "zap-hellfire-electric" } },
+    .noise = .Silent,
+    .effects = &[_]Effect{
+        .{ .Damage = .{ .kind = .Holy, .msg = .{
+            .noun = "The electric damnation",
+            .strs = &[_]types.DamageStr{items._dmgstr(0, "sears", "BUG", "")},
+        } } },
+        .{ .Damage = .{ .kind = .Electric, .msg = .{
+            .noun = "The red lightning",
+            .strs = &items.SHOCK_STRS,
+        } } },
+    },
+};
+
+pub const BOLT_HELLFIRE = Spell{
+    .id = "sp_hellfire",
+    .name = "hellfire",
+    .cast_type = .Bolt,
+    .bolt_aoe = 2, // XXX: Need to update particle effect if changing this
+    .bolt_avoids_allies = true,
+    .animation = .{ .Particles = .{ .name = "zap-hellfire" } },
+    .noise = .Silent,
+    .effects = &[_]Effect{.{ .Damage = .{ .kind = .Holy, .msg = .{
+        .noun = "The tormenting fire",
+        .strs = &[_]types.DamageStr{items._dmgstr(0, "engulfs", "BUG", "")},
+    } } }},
 };
 
 pub const BOLT_AOE_AMNESIA = Spell{
@@ -1322,8 +1440,14 @@ pub const Spell = struct {
         Self,
         ConstructAlly,
         UndeadAlly,
+        HolyAngel,
         Mob,
         Corpse,
+
+        // This one is special, treat it as .Mob for AI-related purposes,
+        // but the player can also use it in other ways (i.e. the spell is used
+        // by rings)
+        AnyTile,
     } = .Mob,
 
     // Only used if cast_type == .Bolt
@@ -1579,27 +1703,37 @@ pub const Spell = struct {
                 };
 
                 switch (self.smite_target_type) {
-                    .Self, .Mob, .SpecificAlly, .ConstructAlly, .UndeadAlly => {
+                    .AnyTile => {
+                        assert(!self.checks_will);
+
+                        for (self.effects) |effect|
+                            effect.execute(opts, caster, caster_coord, target);
+                    },
+                    .Self, .Mob, .HolyAngel, .SpecificAlly, .ConstructAlly, .UndeadAlly => {
                         if (state.dungeon.at(target).mob == null) {
                             err.bug("Mage used smite-targeted spell on empty target!", .{});
                         }
 
+                        const target_mob = state.dungeon.at(target).mob.?;
+
                         if (self.smite_target_type == .SpecificAlly) {
                             const wanted_id = self.smite_target_type.SpecificAlly;
-                            const got_id = state.dungeon.at(target).mob.?.id;
-                            if (!mem.eql(u8, got_id, wanted_id)) {
+                            if (!mem.eql(u8, target_mob.id, wanted_id)) {
                                 err.bug("Mage cast {s} at wrong mob! (Wanted {s}; got {s})", .{
-                                    self.id, wanted_id, got_id,
+                                    self.id, wanted_id, target_mob.id,
                                 });
                             }
+                        } else if (self.smite_target_type == .HolyAngel) {
+                            if (target_mob.faction != .Holy and target_mob.life_type != .Spectral)
+                                err.bug("Mage cast {s} at wrong mob! (Wanted angelic ally; got {s})", .{
+                                    self.id, target_mob.id,
+                                });
                         }
 
-                        const mob = state.dungeon.at(target).mob.?;
-
-                        if (self.checks_will and !willSucceedAgainstMob(caster.?, mob)) {
-                            const chance = 100 - checkAvgWillChances(caster.?, mob);
-                            if (state.player.cansee(mob.coord) or state.player.cansee(caster_coord)) {
-                                state.message(.SpellCast, "{c} resisted $g($c{}%$g chance)$.", .{ mob, chance });
+                        if (self.checks_will and !willSucceedAgainstMob(caster.?, target_mob)) {
+                            const chance = 100 - checkAvgWillChances(caster.?, target_mob);
+                            if (state.player.cansee(target_mob.coord) or state.player.cansee(caster_coord)) {
+                                state.message(.SpellCast, "{c} resisted $g($c{}%$g chance)$.", .{ target_mob, chance });
                             }
                             return;
                         }

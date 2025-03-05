@@ -1494,6 +1494,7 @@ fn _isValidTargetForSpell(caster: *Mob, spell: SpellOptions, target: *Mob) bool 
 
     if (spell.spell.cast_type == .Smite) {
         switch (spell.spell.smite_target_type) {
+            .HolyAngel => if (target.life_type != .Spectral and target.faction != .Holy) return false,
             .ConstructAlly => if (target.life_type != .Construct) return false,
             .UndeadAlly => if (target.life_type != .Undead) return false,
             .SpecificAlly => |id| if (!mem.eql(u8, id, target.id)) return false,
@@ -1550,6 +1551,7 @@ fn _findValidTargetForSpell(caster: *Mob, spell: SpellOptions) ?Coord {
         return utils.getNearestCorpse(caster);
     } else if (spell.spell.cast_type == .Smite and
         (spell.spell.smite_target_type == .ConstructAlly or
+            spell.spell.smite_target_type == .HolyAngel or
             spell.spell.smite_target_type == .UndeadAlly or
             spell.spell.smite_target_type == .SpecificAlly))
     {

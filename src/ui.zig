@@ -1025,7 +1025,8 @@ fn _getMonsSpellsDescription(self: *Console, starty: usize, mob: *Mob, _: usize)
                 },
                 .UndeadAlly => "undead ally",
                 .ConstructAlly => "construct ally",
-                .Mob => "you",
+                .HolyAngel => "angel",
+                .AnyTile, .Mob => "you", // See note on AnyTile in spells.zig
                 .Corpse => "corpse",
             });
             y += self.drawTextAtf(0, y, "· $ctarget$.: {s}", .{target}, .{});

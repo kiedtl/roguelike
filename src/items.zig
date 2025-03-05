@@ -1068,66 +1068,16 @@ pub const DisintegrationRing = Ring{ // {{{
     .effect = struct {
         pub fn f() bool {
             const will: usize = @intCast(state.player.stat(.Willpower));
-
             const dest = ui.chooseCell(.{
                 .require_seen = false,
                 .targeter = .{ .Trajectory = .{ .require_lof = false } },
                 .max_distance = will,
             }) orelse return false;
-            const overhang = will - state.player.coord.distance(dest);
-            const path = state.player.coord.drawLine(dest, state.mapgeometry, overhang);
 
-            // Get dest of bolt, including overhang
-            //
-            // Hacky, might not work all the time since I'm not sure if there's
-            // a guarantee that the trajectory will be the same
-            //
-            const anim_dest = path.data[path.len - 1];
-            ui.Animation.apply(.{ .Particle = .{ .name = "zap-disintegrate", .coord = state.player.coord, .target = .{ .C = anim_dest } } });
-
-            var i: usize = will;
-            var d: usize = 2; // damage
-            var v: usize = 0; // victims so far
-            for (path.constSlice()) |coord| {
-                if (coord.eq(state.player.coord)) continue;
-
-                if (state.is_walkable(coord, .{ .only_if_breaks_lof = true })) {
-                    if (v > 0)
-                        d -|= 1;
-                } else {
-                    if (state.dungeon.at(coord).mob) |mob| {
-                        mob.takeDamage(.{
-                            .amount = d,
-                            .by_mob = state.player,
-                            .kind = .Irresistible,
-                            .blood = false,
-                            .source = .RangedAttack,
-                            .stealth = v == 0,
-                        }, .{
-                            .strs = &[_]DamageStr{
-                                _dmgstr(10, "zap", "zaps", ""),
-                                _dmgstr(99, "disintegrate", "disintegrates", ""),
-                                _dmgstr(200, "annihilate", "annihilates", ""),
-                            },
-                        });
-                        v += 1;
-                    } else if (state.dungeon.at(coord).surface) |surface| {
-                        // It's not walkable
-                        if (surface != .Stair) {
-                            surface.destroy(coord);
-                            if (v == 0)
-                                d += 1;
-                        }
-                    } else if (state.dungeon.at(coord).type == .Wall) {
-                        state.dungeon.at(coord).type = .Floor;
-                        if (v == 0)
-                            d += 3;
-                    }
-                }
-
-                i -= 1;
-                if (i == 0 or d == 0) break;
-            }
+            spells.BOLT_DISINTEGRATE.use(state.player, state.player.coord, dest, .{
+                .free = true,
+                .no_message = true,
+            });
 
             return true;
         }

@@ -1011,6 +1011,7 @@ pub const Resistance = enum {
     rFire,
     rElec,
     rAcid,
+    rHoly,
     Armor,
     rFume,
 
@@ -1019,6 +1020,7 @@ pub const Resistance = enum {
             .rFire => "rFire",
             .rElec => "rElec",
             .rAcid => "rAcid",
+            .rHoly => "rHoly",
             .Armor => "Armor",
             .rFume => "rFume",
         };
@@ -1056,6 +1058,7 @@ pub const Damage = struct {
         Fire,
         Electric,
         Acid,
+        Holy,
         Irresistible,
 
         pub fn resist(self: DamageKind) ?Resistance {
@@ -1064,6 +1067,7 @@ pub const Damage = struct {
                 .Fire => .rFire,
                 .Electric => .rElec,
                 .Acid => .rAcid,
+                .Holy => .rHoly,
                 .Irresistible => null,
             };
         }
@@ -1074,6 +1078,7 @@ pub const Damage = struct {
                 .Fire => "fire",
                 .Electric => "elec",
                 .Acid => "acid",
+                .Holy => "holy",
                 .Irresistible => "irresist",
             };
         }
@@ -1084,6 +1089,7 @@ pub const Damage = struct {
                 .Fire => "fire",
                 .Electric => "electric",
                 .Acid => "acid",
+                .Holy => "holy",
                 .Irresistible => "irresistible",
             };
         }
@@ -1217,6 +1223,7 @@ pub const Faction = enum(usize) {
     CaveGoblins = 2,
     Revgenunkim = 3,
     Night = 4,
+    Holy = 5,
 
     pub const TOTAL = std.meta.fields(@This()).len;
 };
@@ -3794,6 +3801,7 @@ pub const Mob = struct { // {{{
                 const basic_helper_verb: []const u8 = if (self == state.player) "are" else "is";
                 const basic_verb = switch (d.kind) {
                     .Irresistible, .Physical => "damaged",
+                    .Holy => "engulfed in tormenting fire",
                     .Fire => "burnt with fire",
                     .Electric => "electrocuted",
                     .Acid => "splashed with acid",

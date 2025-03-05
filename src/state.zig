@@ -165,8 +165,8 @@ pub var completed_events: [events.EVENTS.len]usize = [_]usize{0} ** events.EVENT
 // zig fmt: off
 pub var night_rep = [types.Faction.TOTAL]isize{
     //
-    // NEC    @   CG   YSM   NC
-         0,   0,   0,  -10,  10,
+    // NEC    @   CG   REV   NC   HOLY
+         0,   0,   0,  -10,  10,     9
     //
 };
 // zig fmt: on

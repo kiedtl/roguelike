@@ -940,6 +940,46 @@
       :lifetime 0
      })
   ]
+  "zap-hellfire" @[
+    (template-lingering-zap ASCII_CHARS 0x882011 0xcc3422 12 :bg-mix 0.8 :require-nonwall false)
+    (new-emitter @{
+      :particle (new-particle @{
+        :tile (new-tile @{ :ch "Z" :fg 0xcc3422 :bg 0x882011 :bg-mix 0.8 })
+        :speed 0
+        :lifetime 12
+        :triggers @[
+          [[:COND-true] [:TRIG-scramble-glyph ASCII_CHARS]]
+          [[:COND-true] [:TRIG-lerp-color :fg 0xddcc22 "rgb" [:sine-custom
+                          (fn [self ticks &] (* 16 (+ ticks (* (math/random) 20))))]]]
+          # Same as lingering zap
+          [[:COND-true] [:TRIG-modify-color :bg "rgb" [:completed-lifetime 1.3]]]
+          #[[:COND-true] [:TRIG-lerp-color :bg 0x908011 "rgb" [:sine-custom
+          #                (fn [self ticks &] (* 16 (+ ticks (* (math/random) 20))))]]]
+        ]
+      })
+      :lifetime 0
+      :spawn-count 180
+      :get-spawn-params (SPAR-circle :inverse true :radius 2)
+    })
+  ]
+  "zap-hellfire-electric" @[
+    (template-lingering-zap ASCII_CHARS 0 0xcc3422 5 :bg-mix 0.0 :require-nonwall false)
+    (new-emitter @{
+      :particle (new-particle @{
+        :tile (new-tile @{ :ch "Z" :fg 0xcc3422 :bg 0 :bg-mix 0 })
+        :speed 0.3
+        :lifetime 2
+        :triggers @[
+          [[:COND-true] [:TRIG-scramble-glyph ASCII_CHARS]]
+          [[:COND-true] [:TRIG-lerp-color :fg 0xddcc22 "rgb" [:sine-custom
+                          (fn [self ticks &] (* 8 (+ ticks (* (math/random) 20))))]]]
+        ]
+      })
+      :lifetime 5
+      :spawn-count 50
+      :get-spawn-params (SPAR-explosion :which-origin :target :distance 1 :sparsity-factor 20)
+    })
+  ]
   "zap-mass-insanity" @[
     (template-lingering-zap ASCII_CHARS 0 0xaa55cc 4 :bg-mix 0.0 :require-nonwall false :require-los 0)
     (new-emitter @{
@@ -951,8 +991,8 @@
           [[:COND-true] [:TRIG-lerp-color :fg 0x0a0a90 "rgb" @(:completed-journey)]]
         ]
       })
-      :lifetime (fn [self &] 4)
-      :spawn-count (fn [self &] (* 4 90))
+      :lifetime 1
+      :spawn-count 180
       :get-spawn-params (SPAR-explosion :which-origin :target :distance 3 :sparsity-factor 4)
     })
   ]

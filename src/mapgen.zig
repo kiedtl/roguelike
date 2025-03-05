@@ -24,6 +24,7 @@ const utils = @import("utils.zig");
 
 pub const tunneler = @import("mapgen/tunneler.zig");
 pub const fungi = @import("mapgen/fungi.zig");
+pub const angels = @import("mapgen/angels.zig");
 
 const LinkedList = @import("list.zig").LinkedList;
 // const Generator = @import("generators.zig").Generator;

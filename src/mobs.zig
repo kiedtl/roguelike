@@ -1065,7 +1065,7 @@ pub const AncientMageTemplate = MobTemplate{
         .memory_duration = 8,
         .blood = null,
         .corpse = .None,
-        .innate_resists = .{ .rFume = 100, .rElec = 75 },
+        .innate_resists = .{ .rHoly = -100, .rFume = 100, .rElec = 75 },
         .stats = .{ .Willpower = 10, .Evade = 20, .Speed = 150 },
     },
     .weapon = &items.W_MACES_3,
@@ -1202,7 +1202,7 @@ pub const DeathKnightTemplate = MobTemplate{
 
         .max_HP = 8,
         .memory_duration = 8,
-        .innate_resists = .{ .Armor = 25 },
+        .innate_resists = .{ .rHoly = -50, .Armor = 25 },
         .stats = .{ .Willpower = 6, .Melee = 65, .Martial = 1, .Evade = 10, .Vision = 6 },
     },
     .weapon = &items.W_MSWRD_1,
@@ -1241,6 +1241,7 @@ pub const DeathMageTemplate = MobTemplate{
         .max_HP = 6,
         .memory_duration = 10,
         .stats = .{ .Willpower = 8, .Evade = 10 },
+        .innate_resists = .{ .rHoly = -50 },
     },
     .weapon = &items.W_SWORD_2,
     .armor = items.HauberkArmor,
@@ -1432,7 +1433,7 @@ pub const BloatTemplate = MobTemplate{
         .corpse = .None,
         .base_night_vision = true,
 
-        .innate_resists = .{ .rFume = 100 },
+        .innate_resists = .{ .rHoly = -75, .rFume = 100 },
         .stats = .{ .Willpower = 4, .Melee = 80, .Speed = 150 },
     },
 
@@ -1500,7 +1501,7 @@ pub const SkeletonTemplate = MobTemplate{
         .blood = null,
         .corpse = .None,
 
-        .innate_resists = .{ .rFume = 100, .rFire = -25 },
+        .innate_resists = .{ .rHoly = -75, .rFume = 100, .rFire = -25 },
         .stats = .{ .Willpower = 3, .Vision = 5 },
     },
 };
@@ -1530,7 +1531,7 @@ pub const ChildSkeletonTemplate = MobTemplate{
         .blood = null,
         .corpse = .None,
 
-        .innate_resists = .{ .rFume = 100, .rFire = -50, .Armor = -50 },
+        .innate_resists = .{ .rFume = 100, .rFire = -75, .Armor = -50 },
         .stats = .{ .Willpower = 0, .Melee = 33, .Evade = 0, .Vision = 3 },
     },
     .squad = &[_][]const MobTemplate.SquadMember{
@@ -1611,7 +1612,7 @@ pub const BoneRatTemplate = MobTemplate{
         .blood = null,
         .corpse = .None,
 
-        .innate_resists = .{ .rFume = 100, .rFire = -25 },
+        .innate_resists = .{ .rHoly = -75, .rFume = 100, .rFire = -25 },
         .stats = .{ .Willpower = 0, .Evade = 5, .Speed = 50, .Vision = 4 },
     },
 
@@ -1776,7 +1777,7 @@ pub const SkeletalBlademasterTemplate = MobTemplate{
         .blood = null,
         .corpse = .None,
 
-        .innate_resists = .{ .rFume = 100, .rFire = -25, .Armor = 35 },
+        .innate_resists = .{ .rHoly = -75, .rFume = 100, .rFire = -25, .Armor = 35 },
         .stats = .{ .Willpower = 4, .Melee = 90, .Martial = 2, .Vision = 6 },
     },
     .weapon = &items.W_MSWRD_1,
@@ -1810,7 +1811,7 @@ pub const SkeletalArbalistTemplate = MobTemplate{
         .blood = null,
         .corpse = .None,
 
-        .innate_resists = .{ .rFume = 100, .rFire = -25 },
+        .innate_resists = .{ .rHoly = -75, .rFume = 100, .rFire = -25 },
         .stats = .{ .Willpower = 4, .Missile = 60, .Vision = 7 },
     },
     .weapon = &items.W_BLUDG_1,
@@ -2256,7 +2257,7 @@ pub const RevgenunkimTemplate = MobTemplate{
 
         .memory_duration = 15,
         .faction = .Revgenunkim,
-        .innate_resists = .{ .rAcid = RESIST_IMMUNE, .rFire = 50, .rElec = -25, .rFume = 50 },
+        .innate_resists = .{ .rAcid = RESIST_IMMUNE, .rHoly = -100, .rFire = 50, .rElec = -25, .rFume = 50 },
         .stats = .{ .Willpower = 5, .Melee = 80, .Martial = 1, .Vision = 6 },
     },
 };
@@ -2296,7 +2297,7 @@ pub const CinderBruteTemplate = MobTemplate{
         .blood_spray = gas.SmokeGas.id,
         .corpse = .None,
         .faction = .Revgenunkim,
-        .innate_resists = .{ .rAcid = RESIST_IMMUNE, .rFire = RESIST_IMMUNE, .rElec = -25, .rFume = 100 },
+        .innate_resists = .{ .rAcid = RESIST_IMMUNE, .rHoly = -100, .rFire = RESIST_IMMUNE, .rElec = -25, .rFume = 100 },
         .stats = .{ .Willpower = 6, .Melee = 80, .Vision = 4 },
     },
     .statuses = &[_]StatusDataInfo{.{ .status = .Fire, .duration = .Prm }},
@@ -2345,7 +2346,7 @@ pub const BurningBruteTemplate = MobTemplate{
         .blood = null,
         .corpse = .None,
 
-        .innate_resists = .{ .rAcid = RESIST_IMMUNE, .rFire = RESIST_IMMUNE, .rElec = -25, .Armor = 25 },
+        .innate_resists = .{ .rAcid = RESIST_IMMUNE, .rHoly = -100, .rFire = RESIST_IMMUNE, .rElec = -25, .Armor = 25 },
         .stats = .{ .Willpower = 8, .Evade = 10, .Melee = 80 },
     },
     .statuses = &[_]StatusDataInfo{
