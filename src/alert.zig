@@ -389,9 +389,9 @@ fn onThreatIncrease(level: usize, threat: Threat, old: usize, new: usize) void {
         .Unknown => {
             if (!getThreat(.Unknown).deadly and
                 (_didIncreasePast(UNKNOWN_THREAT_DEPLOY_WATCHERS_1, old, new) or
-                _didIncreasePast(UNKNOWN_THREAT_DEPLOY_WATCHERS_2, old, new) or
-                _didIncreasePast(UNKNOWN_THREAT_DEPLOY_WATCHERS_3, old, new) or
-                _didIncreasePast(UNKNOWN_THREAT_DEPLOY_WATCHERS_4, old, new)))
+                    _didIncreasePast(UNKNOWN_THREAT_DEPLOY_WATCHERS_2, old, new) or
+                    _didIncreasePast(UNKNOWN_THREAT_DEPLOY_WATCHERS_3, old, new) or
+                    _didIncreasePast(UNKNOWN_THREAT_DEPLOY_WATCHERS_4, old, new)))
             {
                 _reinforceRooms(level, &mobs.WatcherTemplate, 2);
             }

@@ -2068,7 +2068,7 @@ pub fn placeBSPRooms(grandma_rect: Rect, _min_room_width: usize, _min_room_heigh
                     } else if ((cur.rect.width > max_room_width and
                         cur.rect.width < min_room_width * 2) or
                         (cur.rect.height > max_room_height and
-                        cur.rect.height < min_room_height * 2))
+                            cur.rect.height < min_room_height * 2))
                     {
                         // Failed height/width test, but it's not possible to
                         // split it properly AND parent was previously greater than
@@ -2557,7 +2557,7 @@ pub fn setVaultFeatures(room: *Room) void {
                     state.dungeon.at(coord).surface.? == .Machine and
                     mem.startsWith(u8, state.dungeon.at(coord).surface.?.Machine.id, "door")) or
                     (state.dungeon.at(coord).surface == null and
-                    state.dungeon.at(coord).type == .Floor))
+                        state.dungeon.at(coord).type == .Floor))
                 {
                     assert(state.dungeon.at(coord).type == .Floor);
                     if (state.dungeon.at(coord).surface != null) {

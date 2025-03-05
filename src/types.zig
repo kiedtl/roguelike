@@ -2669,7 +2669,7 @@ pub const Mob = struct { // {{{
         for (gases, 0..) |quantity, gasi| {
             if (quantity > 0 and
                 (rng.range(usize, 0, 100) < (100 - self.resistance(.rFume)) or
-                gas.Gases[gasi].not_breathed))
+                    gas.Gases[gasi].not_breathed))
             {
                 gas.Gases[gasi].trigger(self, quantity);
             }
@@ -3912,7 +3912,7 @@ pub const Mob = struct { // {{{
         if (self.HP > 0 and
             self.isUnderStatus(.Exhausted) == null and
             (self.lastDamagePercentage() >= 50 or
-            (self.HP <= (self.max_HP / 10) and old_HP > (self.max_HP / 10))))
+                (self.HP <= (self.max_HP / 10) and old_HP > (self.max_HP / 10))))
         {
             if (self.ai.flee_effect) |s| {
                 if (self.isUnderStatus(s.status) == null) {
@@ -4505,7 +4505,7 @@ pub const Mob = struct { // {{{
         if (self.faction == .Night and
             state.night_rep[@intFromEnum(othermob.faction)] > -5 and
             (state.night_rep[@intFromEnum(othermob.faction)] > 0 or
-            state.dungeon.terrainAt(othermob.coord) != &surfaces.SladeTerrain))
+                state.dungeon.terrainAt(othermob.coord) != &surfaces.SladeTerrain))
         {
             hostile = false;
         }
@@ -5108,9 +5108,9 @@ pub const Container = struct {
     pub fn isLootable(self: *const Container) bool {
         return self.items.len > 0 and
             (self.type == .Smackables or
-            self.type == .Drinkables or
-            self.type == .Wearables or
-            self.type == .Evocables);
+                self.type == .Drinkables or
+                self.type == .Wearables or
+                self.type == .Evocables);
     }
 };
 

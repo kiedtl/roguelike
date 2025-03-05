@@ -71,7 +71,10 @@ pub fn Generator(comptime function: anytype) type {
                     libcoro.xresume(self.ctx.frame);
                 } else {
                     //self.frame = async function(&self.ctx, self.args);
-                    self.frame = libcoro.xasync(&self.ctx, self.args, );
+                    self.frame = libcoro.xasync(
+                        &self.ctx,
+                        self.args,
+                    );
                     self.was_init = true;
                 }
             }

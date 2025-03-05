@@ -862,7 +862,7 @@ pub const Tunneler = struct {
         const has_advanced_nicely = self.advancesSinceLastBranch() > self.corridorWidth() * 3;
         return (self.is_dead or
             (rng.percent(self.opts.branch_chance) and
-            (ctx.opts.allow_chaotic_branching or has_advanced_nicely))) and
+                (ctx.opts.allow_chaotic_branching or has_advanced_nicely))) and
             !self.isParasite();
     }
 

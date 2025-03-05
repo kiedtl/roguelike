@@ -27,7 +27,7 @@ const STATIC_CONTAINERS = [_]struct {
     t: type,
     s: *opaque {},
 }
-// zig fmt: off
+    // zig fmt: off
 {
 .{ .m = "s.props",       .t = types.Prop,              .s = @ptrCast(&surfaces.props.items)  },
 .{ .m = "s.TERRAIN",     .t = *const surfaces.Terrain, .s = @ptrCast(&@as([]const *const surfaces.Terrain, &surfaces.TERRAIN)) },

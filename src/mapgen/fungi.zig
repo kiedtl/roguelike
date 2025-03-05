@@ -301,9 +301,9 @@ fn generateSingle(
             for (preferred_names) |preference| {
                 const name_ind = for (names.constSlice(), 0..) |n, i| {
                     if (mem.eql(u8, n.string, preference.n)) break i;
-                } else b: {
-                    err.ensure(false, "Fungi name {s} doesn't exist.", .{preference.n}) catch {};
-                    break :b 0;
+                } else {
+                    // Already used and removed from list.
+                    continue;
                 };
                 names.slice()[name_ind].weight = @intCast(@max(0, @as(isize, @intCast(names.slice()[name_ind].weight)) + preference.w));
             }

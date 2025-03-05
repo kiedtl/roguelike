@@ -539,7 +539,7 @@ pub fn checkForHostiles(mob: *Mob) void {
             enemy.mob.coord.z != mob.coord.z or
             enemy.mob.ai.flag(.IgnoredByEnemies) or
             (mob.ai.flag(.IgnoresEnemiesUnknownToLeader) and
-            !mob.squad.?.leader.?.cansee(enemy.mob.coord)) or
+                !mob.squad.?.leader.?.cansee(enemy.mob.coord)) or
             (enemy.mob.hasStatus(.RingDeception) and !has_nonundead_ally) or
             enemy.mob.is_dead)
         {
@@ -1550,8 +1550,8 @@ fn _findValidTargetForSpell(caster: *Mob, spell: SpellOptions) ?Coord {
         return utils.getNearestCorpse(caster);
     } else if (spell.spell.cast_type == .Smite and
         (spell.spell.smite_target_type == .ConstructAlly or
-        spell.spell.smite_target_type == .UndeadAlly or
-        spell.spell.smite_target_type == .SpecificAlly))
+            spell.spell.smite_target_type == .UndeadAlly or
+            spell.spell.smite_target_type == .SpecificAlly))
     {
         return for (caster.allies.items) |ally| {
             if (_isValidTargetForSpell(caster, spell, ally))
