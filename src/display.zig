@@ -465,7 +465,7 @@ pub const GetEventsIter = struct {
         while (true) {
             const max_timeout_ns = 15_000_000; // 15 ms
             const remaining = ((self.timeout orelse std.math.maxInt(u64)) *| 1_000_000) -| self.timer.read();
-            std.time.sleep(@min(max_timeout_ns, remaining));
+            std.Thread.sleep(@min(max_timeout_ns, remaining));
 
             if (self.timeout != null and self.timer.read() / 1_000_000 > self.timeout.?) {
                 return null;

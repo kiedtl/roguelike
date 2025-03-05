@@ -2129,7 +2129,7 @@ pub fn drawAnimationNoPresentTimeout(timeout: ?usize) void {
 
         const max_timeout_ns = FRAMERATE * 1_000_000; // 20 ms
         const remaining = ((timeout orelse std.math.maxInt(u64)) *| 1_000_000) -| timer.read();
-        std.time.sleep(@min(max_timeout_ns, remaining));
+        std.Thread.sleep(@min(max_timeout_ns, remaining));
 
         if (timer.read() / 1_000_000 > timeout.?) return;
     }
@@ -4328,7 +4328,7 @@ pub const Animation = union(enum) {
                 map_win.map.renderFullyW(.Main);
                 display.present();
 
-                std.time.sleep(anim.delay * 1_000_000);
+                std.Thread.sleep(anim.delay * 1_000_000);
 
                 map_win.animations.setCell(dcoord.x, dcoord.y, old);
                 map_win.animations.setCell(dcoord.x - 2, dcoord.y - 1, .{ .ch = anim.char, .fg = anim.fg, .bg = colors.BG, .fl = .{ .wide = true } });
@@ -4339,7 +4339,7 @@ pub const Animation = union(enum) {
                 map_win.map.renderFullyW(.Main);
                 display.present();
 
-                std.time.sleep(anim.delay * 1_000_000);
+                std.Thread.sleep(anim.delay * 1_000_000);
             },
             .BlinkChar => |anim| {
                 assert(anim.coords.len < 256); // XXX: increase if necessary
@@ -4370,7 +4370,7 @@ pub const Animation = union(enum) {
 
                     map_win.map.renderFullyW(.Main);
                     display.present();
-                    // std.time.sleep(anim.delay * 1_000_000);
+                    // std.Thread.sleep(anim.delay * 1_000_000);
                     drawAnimationNoPresentTimeout(anim.delay);
 
                     for (coords.constSlice(), 0..) |coord, i| if (state.player.cansee(coord)) {
@@ -4381,7 +4381,7 @@ pub const Animation = union(enum) {
 
                     if (ctr > 1) {
                         display.present();
-                        std.time.sleep(anim.delay * 1_000_000);
+                        std.Thread.sleep(anim.delay * 1_000_000);
                     }
                 }
             },
@@ -4395,7 +4395,7 @@ pub const Animation = union(enum) {
                         map_win.map.renderFullyW(.Main);
                         display.present();
 
-                        std.time.sleep(90_000_000);
+                        std.Thread.sleep(90_000_000);
 
                         map_win.animations.setCell(dneighbor.x, dneighbor.y, old);
                         map_win.map.renderFullyW(.Main);
@@ -4417,7 +4417,7 @@ pub const Animation = union(enum) {
                     map_win.map.renderFullyW(.Main);
                     display.present();
 
-                    std.time.sleep(80_000_000);
+                    std.Thread.sleep(80_000_000);
 
                     if (anim.path_char) |path_char| {
                         map_win.animations.setCell(dcoord.x, dcoord.y, .{ .ch = path_char, .fg = colors.CONCRETE, .bg = old.bg, .fl = .{ .wide = true } });
@@ -4465,7 +4465,7 @@ pub const Animation = union(enum) {
 
                     map_win.map.renderFullyW(.Main);
                     display.present();
-                    std.time.sleep(40_000_000);
+                    std.Thread.sleep(40_000_000);
 
                     if (anim.approach != null and animated_len < line.len) {
                         animated_len = @min(line.len, animated_len + anim.approach.?);
@@ -4513,7 +4513,7 @@ pub const Animation = union(enum) {
                 while (tick < 200) : (tick += 1) {
                     if (were_any_visible) {
                         const time_since_last_sleep = @as(u64, @intCast(std.time.nanoTimestamp() - last_tick_time));
-                        std.time.sleep(WAIT_PERIOD -| time_since_last_sleep);
+                        std.Thread.sleep(WAIT_PERIOD -| time_since_last_sleep);
                     }
 
                     last_tick_time = std.time.nanoTimestamp();
