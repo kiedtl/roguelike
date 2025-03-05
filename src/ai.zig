@@ -789,7 +789,7 @@ fn tryChooseRandomPatrolDest(mob: *Mob) ?Coord {
     return null;
 }
 
-pub fn patrolWork(mob: *Mob, _: mem.Allocator) void {
+pub fn patrolWork(mob: *Mob) void {
     assert(state.dungeon.at(mob.coord).mob != null);
     assert(mob.ai.phase == .Work);
 
@@ -829,7 +829,7 @@ pub fn patrolWork(mob: *Mob, _: mem.Allocator) void {
     }
 }
 
-pub fn guardWork(mob: *Mob, _: mem.Allocator) void {
+pub fn guardWork(mob: *Mob) void {
     const post = mob.ai.work_area.items[0];
 
     // Choose a nearby room to watch as well, if we haven't already.
@@ -925,16 +925,16 @@ pub fn guardWork(mob: *Mob, _: mem.Allocator) void {
     }
 }
 
-pub fn suicideWork(mob: *Mob, _: mem.Allocator) void {
+pub fn suicideWork(mob: *Mob) void {
     tryRest(mob);
     mob.HP = 0;
 }
 
-pub fn dummyWork(m: *Mob, _: mem.Allocator) void {
+pub fn dummyWork(m: *Mob) void {
     tryRest(m);
 }
 
-pub fn standStillAndGuardWork(mob: *Mob, _: mem.Allocator) void {
+pub fn standStillAndGuardWork(mob: *Mob) void {
     const post = mob.ai.work_area.items[0];
 
     if (mob.coord.eq(post)) {
@@ -949,12 +949,12 @@ pub fn standStillAndGuardWork(mob: *Mob, _: mem.Allocator) void {
     }
 }
 
-pub fn combatDummyWork(mob: *Mob, _: mem.Allocator) void {
+pub fn combatDummyWork(mob: *Mob) void {
     guardGlanceRight(mob);
     tryRest(mob);
 }
 
-pub fn spireWork(mob: *Mob, _: mem.Allocator) void {
+pub fn spireWork(mob: *Mob) void {
     guardGlanceRight(mob);
     tryRest(mob);
 
@@ -963,7 +963,7 @@ pub fn spireWork(mob: *Mob, _: mem.Allocator) void {
     }
 }
 
-pub fn watcherWork(mob: *Mob, _: mem.Allocator) void {
+pub fn watcherWork(mob: *Mob) void {
     const post = mob.ai.work_area.items[0];
 
     if (mob.coord.eq(post)) {
@@ -982,7 +982,7 @@ pub fn watcherWork(mob: *Mob, _: mem.Allocator) void {
 // All it does is make the worker scan for jobs, and leave the floor after
 // a few turns if it didn't find anything.
 //
-pub fn workerWork(mob: *Mob, _: mem.Allocator) void {
+pub fn workerWork(mob: *Mob) void {
     assert(mob.jobs.len == 0);
     mob.newJob(.WRK_LeaveFloor);
     mob.newJob(.WRK_ScanJobs);
@@ -991,7 +991,7 @@ pub fn workerWork(mob: *Mob, _: mem.Allocator) void {
     tryRest(mob);
 }
 
-pub fn haulerWork(mob: *Mob, alloc: mem.Allocator) void {
+pub fn haulerWork(mob: *Mob) void {
     switch (mob.ai.work_phase) {
         .HaulerScan => {
             if (mob.ai.work_area.items.len > 0 and
@@ -1046,7 +1046,7 @@ pub fn haulerWork(mob: *Mob, alloc: mem.Allocator) void {
                 if (!mob.dropItem(item, dest)) {
                     // Somehow the item place disappeared, dump the item somewhere.
                     // If there's no place to dump, just let the item disappear :P
-                    const spot = state.nextAvailableSpaceForItem(mob.coord, alloc);
+                    const spot = state.nextAvailableSpaceForItem(mob.coord, state.alloc);
                     if (spot) |dst| _ = mob.dropItem(item, dst);
                 }
 
@@ -1059,7 +1059,7 @@ pub fn haulerWork(mob: *Mob, alloc: mem.Allocator) void {
     }
 }
 
-pub fn stayNearLeaderWork(mob: *Mob, _: mem.Allocator) void {
+pub fn stayNearLeaderWork(mob: *Mob) void {
     assert(mob.squad != null);
     assert(mob.squad.?.leader != null);
 
@@ -1078,7 +1078,7 @@ pub fn stayNearLeaderWork(mob: *Mob, _: mem.Allocator) void {
     }
 }
 
-pub fn hulkWork(mob: *Mob, _: mem.Allocator) void {
+pub fn hulkWork(mob: *Mob) void {
     switch (rng.range(usize, 0, 99)) {
         0...75 => tryRest(mob),
         76...90 => if (!mob.moveInDirection(rng.chooseUnweighted(Direction, &DIRECTIONS))) tryRest(mob),
@@ -1087,7 +1087,7 @@ pub fn hulkWork(mob: *Mob, _: mem.Allocator) void {
     }
 }
 
-pub fn wanderWork(mob: *Mob, _: mem.Allocator) void {
+pub fn wanderWork(mob: *Mob) void {
     assert(state.dungeon.at(mob.coord).mob != null);
     assert(mob.ai.phase == .Work);
 
@@ -1133,7 +1133,7 @@ pub fn wanderWork(mob: *Mob, _: mem.Allocator) void {
 // - Go through list.
 //      - Skip ones that are already affected by Fear.
 //      - When cast spell, return.
-pub fn tortureWork(mob: *Mob, _: mem.Allocator) void {
+pub fn tortureWork(mob: *Mob) void {
     const post = mob.ai.work_area.items[0];
 
     if (!mob.coord.eq(post)) {
@@ -1177,7 +1177,7 @@ pub fn tortureWork(mob: *Mob, _: mem.Allocator) void {
     tryRest(mob);
 }
 
-pub fn ballLightningWorkOrFight(mob: *Mob, _: mem.Allocator) void {
+pub fn ballLightningWorkOrFight(mob: *Mob) void {
     var walkability_map: [HEIGHT][WIDTH]bool = undefined;
     for (&walkability_map, 0..) |*row, y| for (row, 0..) |*cell, x| {
         const coord = Coord.new2(mob.coord.z, x, y);
@@ -1221,7 +1221,7 @@ pub fn ballLightningWorkOrFight(mob: *Mob, _: mem.Allocator) void {
     }
 }
 
-pub fn nightCreatureWork(mob: *Mob, alloc: mem.Allocator) void {
+pub fn nightCreatureWork(mob: *Mob) void {
     switch (mob.ai.work_phase) {
         .NC_Guard => {
             // If this is a slinking terror and it's not close to walls, immediately
@@ -1274,7 +1274,7 @@ pub fn nightCreatureWork(mob: *Mob, alloc: mem.Allocator) void {
                     return;
                 }
             }
-            standStillAndGuardWork(mob, alloc);
+            standStillAndGuardWork(mob);
         },
         .NC_MoveTo, .NC_PatrolTo => {
             // First check for enemies that have seen us, and disable them.
@@ -1322,13 +1322,13 @@ pub fn nightCreatureWork(mob: *Mob, alloc: mem.Allocator) void {
 }
 
 // For combat dummies
-pub fn combatDummyFight(mob: *Mob, _: mem.Allocator) void {
+pub fn combatDummyFight(mob: *Mob) void {
     tryRest(mob);
 }
 
 // Run away and keep distance, but don't look back or update enemy's current
 // position.
-pub fn workerFight(mob: *Mob, _: mem.Allocator) void {
+pub fn workerFight(mob: *Mob) void {
     // Do we really want to do this? There may be some cases I've forgotten
     // about where enemies deliberately purge knowledge of enemy...
     //
@@ -1350,7 +1350,7 @@ pub fn workerFight(mob: *Mob, _: mem.Allocator) void {
         alertAllyOfHostile(mob);
 }
 
-pub fn meleeFight(mob: *Mob, _: mem.Allocator) void {
+pub fn meleeFight(mob: *Mob) void {
     const target = closestEnemy(mob);
 
     if (mob.canMelee(target.mob)) {
@@ -1362,7 +1362,7 @@ pub fn meleeFight(mob: *Mob, _: mem.Allocator) void {
     }
 }
 
-pub fn grueFight(mob: *Mob, _: mem.Allocator) void {
+pub fn grueFight(mob: *Mob) void {
     const target = closestEnemy(mob).mob;
 
     if (mob.distance(target) == 1) {
@@ -1388,7 +1388,7 @@ pub fn grueFight(mob: *Mob, _: mem.Allocator) void {
     }
 }
 
-pub fn watcherFight(mob: *Mob, alloc: mem.Allocator) void {
+pub fn watcherFight(mob: *Mob) void {
     const target = closestEnemy(mob).mob;
 
     mob.makeNoise(.Shout, .Loud);
@@ -1399,18 +1399,18 @@ pub fn watcherFight(mob: *Mob, alloc: mem.Allocator) void {
         if (runAwayFromEnemies(mob, 8)) {
             mob.facing = mob.coord.closestDirectionTo(target.coord, state.mapgeometry);
         } else {
-            meleeFight(mob, alloc);
+            meleeFight(mob);
         }
     }
 }
 
-// pub fn coronerFight(mob: *Mob, alloc: mem.Allocator) void {
+// pub fn coronerFight(mob: *Mob) void {
 //     const target = closestEnemy(mob).mob;
 //     alert.announceEnemyAlert(target);
 //     watcherFight(mob, alloc);
 // }
 
-pub fn stalkerFight(mob: *Mob, alloc: mem.Allocator) void {
+pub fn stalkerFight(mob: *Mob) void {
     const target = closestEnemy(mob).mob;
 
     if (mob.squad != null and
@@ -1424,9 +1424,9 @@ pub fn stalkerFight(mob: *Mob, alloc: mem.Allocator) void {
                 tryRest(mob);
         }
     } else if (mob.enemyList().items.len == 1) {
-        mageFight(mob, alloc);
+        mageFight(mob);
     } else {
-        work(mob, alloc);
+        work(mob);
     }
 }
 
@@ -1441,7 +1441,7 @@ pub fn stalkerFight(mob: *Mob, alloc: mem.Allocator) void {
 //                  - No:  Move towards enemy.
 //                  - Yes: Attack.
 //
-pub fn rangedFight(mob: *Mob, alloc: mem.Allocator) void {
+pub fn rangedFight(mob: *Mob) void {
     const target = closestEnemy(mob).mob;
 
     // if we can't see the enemy, move towards it
@@ -1474,7 +1474,7 @@ pub fn rangedFight(mob: *Mob, alloc: mem.Allocator) void {
     } else {
         // fire projectile
         const item = mob.inventory.pack.orderedRemove(proj_item.?) catch err.wat();
-        mob.throwItem(&item, target.coord, alloc);
+        mob.throwItem(&item, target.coord, state.alloc);
     }
 }
 
@@ -1565,11 +1565,11 @@ fn _findValidTargetForSpell(caster: *Mob, spell: SpellOptions) ?Coord {
     }
 }
 
-pub fn alchemistFight(mob: *Mob, alloc: mem.Allocator) void {
-    mageFight(mob, alloc);
+pub fn alchemistFight(mob: *Mob) void {
+    mageFight(mob);
 }
 
-pub fn mageFight(mob: *Mob, alloc: mem.Allocator) void {
+pub fn mageFight(mob: *Mob) void {
     const target = closestEnemy(mob);
     mob.facing = mob.coord.closestDirectionTo(target.mob.coord, state.mapgeometry);
 
@@ -1601,11 +1601,11 @@ pub fn mageFight(mob: *Mob, alloc: mem.Allocator) void {
     }
 
     switch (mob.ai.spellcaster_backup_action) {
-        .Melee => meleeFight(mob, alloc),
+        .Melee => meleeFight(mob),
         .KeepDistance => if (!mob.immobile) {
             const dist: usize = @intCast(mob.stat(.Vision) -| 2);
             const moved = runAwayFromEnemies(mob, dist);
-            if (!moved) meleeFight(mob, alloc);
+            if (!moved) meleeFight(mob);
             mob.facing = mob.coord.closestDirectionTo(target.mob.coord, state.mapgeometry);
         } else {
             tryRest(mob);
@@ -1617,7 +1617,7 @@ pub fn mageFight(mob: *Mob, alloc: mem.Allocator) void {
                 assert(!mob.immobile);
                 const dist: usize = @intCast(mob.stat(.Vision) -| 1);
                 const moved = runAwayFromEnemies(mob, dist);
-                if (!moved) meleeFight(mob, alloc);
+                if (!moved) meleeFight(mob);
             }
         },
         // .Flee => {
@@ -1628,7 +1628,7 @@ pub fn mageFight(mob: *Mob, alloc: mem.Allocator) void {
     }
 }
 
-pub fn flee(mob: *Mob, alloc: mem.Allocator) void {
+pub fn flee(mob: *Mob) void {
     const FLEE_GOAL = 25;
 
     assert(mob.stat(.Vision) < FLEE_GOAL);
@@ -1649,7 +1649,7 @@ pub fn flee(mob: *Mob, alloc: mem.Allocator) void {
             !runAwayFromEnemies(mob, FLEE_GOAL))
         {
             if (mob.canMelee(target.mob)) {
-                meleeFight(mob, alloc);
+                meleeFight(mob);
             } else {
                 tryRest(mob);
             }
@@ -2117,7 +2117,7 @@ pub fn workJobs(mob: *Mob) bool {
     }
 }
 
-pub fn work(mob: *Mob, alloc: mem.Allocator) void {
+pub fn work(mob: *Mob) void {
     if (mob.hasStatus(.Insane)) {
         if (mob.immobile or
             !mob.moveInDirection(rng.chooseUnweighted(Direction, &DIRECTIONS)))
@@ -2141,10 +2141,10 @@ pub fn work(mob: *Mob, alloc: mem.Allocator) void {
         work_fn = stayNearLeaderWork;
     }
 
-    (work_fn)(mob, alloc);
+    (work_fn)(mob);
 }
 
-pub fn main(mob: *Mob, alloc: mem.Allocator) void {
+pub fn main(mob: *Mob) void {
     checkForLeadership(mob);
 
     checkForAllies(mob);
@@ -2197,7 +2197,7 @@ pub fn main(mob: *Mob, alloc: mem.Allocator) void {
     }
 
     if (mob.ai.phase == .Work) {
-        work(mob, alloc);
+        work(mob);
     } else if (mob.ai.phase == .Investigate) {
         // Even non-curious mobs can investigate, e.g. stalkers sent by player
         //
@@ -2227,8 +2227,8 @@ pub fn main(mob: *Mob, alloc: mem.Allocator) void {
         assert(mob.ai.is_combative);
         assert(mob.enemyList().items.len > 0);
 
-        (mob.ai.fight_fn)(mob, alloc);
+        (mob.ai.fight_fn)(mob);
     } else if (mob.ai.phase == .Flee) {
-        flee(mob, alloc);
+        flee(mob);
     } else unreachable;
 }

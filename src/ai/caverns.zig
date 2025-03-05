@@ -277,7 +277,7 @@ pub fn _Job_CAV_FindJob(mob: *Mob, job: *AIJob) AIJob.JStatus {
     const waited = job.ctx.get(usize, CTX_WAITED, 0);
     if (waited < 14) {
         job.ctx.set(usize, CTX_WAITED, waited + 1);
-        ai.patrolWork(mob, state.alloc);
+        ai.patrolWork(mob);
         return .Ongoing;
     }
 
@@ -292,7 +292,7 @@ pub fn _Job_CAV_FindJob(mob: *Mob, job: *AIJob) AIJob.JStatus {
             }
         }
         if (targets.len == 0) {
-            ai.patrolWork(mob, state.alloc);
+            ai.patrolWork(mob);
             return .Ongoing;
         }
         const new_target = rng.chooseUnweighted(*Mob, targets.constSlice());
@@ -624,7 +624,7 @@ pub fn _Job_CAV_RunSwimmingRoom(mob: *Mob, job: *AIJob) AIJob.JStatus {
     return .Ongoing;
 }
 
-pub fn vapourMageWork(mob: *Mob, _: mem.Allocator) void {
+pub fn vapourMageWork(mob: *Mob) void {
     mob.newJob(.CAV_FindJob);
     tryRest(mob);
 }

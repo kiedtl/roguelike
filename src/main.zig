@@ -539,7 +539,7 @@ fn tickGame(p_cur_level: ?usize) !void {
                     ui.draw();
                     if (state.state == .Quit) break;
                 } else {
-                    ai.main(mob, state.alloc);
+                    ai.main(mob);
                 }
             }
 

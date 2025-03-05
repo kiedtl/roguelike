@@ -1891,8 +1891,8 @@ pub const AI = struct {
     //     - work_fn:  on each tick when the mob is doing work.
     //     - fight_fn: on each tick when the mob is pursuing a hostile mob.
     //
-    work_fn: *const fn (*Mob, mem.Allocator) void,
-    fight_fn: *const fn (*Mob, mem.Allocator) void,
+    work_fn: *const fn (*Mob) void,
+    fight_fn: *const fn (*Mob) void,
 
     // Should the mob attack hostiles?
     is_combative: bool = true,
