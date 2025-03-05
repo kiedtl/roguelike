@@ -832,12 +832,12 @@ const MobInfoLine = struct {
 
     pub const ArrayList = std.ArrayList(@This());
 
-    pub fn new(ch: u21) @This() {
-        return .{ .char = ch, .color = '.', .string = std.ArrayList(u8).init(state.alloc) };
+    pub fn new(ch: u21, alloc: mem.Allocator) @This() {
+        return .{ .char = ch, .color = '.', .string = std.ArrayList(u8).init(alloc) };
     }
 
-    pub fn newColored(ch: u21, color: u21) @This() {
-        return .{ .char = ch, .color = color, .string = std.ArrayList(u8).init(state.alloc) };
+    pub fn newColored(ch: u21, color: u21, alloc: mem.Allocator) @This() {
+        return .{ .char = ch, .color = color, .string = std.ArrayList(u8).init(alloc) };
     }
 
     pub fn deinitList(list: ArrayList) void {
@@ -846,43 +846,43 @@ const MobInfoLine = struct {
     }
 };
 
-fn _getMonsInfoSet(mob: *Mob) MobInfoLine.ArrayList {
-    var list = MobInfoLine.ArrayList.init(state.alloc);
+fn _getMonsInfoSet(mob: *Mob, alloc: mem.Allocator) MobInfoLine.ArrayList {
+    var list = MobInfoLine.ArrayList.init(alloc);
 
     {
-        var i = MobInfoLine.new('*');
+        var i = MobInfoLine.new('*', alloc);
         i.color = if (mob.HP <= (mob.max_HP / 5)) @as(u21, 'r') else '.';
         i.string.writer().print("{}/{} HP, {} MP", .{ mob.HP, mob.max_HP, mob.MP }) catch err.wat();
         list.append(i) catch err.wat();
     }
 
     if (mob.prisoner_status) |ps| {
-        var i = MobInfoLine.new('p');
+        var i = MobInfoLine.new('p', alloc);
         const str = if (ps.held_by) |_| "chained" else "prisoner";
         i.string.writer().print("{s}", .{str}) catch err.wat();
         list.append(i) catch err.wat();
     }
 
     if (mob.resistance(.rFume) == 100) {
-        var i = MobInfoLine.new('u');
+        var i = MobInfoLine.new('u', alloc);
         i.string.writer().print("unbreathing $g(100% rFume)$.", .{}) catch err.wat();
         list.append(i) catch err.wat();
     }
 
     if (mob.immobile) {
-        var i = MobInfoLine.new('i');
+        var i = MobInfoLine.new('i', alloc);
         i.string.writer().print("immobile", .{}) catch err.wat();
         list.append(i) catch err.wat();
     }
 
     if (mob.isMobMartial()) {
-        var i = MobInfoLine.newColored('M', 'r');
+        var i = MobInfoLine.newColored('M', 'r', alloc);
         i.string.writer().print("uses martial attacks <$b+{}$.>", .{mob.stat(.Martial)}) catch err.wat();
         list.append(i) catch err.wat();
     }
 
     if (mob.isUnderStatus(.CopperWeapon) != null and mob.hasWeaponOfEgo(.Copper)) {
-        var i = MobInfoLine.newColored('C', 'r');
+        var i = MobInfoLine.newColored('C', 'r', alloc);
         i.string.writer().print("has copper weapon", .{}) catch err.wat();
         list.append(i) catch err.wat();
     }
@@ -890,7 +890,7 @@ fn _getMonsInfoSet(mob: *Mob) MobInfoLine.ArrayList {
     const mobspeed = mob.stat(.Speed);
     const youspeed = state.player.stat(.Speed);
     if (mobspeed != youspeed) {
-        var i = MobInfoLine.new(if (mobspeed < youspeed) @as(u21, 'f') else 's');
+        var i = MobInfoLine.new(if (mobspeed < youspeed) @as(u21, 'f') else 's', alloc);
         i.color = if (mobspeed < youspeed) @as(u21, 'p') else 'b';
         const str = if (mobspeed < youspeed) "faster than you" else "slower than you";
         i.string.writer().print("{s}", .{str}) catch err.wat();
@@ -900,7 +900,7 @@ fn _getMonsInfoSet(mob: *Mob) MobInfoLine.ArrayList {
     if (mob.ai.phase == .Investigate) {
         assert(mob.sustiles.items.len > 0);
 
-        var i = MobInfoLine.new('?');
+        var i = MobInfoLine.new('?', alloc);
         var you_str: []const u8 = "";
         {
             const cur_sustile = mob.sustiles.items[mob.sustiles.items.len - 1].coord;
@@ -914,13 +914,13 @@ fn _getMonsInfoSet(mob: *Mob) MobInfoLine.ArrayList {
 
         list.append(i) catch err.wat();
     } else if (mob.ai.phase == .Flee) {
-        var i = MobInfoLine.new('!');
+        var i = MobInfoLine.new('!', alloc);
         i.string.writer().print("fleeing", .{}) catch err.wat();
         list.append(i) catch err.wat();
     }
 
     {
-        var i = MobInfoLine.new('@');
+        var i = MobInfoLine.new('@', alloc);
 
         if (mob.isHostileTo(state.player) and mob.ai.is_combative) {
             const Awareness = union(enum) { Seeing, Remember: usize, None };
@@ -967,7 +967,7 @@ fn _getMonsInfoSet(mob: *Mob) MobInfoLine.ArrayList {
     }
 
     if (mob.isUnderStatus(.Sleeping) != null) {
-        var i = MobInfoLine.new('Z');
+        var i = MobInfoLine.new('Z', alloc);
         i.string.writer().print("{s}", .{Status.string(.Sleeping, mob)}) catch err.wat();
         list.append(i) catch err.wat();
     }
@@ -1114,7 +1114,7 @@ fn _getMonsSpellsDescription(self: *Console, starty: usize, mob: *Mob, _: usize)
     return y - starty;
 }
 
-fn _getMonsDescription(self: *Console, starty: usize, mob: *Mob, linewidth: usize) usize {
+fn _getMonsDescription(self: *Console, starty: usize, mob: *Mob, linewidth: usize, alloc: mem.Allocator) usize {
     var y = starty;
 
     if (mob == state.player) {
@@ -1137,7 +1137,7 @@ fn _getMonsDescription(self: *Console, starty: usize, mob: *Mob, linewidth: usiz
         y += self.drawTextAt(0, y, "\n", .{});
     }
 
-    const infoset = _getMonsInfoSet(mob);
+    const infoset = _getMonsInfoSet(mob, alloc);
     defer MobInfoLine.deinitList(infoset);
     for (infoset.items) |info| {
         y += self.drawTextAtf(0, y, "${u}{u}$. {s}", .{ info.color, info.char, info.string.items }, .{});
@@ -1560,6 +1560,9 @@ fn drawHUD(moblist: []const *Mob) void {
     //     break :b (spd * @floatFromInt(f64, lastaction.cost())) / 100.0 / 10.0;
     // } else 0.0;
 
+    var arena = std.heap.ArenaAllocator.init(state.alloc);
+    defer arena.deinit();
+
     const endx = hud_win.main.width - 1;
 
     hud_win.main.clearMouseTriggers();
@@ -1705,7 +1708,7 @@ fn drawHUD(moblist: []const *Mob) void {
             player: bool,
         };
 
-        var features = std.ArrayList(FeatureInfo).init(state.alloc);
+        var features = std.ArrayList(FeatureInfo).init(arena.allocator());
         defer features.deinit();
 
         var dijk = dijkstra.Dijkstra.init(
@@ -1714,7 +1717,7 @@ fn drawHUD(moblist: []const *Mob) void {
             @intCast(state.player.stat(.Vision)),
             dijkstra.dummyIsValid,
             .{},
-            state.alloc,
+            arena.allocator(),
         );
         defer dijk.deinit();
 
@@ -1824,7 +1827,7 @@ fn drawHUD(moblist: []const *Mob) void {
         const name = mob.displayName();
         _ = hud_win.main.drawTextAtf(0 + 3, y, "$c{s}$.", .{name}, .{ .bg = null });
 
-        const infoset = _getMonsInfoSet(mob);
+        const infoset = _getMonsInfoSet(mob, arena.allocator());
         defer MobInfoLine.deinitList(infoset);
         //var info_x: isize = startx + 2 + @intCast(isize, name.len) + 2;
         var info_x: usize = endx - (infoset.items.len - 1);
@@ -3229,6 +3232,9 @@ pub fn drawZapScreen() void {
 pub const ExamineTileFocus = enum(usize) { Mob = 0, Surface = 1, Item = 2 };
 
 pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus, start_coord: ?Coord) bool {
+    var arena = std.heap.ArenaAllocator.init(state.alloc);
+    defer arena.deinit();
+
     var container = Console.init(state.alloc, MIN_WIDTH, MIN_HEIGHT);
     var log_d = dimensions(.Log);
     var lgg_win = Console.init(state.alloc, log_d.width(), log_d.height());
@@ -3331,7 +3337,7 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus, start_coord: ?Coord)
                 }
 
                 switch (mob_tile_focus) {
-                    .Main => y += _getMonsDescription(&inf_win, y, mob, inf_win.width),
+                    .Main => y += _getMonsDescription(&inf_win, y, mob, inf_win.width, arena.allocator()),
                     .Spells => y += _getMonsSpellsDescription(&inf_win, y, mob, inf_win.width),
                     .Stats => y += _getMonsStatsDescription(&inf_win, y, mob, inf_win.width),
                 }

@@ -469,8 +469,10 @@ pub fn drawCapturedDisplay(self: *const Self, startx: usize, starty: usize) void
 }
 
 pub fn drawTextAtf(self: *Self, startx: usize, starty: usize, comptime format: []const u8, args: anytype, opts: ui.DrawStrOpts) usize {
-    const str = std.fmt.allocPrint(state.alloc, format, args) catch err.oom();
-    defer state.alloc.free(str);
+    var buf: [1024]u8 = undefined;
+    var fbs = std.io.fixedBufferStream(&buf);
+    std.fmt.format(fbs.writer(), format, args) catch err.bug("format error!", .{});
+    const str = fbs.getWritten();
     return self.drawTextAt(startx, starty, str, opts);
 }
 
