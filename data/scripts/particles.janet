@@ -19,6 +19,7 @@
 (def PLAYER_LOS_R 8)
 
 (def SYMB1_CHARS "~!@#$%^&*()[]\\{}|/<>?;:1234567890")
+(def ROUND_CHARS "oO0@CQ") # Unicode not supported :( "°ØøÖÓÕÔŌQCÇ"
 (def ASCII_CHARS "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz`1234567890-=~!@#$%^&*()_+[]\\{}|;':\",./<>?")
 
 (def GOLD 0xddb733)
@@ -26,6 +27,8 @@
 (def LIGHT_GOLD 0xfdd753)
 (def ELEC_BLUE1 0x9fefff)
 (def ELEC_BLUE2 0x7fc7ef)
+(def GREEN 0x57cf00)
+(def LIGHT_GREEN 0x37af00)
 (def BG 0x0f0e0b)
 (def FIRE_COLORS [
   #0xFFFFFF 0xEFEFC7 0xDFDF9F 0xCFCF6F 0xB7B737 0xB7AF2F 0xBFAF2F 0xBFA727
@@ -481,12 +484,13 @@
                })
 (defn new-emitter [table] (table/setproto table Emitter))
 (defn new-emitter-from [table proto] (table/setproto table (table/proto-flatten proto)))
-(defmacro SPAR-circle [&named inverse radius]
+(defmacro SPAR-circle [&named inverse radius sparsity-factor]
   (default inverse false)
   (default radius :distance)
+  (default sparsity-factor 3)
   ~(fn [self ticks ctx coord target]
     (let [lrad (case ,radius :distance (+ 1 (:distance coord target)) ,radius)
-          angle (rad (* 3 (/ (self :total-spawned) lrad)))
+          angle (rad (* ,sparsity-factor (/ (self :total-spawned) lrad)))
           n (+ (% (self :total-spawned) lrad) 0)]
       (if ,inverse
         [(:move-angle target n angle) target]
@@ -711,6 +715,7 @@
   "null" @[]
   "lzap-electric" @[ (template-lingering-zap "AEFHIKLMNTYZ13457*-=+~?!@#%&" 0x9fefff 0x7fc7ef 7) ]
   "lzap-golden" @[ (template-lingering-zap ".#.#.#." LIGHT_GOLD GOLD 12) ]
+  "lzap-green" @[ (template-lingering-zap ROUND_CHARS GREEN LIGHT_GREEN 7) ]
   "explosion-simple" @[ (template-explosion) ]
   "explosion-fire1" @[ (template-explosion :embers? false :die-out? false :speed-variation-preset :2 :color1 0xff9f00) ]
   "lzap-fire-quick" @[ (template-lingering-zap " " 0x770f0f 0 4) ]
@@ -941,25 +946,36 @@
      })
   ]
   "zap-hellfire" @[
-    (template-lingering-zap ASCII_CHARS 0x882011 0xcc3422 12 :bg-mix 0.8 :require-nonwall false)
     (new-emitter @{
       :particle (new-particle @{
         :tile (new-tile @{ :ch "Z" :fg 0xcc3422 :bg 0x882011 :bg-mix 0.8 })
-        :speed 0
-        :lifetime 12
+        :speed 2
         :triggers @[
           [[:COND-true] [:TRIG-scramble-glyph ASCII_CHARS]]
-          [[:COND-true] [:TRIG-lerp-color :fg 0xddcc22 "rgb" [:sine-custom
-                          (fn [self ticks &] (* 16 (+ ticks (* (math/random) 20))))]]]
-          # Same as lingering zap
-          [[:COND-true] [:TRIG-modify-color :bg "rgb" [:completed-lifetime 1.3]]]
-          #[[:COND-true] [:TRIG-lerp-color :bg 0x908011 "rgb" [:sine-custom
-          #                (fn [self ticks &] (* 16 (+ ticks (* (math/random) 20))))]]]
+          [[:COND-reached-target?  true]
+           [:TRIG-create-emitter
+              (new-emitter @{
+                :particle (new-particle @{
+                  :tile (new-tile @{ :ch "Z" :fg 0xcc3422 :bg 0x882011 :bg-mix 0.8 })
+                  :speed 0.8
+                  :lifetime 12
+                  :triggers @[
+                    [[:COND-true] [:TRIG-scramble-glyph ASCII_CHARS]]
+                    [[:COND-true] [:TRIG-lerp-color :fg 0xddcc22 "rgb" [:sine-custom
+                                    (fn [self ticks &] (* 16 (+ ticks (* (math/random) 20))))]]]
+                  ]
+                })
+                :lifetime 0
+                :spawn-count 9
+                :get-spawn-params (SPAR-explosion :which-origin :target :distance 1 :sparsity-factor 45)
+              })
+          ]]
+          [[:COND-parent-dead? 1] [:TRIG-die]]
         ]
       })
-      :lifetime 0
-      :spawn-count 180
-      :get-spawn-params (SPAR-circle :inverse true :radius 2)
+      :lifetime (fn [self &] (+ 7 (:distance ((self :particle) :coord)  ((self :particle) :target))))
+      :spawn-count (Emitter :SCNT-dist-to-target)
+      :get-spawn-speed (Emitter :SSPD-min-sin-ticks)
     })
   ]
   "zap-hellfire-electric" @[
@@ -1170,7 +1186,7 @@
     })
     :lifetime (fn [self &] (* 2 (:distance ((self :particle) :coord)  ((self :particle) :target))))
     :spawn-count (fn [self &] 120)
-    :get-spawn-params (SPAR-explosion :inverse true :sparsity-factor 3)
+    :get-spawn-params (SPAR-explosion :inverse true :sparsity-factor 6)
     :get-spawn-speed (Emitter :SSPD-min-sin-ticks)
   })]
   "explosion-bluegold" @[
@@ -1193,6 +1209,31 @@
                                 (let [angle  (rad (* (math/random) 360))
                                       dist   (max 1 (* (math/random) 12))]
                                   [(:move-angle coord dist angle) coord]))
+          })
+  ]
+  "explosion-green" @[
+    (new-emitter @{
+            :particle (new-particle @{
+              :tile (new-tile @{ :ch "O" :fg GREEN :bg LIGHT_GREEN :bg-mix 0.8 })
+              :speed 0.7
+              :triggers @[
+                [[:COND-percent?  7] [:TRIG-custom (fn [self &]
+                                        (put (self :tile) :bg 0x0a0a90)
+                                        (put (self :tile) :fg 0xaa55cc)
+                                        (put (self :original-tile) :bg 0x0a0a90)
+                                        (put (self :original-tile) :fg 0xaa55cc))]]
+                [[:COND-percent? 50] [:TRIG-scramble-glyph ROUND_CHARS]]
+                [[:TRIG-modify-color :bg "a" [:completed-journey]]]
+                [[:COND-reached-target?  true] [:TRIG-die]]
+              ]
+            })
+            :lifetime 3
+            :spawn-count 24
+            :get-spawn-params (fn [self ticks ctx coord target]
+                                (let [mdist  (:distance coord target)
+                                      angle  (rad (* (math/random) 360))
+                                      dist   (max (* mdist 0.8) (* (math/random) mdist))]
+                                  [coord (:move-angle coord dist angle)]))
           })
   ]
   "beams-call-undead" @[

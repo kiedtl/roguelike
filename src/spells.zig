@@ -181,6 +181,62 @@ pub const CAST_ALERT_SIREN = Spell{
     }},
 };
 
+pub const BLAST_DISRUPTING_AOE = 5;
+
+// Power affects duration of Torment Undead, as well as amount of disruption.
+//
+pub const BLAST_DISRUPTING = Spell{
+    .id = "sp_disrupting_blast",
+    .name = "disrupting blast",
+    .animation = .{ .Particles = .{ .name = "explosion-green" } },
+    .cast_type = .{ .Blast = .{ .aoe = BLAST_DISRUPTING_AOE } },
+    .smite_target_type = .Self,
+    .check_has_effect = struct {
+        // There must be hostile undead visible and in range.
+        //
+        fn f(caster: *Mob, _: SpellOptions, _: Coord) bool {
+            return for (caster.enemyList().items) |enemy| {
+                if (caster.canSeeMob(enemy.mob) and
+                    enemy.mob.life_type == .Undead and
+                    enemy.mob.distance(caster) <= BLAST_DISRUPTING_AOE)
+                {
+                    break true;
+                }
+            } else false;
+        }
+    }.f,
+    .effects = &[_]Effect{
+        .{ .Status = .TormentUndead },
+        .{ .Custom = struct {
+            fn f(_: Coord, opts: SpellOptions, target_coord: Coord) void {
+                if (state.dungeon.at(target_coord).mob) |target|
+                    if (target.life_type == .Undead)
+                        combat.disruptIndividualUndead(target, opts.power);
+            }
+        }.f },
+    },
+};
+
+// Zap animation used despite this being a smite spell... lol
+//
+pub const CAST_ABJURE_EARTH_DEMON = Spell{
+    .id = "sp_abjure_earth_demon",
+    .name = "abjure earth demon",
+    .animation = .{ .Particles = .{ .name = "lzap-green" } },
+    .cast_type = .Smite,
+    .smite_target_type = .{ .SpecificMob = "revgenunkim" },
+    .effects = &[_]Effect{
+        .{ .Damage = .{ .kind = .Holy, .msg = .{ .basic = true } } },
+        .{ .Custom = struct {
+            fn f(caster_coord: Coord, _: SpellOptions, target_coord: Coord) void {
+                const caster = state.dungeon.at(caster_coord).mob.?;
+                const target = state.dungeon.at(target_coord).mob.?;
+                combat.abjureEarthDemon(caster, target);
+            }
+        }.f },
+    },
+};
+
 pub const CAST_CALL_UNDEAD = Spell{
     .id = "sp_call_undead",
     .name = "call undead",
@@ -266,7 +322,7 @@ pub const CAST_DIVINE_REGEN = Spell{
     .id = "sp_regen_divine",
     .name = "divine regeneration",
     .cast_type = .Smite,
-    .smite_target_type = .HolyAngel,
+    .smite_target_type = .AngelAlly,
     .check_has_effect = struct {
         // Only use the spell if the target's HP is below
         // the (regeneration_amount * 2).
@@ -320,6 +376,23 @@ pub const CAST_ENRAGE_BONE_RAT = _createSpecificStatusSp("bone_rat", "bone rat",
 pub const CAST_FIREPROOF_EMBERLING = _createSpecificStatusSp("emberling", "emberling", "glow-cream", "fireproof", .Fireproof);
 pub const CAST_FIREPROOF_DUSTLING = _createSpecificStatusSp("dustling", "dustling", "glow-cream", "fireproof", .Fireproof);
 pub const CAST_ENRAGE_DUSTLING = _createSpecificStatusSp("dustling", "dustling", "glow-cream", "enrage", .Enraged);
+
+// Only works if angel's AI routine is ai.meleeFight
+// FIXME: I feel really bad about hardcoding this :/
+//
+pub const CAST_ENRAGE_ANGEL = Spell{
+    .id = "sp_enrage_angel",
+    .name = "enrage angel",
+    .animation = .{ .Particles = .{ .name = "glow-cream" } },
+    .cast_type = .Smite,
+    .smite_target_type = .AngelAlly,
+    .check_has_effect = struct {
+        fn f(_: *Mob, _: SpellOptions, target: Coord) bool {
+            return state.dungeon.at(target).mob.?.ai.fight_fn == ai.meleeFight;
+        }
+    }.f,
+    .effects = &[_]Effect{.{ .Status = .Enraged }},
+};
 
 // }}}
 
@@ -765,6 +838,7 @@ pub const BOLT_HELLFIRE_ELECTRIC = Spell{
     .name = "electric hellfire",
     .cast_type = .Bolt,
     .bolt_avoids_allies = true,
+    .bolt_multitarget = false,
     .animation = .{ .Particles = .{ .name = "zap-hellfire-electric" } },
     .noise = .Silent,
     .effects = &[_]Effect{
@@ -781,15 +855,16 @@ pub const BOLT_HELLFIRE_ELECTRIC = Spell{
 
 pub const BOLT_HELLFIRE = Spell{
     .id = "sp_hellfire",
-    .name = "hellfire",
+    .name = "bolt of hellfire",
     .cast_type = .Bolt,
     .bolt_aoe = 2, // XXX: Need to update particle effect if changing this
     .bolt_avoids_allies = true,
+    .bolt_multitarget = false,
     .animation = .{ .Particles = .{ .name = "zap-hellfire" } },
     .noise = .Silent,
     .effects = &[_]Effect{.{ .Damage = .{ .kind = .Holy, .msg = .{
         .noun = "The tormenting fire",
-        .strs = &[_]types.DamageStr{items._dmgstr(0, "engulfs", "BUG", "")},
+        .strs = &[_]types.DamageStr{items._dmgstr(0, "engulfs", "engulfs", "")},
     } } }},
 };
 
@@ -1432,6 +1507,13 @@ pub const Spell = struct {
 
         // Doesn't require line-of-fire (aka smite-targeted).
         Smite,
+
+        // Area-of-effect centering on caster.
+        Blast: struct {
+            aoe: usize,
+            avoids_allies: bool = false,
+            checks_will: bool = false,
+        },
     },
 
     // Only used if cast_type == .Smite.
@@ -1440,8 +1522,9 @@ pub const Spell = struct {
         Self,
         ConstructAlly,
         UndeadAlly,
-        HolyAngel,
+        AngelAlly,
         Mob,
+        SpecificMob: []const u8, // mob's ID
         Corpse,
 
         // This one is special, treat it as .Mob for AI-related purposes,
@@ -1590,19 +1673,19 @@ pub const Spell = struct {
                         // Stop if we're not multi-targeting or if the blocking object
                         // isn't a mob.
                         if (!self.bolt_multitarget or hit_mob == null) {
-                            // Now we apply AOE effects if applicable
-                            if (self.bolt_aoe > 1) {
-                                var gen = utils.iterCircle(c, self.bolt_aoe);
-                                while (gen.next()) |aoecoord| {
-                                    if (affected_tiles.linearSearch(aoecoord, Coord.eqNotInline) == null)
-                                        affected_tiles.append(aoecoord) catch err.wat();
-                                }
-                            }
-
                             break;
                         }
                     }
                     last_processed_coord = c;
+                }
+
+                // Now we apply AOE effects if applicable
+                if (self.bolt_aoe > 1) {
+                    var gen = utils.iterCircle(last_processed_coord, self.bolt_aoe);
+                    while (gen.next()) |aoecoord| {
+                        if (affected_tiles.linearSearch(aoecoord, Coord.eqNotInline) == null)
+                            affected_tiles.append(aoecoord) catch err.wat();
+                    }
                 }
 
                 if (self.animation) |anim_type| switch (anim_type) {
@@ -1667,6 +1750,67 @@ pub const Spell = struct {
                     }
                 }
             },
+            .Blast => |blast_opts| {
+                var affected_tiles = StackBuffer(Coord, 128).init(null);
+                affected_tiles.append(caster_coord) catch err.wat();
+
+                // Now we apply AOE effects if applicable
+                if (blast_opts.aoe > 1) {
+                    var gen = utils.iterCircle(caster_coord, blast_opts.aoe);
+                    while (gen.next()) |aoecoord| {
+                        if (affected_tiles.linearSearch(aoecoord, Coord.eqNotInline) == null)
+                            affected_tiles.append(aoecoord) catch err.wat();
+                    }
+                }
+
+                var farthest_affected = caster_coord;
+                for (affected_tiles.constSlice()) |affected|
+                    if (affected.distance(caster_coord) > farthest_affected.distance(caster_coord)) {
+                        farthest_affected = affected;
+                    };
+
+                if (self.animation) |anim_type| switch (anim_type) {
+                    .Particles => |particle_anim| {
+                        assert(!particle_anim.coord_is_target);
+                        ui.Animation.apply(.{ .Particle = .{
+                            .name = particle_anim.name,
+                            .coord = caster_coord,
+                            .target = switch (particle_anim.target) {
+                                .Target => .{ .C = farthest_affected },
+                                .Power => .{ .Z = opts.power },
+                                .Z => |n| .{ .Z = n },
+                                .Origin => .{ .C = caster_coord },
+                            },
+                        } });
+                    },
+                    else => err.wat(),
+                };
+
+                for (affected_tiles.constSlice()) |coord| {
+                    //
+                    // If there's a mob on the tile, see if it resisted the effect.
+                    //
+                    if (state.dungeon.at(coord).mob) |victim| {
+                        if (blast_opts.avoids_allies and
+                            (victim == caster.? or !victim.isHostileTo(caster.?)))
+                        {
+                            continue;
+                        }
+
+                        if (self.checks_will and !willSucceedAgainstMob(caster.?, victim)) {
+                            const chance = 100 - checkAvgWillChances(caster.?, victim);
+                            if (state.player.cansee(victim.coord) or state.player.cansee(caster_coord)) {
+                                state.message(.SpellCast, "{c} resisted $g($c{}%$g chance)$.", .{ victim, chance });
+                            }
+                            continue;
+                        }
+                    }
+
+                    for (self.effects) |effect| {
+                        effect.execute(opts, caster, caster_coord, coord);
+                    }
+                }
+            },
             .Smite => {
                 if (self.animation) |anim_type| switch (anim_type) {
                     .Simple => |simple_anim| {
@@ -1709,27 +1853,30 @@ pub const Spell = struct {
                         for (self.effects) |effect|
                             effect.execute(opts, caster, caster_coord, target);
                     },
-                    .Self, .Mob, .HolyAngel, .SpecificAlly, .ConstructAlly, .UndeadAlly => {
+                    .Self, .Mob, .AngelAlly, .SpecificMob, .SpecificAlly, .ConstructAlly, .UndeadAlly => {
                         if (state.dungeon.at(target).mob == null) {
                             err.bug("Mage used smite-targeted spell on empty target!", .{});
                         }
 
                         const target_mob = state.dungeon.at(target).mob.?;
 
-                        if (self.smite_target_type == .SpecificAlly) {
-                            const wanted_id = self.smite_target_type.SpecificAlly;
-                            if (!mem.eql(u8, target_mob.id, wanted_id)) {
+                        // Do some basic validation base on what the target should be.
+                        switch (self.smite_target_type) {
+                            .SpecificAlly,
+                            .SpecificMob,
+                            => |wanted_id| if (!mem.eql(u8, target_mob.id, wanted_id)) {
                                 err.bug("Mage cast {s} at wrong mob! (Wanted {s}; got {s})", .{
                                     self.id, wanted_id, target_mob.id,
                                 });
-                            }
-                        } else if (self.smite_target_type == .HolyAngel) {
-                            if (target_mob.faction != .Holy and target_mob.life_type != .Spectral)
+                            },
+                            .AngelAlly => if (target_mob.faction != .Holy and target_mob.life_type != .Spectral)
                                 err.bug("Mage cast {s} at wrong mob! (Wanted angelic ally; got {s})", .{
                                     self.id, target_mob.id,
-                                });
+                                }),
+                            else => {},
                         }
 
+                        // Will-checks
                         if (self.checks_will and !willSucceedAgainstMob(caster.?, target_mob)) {
                             const chance = 100 - checkAvgWillChances(caster.?, target_mob);
                             if (state.player.cansee(target_mob.coord) or state.player.cansee(caster_coord)) {

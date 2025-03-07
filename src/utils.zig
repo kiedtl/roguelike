@@ -174,7 +174,8 @@ pub const IterCircle = struct {
 
     pub fn next(self: *@This()) ?Coord {
         while (true) {
-            if (self.y >= HEIGHT) return null;
+            if (self.y >= HEIGHT)
+                return null;
             defer {
                 self.x += 1;
                 if (self.x >= WIDTH) {
@@ -195,7 +196,7 @@ pub fn iterCircle(center: Coord, r: usize) IterCircle {
 
     fov.shadowCast(center, r, state.mapgeometry, &i.buf, struct {
         pub fn f(_: Coord) bool {
-            return true;
+            return false;
         }
     }.f);
 

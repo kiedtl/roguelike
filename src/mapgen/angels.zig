@@ -211,6 +211,13 @@ const TRAITS = [_]Trait{
         .prefer_names = &[1]Trait.Preference{
             .{ .n = "Blademaster", .w = 20 },
         },
+        // TODO: Prefer trait: riposte
+    },
+    .{
+        .power = 5,
+        .name = "Speed",
+        .kind = .{ .Stat = .{ .Speed = 50 } },
+        // TODO: Forbid: Slow
     },
     .{
         .power = 5,
@@ -224,26 +231,37 @@ const TRAITS = [_]Trait{
     .{
         .power = 5,
         .name = "Riposte",
-        .kind = .{ .Status = &[_]types.StatusDataInfo{
-            .{ .status = .Riposte, .duration = .Prm, .add_duration = false },
-        } },
+        .kind = .{ .Status = &[_]types.StatusDataInfo{.{ .status = .Riposte, .duration = .Prm }} },
         .prefer_names = &[1]Trait.Preference{
             .{ .n = "Blademaster", .w = 20 },
         },
+        // TODO: Prefer trait: martial
     },
     .{ .power = 3, .name = "Spell: Disintegrate", .kind = .{ .Spell = .{ .MP_cost = 8, .spell = &spells.BOLT_DISINTEGRATE } } },
     .{ .power = 2, .name = "Spell: Divine regeneration", .kind = .{ .Spell = .{ .MP_cost = 5, .power = 3, .spell = &spells.CAST_DIVINE_REGEN } } },
     .{ .power = 4, .name = "Spell: Hellfire", .kind = .{ .Spell = .{ .MP_cost = 5, .power = 3, .spell = &spells.BOLT_HELLFIRE } } },
     .{ .power = 3, .name = "Spell: Electric Hellfire", .kind = .{ .Spell = .{ .MP_cost = 5, .power = 2, .spell = &spells.BOLT_HELLFIRE_ELECTRIC } } },
-    .{ .power = 3, .name = "Spell: Dispelling Bolt", .kind = .Foo },
-    .{ .power = 3, .name = "Spell: Torment Undead", .kind = .Foo },
-    .{ .power = 3, .name = "Spell: Abjure Earth Demon", .kind = .Foo },
+    .{ .power = 2, .name = "Spell: Enrage Angel", .kind = .{ .Spell = .{ .MP_cost = 7, .power = 16, .spell = &spells.CAST_ENRAGE_ANGEL } } },
+    .{
+        .power = 2,
+        .name = "Spell: Crossbow",
+        .kind = .{ .Spell = .{ .MP_cost = 3, .spell = &spells.BOLT_BOLT, .power = 1 } },
+        .prefer_names = &[1]Trait.Preference{
+            .{ .n = "Arbalist", .w = 20 },
+        },
+    },
+    .{ .power = 3, .name = "Spell: Disrupting Blast", .kind = .{ .Spell = .{ .MP_cost = 4, .spell = &spells.BLAST_DISRUPTING, .power = 8 } } },
+    .{ .power = 3, .name = "Spell: Abjure Earth Demon", .kind = .{ .Spell = .{ .MP_cost = 3, .spell = &spells.CAST_ABJURE_EARTH_DEMON, .power = 1 } } },
     .{ .power = 3, .name = "Spell: Rolling Boulder", .kind = .Foo },
     .{ .power = 3, .name = "Spell: Basalt stuff", .kind = .Foo },
     .{ .power = 2, .name = "Spell: Speeding Bolt", .kind = .Foo },
-    .{ .power = -2, .name = "Slow", .kind = .Foo },
-    .{ .power = -2, .name = "Less Melee/Missile", .kind = .Foo },
-    .{ .power = -2, .name = "Less Evade", .kind = .Foo },
+    .{
+        .power = -2,
+        .name = "Slow",
+        .kind = .{ .Status = &[_]types.StatusDataInfo{.{ .status = .Slow, .duration = .Prm }} },
+    },
+    .{ .power = -2, .name = "Less Melee/Missile", .kind = .{ .Stat = .{ .Melee = -20, .Missile = -20 } } },
+    .{ .power = -2, .name = "Less Evade", .kind = .{ .Stat = .{ .Evade = -10 } } },
     .{ .power = 3, .name = "Placeholder", .kind = .Foo },
     .{ .power = 3, .name = "Placeholder", .kind = .Foo },
     .{ .power = 3, .name = "Placeholder", .kind = .Foo },
@@ -274,6 +292,14 @@ pub const AngelKind = enum {
             .Arch => 12,
         };
         return 7 + rng.range(usize, variation / 2, variation);
+    }
+
+    pub fn stats(self: @This()) types.MobStat {
+        return switch (self) {
+            .Follower => .{ .Melee = 80, .Missile = 70, .Evade = 10, .Willpower = 10 },
+            .Soldier => .{ .Melee = 90, .Missile = 70, .Evade = 20, .Willpower = mobs.WILL_IMMUNE },
+            .Arch => .{ .Melee = 100, .Missile = 80, .Evade = 25, .Willpower = mobs.WILL_IMMUNE },
+        };
     }
 };
 

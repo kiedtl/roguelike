@@ -4,23 +4,24 @@ const sort = std.sort;
 const assert = std.debug.assert;
 
 const ai = @import("ai.zig");
+const err = @import("err.zig");
 const items = @import("items.zig");
-const types = @import("types.zig");
 const player = @import("player.zig");
 const rng = @import("rng.zig");
 const state = @import("state.zig");
+const types = @import("types.zig");
 const ui = @import("ui.zig");
 const utils = @import("utils.zig");
 
-const DamageStr = types.DamageStr;
-const Mob = types.Mob;
-const Coord = types.Coord;
-const Direction = types.Direction;
-const Weapon = types.Weapon;
-const Path = types.Path;
 const CARDINAL_DIRECTIONS = types.CARDINAL_DIRECTIONS;
-const DIRECTIONS = types.DIRECTIONS;
 const CoordArrayList = types.CoordArrayList;
+const Coord = types.Coord;
+const DamageStr = types.DamageStr;
+const DIRECTIONS = types.DIRECTIONS;
+const Direction = types.Direction;
+const Mob = types.Mob;
+const Path = types.Path;
+const Weapon = types.Weapon;
 
 pub const CHANCE_FOR_DIP_EFFECT = 33;
 
@@ -326,10 +327,12 @@ pub fn disruptAllUndead(level: usize) void {
     }
 }
 
-pub fn disruptIndividualUndead(mob: *Mob) void {
+// Note: this is called also by angel's spells, in which case <candles> is just
+// the spell power amount.
+//
+pub fn disruptIndividualUndead(mob: *Mob, candles: usize) void {
     assert(mob.life_type == .Undead and !mob.is_dead);
 
-    const candles = state.destroyed_candles;
     if (candles == 0)
         return;
 
@@ -344,6 +347,7 @@ pub fn disruptIndividualUndead(mob: *Mob) void {
     const CHANCE_HLIN_GAIN_DISORIENT = 1; // Range: 1..8
     const CHANCE_SAME_GAIN_PARALYSIS = 2; // Range: always 2
 
+    const enemylist = mob.enemyList();
     const adjacent_ally: ?*Mob = for (&DIRECTIONS) |d| {
         if (utils.getMobInDirection(mob, d)) |othermob| {
             if (othermob.faction == mob.faction) {
@@ -354,9 +358,7 @@ pub fn disruptIndividualUndead(mob: *Mob) void {
 
     var msg: []const u8 = undefined;
 
-    if (rng.percent(CHANCE_NLIN_FORGET_ENEMY * candles)) {
-        const enemylist = mob.enemyList();
-        assert(enemylist.items.len > 0);
+    if (rng.percent(CHANCE_NLIN_FORGET_ENEMY * candles) and enemylist.items.len > 0) {
         _ = enemylist.swapRemove(rng.range(usize, 0, enemylist.items.len - 1));
         msg = "forget enemy";
     } else if (rng.percent(CHANCE_NLIN_ATTACK_ALLY * candles) and adjacent_ally != null) {
@@ -376,6 +378,128 @@ pub fn disruptIndividualUndead(mob: *Mob) void {
     if (state.player.canSeeMob(mob)) {
         state.message(.Status, "{c} is disrupted ($b{s}$.)", .{ mob, msg });
     }
+}
+
+pub fn abjureEarthDemon(angel: *Mob, mob: *Mob) void {
+    assert(std.mem.eql(u8, mob.id, "revgenunkim"));
+
+    // Needed for lose_martial effects
+    // Assertion so I don't forget this if I rebalance Revgenunkim
+    assert(@import("mobs.zig").RevgenunkimTemplate.mob.stats.Martial > 0);
+
+    const Effect = struct {
+        id: enum {
+            lose_martial,
+            lose_resist,
+            negative_armor,
+            fear_tmp,
+            fear_prm,
+            paralysis,
+            immobility,
+            instadeath,
+            torment,
+            nothing, // the bastard escapes
+
+            pub fn isApplicable(self: @This(), m: *Mob) bool {
+                return switch (self) {
+                    .lose_martial => m.stat(.Martial) > 0,
+                    .lose_resist => m.resistance(.rAcid) > 0 and m.resistance(.Armor) > 0,
+                    .negative_armor => m.resistance(.Armor) >= 0,
+
+                    // more strict than paralysis, since it's not as severe an effect
+                    .fear_tmp, .fear_prm => m.hasStatus(.Fear),
+
+                    .paralysis => true, // Duration can stack
+                    .immobility => !m.immobile,
+                    .instadeath => true, // lol
+                    .torment => m.HP > 1,
+                    .nothing => true,
+                };
+            }
+
+            pub fn apply(self: @This(), caster: *Mob, m: *Mob) void {
+                switch (self) {
+                    .lose_martial => m.stats.Martial -= 1,
+                    .lose_resist => {
+                        m.innate_resists.rAcid -= 75;
+                        m.innate_resists.Armor = @max(0, m.innate_resists.Armor - 75);
+                    },
+                    .negative_armor => m.innate_resists.Armor = -100,
+                    .fear_tmp => m.addStatus(.Fear, 0, .{ .Tmp = 10 }),
+                    .fear_prm => m.addStatus(.Fear, 0, .Prm),
+                    .paralysis => m.addStatus(.Paralysis, 0, .{ .Tmp = 4 }),
+                    .immobility => m.immobile = true,
+                    .instadeath => m.kill(),
+                    .torment => m.takeDamage(.{
+                        .amount = m.HP / 2,
+                        .by_mob = caster,
+                        .kind = .Irresistible,
+                        .blood = false,
+                        .source = .RangedAttack,
+                    }, .{
+                        // Copied from torment undead effect
+                        .strs = &[_]DamageStr{
+                            items._dmgstr(99, "torment", "torments", ""),
+                            // When it is completely destroyed, it has been dispelled
+                            items._dmgstr(100, "dispel", "dispels", ""),
+                        },
+                    }),
+                    .nothing => {}, // FIXME: Should log an error
+                }
+            }
+
+            pub fn message(self: @This()) []const u8 {
+                return switch (self) {
+                    .lose_martial => "The Revgenunkim's claw explodes into gore!",
+                    .lose_resist => "The Revgenunkim's skin blisters horribly!",
+                    .negative_armor => "The Revgenunkim's flesh melts and sloughs off!",
+                    .fear_tmp => "The Revgenunkim shudders in primal terror!",
+                    .fear_prm => "The Revgenunkim flees, overcome by the fear of death!",
+                    .paralysis => "The Revgenunkim's devouring spirit is momentarily torn from its body!",
+                    .immobility => "The Revgenunkim's bones shatter, and it writhes in agony!",
+                    .instadeath => "The Revgenunkim's head explodes into gore!!",
+                    .torment => "The Revgenunkim convulses in torment!",
+                    .nothing => "The Revgenunkim takes a brief moment away from its busy schedule to ponder the meaning of the Berlin Interpretation. (This is a bug.)",
+                };
+            }
+        },
+        weight: usize,
+    };
+
+    // More weight for temporary stuff, less for more severe/permanent things
+    const EFFECTS = [_]Effect{
+        .{ .weight = 2, .id = .lose_martial },
+        .{ .weight = 2, .id = .lose_resist },
+        .{ .weight = 1, .id = .negative_armor },
+        .{ .weight = 3, .id = .fear_tmp },
+        .{ .weight = 2, .id = .fear_prm },
+        .{ .weight = 3, .id = .paralysis },
+        .{ .weight = 1, .id = .immobility },
+        .{ .weight = 2, .id = .torment },
+
+        .{ .weight = 1, .id = .nothing },
+    };
+
+    var effect: ?Effect = null;
+
+    // This could be in the loop, but then the chance of instakill would increase
+    // drastically as the Revgen is pummeled with debuff after debuff.
+    //
+    // We don't want that, we want long, drawn-out torture for these creatures.
+    //
+    if (rng.onein(10))
+        effect = .{ .weight = 0, .id = .instadeath };
+
+    var tries: usize = 256;
+    while ((effect == null or !effect.?.id.isApplicable(mob)) and tries > 0) : (tries -= 1)
+        effect = rng.choose2(Effect, &EFFECTS, "weight") catch err.wat();
+
+    if (effect == null or effect.?.id == .nothing)
+        return;
+
+    if (state.player.canSeeMob(angel) or state.player.canSeeMob(mob))
+        state.message(.Info, "{s}", .{effect.?.id.message()});
+    effect.?.id.apply(angel, mob);
 }
 
 test {
