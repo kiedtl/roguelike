@@ -14,11 +14,12 @@ const surfaces = @import("../surfaces.zig");
 const types = @import("../types.zig");
 
 const Machine = types.Machine;
-const Stat = types.Stat;
-const Mob = types.Mob;
 const MobTemplate = mobs.MobTemplate;
-const Terrain = surfaces.Terrain;
+const Mob = types.Mob;
+const Resistance = types.Resistance;
 const StackBuffer = @import("../buffer.zig").StackBuffer;
+const Stat = types.Stat;
+const Terrain = surfaces.Terrain;
 
 const Filter = enum { Mob, Machine, Terrain };
 
@@ -35,6 +36,7 @@ const Name = struct {
     prefer_color: ?[]const u8 = null,
     forbid: ?[]const u8 = null,
     original_weight: usize = 10,
+    require: ?AngelKind = null,
 
     // Reset after generation process
     weight: usize = 0,
@@ -49,6 +51,11 @@ const Trait = struct {
     prefer_names: ?[]const Preference = null,
     prefer_tile: ?u21 = null,
     attached: ?*const Trait = null,
+    max_used: usize = 1,
+    original_weight: usize = 1,
+
+    weight: usize = 0,
+    used_ctr: usize = 0,
 
     pub const Preference = struct {
         n: []const u8,
@@ -58,6 +65,7 @@ const Trait = struct {
     pub const Kind = union(enum) {
         Foo,
         Stat: std.enums.EnumFieldStruct(Stat, isize, 0),
+        Resist: std.enums.EnumFieldStruct(Resistance, isize, 0),
         Status: []const types.StatusDataInfo,
         Spell: spells.SpellOptions,
 
@@ -90,17 +98,12 @@ pub fn s(st: types.Status, d: types.StatusDataInfo.Duration) types.StatusDataInf
 
 const CHARS = [_]Char{
     .{ .ch = 'א', .original_weight = 10 },
-    .{ .ch = 'ג', .original_weight = 10 },
     .{ .ch = 'ד', .original_weight = 10 },
     .{ .ch = 'ה', .original_weight = 10 },
-    .{ .ch = 'ו', .original_weight = 10 },
-    .{ .ch = 'ז', .original_weight = 10 },
     .{ .ch = 'ט', .original_weight = 10 },
-    .{ .ch = 'י', .original_weight = 10 },
     .{ .ch = 'ל', .original_weight = 10 },
     .{ .ch = 'ם', .original_weight = 10 },
     .{ .ch = 'מ', .original_weight = 10 },
-    .{ .ch = 'נ', .original_weight = 10 },
     .{ .ch = 'ס', .original_weight = 10 },
     .{ .ch = 'ע', .original_weight = 10 },
     .{ .ch = 'ף', .original_weight = 10 },
@@ -113,57 +116,52 @@ const CHARS = [_]Char{
 };
 
 const NAMES = [_]Name{
-    .{ .kind = .Adj, .str = "Silver", .syl = 2 },
-    .{ .kind = .Adj, .str = "Adamantine", .syl = 4 },
-    .{ .kind = .Adj, .str = "Grim", .syl = 1 },
-    .{ .kind = .Adj, .str = "Armored", .syl = 2 },
+    .{ .kind = .Adj, .str = "Silver", .syl = 2, .original_weight = 0 },
+    .{ .kind = .Adj, .str = "Adamantine", .syl = 4, .original_weight = 0 },
+    .{ .kind = .Adj, .str = "Grim", .syl = 1, .original_weight = 0 },
+    .{ .kind = .Adj, .str = "Armored", .syl = 2, .original_weight = 0 },
     .{ .kind = .Adj, .str = "Dread", .syl = 1 },
     .{ .kind = .Adj, .str = "Crimson", .syl = 2 },
     .{ .kind = .Adj, .str = "Red", .syl = 1 },
-    .{ .kind = .Adj, .str = "Iron", .syl = 2 },
-    .{ .kind = .Adj, .str = "Bladed", .syl = 2 },
+    .{ .kind = .Adj, .str = "Iron", .syl = 2, .original_weight = 0 },
+    .{ .kind = .Adj, .str = "Bladed", .syl = 2, .original_weight = 0 },
     .{ .kind = .Adj, .str = "Fledgeling", .syl = 2 },
     .{ .kind = .Adj, .str = "Horned", .syl = 1 },
     .{ .kind = .Adj, .str = "Pronged", .syl = 1 },
     .{ .kind = .Adj, .str = "Clawed", .syl = 1 },
-    .{ .kind = .Adj, .str = "Skewering", .syl = 3 },
-    .{ .kind = .Adj, .str = "Spiked", .syl = 1 },
-    .{ .kind = .Adj, .str = "Boiling", .syl = 2 },
-    .{ .kind = .Adj, .str = "Burning", .syl = 2 },
-    .{ .kind = .Adj, .str = "Blazing", .syl = 2 },
+    .{ .kind = .Adj, .str = "Skewering", .syl = 3, .original_weight = 0 },
+    .{ .kind = .Adj, .str = "Spiked", .syl = 1, .original_weight = 0 },
+    .{ .kind = .Adj, .str = "Boiling", .syl = 2, .original_weight = 0 },
+    .{ .kind = .Adj, .str = "Burning", .syl = 2, .original_weight = 0 },
+    .{ .kind = .Adj, .str = "Blazing", .syl = 2, .original_weight = 0 },
     .{ .kind = .Adj, .str = "Molten", .syl = 2 },
-    .{ .kind = .Adj, .str = "Cinder", .syl = 2 },
+    .{ .kind = .Adj, .str = "Cinder", .syl = 2, .original_weight = 0 },
     .{ .kind = .Adj, .str = "Shining", .syl = 2 },
     .{ .kind = .Adj, .str = "Towering", .syl = 3 },
 
     .{ .kind = .Noun, .str = "Crawler", .syl = 2 },
-    .{ .kind = .Noun, .str = "Purger", .syl = 2 },
-    .{ .kind = .Noun, .str = "Cleanser", .syl = 2 },
-    .{ .kind = .Noun, .str = "Disruptor", .syl = 3 },
-    .{ .kind = .Noun, .str = "Tormentor", .syl = 3 },
-    .{ .kind = .Noun, .str = "Smiter", .syl = 2 },
-    .{ .kind = .Noun, .str = "Destroyer", .syl = 3 },
-    .{ .kind = .Noun, .str = "Terminator", .syl = 4 },
+    .{ .kind = .Noun, .str = "Banisher", .syl = 2, .original_weight = 0 },
+    .{ .kind = .Noun, .str = "Purger", .syl = 2, .original_weight = 0 },
+    .{ .kind = .Noun, .str = "Cleanser", .syl = 2, .original_weight = 0 },
+    .{ .kind = .Noun, .str = "Disruptor", .syl = 3, .original_weight = 0 },
+    .{ .kind = .Noun, .str = "Tormentor", .syl = 3, .original_weight = 0 },
+    .{ .kind = .Noun, .str = "Smiter", .syl = 2, .original_weight = 0 },
+    .{ .kind = .Noun, .str = "Destroyer", .syl = 3, .original_weight = 0 },
+    .{ .kind = .Noun, .str = "Terminator", .syl = 4, .original_weight = 0 },
     .{ .kind = .Noun, .str = "Dread", .syl = 1 },
     .{ .kind = .Noun, .str = "Slayer", .syl = 2 },
     .{ .kind = .Noun, .str = "Hunter", .syl = 2 },
     .{ .kind = .Noun, .str = "Warrior", .syl = 2 },
     .{ .kind = .Noun, .str = "Fury", .syl = 2 },
     .{ .kind = .Noun, .str = "Executioner", .syl = 5 },
-    .{ .kind = .Noun, .str = "Blademaster", .syl = 3 },
+    .{ .kind = .Noun, .str = "Blademaster", .syl = 3, .original_weight = 0 },
     .{ .kind = .Noun, .str = "Warlord", .syl = 2 },
     .{ .kind = .Noun, .str = "One", .syl = 1 },
     .{ .kind = .Noun, .str = "Spirit", .syl = 2 },
     .{ .kind = .Noun, .str = "Terror", .syl = 2 },
+    .{ .kind = .Noun, .str = "Menace", .syl = 2 },
     .{ .kind = .Noun, .str = "Servitor", .syl = 3 },
-    .{ .kind = .Noun, .str = "Assistant", .syl = 3 },
-    .{ .kind = .Noun, .str = "Soldier", .syl = 2 },
-    .{ .kind = .Noun, .str = "Apprentice", .syl = 3 },
-    .{ .kind = .Noun, .str = "Follower", .syl = 3 },
-    .{ .kind = .Noun, .str = "Captain", .syl = 2 },
-    .{ .kind = .Noun, .str = "Overlord", .syl = 3 },
-    .{ .kind = .Noun, .str = "Marshal", .syl = 2 },
-    .{ .kind = .Noun, .str = "Arbalist", .syl = 3 },
+    .{ .kind = .Noun, .str = "Arbalist", .syl = 3, .original_weight = 0 },
     .{ .kind = .Noun, .str = "Archer", .syl = 2 },
     .{ .kind = .Noun, .str = "Crusher", .syl = 2 },
     .{ .kind = .Noun, .str = "Star", .syl = 1 },
@@ -171,14 +169,24 @@ const NAMES = [_]Name{
     .{ .kind = .Noun, .str = "Guardian", .syl = 3 },
     .{ .kind = .Noun, .str = "Sentinel", .syl = 3 },
     .{ .kind = .Noun, .str = "Enforcer", .syl = 3 },
-    .{ .kind = .Noun, .str = "Lancer", .syl = 2 },
-    .{ .kind = .Noun, .str = "Piercer", .syl = 2 },
+    .{ .kind = .Noun, .str = "Lancer", .syl = 2, .original_weight = 0 },
+    .{ .kind = .Noun, .str = "Piercer", .syl = 2, .original_weight = 0 },
     .{ .kind = .Noun, .str = "Striker", .syl = 2 },
     .{ .kind = .Noun, .str = "Veteran", .syl = 3 },
     .{ .kind = .Noun, .str = "Trooper", .syl = 2 },
     .{ .kind = .Noun, .str = "Knight", .syl = 1 },
-    .{ .kind = .Noun, .str = "Furnace", .syl = 2 },
-    .{ .kind = .Noun, .str = "Menace", .syl = 2 },
+    .{ .kind = .Noun, .str = "Furnace", .syl = 2, .original_weight = 0 },
+
+    // Follower angels
+    .{ .kind = .Noun, .str = "Assistant", .syl = 3, .require = .Follower },
+    .{ .kind = .Noun, .str = "Soldier", .syl = 2, .require = .Follower },
+    .{ .kind = .Noun, .str = "Apprentice", .syl = 3, .require = .Follower },
+    .{ .kind = .Noun, .str = "Follower", .syl = 3, .require = .Follower },
+
+    // Archangels
+    .{ .kind = .Noun, .str = "Captain", .syl = 2, .require = .Arch },
+    .{ .kind = .Noun, .str = "Overlord", .syl = 3, .require = .Arch },
+    .{ .kind = .Noun, .str = "Marshal", .syl = 2, .require = .Arch },
 };
 
 const NAME_PATTERNS = [_][2]usize{
@@ -203,6 +211,26 @@ const NAME_PATTERNS = [_][2]usize{
 };
 
 const TRAITS = [_]Trait{
+    .{
+        .power = 3,
+        .name = "Armor",
+        .kind = .{ .Resist = .{ .Armor = 50 } },
+        .prefer_names = &[4]Trait.Preference{
+            .{ .n = "Grim", .w = 10 },
+            .{ .n = "Adamantine", .w = 10 },
+            .{ .n = "Armored", .w = 20 },
+            .{ .n = "Iron", .w = 20 },
+        },
+    },
+    .{
+        .power = 2,
+        .name = "Resistances",
+        .kind = .{ .Resist = .{ .rFire = 75, .rElec = 75, .rAcid = 75 } },
+        .prefer_names = &[2]Trait.Preference{
+            .{ .n = "Grim", .w = 20 },
+            .{ .n = "Adamantine", .w = 20 },
+        },
+    },
     .{
         .power = 5,
         .name = "Martial",
@@ -239,19 +267,42 @@ const TRAITS = [_]Trait{
     },
     .{ .power = 3, .name = "Spell: Disintegrate", .kind = .{ .Spell = .{ .MP_cost = 8, .spell = &spells.BOLT_DISINTEGRATE } } },
     .{ .power = 2, .name = "Spell: Divine regeneration", .kind = .{ .Spell = .{ .MP_cost = 5, .power = 3, .spell = &spells.CAST_DIVINE_REGEN } } },
-    .{ .power = 4, .name = "Spell: Hellfire", .kind = .{ .Spell = .{ .MP_cost = 5, .power = 3, .spell = &spells.BOLT_HELLFIRE } } },
-    .{ .power = 3, .name = "Spell: Electric Hellfire", .kind = .{ .Spell = .{ .MP_cost = 5, .power = 2, .spell = &spells.BOLT_HELLFIRE_ELECTRIC } } },
+    .{ .power = 4, .name = "Spell: Hellfire", .kind = .{ .Spell = .{ .MP_cost = 5, .power = 3, .spell = &spells.BOLT_HELLFIRE } }, .max_used = 4, .original_weight = 3 },
+    .{ .power = 3, .name = "Spell: Electric Hellfire", .kind = .{ .Spell = .{ .MP_cost = 5, .power = 2, .spell = &spells.BOLT_HELLFIRE_ELECTRIC } }, .max_used = 2, .original_weight = 1 },
     .{ .power = 2, .name = "Spell: Enrage Angel", .kind = .{ .Spell = .{ .MP_cost = 7, .power = 16, .spell = &spells.CAST_ENRAGE_ANGEL } } },
     .{
         .power = 2,
         .name = "Spell: Crossbow",
         .kind = .{ .Spell = .{ .MP_cost = 3, .spell = &spells.BOLT_BOLT, .power = 1 } },
-        .prefer_names = &[1]Trait.Preference{
-            .{ .n = "Arbalist", .w = 20 },
+        .prefer_names = &[1]Trait.Preference{.{ .n = "Arbalist", .w = 20 }},
+    },
+    .{
+        .power = 3,
+        .name = "Spell: Disrupting Blast",
+        .kind = .{ .Spell = .{ .MP_cost = 4, .spell = &spells.BLAST_DISRUPTING, .power = 8 } },
+        .prefer_names = &[7]Trait.Preference{
+            .{ .n = "Abjuror", .w = 20 },
+            .{ .n = "Tormentor", .w = 20 },
+            .{ .n = "Disruptor", .w = 20 },
+            .{ .n = "Purger", .w = 20 },
+            .{ .n = "Cleanser", .w = 20 },
+            .{ .n = "Destroyer", .w = 20 },
+            .{ .n = "Silver", .w = 20 },
         },
     },
-    .{ .power = 3, .name = "Spell: Disrupting Blast", .kind = .{ .Spell = .{ .MP_cost = 4, .spell = &spells.BLAST_DISRUPTING, .power = 8 } } },
-    .{ .power = 3, .name = "Spell: Abjure Earth Demon", .kind = .{ .Spell = .{ .MP_cost = 3, .spell = &spells.CAST_ABJURE_EARTH_DEMON, .power = 1 } } },
+    .{
+        .power = 3,
+        .name = "Spell: Abjure Earth Demon",
+        .kind = .{ .Spell = .{ .MP_cost = 3, .spell = &spells.CAST_ABJURE_EARTH_DEMON, .power = 1 } },
+        .prefer_names = &[6]Trait.Preference{
+            .{ .n = "Abjuror", .w = 20 },
+            .{ .n = "Tormentor", .w = 20 },
+            .{ .n = "Smiter", .w = 20 },
+            .{ .n = "Destroyer", .w = 20 },
+            .{ .n = "Terminator", .w = 20 },
+            .{ .n = "Banisher", .w = 20 },
+        },
+    },
     .{ .power = 3, .name = "Spell: Rolling Boulder", .kind = .Foo },
     .{ .power = 3, .name = "Spell: Basalt stuff", .kind = .Foo },
     .{ .power = 2, .name = "Spell: Speeding Bolt", .kind = .Foo },
@@ -259,9 +310,10 @@ const TRAITS = [_]Trait{
         .power = -2,
         .name = "Slow",
         .kind = .{ .Status = &[_]types.StatusDataInfo{.{ .status = .Slow, .duration = .Prm }} },
+        .max_used = 2,
     },
-    .{ .power = -2, .name = "Less Melee/Missile", .kind = .{ .Stat = .{ .Melee = -20, .Missile = -20 } } },
-    .{ .power = -2, .name = "Less Evade", .kind = .{ .Stat = .{ .Evade = -10 } } },
+    .{ .power = -2, .name = "Less Melee/Missile", .kind = .{ .Stat = .{ .Melee = -20, .Missile = -20 } }, .max_used = 2 },
+    .{ .power = -2, .name = "Less Evade", .kind = .{ .Stat = .{ .Evade = -10 } }, .max_used = 2 },
     .{ .power = 3, .name = "Placeholder", .kind = .Foo },
     .{ .power = 3, .name = "Placeholder", .kind = .Foo },
     .{ .power = 3, .name = "Placeholder", .kind = .Foo },
@@ -313,26 +365,32 @@ fn generateSingle(
     kind: AngelKind,
     traits: *StackBuffer(Trait, TRAITS.len),
     names: *StackBuffer(Name, NAMES.len),
+    tiles: *StackBuffer(Char, CHARS.len),
 ) void {
+    for (traits.slice()) |*i| i.weight = i.original_weight;
     for (names.slice()) |*i| i.weight = i.original_weight;
-
-    var tiles = StackBuffer(Char, CHARS.len).init(&CHARS);
+    for (tiles.slice()) |*i| i.weight = i.original_weight;
 
     var power = kind.power();
     var chosen_traits = StackBuffer(Trait, 16).init(null);
     var tries: usize = 200;
 
     while (power > 0 and tries > 0) : (tries -= 1) {
-        const chosen_ind = rng.range(usize, 0, traits.len - 1);
-        const chosen = traits.slice()[chosen_ind];
+        const chosen_ind = rng.chooseInd2(Trait, traits.constSlice(), "weight");
+        const chosen = &traits.slice()[chosen_ind];
 
         const new_power = @as(isize, @intCast(power)) - chosen.power;
         if (new_power < 0)
             continue;
         power = @intCast(new_power);
 
-        chosen_traits.append(chosen) catch err.wat();
-        _ = traits.orderedRemove(chosen_ind) catch err.wat();
+        chosen_traits.append(chosen.*) catch err.wat();
+
+        chosen.used_ctr += 1;
+        if (chosen.used_ctr >= chosen.max_used)
+            _ = traits.orderedRemove(chosen_ind) catch err.wat()
+        else
+            chosen.weight = 0;
 
         if (chosen.prefer_names) |preferred_names| {
             for (preferred_names) |preference| {
@@ -356,6 +414,14 @@ fn generateSingle(
 
     var adj: ?Name = null;
     var noun: ?Name = null;
+
+    for (names.slice()) |*name|
+        if (name.require) |require|
+            if (require != kind) {
+                name.weight = 0;
+            } else {
+                name.weight += 20;
+            };
 
     while (adj == null or noun == null) {
         const chosen = rng.choose2(Name, names.constSlice(), "weight") catch err.wat();
@@ -398,7 +464,8 @@ fn generateSingle(
     _ = names.orderedRemove(noun_ind) catch err.wat();
 
     // Choose remaining stuff
-    const chosen_tile = rng.choose2(Char, tiles.constSlice(), "weight") catch err.wat();
+    const chosen_tile_ind = rng.chooseInd2(Char, tiles.constSlice(), "weight");
+    const chosen_tile = tiles.orderedRemove(chosen_tile_ind) catch err.wat();
     const maxHP = kind.maxHP();
 
     // Done, print it
@@ -421,14 +488,15 @@ fn generateSingle(
 pub fn init() void {
     var traits = StackBuffer(Trait, TRAITS.len).init(&TRAITS);
     var names = StackBuffer(Name, NAMES.len).init(&NAMES);
+    var tiles = StackBuffer(Char, CHARS.len).init(&CHARS);
 
-    generateSingle(undefined, .Follower, &traits, &names);
-    generateSingle(undefined, .Follower, &traits, &names);
-    generateSingle(undefined, .Soldier, &traits, &names);
-    generateSingle(undefined, .Soldier, &traits, &names);
-    generateSingle(undefined, .Soldier, &traits, &names);
-    generateSingle(undefined, .Arch, &traits, &names);
-    generateSingle(undefined, .Arch, &traits, &names);
+    generateSingle(undefined, .Follower, &traits, &names, &tiles);
+    generateSingle(undefined, .Follower, &traits, &names, &tiles);
+    generateSingle(undefined, .Soldier, &traits, &names, &tiles);
+    generateSingle(undefined, .Soldier, &traits, &names, &tiles);
+    generateSingle(undefined, .Soldier, &traits, &names, &tiles);
+    generateSingle(undefined, .Arch, &traits, &names, &tiles);
+    generateSingle(undefined, .Arch, &traits, &names, &tiles);
 }
 
 pub fn deinit() void {}
