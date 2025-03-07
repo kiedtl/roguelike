@@ -1019,13 +1019,14 @@ fn _getMonsSpellsDescription(self: *Console, starty: usize, mob: *Mob, _: usize)
         if (spellcfg.spell.cast_type == .Smite) {
             const target = @as([]const u8, switch (spellcfg.spell.smite_target_type) {
                 .Self => "$bself$.",
-                .SpecificAlly => |id| b: {
+                .SpecificMob, .SpecificAlly => |id| b: {
                     const t = mobs.findMobById(id).?;
                     break :b t.mob.ai.profession_name orelse t.mob.species.name;
                 },
                 .UndeadAlly => "undead ally",
                 .ConstructAlly => "construct ally",
-                .Mob => "you",
+                .AngelAlly => "angelic ally",
+                .AnyTile, .Mob => "you", // See note on AnyTile in spells.zig
                 .Corpse => "corpse",
             });
             y += self.drawTextAtf(0, y, "· $ctarget$.: {s}", .{target}, .{});
@@ -1034,12 +1035,16 @@ fn _getMonsSpellsDescription(self: *Console, starty: usize, mob: *Mob, _: usize)
             const missable: []const u8 = if (spellcfg.spell.bolt_missable) "$bmissable$." else "$runmissable$.";
             y += self.drawTextAtf(0, y, "· {s}$g,$. {s}", .{ dodgeable, missable }, .{});
             self.addTooltipForText("Dodgeability and Missability", .{}, "ex_sp_dodgeable_missable", .{});
+        } else if (spellcfg.spell.cast_type == .Blast) {
+            const aoe = spellcfg.spell.cast_type.Blast.aoe;
+            y += self.drawTextAtf(0, y, "· $cblast$. ({} aoe)", .{aoe}, .{});
         }
 
-        if (!(spellcfg.spell.cast_type == .Smite and
-            spellcfg.spell.smite_target_type == .Self))
+        if (spellcfg.spell.cast_type != .Blast and
+            !(spellcfg.spell.cast_type == .Smite and spellcfg.spell.smite_target_type == .Self))
         {
             const targeting = @as([]const u8, switch (spellcfg.spell.cast_type) {
+                .Blast => "this is a bug",
                 .Ray => @panic("TODO"),
                 .Smite => "smite-targeted",
                 .Bolt => "bolt",
@@ -1084,7 +1089,7 @@ fn _getMonsSpellsDescription(self: *Console, starty: usize, mob: *Mob, _: usize)
                 y += self.drawTextAtf(0, y, "· $gIns$. fireblast <rad {s}> <dmg {s}>", .{ rad_str.constSlice(), dmg_str.constSlice() }, .{});
                 self.addTooltipForText("Fireblast", .{}, "ex_sp_effect_fireblast", .{});
             },
-            .Custom => y += self.drawTextAt(0, y, "· $g(See description)$.", .{}),
+            .Custom => y += self.drawTextAt(0, y, "· $g(Click title for info)$.", .{}),
         };
 
         y += self.drawTextAt(0, y, "\n", .{});
@@ -1168,6 +1173,7 @@ fn _getMonsDescription(self: *Console, starty: usize, mob: *Mob, linewidth: usiz
         if (mob.isUnderStatus(entry.key) == null)
             continue;
         y += self.drawTextAtf(0, y, "{s}", .{_formatStatusInfo(entry.value)}, .{});
+        self.addTooltipForText("{s}", .{entry.key.string(mob)}, "nonplayer_{s}", .{@tagName(entry.key)});
     }
     y += self.drawTextAtf(0, y, "\n", .{}, .{});
 

@@ -1594,7 +1594,8 @@ pub const Status = enum {
                 continue;
 
             // It's adjacent, should be seen...
-            assert(mob.cansee(othermob.coord));
+            // Uh nevermind lol, of course not, esp if this isn't the player
+            //assert(mob.cansee(othermob.coord));
 
             if (othermob.isHostileTo(mob)) {
                 ai.updateEnemyKnowledge(othermob, mob, null);
@@ -2555,7 +2556,7 @@ pub const Mob = struct { // {{{
         if (self.faction == .Necromancer and self.life_type == .Undead and
             self.ai.phase == .Hunt)
         {
-            combat.disruptIndividualUndead(self);
+            combat.disruptIndividualUndead(self, state.destroyed_candles);
         }
     }
 
@@ -4053,8 +4054,9 @@ pub const Mob = struct { // {{{
         self.memory_duration = 7;
         self.deaf = true;
 
-        self.innate_resists.rFire = math.clamp(self.innate_resists.rFire + 25, -100, 100);
-        self.innate_resists.rElec = math.clamp(self.innate_resists.rElec + 25, -100, 100);
+        self.innate_resists.rFire = @min(self.innate_resists.rFire + 25, 100);
+        self.innate_resists.rElec = @min(self.innate_resists.rElec + 25, 100);
+        self.innate_resists.rHoly = @max(self.innate_resists.rHoly - 75, -200);
         self.innate_resists.rFume = 100;
 
         return true;

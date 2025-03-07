@@ -1,195 +1,195 @@
-% player_Status.RingTeleportation
+% player_RingTeleportation
 Refer to the ring's description.
 
-% player_Status.RingDamnation
+% player_RingDamnation
 Refer to the ring's description.
 
-% player_Status.RingElectrocution
+% player_RingElectrocution
 Refer to the ring's description.
 
-% player_Status.RingExcision
+% player_RingExcision
 Refer to the ring's description.
 
-% player_Status.RingConjuration
+% player_RingConjuration
 Refer to the ring's description.
 
-% player_Status.RingAcceleration
+% player_RingAcceleration
 Refer to the ring's description.
 
-% player_Status.RingDeception
+% player_RingDeception
 Refer to the ring's description.
 
-% player_Status.RingConcentration
+% player_RingConcentration
 Refer to the ring's description.
 
-% player_Status.RingObscuration
+% player_RingObscuration
 Refer to the ring's description.
 
-% player_Status.RingDeceleration
+% player_RingDeceleration
 Refer to the ring's description.
 
-% player_Status.RingDeterm
+% player_RingDeterm
 Refer to the ring's description.
 
-% player_Status.RingDetermEnd
+% player_RingDetermEnd
 The ring's effect has worn off, and you are experiencing negative after-effects.
 
 Refer to the ring's description.
 
-% player_Status.RingRetaliation
+% player_RingRetaliation
 Refer to the ring's description.
 
-% player_Status.DetectHeat
+% player_DetectHeat
 You are detecting sources of heat, as well as enemies attuned to fire.
 
-% player_Status.DetectElec
+% player_DetectElec
 You are detecting sources of electricity, as well as enemies attuned to it.
 
-% player_Status.EtherealShield
+% player_EtherealShield
 Refer to the shield's description.
 
-% player_Status.EarthenShield
+% player_EarthenShield
 Refer to the shield's description.
 
-% player_Status.FumesVest
+% player_FumesVest
 Refer to the vests' description.
 
-% player_Status.CopperWeapon
+% player_CopperWeapon
 You are standing on copper-plated ground and will deal 1 extra damage if you
 use a copper weapon.
 
-% player_Status.Sceptre
+% player_Sceptre
 You are unlawfully carrying the unholy Ambassador's Sceptre, and can channel a
 small portion of its power.
 
 Be warned: the Sceptre detests your presence, and will seek to betray and kill
 you at the first opportunity.
 
-% player_Status.Riposte
+% player_Riposte
 You can retaliate when you block an attack, executing a free counterattack.
 
-% player_Status.TormentUndead
+% player_TormentUndead
 You are inhibiting the Forces that bind undead together. Nearby undead will
 have a will-checked chance to take damage each turn.
 
-% player_Status.Echolocation
+% player_Echolocation
 Whenever you hear a sound, you'll be able to deduce the structure of nearby
 terrain.
 
-% player_Status.Absorbing
+% player_Absorbing
 Your Potential stat is doubled, and you will gain extra max MP from shrines (5
 instead of 2).
 
-% player_Status.Amnesia
+% player_Amnesia
 [BUG] Did you leave the stove on? DID YOU?
 
-% player_Status.Blind
+% player_Blind
 Your vision is reduced to 1.
 
-% player_Status.Corruption
+% player_Corruption
 You have become corrupted by being adjacent to hostile undead for too long. Due
 to having your minds temporarily connected, both you and undead will be able to
 hit each other more often, and undead will not forget about you while you are
 corrupted.
 
-% player_Status.Conductive
+% player_Conductive
 You will share electric damage with nearby creatures. If they are also
 conductive, they will share with other nearby mobs, and so on.
 
-% player_Status.Corona
+% player_Corona
 You are glowing in the dark!
 
-% player_Status.Daze
+% player_Daze
 You are dazed and will stumble around randomly when you try to move.
 
-% player_Status.Debil
+% player_Debil
 Your ability to fight is destroyed, and you'll find it much harder to land hits
 or evade attacks.
 
-% player_Status.Disorient
+% player_Disorient
 You are disoriented and can only move diagonally.
 
-% player_Status.Enraged
+% player_Enraged
 You are FURIOUS and will deal +50% damage and land hits more often, but evade
 attacks less often.
 
-% player_Status.Exhausted
+% player_Exhausted
 You're exhausted and won't be able to enter a rage if badly hurt.
 
-% player_Status.Explosive
+% player_Explosive
 [BUG] Whoopsies. Looks like you're going to explode when you die.
 
-% player_Status.ExplosiveElec
+% player_ExplosiveElec
 [BUG] Sith lightning, I mean electricity, is building up in your body and will
 discharge when you die.
 
-% player_Status.Fast
+% player_Fast
 You are moving 2x as fast.
 
-% player_Status.Fear
+% player_Fear
 You have a feeling of inescapable doom!
 
-% player_Status.Fire
+% player_Fire
 You are burning and have a 20% chance to take fire damage each turn. You'll
 also spread fire to each tile you step on.
 
-% player_Status.Fireproof
+% player_Fireproof
 You have +25% fire resistance.
 
-% player_Status.Flammable
+% player_Flammable
 You have -25% fire resistance.
 
-% player_Status.Held
+% player_Held
 You're stuck and can't move.
 
-% player_Status.Insane
+% player_Insane
 [BUG] Eating that peanut and eggplant curry was a mistake.
 
-% player_Status.Intimidating
+% player_Intimidating
 You look very intimidating, increasing the chance that foes will flee from you.
 
-% player_Status.Invigorate
+% player_Invigorate
 You are invigorated and will deal +50% damage, as well as land hits and block
 attacks more often.
 
-% player_Status.Lifespan
+% player_Lifespan
 [BUG] Can't think of anything funny to put here, sorry. Something about Thiel,
 I don't know.
 
-% player_Status.Nausea
+% player_Nausea
 You are nauseated and unable to drink potions.
 
-% player_Status.Noisy
+% player_Noisy
 You are finding it difficult to move quietly!
 
-% player_Status.Pain
+% player_Pain
 You are in pain and cannot rest.
 
-% player_Status.Paralysis
+% player_Paralysis
 You are paralyzed, and will skip your turns entirely.
 
-% player_Status.Perceptive
+% player_Perceptive
 You can see through any obstacle that isn't 100% opaque, including most gases
 and vision-obstructing terrain.
 
-% player_Status.Recuperate
+% player_Recuperate
 You are slowly regaining HP, at the cost of being able to evade attacks.
 
-% player_Status.RingingEars
+% player_RingingEars
 Your ears are ringing. In this state you are unable to properly distinguish
 sounds.
 
-% player_Status.Sleeping
+% player_Sleeping
 [BUG] I hate DCSS dream sheep. Don't you?
 
-% player_Status.Slow
+% player_Slow
 You are moving 2x more slowly.
 
-% player_Status.Water
+% player_Water
 You are in deep water, and are suitably affected.
 
-% player_Status.DayBlindness
+% player_DayBlindness
 [BUG] So the sun burnt you when you went outside huh?
 
-% player_Status.NightBlindness
+% player_NightBlindness
 [BUG]

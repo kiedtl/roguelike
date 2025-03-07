@@ -101,10 +101,10 @@ pub const Info = struct {
                         } else {
                             break :b "Fell into darkness";
                         }
-                        // } else if (by.faction == .Revgenunkim) {
-                        //     break :b "Overcome by an ancient Power";
-                        // } else if (by.faction == .Holy) {
-                        //     break :b "Cast into the Abyss";
+                    } else if (by.faction == .Revgenunkim) {
+                        break :b "Overcome by an ancient Power";
+                    } else if (by.faction == .Holy) {
+                        break :b "Cast into the Abyss";
                     } else {
                         break :b "Died on the journey";
                     }

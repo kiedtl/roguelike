@@ -2230,20 +2230,46 @@ pub const CreepingDeathTemplate = MobTemplate{
     },
 };
 
+pub const AngelTemplate = MobTemplate{
+    .mob = .{
+        .id = "angel_procgen_template",
+        .species = &Species{ .name = "angel (bug)" },
+        .tile = '$',
+        .ai = AI{
+            .profession_description = "guarding",
+            .work_fn = ai.wanderWork,
+            .fight_fn = ai.mageFight,
+        },
+        .max_HP = 999,
+        .memory_duration = 15,
+
+        .spells = &[_]SpellOptions{
+            .{ .MP_cost = 3, .spell = &spells.BLAST_DISRUPTING, .power = 2 },
+        },
+        .max_MP = 3,
+        .faction = .Holy,
+        .stats = .{ .Willpower = 10 },
+    },
+};
+
 const REVGENUNKIM_CLAW_WEAPON = Weapon{
     .name = "acid claw",
-    .damage = 1,
+    .damage = 2,
     .damage_kind = .Acid,
     .strs = &items.CLAW_STRS,
     .martial = true,
     .delay = 150,
 };
 
+// XXX: 2025-03-06: Dear future me: For the love of all that is Holy, PLEASE
+// update src/combat/abjureEarthDemon() when rebalancing this creature in the
+// future.
+//
 pub const RevgenunkimTemplate = MobTemplate{
     .mob = .{
         .id = "revgenunkim",
         .species = &Species{
-            .name = "revgenunkim",
+            .name = "Revgenunkim",
             .default_attack = &REVGENUNKIM_CLAW_WEAPON,
         },
         .tile = 'V',
@@ -2252,7 +2278,7 @@ pub const RevgenunkimTemplate = MobTemplate{
             .work_fn = ai.wanderWork,
             .fight_fn = ai.meleeFight,
         },
-        .max_HP = 6,
+        .max_HP = 12,
 
         .memory_duration = 15,
         .faction = .Revgenunkim,
@@ -2340,7 +2366,7 @@ pub const BurningBruteTemplate = MobTemplate{
 
         .faction = .Revgenunkim,
         .multitile = 2,
-        .max_HP = 13,
+        .max_HP = 14,
         .memory_duration = 10,
         .blood = null,
         .corpse = .None,
@@ -2424,6 +2450,7 @@ pub const MOBS = [_]MobTemplate{
     GrueTemplate,
     SlinkingTerrorTemplate,
     CreepingDeathTemplate,
+    AngelTemplate,
     RevgenunkimTemplate,
     CinderBruteTemplate,
     BurningBruteTemplate,
