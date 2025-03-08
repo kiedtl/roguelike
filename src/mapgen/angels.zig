@@ -51,6 +51,7 @@ const Trait = struct {
     prefer_names: ?[]const Preference = null,
     prefer_tile: ?u21 = null,
     attached: ?*const Trait = null,
+    require_kind: ?[]const AngelKind = null,
     max_used: usize = 1,
     original_weight: usize = 1,
 
@@ -125,7 +126,6 @@ const NAMES = [_]Name{
     .{ .kind = .Adj, .str = "Red", .syl = 1 },
     .{ .kind = .Adj, .str = "Iron", .syl = 2, .original_weight = 0 },
     .{ .kind = .Adj, .str = "Bladed", .syl = 2, .original_weight = 0 },
-    .{ .kind = .Adj, .str = "Fledgeling", .syl = 2 },
     .{ .kind = .Adj, .str = "Horned", .syl = 1 },
     .{ .kind = .Adj, .str = "Pronged", .syl = 1 },
     .{ .kind = .Adj, .str = "Clawed", .syl = 1 },
@@ -134,7 +134,7 @@ const NAMES = [_]Name{
     .{ .kind = .Adj, .str = "Boiling", .syl = 2, .original_weight = 0 },
     .{ .kind = .Adj, .str = "Burning", .syl = 2, .original_weight = 0 },
     .{ .kind = .Adj, .str = "Blazing", .syl = 2, .original_weight = 0 },
-    .{ .kind = .Adj, .str = "Molten", .syl = 2 },
+    .{ .kind = .Adj, .str = "Molten", .syl = 2, .original_weight = 0 },
     .{ .kind = .Adj, .str = "Cinder", .syl = 2, .original_weight = 0 },
     .{ .kind = .Adj, .str = "Shining", .syl = 2 },
     .{ .kind = .Adj, .str = "Towering", .syl = 3 },
@@ -155,7 +155,6 @@ const NAMES = [_]Name{
     .{ .kind = .Noun, .str = "Fury", .syl = 2 },
     .{ .kind = .Noun, .str = "Executioner", .syl = 5 },
     .{ .kind = .Noun, .str = "Blademaster", .syl = 3, .original_weight = 0 },
-    .{ .kind = .Noun, .str = "Warlord", .syl = 2 },
     .{ .kind = .Noun, .str = "One", .syl = 1 },
     .{ .kind = .Noun, .str = "Spirit", .syl = 2 },
     .{ .kind = .Noun, .str = "Terror", .syl = 2 },
@@ -178,12 +177,16 @@ const NAMES = [_]Name{
     .{ .kind = .Noun, .str = "Furnace", .syl = 2, .original_weight = 0 },
 
     // Follower angels
+    .{ .kind = .Adj, .str = "Fledgeling", .syl = 2, .require = .Follower },
     .{ .kind = .Noun, .str = "Assistant", .syl = 3, .require = .Follower },
-    .{ .kind = .Noun, .str = "Soldier", .syl = 2, .require = .Follower },
     .{ .kind = .Noun, .str = "Apprentice", .syl = 3, .require = .Follower },
     .{ .kind = .Noun, .str = "Follower", .syl = 3, .require = .Follower },
 
+    // Soldiers
+    .{ .kind = .Noun, .str = "Soldier", .syl = 2, .require = .Soldier },
+
     // Archangels
+    .{ .kind = .Noun, .str = "Warlord", .syl = 2, .require = .Arch },
     .{ .kind = .Noun, .str = "Captain", .syl = 2, .require = .Arch },
     .{ .kind = .Noun, .str = "Overlord", .syl = 3, .require = .Arch },
     .{ .kind = .Noun, .str = "Marshal", .syl = 2, .require = .Arch },
@@ -264,11 +267,33 @@ const TRAITS = [_]Trait{
             .{ .n = "Blademaster", .w = 20 },
         },
         // TODO: Prefer trait: martial
+        // TODO: Forbid: loss of melee/martial
     },
     .{ .power = 3, .name = "Spell: Disintegrate", .kind = .{ .Spell = .{ .MP_cost = 8, .spell = &spells.BOLT_DISINTEGRATE } } },
     .{ .power = 2, .name = "Spell: Divine regeneration", .kind = .{ .Spell = .{ .MP_cost = 5, .power = 3, .spell = &spells.CAST_DIVINE_REGEN } } },
-    .{ .power = 4, .name = "Spell: Hellfire", .kind = .{ .Spell = .{ .MP_cost = 5, .power = 3, .spell = &spells.BOLT_HELLFIRE } }, .max_used = 4, .original_weight = 3 },
-    .{ .power = 3, .name = "Spell: Electric Hellfire", .kind = .{ .Spell = .{ .MP_cost = 5, .power = 2, .spell = &spells.BOLT_HELLFIRE_ELECTRIC } }, .max_used = 2, .original_weight = 1 },
+    .{
+        .power = 4,
+        .name = "Spell: Hellfire",
+        .kind = .{ .Spell = .{ .MP_cost = 5, .power = 3, .spell = &spells.BOLT_HELLFIRE } },
+        .max_used = 4,
+        .original_weight = 3,
+        .require_kind = &.{ .Arch, .Soldier },
+        .prefer_names = &[_]Trait.Preference{
+            .{ .n = "Boiling", .w = 10 },
+            .{ .n = "Blazing", .w = 10 },
+            .{ .n = "Molten", .w = 10 },
+            .{ .n = "Cinder", .w = 10 },
+            .{ .n = "Furnace", .w = 10 },
+        },
+    },
+    .{
+        .power = 3,
+        .name = "Spell: Electric Hellfire",
+        .kind = .{ .Spell = .{ .MP_cost = 5, .power = 2, .spell = &spells.BOLT_HELLFIRE_ELECTRIC } },
+        .max_used = 2,
+        .original_weight = 1,
+        .require_kind = &.{ .Arch, .Soldier },
+    },
     .{ .power = 2, .name = "Spell: Enrage Angel", .kind = .{ .Spell = .{ .MP_cost = 7, .power = 16, .spell = &spells.CAST_ENRAGE_ANGEL } } },
     .{
         .power = 2,
@@ -292,8 +317,8 @@ const TRAITS = [_]Trait{
     },
     .{
         .power = 3,
-        .name = "Spell: Abjure Earth Demon",
-        .kind = .{ .Spell = .{ .MP_cost = 3, .spell = &spells.CAST_ABJURE_EARTH_DEMON, .power = 1 } },
+        .name = "Spell: Rebuke Earth Demon",
+        .kind = .{ .Spell = .{ .MP_cost = 3, .spell = &spells.CAST_REBUKE_EARTH_DEMON, .power = 1 } },
         .prefer_names = &[6]Trait.Preference{
             .{ .n = "Abjuror", .w = 20 },
             .{ .n = "Tormentor", .w = 20 },
@@ -302,6 +327,8 @@ const TRAITS = [_]Trait{
             .{ .n = "Terminator", .w = 20 },
             .{ .n = "Banisher", .w = 20 },
         },
+        .max_used = 3,
+        .require_kind = &.{ .Arch, .Soldier },
     },
     .{ .power = 3, .name = "Spell: Rolling Boulder", .kind = .Foo },
     .{ .power = 3, .name = "Spell: Basalt stuff", .kind = .Foo },
@@ -311,17 +338,71 @@ const TRAITS = [_]Trait{
         .name = "Slow",
         .kind = .{ .Status = &[_]types.StatusDataInfo{.{ .status = .Slow, .duration = .Prm }} },
         .max_used = 2,
+        .prefer_names = &[_]Trait.Preference{
+            .{ .n = "Grim", .w = 10 },
+        },
+        // TODO: Prefer: extra armor or HP
+        .require_kind = &.{ .Arch, .Soldier },
     },
-    .{ .power = -2, .name = "Less Melee/Missile", .kind = .{ .Stat = .{ .Melee = -20, .Missile = -20 } }, .max_used = 2 },
-    .{ .power = -2, .name = "Less Evade", .kind = .{ .Stat = .{ .Evade = -10 } }, .max_used = 2 },
-    .{ .power = 3, .name = "Placeholder", .kind = .Foo },
-    .{ .power = 3, .name = "Placeholder", .kind = .Foo },
-    .{ .power = 3, .name = "Placeholder", .kind = .Foo },
-    .{ .power = 3, .name = "Placeholder", .kind = .Foo },
-    .{ .power = 3, .name = "Placeholder", .kind = .Foo },
-    .{ .power = 3, .name = "Placeholder", .kind = .Foo },
-    .{ .power = 3, .name = "Placeholder", .kind = .Foo },
-    .{ .power = 3, .name = "Placeholder", .kind = .Foo },
+    .{
+        .power = -2,
+        .name = "Less Melee/Missile",
+        .kind = .{ .Stat = .{ .Melee = -20, .Missile = -20 } },
+        .max_used = 2,
+        .require_kind = &.{ .Arch, .Soldier },
+    },
+    .{
+        .power = -2,
+        .name = "Less Evade",
+        .kind = .{ .Stat = .{ .Evade = -10 } },
+        .max_used = 2,
+        .require_kind = &.{ .Arch, .Soldier },
+    },
+
+    // Fluff generic spells, taken from other monsters (and increased in power)
+    .{
+        .power = 2,
+        .name = "Spell: Iron Bolt",
+        .kind = .{ .Spell = .{ .MP_cost = 4, .spell = &spells.BOLT_IRON, .power = 3 } },
+        .prefer_names = &[_]Trait.Preference{
+            .{ .n = "Iron", .w = 20 },
+            .{ .n = "Archer", .w = 10 },
+        },
+    },
+    .{ .power = 2, .name = "Spell: Spark", .kind = .{ .Spell = .{ .MP_cost = 4, .spell = &spells.BOLT_LIGHTNING, .power = 3 } } },
+    .{
+        .power = 4,
+        .name = "Spell: Crystal bolt",
+        .kind = .{ .Spell = .{ .MP_cost = 6, .spell = &spells.BOLT_CRYSTAL, .power = 3 } },
+        .prefer_names = &[_]Trait.Preference{.{ .n = "Archer", .w = 15 }},
+        .require_kind = &.{.Arch}, // Thematic reasons. Only archangels are worthy of the Ancient Mage's signature spell!!
+    },
+    .{ .power = 4, .name = "Spell: Para", .kind = .{ .Spell = .{ .MP_cost = 6, .spell = &spells.BOLT_PARALYSE, .power = 3 } } },
+    .{
+        .power = 2,
+        .name = "Spell: Fiery javelin",
+        .kind = .{ .Spell = .{ .MP_cost = 4, .spell = &spells.BOLT_FIERY_JAVELIN, .power = 3 } },
+        .prefer_names = &[_]Trait.Preference{
+            .{ .n = "Boiling", .w = 20 },
+            .{ .n = "Blazing", .w = 20 },
+            .{ .n = "Molten", .w = 20 },
+            .{ .n = "Cinder", .w = 20 },
+            .{ .n = "Furnace", .w = 20 },
+        },
+    },
+    // This one might be problematic... need to check if this causes angels to kill each other.
+    .{
+        .power = 2,
+        .name = "Spell: Fireball",
+        .kind = .{ .Spell = .{ .MP_cost = 3, .spell = &spells.BOLT_FIREBALL, .power = 2, .duration = 8 } },
+        .prefer_names = &[_]Trait.Preference{
+            .{ .n = "Boiling", .w = 20 },
+            .{ .n = "Blazing", .w = 20 },
+            .{ .n = "Molten", .w = 20 },
+            .{ .n = "Cinder", .w = 20 },
+            .{ .n = "Furnace", .w = 20 },
+        },
+    },
 };
 
 pub const AngelKind = enum {
@@ -333,15 +414,15 @@ pub const AngelKind = enum {
         return switch (self) {
             .Follower => 4,
             .Soldier => 7,
-            .Arch => 10,
+            .Arch => 11,
         };
     }
 
     pub fn maxHP(self: @This()) usize {
         const variation: usize = switch (self) {
-            .Follower => 6,
-            .Soldier => 9,
-            .Arch => 12,
+            .Follower => 2,
+            .Soldier => 5,
+            .Arch => 10,
         };
         return 7 + rng.range(usize, variation / 2, variation);
     }
@@ -370,6 +451,14 @@ fn generateSingle(
     for (traits.slice()) |*i| i.weight = i.original_weight;
     for (names.slice()) |*i| i.weight = i.original_weight;
     for (tiles.slice()) |*i| i.weight = i.original_weight;
+
+    for (traits.slice()) |*trait|
+        if (trait.require_kind) |requires| {
+            const meets_requirement = for (requires) |require| {
+                if (require == kind) break true;
+            } else false;
+            trait.weight = if (meets_requirement) trait.weight + 10 else 0;
+        };
 
     var power = kind.power();
     var chosen_traits = StackBuffer(Trait, 16).init(null);
@@ -420,7 +509,7 @@ fn generateSingle(
             if (require != kind) {
                 name.weight = 0;
             } else {
-                name.weight += 20;
+                name.weight += 40;
             };
 
     while (adj == null or noun == null) {
@@ -469,7 +558,7 @@ fn generateSingle(
     const maxHP = kind.maxHP();
 
     // Done, print it
-    std.log.info("*** {s} {s} ({u}) ({} HP)", .{ adj.?.str, noun.?.str, chosen_tile.ch, maxHP });
+    std.log.info("*** {s}: {s} {s} ({u}) ({} HP)", .{ @tagName(kind), adj.?.str, noun.?.str, chosen_tile.ch, maxHP });
     for (chosen_traits.constSlice()) |chosen_trait|
         std.log.info("  - Trait: {s} ({})", .{ chosen_trait.name, chosen_trait.kind });
 
@@ -490,13 +579,18 @@ pub fn init() void {
     var names = StackBuffer(Name, NAMES.len).init(&NAMES);
     var tiles = StackBuffer(Char, CHARS.len).init(&CHARS);
 
-    generateSingle(undefined, .Follower, &traits, &names, &tiles);
-    generateSingle(undefined, .Follower, &traits, &names, &tiles);
-    generateSingle(undefined, .Soldier, &traits, &names, &tiles);
-    generateSingle(undefined, .Soldier, &traits, &names, &tiles);
-    generateSingle(undefined, .Soldier, &traits, &names, &tiles);
+    // Generation order is deliberate. We want Archangels to have first priority
+    // for spells, in particular the ones which "return" power.
+    //
+    // Followers get leftovers.
+
     generateSingle(undefined, .Arch, &traits, &names, &tiles);
     generateSingle(undefined, .Arch, &traits, &names, &tiles);
+    generateSingle(undefined, .Soldier, &traits, &names, &tiles);
+    generateSingle(undefined, .Soldier, &traits, &names, &tiles);
+    generateSingle(undefined, .Soldier, &traits, &names, &tiles);
+    generateSingle(undefined, .Follower, &traits, &names, &tiles);
+    generateSingle(undefined, .Follower, &traits, &names, &tiles);
 }
 
 pub fn deinit() void {}

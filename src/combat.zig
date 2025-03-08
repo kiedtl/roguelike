@@ -380,7 +380,7 @@ pub fn disruptIndividualUndead(mob: *Mob, candles: usize) void {
     }
 }
 
-pub fn abjureEarthDemon(angel: *Mob, mob: *Mob) void {
+pub fn rebukeEarthDemon(angel: *Mob, mob: *Mob) void {
     assert(std.mem.eql(u8, mob.id, "revgenunkim"));
 
     // Needed for lose_martial effects
