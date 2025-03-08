@@ -931,6 +931,7 @@ pub const Material = struct {
 
     // Tile used to represent walls.
     color_fg: u32,
+    color_fg_dance: ?colors.ColorDance = null,
     color_bg: ?u32,
     sprite: ?font.Sprite = .S_G_Wall_Rough,
     color_sfg: ?u32 = null,
@@ -5724,13 +5725,40 @@ pub const Tile = struct {
     }
 
     pub fn animateAs(coord: Coord) ?ui.CellAnimation {
+        const material = state.dungeon.at(coord).material;
         const terrain = state.dungeon.terrainAt(coord);
 
         const there_is_gas = for (state.dungeon.atGas(coord)) |q| {
             if (q > 0) break true;
         } else false;
 
-        if (state.dungeon.at(coord).mob) |mob| {
+        if (state.dungeon.at(coord).type == .Wall and material.color_fg_dance != null) {
+            // FIXME: duplicated code between here and terrain
+            //
+            const rand = ui.uirng.random();
+            var cells = StackBuffer(display.Cell, 4).init(null);
+            const count: usize = if (rng.onein(7)) 3 else 2;
+
+            for (0..count) |_| {
+                const fg = material.color_fg_dance.?.apply(material.color_fg, rand);
+
+                cells.append(.{
+                    .ch = materials.tileFor(coord, material.tileset),
+                    .fg = fg,
+                    .bg = material.color_bg orelse colors.BG,
+                    .sch = material.sprite,
+                    .sfg = fg, //material.color_sfg orelse fg,
+                    .sbg = material.color_sbg orelse material.color_bg orelse colors.BG,
+                }) catch err.wat();
+            }
+
+            return ui.CellAnimation{
+                .kind = ui.CellAnimation.Kind{
+                    .RotateCells = .{ .cells = cells },
+                },
+                .interval = 15,
+            };
+        } else if (state.dungeon.at(coord).mob) |mob| {
             var ch: ?u21 = null;
             var interval: usize = 25;
 
