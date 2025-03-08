@@ -219,9 +219,9 @@ pub const BLAST_DISRUPTING = Spell{
 
 // Zap animation used despite this being a smite spell... lol
 //
-pub const CAST_ABJURE_EARTH_DEMON = Spell{
-    .id = "sp_abjure_earth_demon",
-    .name = "abjure earth demon",
+pub const CAST_REBUKE_EARTH_DEMON = Spell{
+    .id = "sp_rebuke_earth_demon",
+    .name = "rebuke earth demon",
     .animation = .{ .Particles = .{ .name = "lzap-green" } },
     .cast_type = .Smite,
     .smite_target_type = .{ .SpecificMob = "revgenunkim" },
@@ -231,7 +231,7 @@ pub const CAST_ABJURE_EARTH_DEMON = Spell{
             fn f(caster_coord: Coord, _: SpellOptions, target_coord: Coord) void {
                 const caster = state.dungeon.at(caster_coord).mob.?;
                 const target = state.dungeon.at(target_coord).mob.?;
-                combat.abjureEarthDemon(caster, target);
+                combat.rebukeEarthDemon(caster, target);
             }
         }.f },
     },

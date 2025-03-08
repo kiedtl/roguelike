@@ -2262,7 +2262,7 @@ const REVGENUNKIM_CLAW_WEAPON = Weapon{
 };
 
 // XXX: 2025-03-06: Dear future me: For the love of all that is Holy, PLEASE
-// update src/combat/abjureEarthDemon() when rebalancing this creature in the
+// update src/combat/rebukeEarthDemon() when rebalancing this creature in the
 // future.
 //
 pub const RevgenunkimTemplate = MobTemplate{
