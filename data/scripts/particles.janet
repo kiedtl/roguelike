@@ -22,12 +22,15 @@
 (def ROUND_CHARS "oO0@CQ") # Unicode not supported :( "°ØøÖÓÕÔŌQCÇ"
 (def ASCII_CHARS "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz`1234567890-=~!@#$%^&*()_+[]\\{}|;':\",./<>?")
 
+(def CONCRETE 0x9f8f74)
+(def LIGHT_CONCRETE 0xefdfc4)
 (def GOLD 0xddb733)
 (def DARK_GOLD  0x442700)
 (def LIGHT_GOLD 0xfdd753)
 (def ELEC_BLUE1 0x9fefff)
 (def ELEC_BLUE2 0x7fc7ef)
 (def GREEN 0x57cf00)
+(def VDARK_GREEN 0x075f00)
 (def LIGHT_GREEN 0x37af00)
 (def BG 0x0f0e0b)
 (def FIRE_COLORS [
@@ -716,6 +719,7 @@
   "lzap-electric" @[ (template-lingering-zap "AEFHIKLMNTYZ13457*-=+~?!@#%&" 0x9fefff 0x7fc7ef 7) ]
   "lzap-golden" @[ (template-lingering-zap ".#.#.#." LIGHT_GOLD GOLD 12) ]
   "lzap-green" @[ (template-lingering-zap ROUND_CHARS GREEN LIGHT_GREEN 7) ]
+  "lzap-green-concrete" @[ (template-lingering-zap ".#%," CONCRETE LIGHT_GREEN 4) ]
   "explosion-simple" @[ (template-explosion) ]
   "explosion-fire1" @[ (template-explosion :embers? false :die-out? false :speed-variation-preset :2 :color1 0xff9f00) ]
   "lzap-fire-quick" @[ (template-lingering-zap " " 0x770f0f 0 4) ]
@@ -845,6 +849,29 @@
     :spawn-count 2
     :lifetime 0
     :get-spawn-speed (Emitter :SSPD-min-sin-ticks)
+   })]
+  "zap-speeding-bolt" @[(new-emitter @{
+    :particle (new-particle @{
+      :tile (new-tile @{ :ch " " :fg GREEN :bg LIGHT_GREEN :bg-mix 0.6 })
+      :speed 1.2
+      :triggers @[
+        [[:COND-true] [:TRIG-set-glyph [:overall-cardinal-angle ["╿" "╽" "╾" "╼"]]]]
+        [[:COND-true] [:TRIG-create-emitter (new-emitter @{
+          :particle (new-particle @{
+            :tile (new-tile @{ :ch "0" :fg GREEN :bg GREEN :bg-mix 0.5 })
+            :speed 0
+            :lifetime 6
+            :triggers @[
+              [[:COND-true] [:TRIG-scramble-glyph "L1!@#$%^*|\\][-+_"]]
+              [[:COND-true] [:TRIG-modify-color :bg "a" [:completed-lifetime 0.5]]]
+              [[:COND-parent-dead? 2] [:TRIG-modify-color :fg "rgb" [:fixed-factor 0.8]]]
+            ]
+          })
+          :lifetime 0
+        })]]
+      ]
+    })
+    :lifetime 0
    })]
   "zap-fire-trails" @[(new-emitter @{
     :particle (new-particle @{
@@ -1407,6 +1434,23 @@
   "glow-blue-dblue" @[ (template-lerp-single 0x11ddff 0x001e85) ]
   "glow-pink"       @[ (template-lerp-single 0xff9999 0x333333) ]
 
+  "zap-awaken-stone" @[
+    (new-emitter @{
+      :particle (new-particle @{
+        :tile (new-tile @{ :ch "Z" :fg GREEN :bg LIGHT_GREEN :bg-mix 0.7 })
+        :speed 1
+        :triggers @[
+          [[:COND-true] [:TRIG-lerp-color :bg CONCRETE "rgb" [:completed-journey]]]
+          [[:COND-percent? 60] [:TRIG-scramble-glyph ".#"]]
+          [[:COND-reached-target? true]
+           [:TRIG-create-emitter
+            (template-chargeover "#.," CONCRETE VDARK_GREEN :direction :out :speed 0.5 :lifetime 12)
+          ]]
+        ]
+      })
+      :lifetime 2
+    })
+  ]
   "zap-torment" @[
     (template-chargeover ASCII_CHARS 0xffd700 0x000066 :direction :in :which :origin :speed 0.5 :lifetime 2 :maxdist 4 :mindist 3)
     (new-emitter-from @{ :birth-delay 2 } (template-lerp-single 0x000066 0xffd700 :lifetime 8 :which :origin))

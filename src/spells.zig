@@ -507,6 +507,34 @@ pub const BOLT_BOLT = Spell{
     },
 };
 
+pub const BOLT_SPEEDING = Spell{
+    .id = "sp_speeding",
+    .name = "speeding bolt",
+    .cast_type = .Bolt,
+    .bolt_dodgeable = true,
+    .bolt_missable = true,
+    .bolt_multitarget = false,
+    .animation = .{ .Particles = .{ .name = "zap-speeding-bolt" } },
+    .noise = .Medium,
+    .effects = &[_]Effect{.{
+        .Custom = struct {
+            fn f(caster_coord: Coord, _: SpellOptions, target: Coord) void {
+                const damage = math.clamp(target.distance(caster_coord) / 2, 1, 5);
+                state.dungeon.at(target).mob.?.takeDamage(.{
+                    .amount = damage,
+                    .source = .RangedAttack,
+                    .by_mob = state.dungeon.at(caster_coord).mob,
+                    .kind = .Irresistible,
+                    .blood = false,
+                }, .{
+                    .noun = "The speeding bolt",
+                    .strs = &items.PIERCING_STRS,
+                });
+            }
+        }.f,
+    }},
+};
+
 pub const CAST_MASS_DISMISSAL = Spell{
     .id = "sp_mass_dismissal",
     .name = "mass dismissal",
@@ -1167,36 +1195,42 @@ fn _resurrectFrozen(_: Coord, opts: SpellOptions, coord: Coord) void {
     }
 }
 
-pub const CAST_POLAR_LAYER = Spell{
-    .id = "sp_polar_casing",
-    .name = "polar casing",
-    .animation = .{ .Particles = .{ .name = "chargeover-blue-out" } },
+pub const CAST_AWAKEN_STONE = Spell{
+    .id = "sp_awaken_stone",
+    .name = "awaken stone",
+    .animation = .{ .Particles = .{ .name = "zap-awaken-stone" } },
     .cast_type = .Smite,
     .smite_target_type = .Mob,
-    .check_has_effect = _hasEffectPolarLayer,
-    .effects = &[_]Effect{.{ .Custom = _effectPolarLayer }},
-    .checks_will = false,
-};
-fn _hasEffectPolarLayer(_: *Mob, _: SpellOptions, target: Coord) bool {
-    return state.dungeon.neighboringWalls(target, false) > 0;
-}
-fn _effectPolarLayer(_: Coord, opts: SpellOptions, coord: Coord) void {
-    const mob = state.dungeon.at(coord).mob.?;
-    for (&CARDINAL_DIRECTIONS) |d| if (coord.move(d, state.mapgeometry)) |neighbor| {
-        if (state.dungeon.at(neighbor).type == .Wall) {
-            state.dungeon.at(neighbor).type = .Floor;
-            // FIXME: passing allocator directly is anti-pattern?
-            const w = mobs.placeMob(state.alloc, &mobs.LivingIceTemplate, neighbor, .{});
-            w.addStatus(.Lifespan, 0, .{ .Tmp = opts.power });
+    .check_has_effect = struct {
+        fn f(_: *Mob, _: SpellOptions, target: Coord) bool {
+            return state.dungeon.neighboringWalls(target, false) > 0;
         }
-    };
+    }.f,
+    .effects = &[_]Effect{.{
+        .Custom = struct {
+            fn f(caster_coord: Coord, opts: SpellOptions, coord: Coord) void {
+                const caster = state.dungeon.at(caster_coord).mob.?;
 
-    if (mob == state.player) {
-        state.message(.SpellCast, "The walls near you transmute into living ice!", .{});
-    } else if (state.player.cansee(mob.coord)) {
-        state.message(.SpellCast, "The walls near the {s} transmute into living ice!", .{mob.displayName()});
-    }
-}
+                const mob = state.dungeon.at(coord).mob.?;
+                for (&CARDINAL_DIRECTIONS) |d| if (coord.move(d, state.mapgeometry)) |neighbor| {
+                    if (state.dungeon.at(neighbor).type == .Wall) {
+                        state.dungeon.at(neighbor).type = .Floor;
+                        const w = mobs.placeMob(state.alloc, &mobs.LivingStoneTemplate, neighbor, .{});
+                        w.faction = caster.faction;
+                        w.addStatus(.Lifespan, 0, .{ .Tmp = opts.power + 1 });
+                        ai.updateEnemyKnowledge(w, mob, null);
+                    }
+                };
+
+                if (mob == state.player) {
+                    state.message(.SpellCast, "The walls near you awaken!", .{});
+                } else if (state.player.cansee(mob.coord)) {
+                    state.message(.SpellCast, "The walls near {} transmute into living stone!", .{mob});
+                }
+            }
+        }.f,
+    }},
+};
 
 pub const CAST_RESURRECT_NORMAL = Spell{
     .id = "sp_raise",

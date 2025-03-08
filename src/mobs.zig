@@ -1881,16 +1881,18 @@ pub const TorturerNecromancerTemplate = MobTemplate{
 //     .armor = items.HauberkArmor,
 // };
 
-pub const LivingIceTemplate = MobTemplate{
+pub const LivingStoneTemplate = MobTemplate{
     .mob = .{
-        .id = "living_ice",
+        .id = "living_stone",
         .species = &Species{
-            .name = "living ice",
+            .name = "living stone",
             .default_attack = &Weapon{
-                .name = "icy blast",
+                .name = "strike",
                 .damage = 1,
                 .strs = &[_]DamageStr{
-                    items._dmgstr(10, "hit", "hits", ""),
+                    items._dmgstr(8, "hit", "hits", ""),
+                    items._dmgstr(14, "smite", "smites", ""),
+                    items._dmgstr(15, "strike", "strikes", ""),
                 },
             },
         },
@@ -1907,16 +1909,15 @@ pub const LivingIceTemplate = MobTemplate{
         .deg360_vision = true,
         .no_show_fov = true,
         .immobile = true,
-        .max_HP = 12,
+        .max_HP = 6,
         .memory_duration = 1,
 
         .life_type = .Construct,
-
-        .blood = .Water,
+        .blood = null,
         .corpse = .Wall,
 
-        .innate_resists = .{ .rFire = -50, .rElec = RESIST_IMMUNE, .Armor = 50, .rFume = 100 },
-        .stats = .{ .Willpower = 5, .Melee = 100, .Vision = 2 },
+        .innate_resists = .{ .rFire = RESIST_IMMUNE, .rElec = RESIST_IMMUNE, .rAcid = -50, .rHoly = RESIST_IMMUNE, .Armor = 50, .rFume = 100 },
+        .stats = .{ .Willpower = 2, .Melee = 100, .Vision = 1 },
     },
     // This status should be added by whatever spell created it.
     //.statuses = &[_]StatusDataInfo{.{ .status = .Lifespan, .duration = .{.Tmp=10} }},
@@ -2244,7 +2245,7 @@ pub const AngelTemplate = MobTemplate{
         .memory_duration = 15,
 
         .spells = &[_]SpellOptions{
-            .{ .MP_cost = 3, .spell = &spells.BLAST_DISRUPTING, .power = 2 },
+            .{ .MP_cost = 3, .spell = &spells.CAST_AWAKEN_STONE, .power = 2 },
         },
         .max_MP = 3,
         .faction = .Holy,
@@ -2442,6 +2443,7 @@ pub const MOBS = [_]MobTemplate{
     SkeletalArbalistTemplate,
     TorturerNecromancerTemplate,
     // FrozenFiendTemplate,
+    LivingStoneTemplate,
     BallLightningTemplate,
     SpectralSwordTemplate,
     SpectralSabreTemplate,

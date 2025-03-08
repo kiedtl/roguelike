@@ -14,7 +14,7 @@
 :notraps
 :priority 100
 
-@a Cmons angel_procgen_template ()
+@a Cmons angel_procgen_template ([facing]East)
 @v M bone_rat
 
 @0 i potion_smoke
@@ -24,10 +24,9 @@
 
 #####****#####
 #..≈≈≈≈≈≈≈≈≈.#
-#..≈≈≈≈v≈≈≈≈.#
-#.≈≈≈≈≈≈≈≈v≈.#
-*.≈vv≈≈a≈vv≈.*
-#.≈≈≈≈≈≈≈vv≈.#
+#.≈##≈≈≈≈≈v≈.#
+*.≈vv≈≈a≈v#≈.*
+#.≈##≈≈≈≈v#≈.#
 *..≈≈≈≈≈≈≈≈≈.*
 #.....@......#
 #............#

@@ -331,8 +331,11 @@ const TRAITS = [_]Trait{
         .require_kind = &.{ .Arch, .Soldier },
     },
     .{ .power = 3, .name = "Spell: Rolling Boulder", .kind = .Foo },
-    .{ .power = 3, .name = "Spell: Basalt stuff", .kind = .Foo },
-    .{ .power = 2, .name = "Spell: Speeding Bolt", .kind = .Foo },
+    .{
+        .power = 3,
+        .name = "Spell: Awaken Stone",
+        .kind = .{ .Spell = .{ .MP_cost = 5, .spell = &spells.CAST_AWAKEN_STONE, .power = 3 } },
+    },
     .{
         .power = -2,
         .name = "Slow",
@@ -376,6 +379,13 @@ const TRAITS = [_]Trait{
         .kind = .{ .Spell = .{ .MP_cost = 6, .spell = &spells.BOLT_CRYSTAL, .power = 3 } },
         .prefer_names = &[_]Trait.Preference{.{ .n = "Archer", .w = 15 }},
         .require_kind = &.{.Arch}, // Thematic reasons. Only archangels are worthy of the Ancient Mage's signature spell!!
+    },
+    .{
+        .power = 4,
+        .name = "Spell: Speeding bolt",
+        .kind = .{ .Spell = .{ .MP_cost = 5, .spell = &spells.BOLT_SPEEDING } },
+        .prefer_names = &[_]Trait.Preference{.{ .n = "Archer", .w = 15 }},
+        .require_kind = &.{ .Arch, .Soldier },
     },
     .{ .power = 4, .name = "Spell: Para", .kind = .{ .Spell = .{ .MP_cost = 6, .spell = &spells.BOLT_PARALYSE, .power = 3 } } },
     .{
@@ -466,23 +476,25 @@ fn generateSingle(
 
     while (power > 0 and tries > 0) : (tries -= 1) {
         const chosen_ind = rng.chooseInd2(Trait, traits.constSlice(), "weight");
-        const chosen = &traits.slice()[chosen_ind];
+        const chosen_ptr = &traits.slice()[chosen_ind];
+        const chosen = traits.slice()[chosen_ind];
 
         const new_power = @as(isize, @intCast(power)) - chosen.power;
         if (new_power < 0)
             continue;
         power = @intCast(new_power);
 
-        chosen_traits.append(chosen.*) catch err.wat();
+        chosen_traits.append(chosen) catch err.wat();
 
-        chosen.used_ctr += 1;
-        if (chosen.used_ctr >= chosen.max_used)
+        chosen_ptr.used_ctr += 1;
+        if (chosen_ptr.used_ctr >= chosen.max_used)
             _ = traits.orderedRemove(chosen_ind) catch err.wat()
         else
-            chosen.weight = 0;
+            chosen_ptr.weight = 0;
 
         if (chosen.prefer_names) |preferred_names| {
             for (preferred_names) |preference| {
+                // std.log.info("* {s} preferring {s}...", .{ chosen.name, preference.n });
                 const name_ind = for (names.constSlice(), 0..) |n, i| {
                     if (mem.eql(u8, n.str, preference.n)) break i;
                 } else {
@@ -514,13 +526,18 @@ fn generateSingle(
 
     while (adj == null or noun == null) {
         const chosen = rng.choose2(Name, names.constSlice(), "weight") catch err.wat();
+        // std.log.info("chose {s}, weight was {}, original weight was {}", .{ chosen.str, chosen.weight, chosen.original_weight });
         switch (chosen.kind) {
             .Noun => {
+                if (noun != null)
+                    continue;
                 if (adj != null and adj.?.forbid != null and mem.eql(u8, adj.?.forbid.?, chosen.str))
                     continue;
                 noun = chosen;
             },
             .Adj => {
+                if (adj != null)
+                    continue;
                 if (noun != null and noun.?.forbid != null and mem.eql(u8, noun.?.forbid.?, chosen.str))
                     continue;
                 adj = chosen;
