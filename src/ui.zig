@@ -1556,13 +1556,19 @@ fn _drawStr(_x: usize, _y: usize, endx: usize, str: []const u8, opts: DrawStrOpt
 }
 
 fn drawHUD(moblist: []const *Mob) void {
+    //const ts = std.time.milliTimestamp();
+
+    var arena = std.heap.ArenaAllocator.init(state.alloc);
+    defer arena.deinit();
+    // var counting = utils.CountingAllocator.init(arena.allocator());
+    // defer counting.deinit();
+    // const localalloc = counting.allocator();
+    const localalloc = arena.allocator();
+
     // const last_action_cost = if (state.player.activities.current()) |lastaction| b: {
     //     const spd = @floatFromInt(f64, state.player.speed());
     //     break :b (spd * @floatFromInt(f64, lastaction.cost())) / 100.0 / 10.0;
     // } else 0.0;
-
-    var arena = std.heap.ArenaAllocator.init(state.alloc);
-    defer arena.deinit();
 
     const endx = hud_win.main.width - 1;
 
@@ -1709,7 +1715,7 @@ fn drawHUD(moblist: []const *Mob) void {
             player: bool,
         };
 
-        var features = std.ArrayList(FeatureInfo).init(arena.allocator());
+        var features = std.ArrayList(FeatureInfo).init(localalloc);
         defer features.deinit();
 
         var dijk = dijkstra.Dijkstra.init(
@@ -1718,7 +1724,7 @@ fn drawHUD(moblist: []const *Mob) void {
             @intCast(state.player.stat(.Vision)),
             dijkstra.dummyIsValid,
             .{},
-            arena.allocator(),
+            localalloc,
         );
         defer dijk.deinit();
 
@@ -1828,7 +1834,7 @@ fn drawHUD(moblist: []const *Mob) void {
         const name = mob.displayName();
         _ = hud_win.main.drawTextAtf(0 + 3, y, "$c{s}$.", .{name}, .{ .bg = null });
 
-        const infoset = _getMonsInfoSet(mob, arena.allocator());
+        const infoset = _getMonsInfoSet(mob, localalloc);
         defer MobInfoLine.deinitList(infoset);
         //var info_x: isize = startx + 2 + @intCast(isize, name.len) + 2;
         var info_x: usize = endx - (infoset.items.len - 1);
@@ -1870,6 +1876,8 @@ fn drawHUD(moblist: []const *Mob) void {
     }
 
     hud_win.main.highlightMouseArea(colors.BG_L);
+
+    //std.log.info("Time taken: {} ms", .{std.time.milliTimestamp() - ts});
 }
 
 fn drawLog() void {
