@@ -2213,6 +2213,29 @@ pub const CopperRapierWeapon = Weapon.createCopperWeapon(&RapierWeapon, .{});
 
 // }}}
 
+// Angelic weapons. {{{
+//
+pub const AngelSword = Weapon{
+    .id = "sword_angelic",
+    .name = "heavy sword",
+    .damage = 4,
+    .martial = true,
+    .stats = .{},
+    .damage_kind = .Holy,
+    .strs = &SLASHING_STRS,
+};
+
+pub const AngelLance = Weapon{
+    .id = "sword_angelic",
+    .name = "blazing lance",
+    .damage = 3,
+    .martial = true,
+    .stats = .{},
+    .damage_kind = .Irresistible,
+    .strs = &SLASHING_STRS,
+};
+// }}}
+
 // Polearms {{{
 //
 

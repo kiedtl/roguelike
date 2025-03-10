@@ -1935,6 +1935,7 @@ pub const AI = struct {
         AwakesNearAllies, // If the monster is dormant, it awakes near allies.
         SocialFighter, // Won't fight unless there are aware allies around.
         SocialFighter2, // Like above, but doesn't need allies to be aware.
+        RandomSpells, // Casts any random spell, doesn't go from top to bottom
         CalledWithUndead, // Can be called by CAST_CALL_UNDEAD, even if not undead.
         NotCalledWithUndead, // Ignored by CAST_CALL_UNDEAD.
         FearsDarkness, // Tries very hard to stay in light areas (pathfinding).

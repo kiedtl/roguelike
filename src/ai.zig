@@ -1572,6 +1572,32 @@ pub fn alchemistFight(mob: *Mob) void {
     mageFight(mob);
 }
 
+fn castAnySpell(mob: *Mob) bool {
+    if (mob.ai.flag(.RandomSpells)) {
+        var possibles = std.ArrayList(struct { Coord, SpellOptions }).init(state.alloc);
+        for (mob.spells) |spell| {
+            if (spell.MP_cost > mob.MP) continue;
+            if (_findValidTargetForSpell(mob, spell)) |coord|
+                possibles.append(.{ coord, spell }) catch err.wat();
+        }
+        if (possibles.items.len == 0)
+            return false;
+        const coord, const spell =
+            rng.chooseUnweighted(struct { Coord, SpellOptions }, possibles.items);
+        spell.spell.use(mob, mob.coordMT(coord), coord, spell);
+        return true;
+    } else {
+        for (mob.spells) |spell| {
+            if (spell.MP_cost > mob.MP) continue;
+            if (_findValidTargetForSpell(mob, spell)) |coord| {
+                spell.spell.use(mob, mob.coordMT(coord), coord, spell);
+                return true;
+            }
+        }
+        return false;
+    }
+}
+
 pub fn mageFight(mob: *Mob) void {
     const target = closestEnemy(mob);
     mob.facing = mob.coord.closestDirectionTo(target.mob.coord, state.mapgeometry);
@@ -1595,13 +1621,8 @@ pub fn mageFight(mob: *Mob) void {
         }
     }
 
-    for (mob.spells) |spell| {
-        if (spell.MP_cost > mob.MP) continue;
-        if (_findValidTargetForSpell(mob, spell)) |coord| {
-            spell.spell.use(mob, mob.coordMT(coord), coord, spell);
-            return;
-        }
-    }
+    if (castAnySpell(mob))
+        return;
 
     switch (mob.ai.spellcaster_backup_action) {
         .Melee => meleeFight(mob),
@@ -1972,19 +1993,12 @@ pub fn _Job_ATK_Homing(homer: *Mob, job: *AIJob) AIJob.JStatus {
             if (is_blast) {
                 if (state.player.canSeeMob(me))
                     state.message(.SpellCast, "{c} explodes!!", .{me});
-
-                // Do some retarded hackery so that the blast doesn't affect the caster.
-                state.dungeon.at(me.coord).mob = null;
-
                 spells.BLAST_HELLFIRE.use(me, me.coord, me.coord, .{
                     .power = spells.CAST_ROLLING_BOULDER_DAMAGE,
                     .free = true,
                     .MP_cost = 0,
                     .no_message = true,
                 });
-
-                // Fix the retarded hackery...
-                state.dungeon.at(me.coord).mob = me;
             } else {
                 target.takeDamage(.{
                     .amount = spells.CAST_ROLLING_BOULDER_DAMAGE,

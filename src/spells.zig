@@ -191,6 +191,7 @@ pub const BLAST_DISRUPTING = Spell{
     .animation = .{ .Particles = .{ .name = "explosion-green" } },
     .cast_type = .{ .Blast = .{ .aoe = BLAST_DISRUPTING_AOE } },
     .smite_target_type = .Self,
+    .checks_will = true,
     .check_has_effect = struct {
         // There must be hostile undead visible and in range.
         //
@@ -706,60 +707,44 @@ fn _effectSummonEnemy(caster: Coord, _: SpellOptions, coord: Coord) void {
     }
 }
 
-pub const CAST_AURA_DISPERSAL = Spell{
+pub const BLAST_DISPERSAL_AOE = 2;
+pub const BLAST_DISPERSAL = Spell{
     .id = "sp_dismissal_aura",
     .name = "aura of dispersal",
-    .cast_type = .Smite,
+    .cast_type = .{ .Blast = .{ .aoe = BLAST_DISPERSAL_AOE, .avoids_allies = true } },
     .smite_target_type = .Self,
     .check_has_effect = _hasEffectAuraDispersal,
-    .noise = .Quiet,
+    .noise = .Silent,
     .effects = &[_]Effect{.{ .Custom = _effectAuraDispersal }},
 };
-fn _hasEffectAuraDispersal(caster: *Mob, _: SpellOptions, target: Coord) bool {
-    for (&DIRECTIONS) |d| if (target.move(d, state.mapgeometry)) |neighbor| {
-        if (state.dungeon.at(neighbor).mob) |mob|
-            if (mob.isHostileTo(caster)) {
-                return true;
-            };
-    };
-    return false;
+fn _hasEffectAuraDispersal(caster: *Mob, _: SpellOptions, _: Coord) bool {
+    return ai.closestEnemy(caster).mob.distance(caster) <= BLAST_DISPERSAL_AOE;
 }
-fn _effectAuraDispersal(caster: Coord, _: SpellOptions, _: Coord) void {
-    const caster_mob = state.dungeon.at(caster).mob.?;
-    var had_visible_effect = false;
-    for (&DIRECTIONS) |d| if (caster.move(d, state.mapgeometry)) |neighbor| {
-        if (state.dungeon.at(neighbor).mob) |mob|
-            if (mob.isHostileTo(caster_mob)) {
-                // Find a new home
-                var new: ?Coord = null;
-                var farthest_dist: usize = 0;
-                for (caster_mob.fov, 0..) |row, y| {
-                    for (row, 0..) |cell, x| {
-                        const fitem = Coord.new2(caster_mob.coord.z, x, y);
-                        const dist = fitem.distance(caster);
-                        if (cell == 0 or dist == 1)
-                            continue;
-                        if (state.is_walkable(fitem, .{ .right_now = true })) {
-                            if (dist > farthest_dist) {
-                                farthest_dist = dist;
-                                new = fitem;
-                            }
-                        }
+fn _effectAuraDispersal(caster_coord: Coord, _: SpellOptions, target_coord: Coord) void {
+    const caster = state.dungeon.at(caster_coord).mob.?;
+    if (state.dungeon.at(target_coord).mob) |mob| {
+        // Find a new home
+        var new: ?Coord = null;
+        var farthest_dist: usize = 0;
+        for (caster.fov, 0..) |row, y| {
+            for (row, 0..) |cell, x| {
+                const fitem = Coord.new2(caster.coord.z, x, y);
+                const dist = fitem.distance(caster_coord);
+                if (cell == 0 or dist == 1)
+                    continue;
+                if (state.is_walkable(fitem, .{ .right_now = true })) {
+                    if (dist > farthest_dist) {
+                        farthest_dist = dist;
+                        new = fitem;
                     }
                 }
-                if (new) |newcoord| {
-                    _ = mob.teleportTo(newcoord, null, true, false);
-                    mob.addStatus(.Daze, 0, .{ .Tmp = 2 });
-                    if (state.player.cansee(mob.coord) or state.player.cansee(caster))
-                        had_visible_effect = true;
-                }
-            };
-    };
-
-    if (had_visible_effect)
-        state.message(.SpellCast, "Space bends horribly around the {s}!", .{
-            caster_mob.displayName(),
-        });
+            }
+        }
+        if (new) |newcoord| {
+            _ = mob.teleportTo(newcoord, null, true, false);
+            mob.addStatus(.Daze, 0, .{ .Tmp = 3 });
+        }
+    }
 }
 
 // pub const CAST_CONJ_SPECTRAL_SWORD = Spell{
@@ -883,9 +868,22 @@ pub const BLAST_HELLFIRE_AOE = 2;
 pub const BLAST_HELLFIRE = Spell{
     .id = "sp_hellfire_blast",
     .name = "hellfire blast",
-    .cast_type = .{ .Blast = .{ .aoe = BLAST_HELLFIRE_AOE } },
+    .cast_type = .{ .Blast = .{ .aoe = BLAST_HELLFIRE_AOE, .avoids_caster = true } },
     .animation = .{ .Particles = .{ .name = "explosion-hellfire", .target = .Origin } },
     .noise = .Loudest,
+    .check_has_effect = struct {
+        // There must be hostiles visible and in range.
+        //
+        fn f(caster: *Mob, _: SpellOptions, _: Coord) bool {
+            return for (caster.enemyList().items) |enemy| {
+                if (enemy.mob.innate_resists.rHoly <= 0 and
+                    enemy.mob.distance(caster) <= BLAST_HELLFIRE_AOE)
+                {
+                    break true;
+                }
+            } else false;
+        }
+    }.f,
     .effects = &[_]Effect{.{ .Damage = .{ .kind = .Holy, .msg = .{
         .noun = "The blast of hellfire",
         .strs = &[_]types.DamageStr{items._dmgstr(0, "engulfs", "engulfs", "")},
@@ -1080,6 +1078,7 @@ pub const BOLT_IRON = Spell{
     .name = "iron arrow",
     .cast_type = .Bolt,
     .bolt_dodgeable = true,
+    .bolt_missable = true,
     .bolt_multitarget = false,
     .animation = .{ .Particles = .{ .name = "zap-iron-inacc" } },
     .noise = .Medium,
@@ -1542,6 +1541,7 @@ pub const Spell = struct {
         Blast: struct {
             aoe: usize,
             avoids_allies: bool = false,
+            avoids_caster: bool = false,
             checks_will: bool = false,
         },
     },
@@ -1779,15 +1779,18 @@ pub const Spell = struct {
                 assert(target.eq(caster_coord));
 
                 var affected_tiles = StackBuffer(Coord, 128).init(null);
-                affected_tiles.append(caster_coord) catch err.wat();
+                if (!blast_opts.avoids_caster)
+                    affected_tiles.append(caster_coord) catch err.wat();
 
                 // Now we apply AOE effects if applicable
                 if (blast_opts.aoe > 1) {
                     var gen = utils.iterCircle(caster_coord, blast_opts.aoe);
-                    while (gen.next()) |aoecoord| {
-                        if (affected_tiles.linearSearch(aoecoord, Coord.eqNotInline) == null)
+                    while (gen.next()) |aoecoord|
+                        if (affected_tiles.linearSearch(aoecoord, Coord.eqNotInline) == null and
+                            (!aoecoord.eq(caster_coord) or !blast_opts.avoids_caster))
+                        {
                             affected_tiles.append(aoecoord) catch err.wat();
-                    }
+                        };
                 }
 
                 var farthest_affected = caster_coord;

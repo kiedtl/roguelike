@@ -1050,7 +1050,7 @@ pub const AncientMageTemplate = MobTemplate{
             //      summon nonvisible enemies. This is after BOLT_CRYSTAL to
             //      ensure that the mob doesn't waste time summoning enemies
             //      while a hundred goblins are trying to tear it apart.
-            .{ .MP_cost = 0, .spell = &spells.CAST_AURA_DISPERSAL },
+            .{ .MP_cost = 0, .spell = &spells.BLAST_DISPERSAL },
             .{ .MP_cost = 7, .spell = &spells.BOLT_CRYSTAL, .power = 3 },
             .{ .MP_cost = 0, .spell = &spells.CAST_MASS_DISMISSAL, .power = 15 },
             .{ .MP_cost = 9, .spell = &spells.CAST_SUMMON_ENEMY },
@@ -2305,13 +2305,14 @@ pub fn mkAngelTemplate(comptime id: []const u8) MobTemplate {
                 .is_fearless = true,
                 .is_curious = true,
                 .spellcaster_backup_action = .KeepDistance,
+                .flags = &[_]AI.Flag{.RandomSpells},
             },
-            .max_HP = 999,
             .memory_duration = 15,
-            .spells = &[_]SpellOptions{},
-            .faction = .Holy,
-            .life_type = .Spectral,
             .blood = null,
+            .life_type = .Spectral,
+            .faction = .Holy,
+
+            .max_HP = undefined,
         },
     };
 }
