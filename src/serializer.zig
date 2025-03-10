@@ -488,6 +488,18 @@ pub fn initPointerContainers() void {
 }
 
 pub fn serializeWorld() !void {
+    if (true)
+        @compileError(
+            \\ Stop, you forgot about Angels.
+            \\
+            \\ Mob serialization assumes that spell list will be immutable,
+            \\ but angels violate this principle. (Probably other fields that
+            \\ I'm forgetting now as well.)
+            \\
+            \\ In theory we can regenerate angels on deserialization just fine given the
+            \\ seed. But this will have to be tested.
+        );
+
     // var tar = try microtar.MTar.init("dump.tar", "w");
     // defer tar.deinit();
 

@@ -157,13 +157,13 @@ pub const Dummy_C_Immobile = MobTemplate{
     },
 };
 
-pub const MOBS = [_]MobTemplate{
-    Dummy_L_Immobile,
-    Dummy_L_Immobile_Omniscient,
-    Dummy_L_Meleedude,
-    Dummy_L_Javelineer,
-    Dummy_L_Javelineer_SF,
-    Dummy_L_Javelineer_SF2,
-    Dummy_L_Ignored,
-    Dummy_C_Immobile,
+pub const MOBS = [_]*const MobTemplate{
+    &Dummy_L_Immobile,
+    &Dummy_L_Immobile_Omniscient,
+    &Dummy_L_Meleedude,
+    &Dummy_L_Javelineer,
+    &Dummy_L_Javelineer_SF,
+    &Dummy_L_Javelineer_SF2,
+    &Dummy_L_Ignored,
+    &Dummy_C_Immobile,
 };
