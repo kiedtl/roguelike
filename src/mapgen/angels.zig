@@ -6,6 +6,7 @@ const assert = std.debug.assert;
 const colors = @import("../colors.zig");
 const err = @import("../err.zig");
 const gas = @import("../gas.zig");
+const items = @import("../items.zig");
 const mobs = @import("../mobs.zig");
 const rng = @import("../rng.zig");
 const spells = @import("../spells.zig");
@@ -13,14 +14,22 @@ const state = @import("../state.zig");
 const surfaces = @import("../surfaces.zig");
 const types = @import("../types.zig");
 
-const SpellOptions = spells.SpellOptions;
+const AI = types.AI;
 const Machine = types.Machine;
+const minmax = types.minmax;
+const MinMax = types.MinMax;
 const MobTemplate = mobs.MobTemplate;
 const Mob = types.Mob;
 const Resistance = types.Resistance;
+const SpellOptions = spells.SpellOptions;
 const StackBuffer = @import("../buffer.zig").StackBuffer;
 const Stat = types.Stat;
 const Terrain = surfaces.Terrain;
+
+const DEFAULT_ARMOR = 30;
+const DEFAULT_RESIST = 0;
+const DEFAULT_AI_FLAGS = [_]AI.Flag{.RandomSpells};
+const MAX_SPELLS = 5; // Any more, and it doesn't fit on UI window :P
 
 const Filter = enum { Mob, Machine, Terrain };
 
@@ -45,14 +54,45 @@ const Name = struct {
     pub const Kind = enum { Adj, Noun };
 };
 
+// Sorry, I couldn't think of a better name.
+//
+// ... actually, "Category" would've worked?
+//
+// Each angel has a "vibe" that has various bits incremented as traits are
+// added. Certain traits are forbidden if the relevant vibe is too high or not
+// high enough.
+//
+const Vibe = enum {
+    // Missable bolts that rely on Missile% stat.
+    missiles,
+
+    // Non-missable AoE, blasts, smites, or bolts.
+    magic,
+
+    // Spells that check willpower.
+    hexes,
+
+    // Melee abilities. Martial, spikes, riposte, etc. Also spells that help
+    // melee ("Invigorate Self").
+    melee,
+
+    // Ally-focused spells.
+    protector,
+
+    pub const Range = struct { Vibe, MinMax(isize) };
+};
+
 const Trait = struct {
-    power: isize,
-    name: []const u8,
+    power: isize = 0,
+    name: []const u8 = "",
     kind: Kind,
+    vibes: []const Vibe = &[_]Vibe{},
     prefer_names: ?[]const Preference = null,
     prefer_tile: ?u21 = null,
     attached: ?*const Trait = null,
+    require_not_first: bool = false,
     require_kind: ?[]const AngelKind = null,
+    require_vibe_range: ?[]const Vibe.Range = null,
     max_used: usize = 1,
     original_weight: usize = 1,
 
@@ -69,6 +109,7 @@ const Trait = struct {
         Resist: std.enums.EnumFieldStruct(Resistance, isize, 0),
         Status: []const types.StatusDataInfo,
         Spell: spells.SpellOptions,
+        AIFlag: []const AI.Flag,
 
         // Mostly for debugging, so it's ok if this is incomplete
         //
@@ -84,27 +125,31 @@ const Trait = struct {
                 else => writer.writeAll(""),
             };
         }
-
-        pub fn apply(
-            self: @This(),
-            out: *MobTemplate,
-            out_statuses: *std.ArrayList(types.StatusDataInfo),
-            out_spells: *std.ArrayList(SpellOptions),
-        ) void {
-            switch (self) {
-                .Stat => |statset| {
-                    inline for (@typeInfo(@TypeOf(statset)).@"struct".fields) |field|
-                        @field(out.mob.stats, field.name) += @field(statset, field.name);
-                },
-                .Resist => |resists| {
-                    inline for (@typeInfo(@TypeOf(resists)).@"struct".fields) |field|
-                        @field(out.mob.innate_resists, field.name) += @field(resists, field.name);
-                },
-                .Spell => |sp| out_spells.append(sp) catch err.wat(),
-                .Status => |statuses| out_statuses.appendSlice(statuses) catch err.wat(),
-            }
-        }
     };
+
+    pub fn apply(
+        self: @This(),
+        out: *MobTemplate,
+        out_statuses: *std.ArrayList(types.StatusDataInfo),
+        out_spells: *std.ArrayList(SpellOptions),
+        out_ai_flags: *std.ArrayList(AI.Flag),
+    ) void {
+        if (self.attached) |attached|
+            attached.apply(out, out_statuses, out_spells, out_ai_flags);
+        switch (self.kind) {
+            .Stat => |statset| {
+                inline for (@typeInfo(@TypeOf(statset)).@"struct".fields) |field|
+                    @field(out.mob.stats, field.name) += @field(statset, field.name);
+            },
+            .Resist => |resists| {
+                inline for (@typeInfo(@TypeOf(resists)).@"struct".fields) |field|
+                    @field(out.mob.innate_resists, field.name) += @field(resists, field.name);
+            },
+            .Spell => |sp| out_spells.append(sp) catch err.wat(),
+            .Status => |statuses| out_statuses.appendSlice(statuses) catch err.wat(),
+            .AIFlag => |flags| out_ai_flags.appendSlice(flags) catch err.wat(),
+        }
+    }
 };
 
 pub fn s(st: types.Status, d: types.StatusDataInfo.Duration) types.StatusDataInfo {
@@ -232,6 +277,7 @@ const TRAITS = [_]Trait{
         .power = 3,
         .name = "Armor",
         .kind = .{ .Resist = .{ .Armor = 50 } },
+        .vibes = &.{.melee},
         .prefer_names = &[4]Trait.Preference{
             .{ .n = "Grim", .w = 10 },
             .{ .n = "Adamantine", .w = 10 },
@@ -249,17 +295,19 @@ const TRAITS = [_]Trait{
         },
     },
     .{
-        .power = 5,
+        .power = 4,
         .name = "Martial",
         .kind = .{ .Stat = .{ .Martial = 2 } },
+        .vibes = &.{.melee},
         .prefer_names = &[1]Trait.Preference{
             .{ .n = "Blademaster", .w = 20 },
         },
         // TODO: Prefer trait: riposte
     },
     .{
-        .power = 5,
+        .power = 2,
         .name = "Speed",
+        .vibes = &.{ .melee, .magic, .missiles }, // Can keep distances, close ranges, etc
         .kind = .{ .Stat = .{ .Speed = 50 } },
         // TODO: Forbid: Slow
     },
@@ -267,27 +315,58 @@ const TRAITS = [_]Trait{
         .power = 5,
         .name = "Spikes",
         .kind = .{ .Stat = .{ .Spikes = 2 } },
+        .vibes = &.{.melee},
         .prefer_names = &[2]Trait.Preference{
             .{ .n = "Spiked", .w = 20 },
             .{ .n = "Piercer", .w = 20 },
         },
     },
     .{
-        .power = 5,
+        .power = 4,
+        .name = "Burning+Fireproof",
+        .kind = .{ .Status = &[_]types.StatusDataInfo{.{ .status = .Riposte, .duration = .Prm }} },
+        .attached = &.{
+            .kind = .{ .Resist = .{ .rFire = mobs.RESIST_IMMUNE } },
+            .attached = &.{
+                .kind = .{ .AIFlag = &.{.DetectWithHeat} },
+            },
+        },
+        .prefer_names = &[_]Trait.Preference{
+            .{ .n = "Boiling", .w = 10 },
+            .{ .n = "Blazing", .w = 10 },
+            .{ .n = "Molten", .w = 10 },
+            .{ .n = "Cinder", .w = 10 },
+            .{ .n = "Furnace", .w = 10 },
+        },
+    },
+    .{
+        .power = 4,
         .name = "Riposte",
         .kind = .{ .Status = &[_]types.StatusDataInfo{.{ .status = .Riposte, .duration = .Prm }} },
+        .vibes = &.{.melee},
         .prefer_names = &[1]Trait.Preference{
             .{ .n = "Blademaster", .w = 20 },
         },
         // TODO: Prefer trait: martial
         // TODO: Forbid: loss of melee/martial
     },
-    .{ .power = 3, .name = "Spell: Disintegrate", .kind = .{ .Spell = .{ .MP_cost = 8, .spell = &spells.BOLT_DISINTEGRATE } } },
-    .{ .power = 2, .name = "Spell: Divine regeneration", .kind = .{ .Spell = .{ .MP_cost = 5, .power = 3, .spell = &spells.CAST_DIVINE_REGEN } } },
+    .{
+        .power = 3,
+        .name = "Spell: Disintegrate",
+        .kind = .{ .Spell = .{ .MP_cost = 8, .spell = &spells.BOLT_DISINTEGRATE } },
+        .vibes = &.{.magic},
+    },
+    .{
+        .power = 2,
+        .name = "Spell: Divine regeneration",
+        .kind = .{ .Spell = .{ .MP_cost = 5, .power = 3, .spell = &spells.CAST_DIVINE_REGEN } },
+        .vibes = &.{.protector},
+    },
     .{
         .power = 4,
         .name = "Spell: Hellfire",
         .kind = .{ .Spell = .{ .MP_cost = 5, .power = 3, .spell = &spells.BOLT_HELLFIRE } },
+        .vibes = &.{.magic},
         .max_used = 4,
         .original_weight = 3,
         .require_kind = &.{ .Arch, .Soldier },
@@ -303,6 +382,7 @@ const TRAITS = [_]Trait{
         .power = 3,
         .name = "Spell: Hellfire Blast",
         .kind = .{ .Spell = .{ .MP_cost = 5, .power = 2, .spell = &spells.BLAST_HELLFIRE } },
+        .vibes = &.{.magic},
         .require_kind = &.{ .Arch, .Soldier },
         .prefer_names = &[_]Trait.Preference{
             .{ .n = "Blazing", .w = 10 },
@@ -313,21 +393,29 @@ const TRAITS = [_]Trait{
         .power = 3,
         .name = "Spell: Electric Hellfire",
         .kind = .{ .Spell = .{ .MP_cost = 5, .power = 2, .spell = &spells.BOLT_HELLFIRE_ELECTRIC } },
+        .vibes = &.{.magic},
         .max_used = 2,
         .original_weight = 1,
         .require_kind = &.{ .Arch, .Soldier },
     },
-    .{ .power = 2, .name = "Spell: Enrage Angel", .kind = .{ .Spell = .{ .MP_cost = 7, .power = 16, .spell = &spells.CAST_ENRAGE_ANGEL } } },
+    .{
+        .power = 2,
+        .name = "Spell: Enrage Angel",
+        .kind = .{ .Spell = .{ .MP_cost = 7, .power = 16, .spell = &spells.CAST_ENRAGE_ANGEL } },
+        .vibes = &.{.protector},
+    },
     .{
         .power = 2,
         .name = "Spell: Crossbow",
         .kind = .{ .Spell = .{ .MP_cost = 3, .spell = &spells.BOLT_BOLT, .power = 1 } },
         .prefer_names = &[1]Trait.Preference{.{ .n = "Arbalist", .w = 20 }},
+        .vibes = &.{.missiles},
     },
     .{
         .power = 3,
         .name = "Spell: Disrupting Blast",
         .kind = .{ .Spell = .{ .MP_cost = 4, .spell = &spells.BLAST_DISRUPTING, .power = 8 } },
+        .vibes = &.{.hexes},
         .prefer_names = &[7]Trait.Preference{
             .{ .n = "Abjuror", .w = 20 },
             .{ .n = "Tormentor", .w = 20 },
@@ -339,9 +427,17 @@ const TRAITS = [_]Trait{
         },
     },
     .{
+        .power = 4,
+        .name = "Spell: Dispersing Blast",
+        .kind = .{ .Spell = .{ .MP_cost = 2, .spell = &spells.BLAST_DISPERSAL } },
+        .vibes = &.{.magic},
+        .require_vibe_range = &.{.{ .melee, minmax(isize, -99, 1) }},
+    },
+    .{
         .power = 3,
         .name = "Spell: Rebuke Earth Demon",
         .kind = .{ .Spell = .{ .MP_cost = 3, .spell = &spells.CAST_REBUKE_EARTH_DEMON, .power = 1 } },
+        .vibes = &.{.magic},
         .prefer_names = &[6]Trait.Preference{
             .{ .n = "Abjuror", .w = 20 },
             .{ .n = "Tormentor", .w = 20 },
@@ -357,6 +453,7 @@ const TRAITS = [_]Trait{
         .power = 1, // Very weak, since it leaves caster helpless in face of close/swarming enemies
         .name = "Spell: Rolling Boulder",
         .kind = .{ .Spell = .{ .MP_cost = 8, .spell = &spells.CAST_ROLLING_BOULDER, .power = 5 } },
+        .vibes = &.{.magic},
         // Make up (sort of) for the spell's downsides
         .attached = &.{
             .power = 0,
@@ -368,30 +465,53 @@ const TRAITS = [_]Trait{
         .power = 3,
         .name = "Spell: Awaken Stone",
         .kind = .{ .Spell = .{ .MP_cost = 5, .spell = &spells.CAST_AWAKEN_STONE, .power = 3 } },
+        .vibes = &.{.magic},
     },
     .{
-        .power = -2,
+        .power = -3,
         .name = "Slow",
         .kind = .{ .Status = &[_]types.StatusDataInfo{.{ .status = .Slow, .duration = .Prm }} },
+        .vibes = &.{ .missiles, .magic }, // Negative vibe
         .max_used = 2,
         .prefer_names = &[_]Trait.Preference{
             .{ .n = "Grim", .w = 10 },
         },
         // TODO: Prefer: extra armor or HP
+        .require_not_first = true,
         .require_kind = &.{ .Arch, .Soldier },
+        .require_vibe_range = &.{
+            .{ .missiles, minmax(isize, -99, 3) },
+            .{ .magic, minmax(isize, -99, 4) },
+            .{ .hexes, minmax(isize, -99, 4) },
+        },
     },
     .{
-        .power = -2,
-        .name = "Less Melee/Missile",
-        .kind = .{ .Stat = .{ .Melee = -20, .Missile = -20 } },
+        .power = -3,
+        .name = "Less Melee",
+        .kind = .{ .Stat = .{ .Melee = -20 } },
+        .vibes = &.{.melee}, // Negative vibe
         .max_used = 2,
-        .require_kind = &.{ .Arch, .Soldier },
+        .require_not_first = true,
+        .require_kind = &.{ .Arch, .Soldier }, // Followers already kinda weak
+        .require_vibe_range = &.{.{ .melee, minmax(isize, -99, 3) }},
+    },
+    .{
+        .power = -3,
+        .name = "Less Missile",
+        .kind = .{ .Stat = .{ .Melee = -20 } },
+        .vibes = &.{.missiles}, // Negative vibe
+        .max_used = 2,
+        .require_not_first = true,
+        .require_kind = &.{ .Arch, .Soldier }, // Followers already kinda weak
+        .require_vibe_range = &.{.{ .missiles, minmax(isize, -99, 3) }},
     },
     .{
         .power = -2,
         .name = "Less Evade",
         .kind = .{ .Stat = .{ .Evade = -10 } },
+        .vibes = &.{.melee}, // Negative vibe
         .max_used = 2,
+        .require_not_first = true,
         .require_kind = &.{ .Arch, .Soldier },
     },
 
@@ -400,31 +520,45 @@ const TRAITS = [_]Trait{
         .power = 2,
         .name = "Spell: Iron Bolt",
         .kind = .{ .Spell = .{ .MP_cost = 4, .spell = &spells.BOLT_IRON, .power = 3 } },
+        .vibes = &.{.missiles},
         .prefer_names = &[_]Trait.Preference{
             .{ .n = "Iron", .w = 20 },
             .{ .n = "Archer", .w = 10 },
         },
     },
-    .{ .power = 2, .name = "Spell: Spark", .kind = .{ .Spell = .{ .MP_cost = 4, .spell = &spells.BOLT_LIGHTNING, .power = 3 } } },
+    .{
+        .power = 2,
+        .name = "Spell: Spark",
+        .kind = .{ .Spell = .{ .MP_cost = 4, .spell = &spells.BOLT_LIGHTNING, .power = 3 } },
+        .vibes = &.{.magic},
+    },
     .{
         .power = 4,
         .name = "Spell: Crystal bolt",
         .kind = .{ .Spell = .{ .MP_cost = 6, .spell = &spells.BOLT_CRYSTAL, .power = 3 } },
+        .vibes = &.{.magic},
         .prefer_names = &[_]Trait.Preference{.{ .n = "Archer", .w = 15 }},
-        .require_kind = &.{.Arch}, // Thematic reasons. Only archangels are worthy of the Ancient Mage's signature spell!!
+        .require_kind = &.{.Arch}, // Thematic reasons. Only archangels are worthy of the Ancient Mage's signature spell.
     },
     .{
         .power = 4,
         .name = "Spell: Speeding bolt",
         .kind = .{ .Spell = .{ .MP_cost = 5, .spell = &spells.BOLT_SPEEDING } },
+        .vibes = &.{.missiles},
         .prefer_names = &[_]Trait.Preference{.{ .n = "Archer", .w = 15 }},
         .require_kind = &.{ .Arch, .Soldier },
     },
-    .{ .power = 4, .name = "Spell: Para", .kind = .{ .Spell = .{ .MP_cost = 6, .spell = &spells.BOLT_PARALYSE, .power = 3 } } },
+    .{
+        .power = 4,
+        .name = "Spell: Para",
+        .kind = .{ .Spell = .{ .MP_cost = 6, .spell = &spells.BOLT_PARALYSE, .power = 3 } },
+        .vibes = &.{.magic},
+    },
     .{
         .power = 2,
         .name = "Spell: Fiery javelin",
         .kind = .{ .Spell = .{ .MP_cost = 4, .spell = &spells.BOLT_FIERY_JAVELIN, .power = 3 } },
+        .vibes = &.{.missiles},
         .prefer_names = &[_]Trait.Preference{
             .{ .n = "Boiling", .w = 20 },
             .{ .n = "Blazing", .w = 20 },
@@ -438,6 +572,7 @@ const TRAITS = [_]Trait{
         .power = 2,
         .name = "Spell: Fireball",
         .kind = .{ .Spell = .{ .MP_cost = 3, .spell = &spells.BOLT_FIREBALL, .power = 2, .duration = 8 } },
+        .vibes = &.{.magic},
         .prefer_names = &[_]Trait.Preference{
             .{ .n = "Boiling", .w = 20 },
             .{ .n = "Blazing", .w = 20 },
@@ -470,11 +605,22 @@ pub const AngelKind = enum {
         return 7 + rng.range(usize, variation / 2, variation);
     }
 
-    pub fn stats(self: @This()) types.MobStat {
+    pub fn stats(self: @This()) types.Mob.MobStat {
         return switch (self) {
             .Follower => .{ .Melee = 80, .Missile = 70, .Evade = 10, .Willpower = 10 },
             .Soldier => .{ .Melee = 90, .Missile = 70, .Evade = 20, .Willpower = mobs.WILL_IMMUNE },
             .Arch => .{ .Melee = 100, .Missile = 80, .Evade = 25, .Willpower = mobs.WILL_IMMUNE },
+        };
+    }
+
+    pub fn resists(_: @This()) @FieldType(Mob, "innate_resists") {
+        return .{
+            .Armor = DEFAULT_ARMOR,
+            .rFire = DEFAULT_RESIST,
+            .rElec = DEFAULT_RESIST,
+            .rAcid = DEFAULT_RESIST,
+            .rHoly = mobs.RESIST_IMMUNE,
+            .rFume = 100,
         };
     }
 };
@@ -519,13 +665,34 @@ fn generateSingle(
         };
 
     var power = kind.power();
+    var vibes = std.enums.directEnumArrayDefault(Vibe, isize, 0, 0, .{});
     var chosen_traits = StackBuffer(Trait, 16).init(null);
     var tries: usize = 200;
 
-    while (power > 0 and tries > 0) : (tries -= 1) {
+    choose_traits: while (power > 0 and tries > 0) : (tries -= 1) {
         const chosen_ind = rng.chooseInd2(Trait, traits.constSlice(), "weight");
         const chosen_ptr = &traits.slice()[chosen_ind];
         const chosen = traits.slice()[chosen_ind];
+
+        if (chosen.require_not_first and traits.len == 0)
+            continue :choose_traits;
+
+        if (chosen.require_vibe_range) |required_vibes|
+            for (required_vibes) |required_vibe| {
+                const v = vibes[@intFromEnum(required_vibe.@"0")];
+                if (v < required_vibe.@"1".min or v > required_vibe.@"1".max)
+                    continue :choose_traits;
+            };
+
+        if (chosen.kind == .Spell) {
+            var already: usize = 0;
+            for (chosen_traits.constSlice()) |t|
+                if (t.kind == .Spell) {
+                    already += 1;
+                };
+            if (already >= MAX_SPELLS)
+                continue :choose_traits;
+        }
 
         const new_power = @as(isize, @intCast(power)) - chosen.power;
         if (new_power < 0)
@@ -539,6 +706,9 @@ fn generateSingle(
             _ = traits.orderedRemove(chosen_ind) catch err.wat()
         else
             chosen_ptr.weight = 0;
+
+        for (chosen.vibes) |vibe|
+            vibes[@intFromEnum(vibe)] += chosen.power;
 
         if (chosen.prefer_names) |preferred_names| {
             for (preferred_names) |preference| {
@@ -622,28 +792,62 @@ fn generateSingle(
     const chosen_tile = tiles.orderedRemove(chosen_tile_ind) catch err.wat();
     const maxHP = kind.maxHP();
     const maxMP = calcMaxMP(kind, traits.constSlice());
+    const stats = kind.stats();
+    const resists = kind.resists();
 
     // Done, print it
     std.log.info("*** {s}: {s} {s} ({u}) ({} HP)", .{ @tagName(kind), adj.?.str, noun.?.str, chosen_tile.ch, maxHP });
     for (chosen_traits.constSlice()) |chosen_trait|
         std.log.info("  - Trait: {s} ({})", .{ chosen_trait.name, chosen_trait.kind });
 
-    // Now apply to the terrain
-
-    var spell_list = std.ArrayList(SpellOptions).init(state.alloc);
-    var statuses = std.ArrayList(types.StatusDataInfo).init(state.alloc);
-    for (chosen_traits.constSlice()) |trait| {
-        trait.kind.apply(out, &statuses, &spell_list);
-        if (trait.attached) |attached|
-            attached.kind.apply(out, &statuses, &spell_list);
-    }
-    out.mob.spells = spell_list.toOwnedSlice() catch err.oom();
-    out.statuses = statuses.toOwnedSlice() catch err.oom();
+    // Now apply to the MobTemplate
 
     out.mob.ai.profession_name = std.fmt.allocPrint(state.alloc, "{s} {s}", .{ adj.?.str, noun.?.str }) catch err.oom();
     out.mob.tile = chosen_tile.ch;
     out.mob.max_HP = maxHP;
     out.mob.max_MP = maxMP;
+
+    // MUST be applied before traits, since traits will modify this.
+    out.mob.stats = stats;
+    out.mob.innate_resists = resists;
+
+    // Out parameters...
+    var spell_list = std.ArrayList(SpellOptions).init(state.alloc);
+    var statuses = std.ArrayList(types.StatusDataInfo).init(state.alloc);
+    var aiflags = std.ArrayList(AI.Flag).init(state.alloc);
+    aiflags.appendSlice(&DEFAULT_AI_FLAGS) catch err.wat();
+
+    // Trait application...
+    for (chosen_traits.constSlice()) |trait|
+        trait.apply(out, &statuses, &spell_list, &aiflags);
+
+    // Finish applying
+    out.mob.spells = spell_list.toOwnedSlice() catch err.oom();
+    out.statuses = statuses.toOwnedSlice() catch err.oom();
+    out.mob.ai.flags = aiflags.toOwnedSlice() catch err.oom();
+
+    // Set the general AI behaviour.
+    //
+    // meleedude: heavy weapon
+    // blaster: spellcaster that stays away from targets
+    // warlock: spellcaster that melees. weaker weapon.
+    const AIKind = enum { meleedude, blaster, warlock };
+    const choice = rng.choose(AIKind, &.{ .meleedude, .blaster, .warlock }, &.{
+        // Clamp melee weight to 1..inf, to make it the "fallback" option in case
+        // everything else is zero (unlikely, not sure if even possible)
+        @intCast(@max(1, vibes[@intFromEnum(Vibe.melee)])),
+        @intCast(@max(0, vibes[@intFromEnum(Vibe.magic)] + vibes[@intFromEnum(Vibe.missiles)])),
+        @intCast(@max(0, vibes[@intFromEnum(Vibe.magic)] + vibes[@intFromEnum(Vibe.melee)])),
+    }) catch err.wat();
+
+    out.weapon = switch (choice) {
+        .meleedude, .blaster => &items.AngelSword,
+        .warlock => &items.AngelLance,
+    };
+    out.mob.ai.spellcaster_backup_action = switch (choice) {
+        .meleedude, .warlock => .Melee,
+        .blaster => .KeepDistance,
+    };
 }
 
 pub fn init() void {
@@ -663,10 +867,47 @@ pub fn init() void {
     generateSingle(&mobs.SoldierAngelTemplate3, .Soldier, &traits, &names, &tiles);
     generateSingle(&mobs.FollowerAngelTemplate1, .Follower, &traits, &names, &tiles);
     generateSingle(&mobs.FollowerAngelTemplate2, .Follower, &traits, &names, &tiles);
+
+    // Now choose a strength and a vulnerability.
+    const RESISTS = [_]types.Resistance{ .rFire, .rElec, .rAcid, .Armor };
+    const vuln = rng.chooseUnweighted(types.Resistance, &RESISTS);
+    const strength = rng.chooseUnweighted(types.Resistance, &RESISTS);
+
+    // Rare chance that they're the same, do nothing.
+    if (vuln == strength) return;
+
+    const _getResistPtr = struct {
+        pub fn f(m: *MobTemplate, r: types.Resistance) *isize {
+            return switch (r) {
+                .rAcid => &m.mob.innate_resists.rAcid,
+                .rFire => &m.mob.innate_resists.rFire,
+                .rElec => &m.mob.innate_resists.rElec,
+                .Armor => &m.mob.innate_resists.Armor,
+                else => err.wat(),
+            };
+        }
+    }.f;
+
+    for (&mobs.ANGELS) |angel_template| {
+        const vuln_ptr = _getResistPtr(angel_template, vuln);
+        if ((vuln == .Armor and vuln_ptr.* == DEFAULT_ARMOR) or
+            vuln_ptr.* == DEFAULT_RESIST)
+        {
+            vuln_ptr.* -= 50;
+        }
+
+        const strength_ptr = _getResistPtr(angel_template, strength);
+        if ((strength == .Armor and strength_ptr.* == DEFAULT_ARMOR) or
+            strength_ptr.* == DEFAULT_RESIST)
+        {
+            strength_ptr.* += 75;
+        }
+    }
 }
 
 pub fn deinit() void {
     for (&mobs.ANGELS) |angel| {
+        state.alloc.free(angel.mob.ai.flags);
         state.alloc.free(angel.mob.ai.profession_name.?);
         state.alloc.free(angel.mob.spells);
         state.alloc.free(angel.statuses);
