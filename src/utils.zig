@@ -455,16 +455,24 @@ pub fn getNearestCorpse(me: *Mob) ?Coord {
     return buf.last().?;
 }
 
-pub fn hasClearLOF(from: Coord, to: Coord) bool {
+fn _checkPath(from: Coord, to: Coord, opts: state.IsWalkableOptions) bool {
     const line = from.drawLine(to, state.mapgeometry, 0);
     return for (line.constSlice()) |c| {
         if (c.eq(from) or c.eq(to)) {
             continue;
         }
-        if (!state.is_walkable(c, .{ .right_now = true, .only_if_breaks_lof = true })) {
+        if (!state.is_walkable(c, opts)) {
             break false;
         }
     } else true;
+}
+
+pub fn hasClearLOF(from: Coord, to: Coord) bool {
+    return _checkPath(from, to, .{ .right_now = true, .only_if_breaks_lof = true });
+}
+
+pub fn hasStraightPath(from: Coord, to: Coord) bool {
+    return _checkPath(from, to, .{ .right_now = true });
 }
 
 pub fn percentOf(comptime T: type, x: T, percent: T) T {

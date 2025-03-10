@@ -589,6 +589,34 @@
                           [(:move-angle coord n angle) target]))
    }))
 
+(defn template-hellfire-explosion [&named distance lifetime]
+  (default lifetime 0)
+  (default distance 1)
+  (def spf (case distance
+             1 45
+             2 20
+             (assert false)))
+  (def spc (case distance
+             1 12
+             2 24
+             (assert false)))
+  (new-emitter @{
+    :particle (new-particle @{
+      :tile (new-tile @{ :ch "Z" :fg 0xcc3422 :bg 0x882011 :bg-mix 0.8 })
+      :speed 0.8
+      :lifetime 12
+      :triggers @[
+        [[:COND-true] [:TRIG-scramble-glyph ASCII_CHARS]]
+        [[:COND-true] [:TRIG-lerp-color :fg 0xddcc22 "rgb" [:sine-custom
+                        (fn [self ticks &] (* 16 (+ ticks (* (math/random) 20))))]]]
+      ]
+    })
+    :lifetime lifetime
+    :spawn-count spc
+    :get-spawn-params (SPAR-explosion :which-origin :target :distance distance :sparsity-factor spf)
+  })
+)
+
 (defn template-explosion [&named embers? die-out? speed-variation-preset color1 color2]
   (default embers?              true)
   (default die-out?             true)
@@ -979,24 +1007,9 @@
         :speed 2
         :triggers @[
           [[:COND-true] [:TRIG-scramble-glyph ASCII_CHARS]]
-          [[:COND-reached-target?  true]
-           [:TRIG-create-emitter
-              (new-emitter @{
-                :particle (new-particle @{
-                  :tile (new-tile @{ :ch "Z" :fg 0xcc3422 :bg 0x882011 :bg-mix 0.8 })
-                  :speed 0.8
-                  :lifetime 12
-                  :triggers @[
-                    [[:COND-true] [:TRIG-scramble-glyph ASCII_CHARS]]
-                    [[:COND-true] [:TRIG-lerp-color :fg 0xddcc22 "rgb" [:sine-custom
-                                    (fn [self ticks &] (* 16 (+ ticks (* (math/random) 20))))]]]
-                  ]
-                })
-                :lifetime 0
-                :spawn-count 9
-                :get-spawn-params (SPAR-explosion :which-origin :target :distance 1 :sparsity-factor 45)
-              })
-          ]]
+          [[:COND-reached-target? true]
+           [:TRIG-create-emitter (template-hellfire-explosion :distance 1)]
+          ]
           [[:COND-parent-dead? 1] [:TRIG-die]]
         ]
       })
@@ -1188,6 +1201,9 @@
                                                   (+ (coord :y) (* dist (math/sin angle))))]
                             [coord ntarg]))
     })
+  ]
+  "explosion-hellfire" @[
+    (template-hellfire-explosion :distance 2 :lifetime 5)
   ]
   "explosion-electric-sparkly" @[(new-emitter @{
     :particle (new-particle @{
@@ -1389,6 +1405,7 @@
   "chargeover-lines"        @[ (template-chargeover   "|_-=\\/"   0xcacbca 0xffffff                 :speed 0.3             ) ]
   "chargeover-blue-out"     @[ (template-chargeover SYMB1_CHARS   0x11ddff 0x001e85 :direction :out :speed 0.5 :lifetime 12) ]
   "chargeover-noise"        @[ (template-chargeover ["♫" "♩"]     0x00d610 0x00d610 :direction :out :speed 0.5 :lifetime  4 :style :nobg :maxdist 2) ]
+  "chargeover-walls"        @[ (template-chargeover "#.,"         CONCRETE VDARK_GREEN :direction :out :speed 0.5 :lifetime 5) ]
   "chargeover-doublegold-candles" @[
     (template-chargeover SYMB1_CHARS 0x3333ff GOLD :direction :out :speed 0.3 :lifetime 7)
     (template-chargeover SYMB1_CHARS LIGHT_GOLD GOLD :direction :in :speed 0.6 :lifetime 10 :which :origin)

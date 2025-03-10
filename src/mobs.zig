@@ -1917,10 +1917,71 @@ pub const LivingStoneTemplate = MobTemplate{
         .corpse = .Wall,
 
         .innate_resists = .{ .rFire = RESIST_IMMUNE, .rElec = RESIST_IMMUNE, .rAcid = -50, .rHoly = RESIST_IMMUNE, .Armor = 50, .rFume = 100 },
-        .stats = .{ .Willpower = 2, .Melee = 100, .Vision = 1 },
+        .stats = .{ .Willpower = 0, .Melee = 100, .Vision = 1 },
     },
     // This status should be added by whatever spell created it.
     //.statuses = &[_]StatusDataInfo{.{ .status = .Lifespan, .duration = .{.Tmp=10} }},
+};
+
+pub const RollingBoulderTemplate = MobTemplate{
+    .mob = .{
+        .id = "rolling_boulder",
+        .species = &Species{
+            .name = "rolling boulder",
+            .default_attack = &Weapon{ .name = "bug", .damage = 0, .strs = &items.CLAW_STRS },
+        },
+        .tile = 'O',
+        .ai = AI{
+            .profession_description = "rolling",
+            .work_fn = ai.suicideWork,
+            .fight_fn = ai.suicideWork, // Should never be called, but just in case
+            .is_curious = false,
+            .is_fearless = true,
+            .is_combative = false,
+            .flags = &[_]AI.Flag{ .NoRaiseAllyMorale, .IgnoredByEnemies },
+        },
+
+        .max_HP = 24,
+        .memory_duration = 1,
+
+        .life_type = .Construct,
+        .blood = null,
+        //.corpse = .Wall, // Commented out, could block player progress...
+        .faction = .Holy,
+
+        .innate_resists = .{ .rFire = RESIST_IMMUNE, .rElec = RESIST_IMMUNE, .rAcid = -50, .rHoly = RESIST_IMMUNE, .Armor = 90, .rFume = 100 },
+        .stats = .{ .Willpower = 0, .Melee = 100, .Vision = 0 },
+    },
+};
+
+pub const SphereHellfireTemplate = MobTemplate{
+    .mob = .{
+        .id = "hellfire_sphere",
+        .species = &Species{
+            .name = "sphere of hellfire",
+            .default_attack = &Weapon{ .name = "bug", .damage = 0, .strs = &items.CLAW_STRS },
+        },
+        .tile = 'Ø',
+        .ai = AI{
+            .profession_description = "hovering",
+            .work_fn = ai.suicideWork,
+            .fight_fn = ai.suicideWork, // Should never be called, but just in case
+            .is_curious = false,
+            .is_fearless = true,
+            .is_combative = false,
+            .flags = &[_]AI.Flag{ .NoRaiseAllyMorale, .IgnoredByEnemies },
+        },
+
+        .max_HP = 24,
+        .memory_duration = 1,
+
+        .life_type = .Spectral,
+        .blood = null,
+        .faction = .Holy,
+
+        .innate_resists = .{ .rFire = RESIST_IMMUNE, .rElec = RESIST_IMMUNE, .rAcid = RESIST_IMMUNE, .rHoly = RESIST_IMMUNE, .Armor = RESIST_IMMUNE, .rFume = 100 },
+        .stats = .{ .Willpower = 10, .Vision = 0 },
+    },
 };
 
 pub const BallLightningTemplate = MobTemplate{
@@ -2240,14 +2301,15 @@ pub const AngelTemplate = MobTemplate{
             .profession_description = "guarding",
             .work_fn = ai.wanderWork,
             .fight_fn = ai.mageFight,
+            .spellcaster_backup_action = .KeepDistance,
         },
         .max_HP = 999,
         .memory_duration = 15,
 
         .spells = &[_]SpellOptions{
-            .{ .MP_cost = 3, .spell = &spells.CAST_AWAKEN_STONE, .power = 2 },
+            .{ .MP_cost = 8, .spell = &spells.CAST_ROLLING_BOULDER, .power = 2 },
         },
-        .max_MP = 3,
+        .max_MP = 8,
         .faction = .Holy,
         .stats = .{ .Willpower = 10 },
     },
@@ -2444,6 +2506,7 @@ pub const MOBS = [_]MobTemplate{
     TorturerNecromancerTemplate,
     // FrozenFiendTemplate,
     LivingStoneTemplate,
+    RollingBoulderTemplate,
     BallLightningTemplate,
     SpectralSwordTemplate,
     SpectralSabreTemplate,

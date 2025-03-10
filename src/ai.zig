@@ -6,23 +6,24 @@ const meta = std.meta;
 
 const alert = @import("alert.zig");
 const astar = @import("astar.zig");
+const buffer = @import("buffer.zig");
 const colors = @import("colors.zig");
 const combat = @import("combat.zig");
-const ui = @import("ui.zig");
+const dijkstra = @import("dijkstra.zig");
+const err = @import("err.zig");
 const fov = @import("fov.zig");
+const gas = @import("gas.zig");
+const items = @import("items.zig");
+const mapgen = @import("mapgen.zig");
+const mobs = @import("mobs.zig");
+const rng = @import("rng.zig");
+const spells = @import("spells.zig");
 const state = @import("state.zig");
 const surfaces = @import("surfaces.zig");
-const err = @import("err.zig");
-const utils = @import("utils.zig");
-const items = @import("items.zig");
-const spells = @import("spells.zig");
-const mapgen = @import("mapgen.zig");
-const dijkstra = @import("dijkstra.zig");
-const buffer = @import("buffer.zig");
-const rng = @import("rng.zig");
-const mobs = @import("mobs.zig");
 const tasks = @import("tasks.zig");
 const types = @import("types.zig");
+const ui = @import("ui.zig");
+const utils = @import("utils.zig");
 
 const AIJob = types.AIJob;
 const Dungeon = types.Dungeon;
@@ -1947,6 +1948,158 @@ pub fn _Job_WRK_WrkstationBusyWork(mob: *Mob, j: *AIJob) AIJob.JStatus {
     if (!didstuff) tryRest(mob);
 
     return j.checkTurnsLeft(7);
+}
+
+// Specifically for rolling boulder, and only for rolling boulder.
+//
+// If generalizing, make sure to change the bit which transforms into SoH.
+//
+pub fn _Job_ATK_Homing(homer: *Mob, job: *AIJob) AIJob.JStatus {
+    const MAX_ANGLE_CHANGE = 40.0 * math.pi / 180.0;
+
+    const S = struct {
+        pub fn _die(me: *Mob) AIJob.JStatus {
+            if (state.player.canSeeMob(me)) {
+                const verb = if (mem.eql(u8, me.id, "rolling_boulder")) "stops" else "dissipates";
+                state.message(.CombatUnimportant, "{c} {s}.", .{ me, verb });
+            }
+            state.dungeon.atGas(me.coord)[gas.SmokeGas.id] += gas.MIN_GAS_SPREAD - 1;
+            me.deinitNoCorpse();
+            return .Complete;
+        }
+
+        pub fn _dieWithVictim(me: *Mob, target: *Mob, is_blast: bool) AIJob.JStatus {
+            if (is_blast) {
+                if (state.player.canSeeMob(me))
+                    state.message(.SpellCast, "{c} explodes!!", .{me});
+
+                // Do some retarded hackery so that the blast doesn't affect the caster.
+                state.dungeon.at(me.coord).mob = null;
+
+                spells.BLAST_HELLFIRE.use(me, me.coord, me.coord, .{
+                    .power = spells.CAST_ROLLING_BOULDER_DAMAGE,
+                    .free = true,
+                    .MP_cost = 0,
+                    .no_message = true,
+                });
+
+                // Fix the retarded hackery...
+                state.dungeon.at(me.coord).mob = me;
+            } else {
+                target.takeDamage(.{
+                    .amount = spells.CAST_ROLLING_BOULDER_DAMAGE,
+                    .by_mob = me,
+                    .kind = .Physical,
+                    .blood = false,
+                    .source = .MeleeAttack,
+                }, .{
+                    .strs = &[_]types.DamageStr{
+                        items._dmgstr(10, "slam", "slams", ""),
+                    },
+                });
+            }
+            me.deinitNoCorpse();
+            return .Complete;
+        }
+
+        pub fn _calcAngle(from: Coord, to: Coord) f64 {
+            const dx: f64 = @floatFromInt(@as(isize, @intCast(to.x)) - @as(isize, @intCast(from.x)));
+            const dy: f64 = @floatFromInt(@as(isize, @intCast(to.y)) - @as(isize, @intCast(from.y)));
+            return math.atan2(dy, dx);
+        }
+    };
+
+    // Code written with assumption that this is false
+    assert(homer.multitile == null);
+
+    // target, speed, and is_blast should be set by spawner (e.g. spells.CAST_ROLLING_BOULDER)
+    const target = job.ctx.getOrNone(*Mob, AIJob.CTX_HOMING_TARGET).?;
+    const target_coord = target.coordMT(homer.coord);
+    const speed = job.ctx.getOrNone(f64, AIJob.CTX_HOMING_SPEED).?;
+    const is_blast = job.ctx.getOrNone(bool, AIJob.CTX_HOMING_BLAST).?;
+    const angle = job.ctx.get(f64, AIJob.CTX_HOMING_ANGLE, S._calcAngle(homer.coord, target_coord));
+
+    const min_distance: usize =
+        if (mem.eql(u8, homer.id, "rolling_boulder")) 1 else spells.BLAST_HELLFIRE_AOE;
+
+    // Do a check before-hand, in case target very helpfully moved
+    if (homer.coord.distanceManhattan(target_coord) == min_distance) {
+        return S._dieWithVictim(homer, target, is_blast);
+    }
+
+    const x = (@max(1, speed) * @cos(angle)) + @as(f64, @floatFromInt(homer.coord.x));
+    const y = (@max(1, speed) * @sin(angle)) + @as(f64, @floatFromInt(homer.coord.y));
+    const dest = Coord.new2(homer.coord.z, @intFromFloat(x), @intFromFloat(y));
+
+    // Semi-duplicated from src/combat/throwMob()
+    var slammed_into_mob: ?*Mob = null;
+    var slammed_into_something = false;
+    var last_viable_coord = homer.coord;
+    const line = homer.coord.drawLine(dest, state.mapgeometry, 0);
+    for (line.constSlice(), 0..) |path, i| {
+        if (i == 0) continue; // Skip the current coord
+        if (!state.is_walkable(path, .{ .mob = homer, .right_now = true })) {
+            if (state.dungeon.at(path).mob) |mob|
+                slammed_into_mob = mob;
+            slammed_into_something = true;
+            break;
+        }
+        last_viable_coord = path;
+    }
+
+    ui.Animation.apply(.{ .TraverseLine = .{
+        .start = homer.coord,
+        .end = dest,
+        .char = homer.tile,
+        .path_char = '°',
+    } });
+
+    const r = homer.teleportTo(last_viable_coord, null, false, false);
+    assert(r);
+
+    if (slammed_into_something) {
+        if (slammed_into_mob) |victim| {
+            return S._dieWithVictim(homer, victim, is_blast);
+        } else {
+            return S._die(homer);
+        }
+    }
+
+    // Check again after movement. So that victim can't force the
+    // boulder/sphere to play catch-up.
+    if (homer.coord.distanceManhattan(target.coordMT(homer.coord)) == min_distance) {
+        return S._dieWithVictim(homer, target, is_blast);
+    }
+
+    // Now set new variables, and potentially transform
+    job.ctx.set(f64, AIJob.CTX_HOMING_SPEED, speed * 2);
+
+    // Don't turn too sharply
+    const angle_d = angle - S._calcAngle(homer.coord, target.coord);
+    const new_angle =
+        if (angle_d > MAX_ANGLE_CHANGE)
+            angle + MAX_ANGLE_CHANGE
+        else if (angle_d < -MAX_ANGLE_CHANGE)
+            angle - MAX_ANGLE_CHANGE
+        else
+            angle - angle_d;
+    job.ctx.set(f64, AIJob.CTX_HOMING_ANGLE, new_angle);
+
+    if (rng.onein(5) and mem.eql(u8, homer.id, "rolling_boulder")) {
+        if (state.player.canSeeMob(homer))
+            state.message(.SpellCast, "The boulder transforms into a sphere of hellfire!", .{});
+        homer.deinitNoCorpse();
+
+        const soh = mobs.placeMob(state.alloc, &mobs.SphereHellfireTemplate, homer.coord, .{});
+        soh.newJob(.ATK_Homing);
+        soh.newestJob().?.ctx.set(*Mob, AIJob.CTX_HOMING_TARGET, target);
+        soh.newestJob().?.ctx.set(f64, AIJob.CTX_HOMING_SPEED, speed * 2);
+        soh.newestJob().?.ctx.set(bool, AIJob.CTX_HOMING_BLAST, true);
+
+        return .Complete;
+    }
+
+    return .Ongoing;
 }
 
 pub fn _Job_GRD_LookAround(mob: *Mob, job: *AIJob) AIJob.JStatus {

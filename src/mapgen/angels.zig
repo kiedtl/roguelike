@@ -288,6 +288,16 @@ const TRAITS = [_]Trait{
     },
     .{
         .power = 3,
+        .name = "Spell: Hellfire Blast",
+        .kind = .{ .Spell = .{ .MP_cost = 5, .power = 2, .spell = &spells.BLAST_HELLFIRE } },
+        .require_kind = &.{ .Arch, .Soldier },
+        .prefer_names = &[_]Trait.Preference{
+            .{ .n = "Blazing", .w = 10 },
+            .{ .n = "Furnace", .w = 10 },
+        },
+    },
+    .{
+        .power = 3,
         .name = "Spell: Electric Hellfire",
         .kind = .{ .Spell = .{ .MP_cost = 5, .power = 2, .spell = &spells.BOLT_HELLFIRE_ELECTRIC } },
         .max_used = 2,
@@ -330,7 +340,17 @@ const TRAITS = [_]Trait{
         .max_used = 3,
         .require_kind = &.{ .Arch, .Soldier },
     },
-    .{ .power = 3, .name = "Spell: Rolling Boulder", .kind = .Foo },
+    .{
+        .power = 1, // Very weak, since it leaves caster helpless in face of close/swarming enemies
+        .name = "Spell: Rolling Boulder",
+        .kind = .{ .Spell = .{ .MP_cost = 8, .spell = &spells.CAST_ROLLING_BOULDER, .power = 5 } },
+        // Make up (sort of) for the spell's downsides
+        .attached = &.{
+            .power = 0,
+            .name = undefined,
+            .kind = .{ .Stat = .{ .Speed = 80 } },
+        },
+    },
     .{
         .power = 3,
         .name = "Spell: Awaken Stone",

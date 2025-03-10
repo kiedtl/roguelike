@@ -217,6 +217,53 @@ pub const BLAST_DISRUPTING = Spell{
     },
 };
 
+pub const CAST_ROLLING_BOULDER_DAMAGE = 3;
+pub const CAST_ROLLING_BOULDER = Spell{
+    .id = "sp_rolling_boulder",
+    .name = "rolling boulder",
+    .animation = .{ .Particles = .{ .name = "chargeover-walls", .target = .Origin } },
+    .cast_type = .Smite,
+    .check_has_effect = struct {
+        // Enemy must be far away, must have line of fire, must have adjacent
+        // space that's free, must have adjacent wall, and there must be no
+        // allies in view.
+        fn f(caster: *Mob, _: SpellOptions, target: Coord) bool {
+            const d = caster.coordMT(target).closestDirectionTo(target, state.mapgeometry);
+            const n = caster.coord.move(d, state.mapgeometry).?;
+            return state.is_walkable(n, .{ .right_now = true }) and
+                state.dungeon.neighboringWalls(caster.coord, true) > 0 and
+                target.distance(caster.coord) >= 4 and
+                utils.hasStraightPath(n, target);
+        }
+    }.f,
+    .effects = &[_]Effect{
+        .{
+            .Custom = struct {
+                fn f(caster_coord: Coord, _: SpellOptions, target_coord: Coord) void {
+                    const caster = state.dungeon.at(caster_coord).mob.?;
+                    const target = state.dungeon.at(target_coord).mob.?;
+                    // Remove a single wall, for flavor.
+                    var directions = DIRECTIONS;
+                    rng.shuffle(Direction, &directions);
+                    for (&directions) |d| if (caster_coord.move(d, state.mapgeometry)) |neighbor| {
+                        if (state.dungeon.at(neighbor).type == .Wall) {
+                            state.dungeon.at(neighbor).type = .Floor;
+                            break;
+                        }
+                    };
+                    const d = caster.coordMT(target_coord).closestDirectionTo(target_coord, state.mapgeometry);
+                    const n = caster.coord.move(d, state.mapgeometry).?;
+                    const b = mobs.placeMob(state.alloc, &mobs.RollingBoulderTemplate, n, .{});
+                    b.newJob(.ATK_Homing);
+                    b.newestJob().?.ctx.set(*Mob, AIJob.CTX_HOMING_TARGET, target);
+                    b.newestJob().?.ctx.set(f64, AIJob.CTX_HOMING_SPEED, 0.6);
+                    b.newestJob().?.ctx.set(bool, AIJob.CTX_HOMING_BLAST, false);
+                }
+            }.f,
+        },
+    },
+};
+
 // Zap animation used despite this being a smite spell... lol
 //
 pub const CAST_REBUKE_EARTH_DEMON = Spell{
@@ -803,7 +850,7 @@ pub const BOLT_HELLFIRE_ELECTRIC = Spell{
     .bolt_avoids_allies = true,
     .bolt_multitarget = false,
     .animation = .{ .Particles = .{ .name = "zap-hellfire-electric" } },
-    .noise = .Silent,
+    .noise = .Loud,
     .effects = &[_]Effect{
         .{ .Damage = .{ .kind = .Holy, .msg = .{
             .noun = "The electric damnation",
@@ -824,9 +871,22 @@ pub const BOLT_HELLFIRE = Spell{
     .bolt_avoids_allies = true,
     .bolt_multitarget = false,
     .animation = .{ .Particles = .{ .name = "zap-hellfire" } },
-    .noise = .Silent,
+    .noise = .Louder,
     .effects = &[_]Effect{.{ .Damage = .{ .kind = .Holy, .msg = .{
         .noun = "The tormenting fire",
+        .strs = &[_]types.DamageStr{items._dmgstr(0, "engulfs", "engulfs", "")},
+    } } }},
+};
+
+pub const BLAST_HELLFIRE_AOE = 2;
+pub const BLAST_HELLFIRE = Spell{
+    .id = "sp_hellfire_blast",
+    .name = "hellfire blast",
+    .cast_type = .{ .Blast = .{ .aoe = BLAST_HELLFIRE_AOE } },
+    .animation = .{ .Particles = .{ .name = "explosion-hellfire", .target = .Origin } },
+    .noise = .Loudest,
+    .effects = &[_]Effect{.{ .Damage = .{ .kind = .Holy, .msg = .{
+        .noun = "The blast of hellfire",
         .strs = &[_]types.DamageStr{items._dmgstr(0, "engulfs", "engulfs", "")},
     } } }},
 };
@@ -1715,6 +1775,8 @@ pub const Spell = struct {
                 }
             },
             .Blast => |blast_opts| {
+                assert(target.eq(caster_coord));
+
                 var affected_tiles = StackBuffer(Coord, 128).init(null);
                 affected_tiles.append(caster_coord) catch err.wat();
 

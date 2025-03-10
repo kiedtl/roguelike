@@ -325,8 +325,7 @@ pub const Coord = struct { // {{{
     }
 
     pub inline fn distance(a: Self, b: Self) usize {
-        const diff =
-            a.difference(b);
+        const diff = a.difference(b);
 
         // Euclidean: d = sqrt(dx^2 + dy^2)
         //
@@ -1983,6 +1982,11 @@ pub const AIJob = struct {
     pub const CTX_ALARM_COORD = "ctx_alarm_coord";
     pub const CTX_ADVERTISE_KIND = "ctx_advertise_kind";
 
+    pub const CTX_HOMING_TARGET = "ctx_homing_target";
+    pub const CTX_HOMING_BLAST = "ctx_homing_blast";
+    pub const CTX_HOMING_ANGLE = "ctx_homing_velocity_dir";
+    pub const CTX_HOMING_SPEED = "ctx_homing_velocity_speed";
+
     pub const Type = enum {
         Dummy,
         WRK_LeaveFloor,
@@ -1993,6 +1997,7 @@ pub const AIJob = struct {
         WRK_ExamineCorpse,
         WRK_WrkstationBusyWork,
         WRK_BuildMob,
+        ATK_Homing,
         GRD_LookAround,
         GRD_SweepRoom,
         ALM_PullAlarm,
@@ -2019,6 +2024,7 @@ pub const AIJob = struct {
                 .WRK_ExamineCorpse => ai._Job_WRK_ExamineCorpse,
                 .WRK_BuildMob => ai._Job_WRK_BuildMob,
                 .WRK_WrkstationBusyWork => ai._Job_WRK_WrkstationBusyWork,
+                .ATK_Homing => ai._Job_ATK_Homing,
                 .GRD_LookAround => ai._Job_GRD_LookAround,
                 .GRD_SweepRoom => ai._Job_GRD_SweepRoom,
                 .ALM_PullAlarm => ai._Job_ALM_PullAlarm,
@@ -2060,6 +2066,7 @@ pub const Ctx = struct {
     pub const Value = union(enum) {
         usize: usize,
         bool: bool,
+        f64: f64,
         @"types.AIJob.Type": AIJob.Type,
         @"types.Coord": Coord,
         @"*types.Mob": *Mob,
@@ -3208,6 +3215,16 @@ pub const Mob = struct { // {{{
     }
 
     pub fn teleportTo(self: *Mob, dest: Coord, direction: ?Direction, instant: bool, swap_ignore_hostility: bool) bool {
+        // FIXME: 2025-03-09: Should assert !immobile here.
+        // HOWEVER, I seem to dimly recall that causing issues at some point.
+        // In which case I need to do some deep testing to see if that's still
+        // the case, which I'm not inclined at all to do.
+        //
+        // (What provoked this comment? Accidentally marking rolling boulders
+        // and spheres of hellfires as immobile and wondering why this was
+        // causing all sorts of interesting bugs. An assertion would have
+        // caught this much earlier.)
+
         if (self != state.player) {
             self.makeNoise(.Movement, .Medium);
         }
@@ -3385,6 +3402,12 @@ pub const Mob = struct { // {{{
     }
 
     // closestMultitileCoord
+    //
+    // FIXME: 2025-03-09: something something calculus 3, optimizing functions,
+    // pointing vector from one plane to another along any point, & using
+    // optimization to find the actual shortest vector from the first plane to
+    // the second...
+    //
     pub fn coordMT(self: *Mob, to: Coord) Coord {
         var closest = self.coord;
         {
