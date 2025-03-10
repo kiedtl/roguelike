@@ -1517,7 +1517,7 @@ pub const Effect = union(enum) {
             .Heal => if (state.dungeon.at(target_c).mob) |victim|
                 victim.takeHealing(spellcfg.power),
             .FireBlast => |b| explosions.fireBurst(target_c, b.radius.get(spellcfg), .{
-                .initial_damage = b.radius.get(spellcfg),
+                .initial_damage = b.damage.get(spellcfg),
                 .culprit = caster,
             }),
             .Custom => |c| c(caster_c, spellcfg, target_c),

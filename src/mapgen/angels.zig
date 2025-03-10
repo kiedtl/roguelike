@@ -79,6 +79,9 @@ const Vibe = enum {
     // Ally-focused spells.
     protector,
 
+    // Hack to keep track of how many "negative traits" an angel has.
+    debuffed,
+
     pub const Range = struct { Vibe, MinMax(isize) };
 };
 
@@ -324,7 +327,7 @@ const TRAITS = [_]Trait{
     .{
         .power = 4,
         .name = "Burning+Fireproof",
-        .kind = .{ .Status = &[_]types.StatusDataInfo{.{ .status = .Riposte, .duration = .Prm }} },
+        .kind = .{ .Status = &[_]types.StatusDataInfo{.{ .status = .Fire, .duration = .Prm }} },
         .attached = &.{
             .kind = .{ .Resist = .{ .rFire = mobs.RESIST_IMMUNE } },
             .attached = &.{
@@ -337,6 +340,14 @@ const TRAITS = [_]Trait{
             .{ .n = "Molten", .w = 10 },
             .{ .n = "Cinder", .w = 10 },
             .{ .n = "Furnace", .w = 10 },
+        },
+    },
+    .{
+        .power = 2,
+        .name = "Fly",
+        .kind = .{ .Status = &[_]types.StatusDataInfo{.{ .status = .Fly, .duration = .Prm }} },
+        .prefer_names = &[1]Trait.Preference{
+            .{ .n = "Fledgeling", .w = 20 },
         },
     },
     .{
@@ -471,7 +482,7 @@ const TRAITS = [_]Trait{
         .power = -3,
         .name = "Slow",
         .kind = .{ .Status = &[_]types.StatusDataInfo{.{ .status = .Slow, .duration = .Prm }} },
-        .vibes = &.{ .missiles, .magic }, // Negative vibe
+        .vibes = &.{ .debuffed, .missiles, .magic }, // Negative vibe
         .prefer_names = &[_]Trait.Preference{
             .{ .n = "Grim", .w = 10 },
         },
@@ -479,6 +490,7 @@ const TRAITS = [_]Trait{
         .require_not_first = true,
         .require_kind = &.{ .Arch, .Soldier },
         .require_vibe_range = &.{
+            .{ .debuffed, minmax(isize, -4, 0) },
             .{ .missiles, minmax(isize, -99, 3) },
             .{ .magic, minmax(isize, -99, 4) },
             .{ .hexes, minmax(isize, -99, 4) },
@@ -488,30 +500,39 @@ const TRAITS = [_]Trait{
         .power = -3,
         .name = "Less Melee",
         .kind = .{ .Stat = .{ .Melee = -20 } },
-        .vibes = &.{.melee}, // Negative vibe
+        .vibes = &.{ .debuffed, .melee }, // Negative vibe
         .max_used = 2,
         .require_not_first = true,
         .require_kind = &.{ .Arch, .Soldier }, // Followers already kinda weak
-        .require_vibe_range = &.{.{ .melee, minmax(isize, -99, 3) }},
+        .require_vibe_range = &.{
+            .{ .melee, minmax(isize, -99, 3) },
+            .{ .debuffed, minmax(isize, -4, 0) },
+        },
     },
     .{
         .power = -3,
         .name = "Less Missile",
         .kind = .{ .Stat = .{ .Melee = -20 } },
-        .vibes = &.{.missiles}, // Negative vibe
+        .vibes = &.{ .debuffed, .missiles }, // Negative vibe
         .max_used = 2,
         .require_not_first = true,
         .require_kind = &.{ .Arch, .Soldier }, // Followers already kinda weak
-        .require_vibe_range = &.{.{ .missiles, minmax(isize, -99, 3) }},
+        .require_vibe_range = &.{
+            .{ .debuffed, minmax(isize, -4, 0) },
+            .{ .missiles, minmax(isize, -99, 3) },
+        },
     },
     .{
         .power = -2,
         .name = "Less Evade",
         .kind = .{ .Stat = .{ .Evade = -10 } },
-        .vibes = &.{.melee}, // Negative vibe
+        .vibes = &.{ .debuffed, .melee }, // Negative vibe
         .max_used = 2,
         .require_not_first = true,
         .require_kind = &.{ .Arch, .Soldier },
+        .require_vibe_range = &.{
+            .{ .debuffed, minmax(isize, -4, 0) },
+        },
     },
 
     // Fluff generic spells, taken from other monsters (and increased in power)
@@ -570,8 +591,11 @@ const TRAITS = [_]Trait{
     .{
         .power = 2,
         .name = "Spell: Fireball",
-        .kind = .{ .Spell = .{ .MP_cost = 3, .spell = &spells.BOLT_FIREBALL, .power = 2, .duration = 8 } },
+        .kind = .{ .Spell = .{ .MP_cost = 3, .spell = &spells.BOLT_FIREBALL, .power = 3, .duration = 8 } },
         .vibes = &.{.magic},
+        .attached = &.{
+            .kind = .{ .Resist = .{ .rFire = mobs.RESIST_IMMUNE } },
+        },
         .prefer_names = &[_]Trait.Preference{
             .{ .n = "Boiling", .w = 20 },
             .{ .n = "Blazing", .w = 20 },
