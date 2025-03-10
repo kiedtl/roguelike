@@ -2292,28 +2292,36 @@ pub const CreepingDeathTemplate = MobTemplate{
     },
 };
 
-pub const AngelTemplate = MobTemplate{
-    .mob = .{
-        .id = "angel_procgen_template",
-        .species = &Species{ .name = "angel (bug)" },
-        .tile = '$',
-        .ai = AI{
-            .profession_description = "guarding",
-            .work_fn = ai.wanderWork,
-            .fight_fn = ai.mageFight,
-            .spellcaster_backup_action = .KeepDistance,
+pub fn mkAngelTemplate(comptime id: []const u8) MobTemplate {
+    return .{
+        .mob = .{
+            .id = id,
+            .species = &Species{ .name = "angel" },
+            .tile = '$',
+            .ai = AI{
+                .profession_description = "guarding",
+                .work_fn = ai.wanderWork,
+                .fight_fn = ai.mageFight,
+                .is_fearless = true,
+                .is_curious = true,
+                .spellcaster_backup_action = .KeepDistance,
+            },
+            .max_HP = 999,
+            .memory_duration = 15,
+            .spells = &[_]SpellOptions{},
+            .faction = .Holy,
+            .life_type = .Spectral,
+            .blood = null,
         },
-        .max_HP = 999,
-        .memory_duration = 15,
-
-        .spells = &[_]SpellOptions{
-            .{ .MP_cost = 8, .spell = &spells.CAST_ROLLING_BOULDER, .power = 2 },
-        },
-        .max_MP = 8,
-        .faction = .Holy,
-        .stats = .{ .Willpower = 10 },
-    },
-};
+    };
+}
+pub var ArchangelTemplate1 = mkAngelTemplate("angel_arch_1");
+pub var ArchangelTemplate2 = mkAngelTemplate("angel_arch_2");
+pub var SoldierAngelTemplate1 = mkAngelTemplate("angel_soldier_1");
+pub var SoldierAngelTemplate2 = mkAngelTemplate("angel_soldier_2");
+pub var SoldierAngelTemplate3 = mkAngelTemplate("angel_soldier_3");
+pub var FollowerAngelTemplate1 = mkAngelTemplate("angel_follower_1");
+pub var FollowerAngelTemplate2 = mkAngelTemplate("angel_follower_2");
 
 const REVGENUNKIM_CLAW_WEAPON = Weapon{
     .name = "acid claw",
@@ -2443,83 +2451,111 @@ pub const BurningBruteTemplate = MobTemplate{
     },
 };
 
-pub const MOBS = [_]MobTemplate{
-    CombatDummyNormal,
-    WrithingHulkTemplate,
-    SwollenHulkTemplate,
-    ThrashingHulkTemplate,
-    // CoronerTemplate,
-    ExecutionerTemplate,
-    WatcherTemplate,
-    GuardTemplate,
-    ArmoredGuardTemplate,
-    EnforcerGTemplate,
-    EnforcerAGTemplate,
-    JavelineerTemplate,
-    DefenderTemplate,
-    LeadTurtleTemplate,
-    IronWaspTemplate,
-    CopperHornetTemplate,
-    PatrolTemplate,
-    PlayerTemplate,
-    GoblinTemplate,
-    ConvultTemplate,
-    VapourMageTemplate,
-    DustlingTemplate,
-    WarOlgTemplate,
-    MellaentTemplate,
-    IronSpireTemplate,
-    LightningSpireTemplate,
-    CalciteSpireTemplate,
-    SentrySpireTemplate,
-    SirenSpireTemplate,
-    KyaniteStatueTemplate,
-    NebroStatueTemplate,
-    CrystalStatueTemplate,
-    AlchemistTemplate,
-    CleanerTemplate,
-    EngineerTemplate,
-    HaulerTemplate,
-    AncientMageTemplate,
-    //SpectreMageTemplate,
-    RecruitTemplate,
-    WarriorTemplate,
-    HunterTemplate,
-    BoneMageTemplate,
-    DeathKnightTemplate,
-    DeathMageTemplate,
-    EmberMageTemplate,
-    BrimstoneMageTemplate,
-    SparkMageTemplate,
-    LightningMageTemplate,
-    BloatTemplate,
-    // ThrashingSculptorTemplate,
-    ChildSkeletonTemplate,
-    SkeletonTemplate,
-    StalkerTemplate,
-    BoneRatTemplate,
-    EmberlingTemplate,
-    EmberBeastTemplate,
-    SparklingTemplate,
-    SkeletalBlademasterTemplate,
-    SkeletalArbalistTemplate,
-    TorturerNecromancerTemplate,
-    // FrozenFiendTemplate,
-    LivingStoneTemplate,
-    RollingBoulderTemplate,
-    BallLightningTemplate,
-    SpectralSwordTemplate,
-    SpectralSabreTemplate,
-    SpectralTotemTemplate,
-    NightReaperTemplate,
-    GrueTemplate,
-    SlinkingTerrorTemplate,
-    CreepingDeathTemplate,
-    AngelTemplate,
-    RevgenunkimTemplate,
-    CinderBruteTemplate,
-    BurningBruteTemplate,
-} ++ templates_test.MOBS;
+pub const MOBS = [_]*const MobTemplate{
+    &PlayerTemplate,
+    &CombatDummyNormal,
+
+    // Hulks
+    &WrithingHulkTemplate,
+    &SwollenHulkTemplate,
+    &ThrashingHulkTemplate,
+
+    // Ecosystem
+    &CoronerTemplate,
+    &AlchemistTemplate,
+    &CleanerTemplate,
+    &EngineerTemplate,
+    &HaulerTemplate,
+    &MellaentTemplate,
+
+    // Run of the mill monsters/guards/etc
+    &WatcherTemplate,
+    &GuardTemplate,
+    &ArmoredGuardTemplate,
+    &ExecutionerTemplate,
+    &EnforcerGTemplate,
+    &EnforcerAGTemplate,
+    &JavelineerTemplate,
+    &DefenderTemplate,
+    &PatrolTemplate,
+    &GoblinTemplate,
+    &WarOlgTemplate,
+
+    // Caverns
+    &ConvultTemplate,
+    &VapourMageTemplate,
+    &DustlingTemplate,
+
+    // Lab
+    &LeadTurtleTemplate,
+    &IronWaspTemplate,
+    &CopperHornetTemplate,
+
+    // Spires
+    &IronSpireTemplate,
+    &LightningSpireTemplate,
+    &CalciteSpireTemplate,
+    &SentrySpireTemplate,
+    &SirenSpireTemplate,
+
+    // Statues
+    &KyaniteStatueTemplate,
+    &NebroStatueTemplate,
+    &CrystalStatueTemplate,
+
+    // Others
+    &AncientMageTemplate,
+    &RecruitTemplate,
+    &WarriorTemplate,
+    &HunterTemplate,
+    &BoneMageTemplate,
+    &DeathKnightTemplate,
+    &DeathMageTemplate,
+    &EmberMageTemplate,
+    &BrimstoneMageTemplate,
+    &SparkMageTemplate,
+    &LightningMageTemplate,
+    &BloatTemplate,
+    &ChildSkeletonTemplate,
+    &SkeletonTemplate,
+    &StalkerTemplate,
+    &BoneRatTemplate,
+    &EmberlingTemplate,
+    &EmberBeastTemplate,
+    &SparklingTemplate,
+    &SkeletalBlademasterTemplate,
+    &SkeletalArbalistTemplate,
+    &TorturerNecromancerTemplate,
+
+    // Sub-mobs
+    &LivingStoneTemplate,
+    &RollingBoulderTemplate,
+    &BallLightningTemplate,
+
+    // Night creatures & other spectre stuff
+    &SpectralSwordTemplate,
+    &SpectralSabreTemplate,
+    &SpectralTotemTemplate,
+    &NightReaperTemplate,
+    &GrueTemplate,
+    &SlinkingTerrorTemplate,
+    &CreepingDeathTemplate,
+
+    // Earth demons
+    &RevgenunkimTemplate,
+    &CinderBruteTemplate,
+    &BurningBruteTemplate,
+} ++ templates_test.MOBS ++ ANGELS;
+
+pub const ANGELS = [_]*MobTemplate{
+    &ArchangelTemplate1,
+    &ArchangelTemplate2,
+    &SoldierAngelTemplate1,
+    &SoldierAngelTemplate2,
+    &SoldierAngelTemplate3,
+    &FollowerAngelTemplate1,
+    &FollowerAngelTemplate2,
+};
 
 pub const PRISONERS = [_]MobTemplate{
     GoblinTemplate,
@@ -2533,7 +2569,7 @@ pub const STATUES = [_]MobTemplate{
 
 pub fn findMobById(raw_id: anytype) ?*const MobTemplate {
     const id = utils.used(raw_id);
-    return for (&MOBS) |*mobt| {
+    return for (&MOBS) |mobt| {
         if (mem.eql(u8, mobt.mob.id, id))
             break mobt;
     } else null;

@@ -1875,7 +1875,7 @@ pub const StatusDataInfo = struct {
 pub const AIPhase = enum { Work, Hunt, Investigate, Flee };
 
 pub const AI = struct {
-    pub const __SER_SKIP = [_][]const u8{"flags"};
+    pub const __SER_SKIP = [_][]const u8{"flags"}; // Must not include profession_name (angels)
 
     // Name of mob doing the profession.
     profession_name: ?[]const u8 = null,

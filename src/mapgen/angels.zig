@@ -13,6 +13,7 @@ const state = @import("../state.zig");
 const surfaces = @import("../surfaces.zig");
 const types = @import("../types.zig");
 
+const SpellOptions = spells.SpellOptions;
 const Machine = types.Machine;
 const MobTemplate = mobs.MobTemplate;
 const Mob = types.Mob;
@@ -64,7 +65,6 @@ const Trait = struct {
     };
 
     pub const Kind = union(enum) {
-        Foo,
         Stat: std.enums.EnumFieldStruct(Stat, isize, 0),
         Resist: std.enums.EnumFieldStruct(Resistance, isize, 0),
         Status: []const types.StatusDataInfo,
@@ -85,9 +85,23 @@ const Trait = struct {
             };
         }
 
-        pub fn apply(self: @This(), _: *MobTemplate) void {
+        pub fn apply(
+            self: @This(),
+            out: *MobTemplate,
+            out_statuses: *std.ArrayList(types.StatusDataInfo),
+            out_spells: *std.ArrayList(SpellOptions),
+        ) void {
             switch (self) {
-                .Foo => {},
+                .Stat => |statset| {
+                    inline for (@typeInfo(@TypeOf(statset)).@"struct".fields) |field|
+                        @field(out.mob.stats, field.name) += @field(statset, field.name);
+                },
+                .Resist => |resists| {
+                    inline for (@typeInfo(@TypeOf(resists)).@"struct".fields) |field|
+                        @field(out.mob.innate_resists, field.name) += @field(resists, field.name);
+                },
+                .Spell => |sp| out_spells.append(sp) catch err.wat(),
+                .Status => |statuses| out_statuses.appendSlice(statuses) catch err.wat(),
             }
         }
     };
@@ -238,7 +252,6 @@ const TRAITS = [_]Trait{
         .power = 5,
         .name = "Martial",
         .kind = .{ .Stat = .{ .Martial = 2 } },
-        //.attached = &Trait{ .kind = .Foo },
         .prefer_names = &[1]Trait.Preference{
             .{ .n = "Blademaster", .w = 20 },
         },
@@ -466,13 +479,28 @@ pub const AngelKind = enum {
     }
 };
 
+fn calcMaxMP(kind: AngelKind, traits: []const Trait) usize {
+    var highest_cost: usize = 0;
+    for (traits) |trait|
+        if (trait.kind == .Spell)
+            if (trait.kind.Spell.MP_cost > highest_cost) {
+                highest_cost = trait.kind.Spell.MP_cost;
+            };
+    const max_bonus = highest_cost / @as(usize, switch (kind) {
+        .Follower => 4,
+        .Soldier => 3,
+        .Arch => 2,
+    });
+    return highest_cost + rng.range(usize, max_bonus / 2, max_bonus);
+}
+
 // Generates a single angel into a given mob template, and removes its name and
 // traits so it can't be used in future generation cycles.
 //
 // Tiles are not unique and can be reused.
 //
 fn generateSingle(
-    _: *MobTemplate,
+    out: *MobTemplate,
     kind: AngelKind,
     traits: *StackBuffer(Trait, TRAITS.len),
     names: *StackBuffer(Name, NAMES.len),
@@ -593,6 +621,7 @@ fn generateSingle(
     const chosen_tile_ind = rng.chooseInd2(Char, tiles.constSlice(), "weight");
     const chosen_tile = tiles.orderedRemove(chosen_tile_ind) catch err.wat();
     const maxHP = kind.maxHP();
+    const maxMP = calcMaxMP(kind, traits.constSlice());
 
     // Done, print it
     std.log.info("*** {s}: {s} {s} ({u}) ({} HP)", .{ @tagName(kind), adj.?.str, noun.?.str, chosen_tile.ch, maxHP });
@@ -601,14 +630,20 @@ fn generateSingle(
 
     // Now apply to the terrain
 
-    // for (chosen_traits.constSlice()) |trait| {
-    //     trait.kind.apply(onto);
-    //     if (trait.attached) |attached|
-    //         attached.kind.apply(onto);
-    // }
+    var spell_list = std.ArrayList(SpellOptions).init(state.alloc);
+    var statuses = std.ArrayList(types.StatusDataInfo).init(state.alloc);
+    for (chosen_traits.constSlice()) |trait| {
+        trait.kind.apply(out, &statuses, &spell_list);
+        if (trait.attached) |attached|
+            attached.kind.apply(out, &statuses, &spell_list);
+    }
+    out.mob.spells = spell_list.toOwnedSlice() catch err.oom();
+    out.statuses = statuses.toOwnedSlice() catch err.oom();
 
-    // onto.name = std.fmt.allocPrint(state.alloc, "{s} {s}", .{ adj.?.str, noun.?.string }) catch err.oom();
-    // onto.tile = chosen_tile.ch;
+    out.mob.ai.profession_name = std.fmt.allocPrint(state.alloc, "{s} {s}", .{ adj.?.str, noun.?.str }) catch err.oom();
+    out.mob.tile = chosen_tile.ch;
+    out.mob.max_HP = maxHP;
+    out.mob.max_MP = maxMP;
 }
 
 pub fn init() void {
@@ -621,13 +656,19 @@ pub fn init() void {
     //
     // Followers get leftovers.
 
-    generateSingle(undefined, .Arch, &traits, &names, &tiles);
-    generateSingle(undefined, .Arch, &traits, &names, &tiles);
-    generateSingle(undefined, .Soldier, &traits, &names, &tiles);
-    generateSingle(undefined, .Soldier, &traits, &names, &tiles);
-    generateSingle(undefined, .Soldier, &traits, &names, &tiles);
-    generateSingle(undefined, .Follower, &traits, &names, &tiles);
-    generateSingle(undefined, .Follower, &traits, &names, &tiles);
+    generateSingle(&mobs.ArchangelTemplate1, .Arch, &traits, &names, &tiles);
+    generateSingle(&mobs.ArchangelTemplate2, .Arch, &traits, &names, &tiles);
+    generateSingle(&mobs.SoldierAngelTemplate1, .Soldier, &traits, &names, &tiles);
+    generateSingle(&mobs.SoldierAngelTemplate2, .Soldier, &traits, &names, &tiles);
+    generateSingle(&mobs.SoldierAngelTemplate3, .Soldier, &traits, &names, &tiles);
+    generateSingle(&mobs.FollowerAngelTemplate1, .Follower, &traits, &names, &tiles);
+    generateSingle(&mobs.FollowerAngelTemplate2, .Follower, &traits, &names, &tiles);
 }
 
-pub fn deinit() void {}
+pub fn deinit() void {
+    for (&mobs.ANGELS) |angel| {
+        state.alloc.free(angel.mob.ai.profession_name.?);
+        state.alloc.free(angel.mob.spells);
+        state.alloc.free(angel.statuses);
+    }
+}
