@@ -568,6 +568,7 @@ pub const BOLT_SPEEDING = Spell{
         .Custom = struct {
             fn f(caster_coord: Coord, _: SpellOptions, target: Coord) void {
                 const victim = state.dungeon.at(target).mob orelse return;
+                // NOTE: update spell description if tweaking this.
                 const damage = math.clamp(target.distance(caster_coord) / 2, 1, 5);
                 victim.takeDamage(.{
                     .amount = damage,

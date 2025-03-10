@@ -129,6 +129,61 @@ Use a nearby corpse to heal a nearby undead ally by a significant amount.
 Command the air surrounding the target to discharge electricity, with
 increasing damage for more adjacent empty tiles.
 
+% sp_hellfire_electric
+Unleash a torrent of red lightning.
+
+% sp_hellfire
+Hurl a bolt of blazing hellfire.
+
+% sp_hellfire_blast
+Unleash a blast of hellfire around the caster.
+
+% sp_disintegration
+Hurl a bolt of disintegrating energy, destroying walls and obstructions and
+damaging all targets, hostile or otherwise.
+
+$c    -$. The bolt initially does $b2$. damage, gaining $b+3 damage$. for each
+wall destroyed and $b+1$. for each non-wall obstruction destroyed.
+
+$c    -$. Once an enemy or other creature has been hit by the bolt, the bolt
+loses $b1 damage$. for each tile it passes, fizzling out when its damage reaches
+$b0$..
+
+% sp_regen_divine
+Heals a nearby angelic ally.
+
+% sp_enrage_angel
+Enrages a nearby angelic ally.
+
+% sp_speeding
+Hurl a speeding bolt.
+
+
+$oDamage formula$.: $cclamp$g($bdistance$g / $.2$g, $.1$g,$. 5$g)$.
+
+% sp_disrupting_blast
+Unleashes a disrupting blast around the caster, inflicting the $cTorment
+Undead$. status and causing disruption in nearby undead.
+
+% sp_rebuke_earth_demon
+Torments a Revgenunkim, inflicting Holy damage and causing random harmful
+effects -- anything from causing the demon's head to explode, to causing its
+bones to shatter, to causing its skin to rot and slough off its body.
+
+% sp_rolling_boulder
+Breaks a nearby wall into a rolling boulder that will home in on its target,
+starting relatively slow, and picking up speed later. Staying adjacent at a 90°
+angle will trigger an "en passant" and allow the boulder to hit you; it will
+otherwise not be able to turn sharply if you avoid its path.
+
+The boulder has a chance to transform into a Sphere of Hellfire each turn.
+
+% sp_awaken_stone
+Awakens adjacent walls into living stone that attack the target.
+
+Only cardinally-adjacent walls are affected, and the living stone will revert
+to being walls within a short period.
+
 % sp_ferment_bartender
 % sp_flammable
 % sp_freeze

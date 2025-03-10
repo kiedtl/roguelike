@@ -472,7 +472,6 @@ const TRAITS = [_]Trait{
         .name = "Slow",
         .kind = .{ .Status = &[_]types.StatusDataInfo{.{ .status = .Slow, .duration = .Prm }} },
         .vibes = &.{ .missiles, .magic }, // Negative vibe
-        .max_used = 2,
         .prefer_names = &[_]Trait.Preference{
             .{ .n = "Grim", .w = 10 },
         },
