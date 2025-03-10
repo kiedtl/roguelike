@@ -484,6 +484,7 @@ pub const IronWaspTemplate = MobTemplate{
     .statuses = &[_]StatusDataInfo{
         .{ .status = .Sleeping, .duration = .Prm },
         .{ .status = .Noisy, .duration = .Prm },
+        .{ .status = .Fly, .duration = .Prm },
     },
 };
 
@@ -522,6 +523,7 @@ pub const CopperHornetTemplate = MobTemplate{
 
     .statuses = &[_]StatusDataInfo{
         .{ .status = .Sleeping, .duration = .Prm }, .{ .status = .Noisy, .duration = .Prm },
+        .{ .status = .Fly, .duration = .Prm },
     },
 };
 
@@ -585,6 +587,7 @@ pub const PlayerTemplate = MobTemplate{
     // .armor = items.FumingVestArmor,
     //.evocables = &[_]Evocable{items.EldritchLanternEvoc},
     //.cloak = &items.ThornsCloak,
+    //.statuses = &[_]StatusDataInfo{.{ .status = .Fly, .duration = .Prm }},
 };
 
 pub const GoblinTemplate = MobTemplate{
@@ -754,6 +757,7 @@ pub const MellaentTemplate = MobTemplate{
     },
     .statuses = &[_]StatusDataInfo{
         .{ .status = .Corona, .power = 50, .duration = .Prm },
+        .{ .status = .Fly, .duration = .Prm },
     },
 };
 
@@ -1982,6 +1986,7 @@ pub const SphereHellfireTemplate = MobTemplate{
         .innate_resists = .{ .rFire = RESIST_IMMUNE, .rElec = RESIST_IMMUNE, .rAcid = RESIST_IMMUNE, .rHoly = RESIST_IMMUNE, .Armor = RESIST_IMMUNE, .rFume = 100 },
         .stats = .{ .Willpower = 10, .Vision = 0 },
     },
+    .statuses = &[_]StatusDataInfo{.{ .status = .Fly, .duration = .Prm }},
 };
 
 pub const BallLightningTemplate = MobTemplate{
@@ -2015,6 +2020,7 @@ pub const BallLightningTemplate = MobTemplate{
     // This status should be added by whatever spell created it.
     .statuses = &[_]StatusDataInfo{
         .{ .status = .ExplosiveElec, .power = 5, .duration = .Prm },
+        .{ .status = .Fly, .power = 5, .duration = .Prm },
     },
 };
 
@@ -2046,6 +2052,7 @@ pub const SpectralSwordTemplate = MobTemplate{
         .innate_resists = .{ .Armor = RESIST_IMMUNE, .rFire = RESIST_IMMUNE, .rElec = RESIST_IMMUNE, .rFume = 100, .rAcid = RESIST_IMMUNE },
         .stats = .{ .Willpower = WILL_IMMUNE, .Vision = 20 },
     },
+    .statuses = &[_]StatusDataInfo{.{ .status = .Fly, .duration = .Prm }},
 };
 
 pub const SpectralSabreTemplate = MobTemplate{
@@ -2083,6 +2090,7 @@ pub const SpectralSabreTemplate = MobTemplate{
         .innate_resists = .{ .rFume = 100, .rAcid = RESIST_IMMUNE },
         .stats = .{ .Willpower = WILL_IMMUNE, .Melee = 50, .Speed = 50, .Vision = 20 },
     },
+    .statuses = &[_]StatusDataInfo{.{ .status = .Fly, .duration = .Prm }},
 };
 
 pub const SpectralTotemTemplate = MobTemplate{

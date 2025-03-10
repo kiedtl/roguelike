@@ -1246,6 +1246,11 @@ pub const Status = enum {
     FumesVest, // Doesn't have a power field.
     Sceptre, // Doesn't have a power field.
 
+    // Immunity to ground effects.
+    //
+    // Doesn't have a power field.
+    Fly,
+
     // Disrupts the player's hearing
     //
     // Doesn't have a power field.
@@ -2750,22 +2755,23 @@ pub const Mob = struct { // {{{
     // babysitting each turn.
     pub fn tickStatuses(self: *Mob) void {
         const terrain = state.dungeon.terrainAt(self.coord);
-        for (terrain.effects) |effect| {
-            var adj_effect = effect;
+        if (!self.hasStatus(.Fly))
+            for (terrain.effects) |effect| {
+                var adj_effect = effect;
 
-            // Set the dummy .Ctx durations' values.
-            //
-            if (effect.duration == .Ctx) {
-                adj_effect.duration = .{ .Ctx = terrain };
-            }
+                // Set the dummy .Ctx durations' values.
+                //
+                if (effect.duration == .Ctx) {
+                    adj_effect.duration = .{ .Ctx = terrain };
+                }
 
-            // If the status is a .Tmp status and we already have it, skip
-            if (effect.duration == .Tmp and self.hasStatus(effect.status)) {
-                continue;
-            }
+                // If the status is a .Tmp status and we already have it, skip
+                if (effect.duration == .Tmp and self.hasStatus(effect.status)) {
+                    continue;
+                }
 
-            self.applyStatus(adj_effect, .{});
-        }
+                self.applyStatus(adj_effect, .{});
+            };
 
         inline for (@typeInfo(Status).@"enum".fields) |status| {
             const status_e = @field(Status, status.name);
@@ -3240,7 +3246,7 @@ pub const Mob = struct { // {{{
             if (prisoner.held_by != null)
                 return false;
 
-        if (!state.is_walkable(dest, .{ .right_now = true, .ignore_mobs = true })) {
+        if (!state.is_walkable(dest, .{ .mob = self, .right_now = true, .ignore_mobs = true })) {
             if (state.dungeon.at(dest).surface) |surface| {
                 switch (surface) {
                     .Machine => |m| if (!m.isWalkable()) {
@@ -3306,32 +3312,34 @@ pub const Mob = struct { // {{{
             state.dungeon.atGas(coord)[gas.Darkness.id] += 2;
         }
 
-        if (state.dungeon.terrainAt(dest).trample_cloud) |gas_opts| {
-            if (rng.onein(gas_opts.chance)) {
-                state.dungeon.atGas(coord)[gas_opts.id] += gas_opts.amount;
+        if (!self.hasStatus(.Fly)) {
+            if (state.dungeon.terrainAt(dest).trample_cloud) |gas_opts| {
+                if (rng.onein(gas_opts.chance)) {
+                    state.dungeon.atGas(coord)[gas_opts.id] += gas_opts.amount;
+                }
             }
-        }
 
-        if (state.dungeon.terrainAt(dest).trample_into) |new| {
-            state.dungeon.at(dest).terrain = new;
-        }
+            if (state.dungeon.terrainAt(dest).trample_into) |new| {
+                state.dungeon.at(dest).terrain = new;
+            }
 
-        if (state.dungeon.at(dest).surface) |surface| {
-            switch (surface) {
-                .Corpse => |c| if (self == state.player) {
-                    player.drainMob(c);
-                },
-                .Machine => |m| if (m.isWalkable()) {
-                    _ = m.addPower(self);
-                },
+            if (state.dungeon.at(dest).surface) |surface| {
+                switch (surface) {
+                    .Corpse => |c| if (self == state.player) {
+                        player.drainMob(c);
+                    },
+                    .Machine => |m| if (m.isWalkable()) {
+                        _ = m.addPower(self);
+                    },
+                    else => {},
+                }
+            }
+
+            if (state.dungeon.itemsAt(dest).last()) |item| switch (item) {
+                .Ring => |r| if (self == state.player) player.drainRing(r),
                 else => {},
-            }
+            };
         }
-
-        if (state.dungeon.itemsAt(dest).last()) |item| switch (item) {
-            .Ring => |r| if (self == state.player) player.drainRing(r),
-            else => {},
-        };
 
         return true;
     }
