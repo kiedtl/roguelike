@@ -295,6 +295,8 @@ pub const IsWalkableOptions = struct {
 
 // STYLE: change to Tile.isWalkable
 pub fn is_walkable(coord: Coord, opts: IsWalkableOptions) bool {
+    const flying = opts.mob != null and opts.mob.?.hasStatus(.Fly);
+
     if (opts.mob != null and opts.mob.?.multitile != null and !opts._no_multitile_recurse) {
         var newopts = opts;
         newopts._no_multitile_recurse = true;
@@ -310,7 +312,7 @@ pub fn is_walkable(coord: Coord, opts: IsWalkableOptions) bool {
 
     switch (dungeon.at(coord).type) {
         .Wall => return false,
-        .Water, .Lava => if (!opts.only_if_breaks_lof) return false,
+        .Water, .Lava => if (!opts.only_if_breaks_lof and !flying) return false,
         else => {},
     }
 

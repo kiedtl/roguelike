@@ -14,8 +14,8 @@
 :notraps
 :priority 100
 
-@a Cmons angel_procgen_template ([facing]East)
-@v M bone_rat
+@a Cmons angel_arch_1 ([facing]East)
+@v Cmons bone_rat ([prm_status1]Paralysis)
 
 @0 i potion_smoke
 @1 i potion_paralysis
@@ -24,11 +24,11 @@
 
 #####****#####
 #..≈≈≈≈≈≈≈≈≈.#
-#.≈##≈≈≈≈≈v≈.#
-*.≈vv≈≈a≈v#≈.*
-#.≈##≈≈≈≈v#≈.#
-*..≈≈≈≈≈≈≈≈≈.*
-#.....@......#
+#.≈≈≈≈≈≈≈≈≈≈.#
+*.≈a.......≈.*
+#.≈..........*
+*.#..........*
 #............#
+#.@..........#
 #............#
 #####****#####
