@@ -382,11 +382,8 @@ const TRAITS = [_]Trait{
         .original_weight = 3,
         .require_kind = &.{ .Arch, .Soldier },
         .prefer_names = &[_]Trait.Preference{
-            .{ .n = "Boiling", .w = 10 },
-            .{ .n = "Blazing", .w = 10 },
-            .{ .n = "Molten", .w = 10 },
-            .{ .n = "Cinder", .w = 10 },
-            .{ .n = "Furnace", .w = 10 },
+            .{ .n = "Cleanser", .w = 5 },
+            .{ .n = "Silver", .w = 5 },
         },
     },
     .{
@@ -396,8 +393,8 @@ const TRAITS = [_]Trait{
         .vibes = &.{.magic},
         .require_kind = &.{ .Arch, .Soldier },
         .prefer_names = &[_]Trait.Preference{
-            .{ .n = "Blazing", .w = 10 },
-            .{ .n = "Furnace", .w = 10 },
+            .{ .n = "Cleanser", .w = 5 },
+            .{ .n = "Silver", .w = 5 },
         },
     },
     .{
@@ -408,6 +405,10 @@ const TRAITS = [_]Trait{
         .max_used = 2,
         .original_weight = 1,
         .require_kind = &.{ .Arch, .Soldier },
+        .prefer_names = &[_]Trait.Preference{
+            .{ .n = "Cleanser", .w = 5 },
+            .{ .n = "Silver", .w = 5 },
+        },
     },
     .{
         .power = 2,
