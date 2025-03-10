@@ -2319,6 +2319,7 @@ pub fn mkAngelTemplate(comptime id: []const u8) MobTemplate {
             .blood = null,
             .life_type = .Spectral,
             .faction = .Holy,
+            .corpse = .None,
 
             .max_HP = undefined,
         },
@@ -2331,6 +2332,57 @@ pub var SoldierAngelTemplate2 = mkAngelTemplate("angel_soldier_2");
 pub var SoldierAngelTemplate3 = mkAngelTemplate("angel_soldier_3");
 pub var FollowerAngelTemplate1 = mkAngelTemplate("angel_follower_1");
 pub var FollowerAngelTemplate2 = mkAngelTemplate("angel_follower_2");
+
+pub fn mkMothTemplate(comptime id: []const u8) MobTemplate {
+    return .{
+        .mob = .{
+            .id = id,
+            .species = &Species{ .name = "sun moth" },
+            .tile = 'ß',
+            .ai = AI{
+                .profession_description = "guarding",
+                .work_fn = ai.sunMothWork,
+                .fight_fn = ai.sunMothFight,
+                .is_fearless = true,
+                .is_curious = false,
+                .spellcaster_backup_action = .KeepDistance,
+                .flags = &[_]AI.Flag{.RandomSpells},
+            },
+            .max_HP = 12,
+
+            .memory_duration = 99,
+            .blood = null,
+            .life_type = .Spectral,
+            .faction = .Holy,
+            .corpse = .None,
+            .deg360_vision = true,
+            .no_show_fov = true,
+
+            .innate_resists = .{
+                .rFire = RESIST_IMMUNE,
+                .rAcid = RESIST_IMMUNE,
+                .rElec = RESIST_IMMUNE,
+                .Armor = RESIST_IMMUNE,
+                .rFume = 100,
+            },
+            .stats = .{
+                .Willpower = WILL_IMMUNE,
+                .Melee = 0,
+                .Vision = PLAYER_VISION - 1,
+                .Speed = 50,
+            },
+        },
+        .statuses = &[_]StatusDataInfo{.{ .status = .Fly, .duration = .Prm }},
+    };
+}
+
+pub var ArchangelMothTemplate1 = mkMothTemplate("moth_arch_1");
+pub var ArchangelMothTemplate2 = mkMothTemplate("moth_arch_2");
+pub var SoldierMothTemplate1 = mkMothTemplate("moth_soldier_1");
+pub var SoldierMothTemplate2 = mkMothTemplate("moth_soldier_2");
+pub var SoldierMothTemplate3 = mkMothTemplate("moth_soldier_3");
+pub var FollowerMothTemplate1 = mkMothTemplate("moth_follower_1");
+pub var FollowerMothTemplate2 = mkMothTemplate("moth_follower_2");
 
 const REVGENUNKIM_CLAW_WEAPON = Weapon{
     .name = "acid claw",
@@ -2554,7 +2606,7 @@ pub const MOBS = [_]*const MobTemplate{
     &RevgenunkimTemplate,
     &CinderBruteTemplate,
     &BurningBruteTemplate,
-} ++ templates_test.MOBS ++ ANGELS;
+} ++ templates_test.MOBS ++ ANGELS ++ MOTHS;
 
 pub const ANGELS = [_]*MobTemplate{
     &ArchangelTemplate1,
@@ -2564,6 +2616,16 @@ pub const ANGELS = [_]*MobTemplate{
     &SoldierAngelTemplate3,
     &FollowerAngelTemplate1,
     &FollowerAngelTemplate2,
+};
+
+pub const MOTHS = [_]*MobTemplate{
+    &ArchangelMothTemplate1,
+    &ArchangelMothTemplate2,
+    &SoldierMothTemplate1,
+    &SoldierMothTemplate2,
+    &SoldierMothTemplate3,
+    &FollowerMothTemplate1,
+    &FollowerMothTemplate2,
 };
 
 pub const PRISONERS = [_]MobTemplate{

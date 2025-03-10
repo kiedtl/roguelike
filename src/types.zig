@@ -4734,9 +4734,10 @@ pub const Mob = struct { // {{{
         // Add the mob's innate resistance.
         const innate = utils.getFieldByEnum(Resistance, self.innate_resists, resist);
         // Special case for immunity
-        if (resist != .rFume and innate == 1000) {
+        if (resist != .rFume and innate == mobs.RESIST_IMMUNE) {
             return 100;
         }
+        //std.log.info("{}: {}: {}", .{ self, resist, innate });
         assert(innate <= 100 and innate >= -100);
         r += innate;
 

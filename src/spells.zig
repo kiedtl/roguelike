@@ -181,6 +181,36 @@ pub const CAST_ALERT_SIREN = Spell{
     }},
 };
 
+// Power is the index into mobs.ANGELS. Yes, a weird hack.
+//
+pub const CAST_MOTH_TRANSFORM = Spell{
+    .id = "sp_moth_transform",
+    .name = "transform",
+    .cast_type = .Smite,
+    .smite_target_type = .Self,
+    .check_has_effect = struct {
+        // No hostiles can see me change, unless I can't see them
+        fn f(caster: *Mob, _: SpellOptions, _: Coord) bool {
+            return for (caster.enemyList().items) |enemy| {
+                if (enemy.mob.canSeeMob(caster) and caster.canSeeMob(enemy.mob))
+                    break false;
+            } else true;
+        }
+    }.f,
+    .effects = &[_]Effect{.{
+        .Custom = struct {
+            fn f(caster_coord: Coord, opts: SpellOptions, _: Coord) void {
+                const caster = state.dungeon.at(caster_coord).mob.?;
+                state.dungeon.at(caster_coord).mob = null; // Hack
+                const new = mobs.placeMob(state.alloc, mobs.ANGELS[opts.power], caster.coord, .{});
+                new.enemies = caster.enemyList().clone() catch err.oom();
+                caster.coord = Coord.new2(0, 0, 0);
+                caster.deinitNoCorpse();
+            }
+        }.f,
+    }},
+};
+
 pub const BLAST_DISRUPTING_AOE = 5;
 
 // Power affects duration of Torment Undead, as well as amount of disruption.
@@ -561,7 +591,7 @@ pub const BOLT_SPEEDING = Spell{
     .cast_type = .Bolt,
     .bolt_dodgeable = true,
     .bolt_missable = true,
-    .bolt_multitarget = false,
+    .bolt_multitarget = true, // Yes, TRUE, I did this deliberately :P
     .animation = .{ .Particles = .{ .name = "zap-speeding-bolt" } },
     .noise = .Medium,
     .effects = &[_]Effect{.{

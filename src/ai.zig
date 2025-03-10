@@ -790,6 +790,10 @@ fn tryChooseRandomPatrolDest(mob: *Mob) ?Coord {
     return null;
 }
 
+pub fn sunMothWork(mob: *Mob) void {
+    patrolWork(mob);
+}
+
 pub fn patrolWork(mob: *Mob) void {
     assert(state.dungeon.at(mob.coord).mob != null);
     assert(mob.ai.phase == .Work);
@@ -1570,6 +1574,14 @@ fn _findValidTargetForSpell(caster: *Mob, spell: SpellOptions) ?Coord {
 
 pub fn alchemistFight(mob: *Mob) void {
     mageFight(mob);
+}
+
+pub fn sunMothFight(mob: *Mob) void {
+    if (!castAnySpell(mob)) {
+        const dist: usize = @intCast(mob.stat(.Vision) + 1);
+        const moved = runAwayFromEnemies(mob, dist);
+        if (!moved) tryRest(mob);
+    }
 }
 
 fn castAnySpell(mob: *Mob) bool {

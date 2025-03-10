@@ -1,6 +1,7 @@
 const std = @import("std");
 const meta = std.meta;
 const mem = std.mem;
+const math = std.math;
 const assert = std.debug.assert;
 
 const colors = @import("../colors.zig");
@@ -42,8 +43,8 @@ const Char = struct {
 const Name = struct {
     kind: Kind,
     str: []const u8,
+    moth_str: []const u8 = "",
     syl: usize,
-    prefer_color: ?[]const u8 = null,
     forbid: ?[]const u8 = null,
     original_weight: usize = 10,
     require: ?AngelKind = null,
@@ -178,28 +179,41 @@ const CHARS = [_]Char{
     .{ .ch = 'ת', .original_weight = 10 },
 };
 
+fn _n(kind: Name.Kind, str: []const u8, syl: usize, moth: []const u8, opts: struct {
+    w: usize = 10,
+    forbid: ?[]const u8 = null,
+    req: ?AngelKind = null,
+}) Name {
+    return .{ .kind = kind, .str = str, .syl = syl, .moth_str = moth, .original_weight = opts.w, .forbid = opts.forbid, .require = opts.req };
+}
+
 const NAMES = [_]Name{
-    .{ .kind = .Adj, .str = "Silver", .syl = 2, .original_weight = 0 },
-    .{ .kind = .Adj, .str = "Adamantine", .syl = 4, .original_weight = 0 },
-    .{ .kind = .Adj, .str = "Grim", .syl = 1, .original_weight = 0 },
-    .{ .kind = .Adj, .str = "Armored", .syl = 2, .original_weight = 0 },
-    .{ .kind = .Adj, .str = "Dread", .syl = 1 },
-    .{ .kind = .Adj, .str = "Crimson", .syl = 2 },
-    .{ .kind = .Adj, .str = "Red", .syl = 1 },
-    .{ .kind = .Adj, .str = "Iron", .syl = 2, .original_weight = 0 },
-    .{ .kind = .Adj, .str = "Bladed", .syl = 2, .original_weight = 0 },
-    .{ .kind = .Adj, .str = "Horned", .syl = 1 },
-    .{ .kind = .Adj, .str = "Pronged", .syl = 1 },
-    .{ .kind = .Adj, .str = "Clawed", .syl = 1 },
-    .{ .kind = .Adj, .str = "Skewering", .syl = 3, .original_weight = 0 },
-    .{ .kind = .Adj, .str = "Spiked", .syl = 1, .original_weight = 0 },
-    .{ .kind = .Adj, .str = "Boiling", .syl = 2, .original_weight = 0 },
-    .{ .kind = .Adj, .str = "Burning", .syl = 2, .original_weight = 0 },
-    .{ .kind = .Adj, .str = "Blazing", .syl = 2, .original_weight = 0 },
-    .{ .kind = .Adj, .str = "Molten", .syl = 2, .original_weight = 0 },
-    .{ .kind = .Adj, .str = "Cinder", .syl = 2, .original_weight = 0 },
-    .{ .kind = .Adj, .str = "Shining", .syl = 2 },
-    .{ .kind = .Adj, .str = "Towering", .syl = 3 },
+    // zig fmt: off
+    _n(.Adj, "Silver",     2, "shining",    .{ .w = 0 }),
+    _n(.Adj, "Adamantine", 4, "iridescent", .{ .w = 0 }),
+    _n(.Adj, "Grim",       1, "metallic",   .{ .w = 0 }),
+    _n(.Adj, "Armored" ,   2, "metallic",   .{ .w = 0 }),
+    _n(.Adj, "Dread",      1, "magenta",    .{}),
+    _n(.Adj, "Crimson" ,   2, "crimson",    .{}),
+    _n(.Adj, "Red",        1, "scarlet",    .{}),
+    _n(.Adj, "Iron",       2, "metallic",   .{ .w = 0 }),
+    _n(.Adj, "Bladed",     2, "metallic",   .{ .w = 0 }),
+    _n(.Adj, "Horned",     1, "spiked",     .{}),
+    _n(.Adj, "Pronged",    1, "spiked",     .{}),
+    _n(.Adj, "Clawed",     1, "spiked",     .{}),
+    _n(.Adj, "Skewering",  3, "metallic",   .{ .w = 0 }),
+    _n(.Adj, "Spiked",     1, "spiked",     .{ .w = 0 }),
+    _n(.Adj, "Boiling",    2, "scarlet",    .{ .w = 0 }),
+    _n(.Adj, "Burning",    2, "crimson",    .{ .w = 0 }),
+    _n(.Adj, "Blazing",    2, "shimmering", .{ .w = 0 }),
+    _n(.Adj, "Molten",     2, "glowing",    .{ .w = 0 }),
+    _n(.Adj, "Cinder",     2, "scarlet",    .{}),
+    _n(.Adj, "Charred",    2, "graphite",   .{}),
+    _n(.Adj, "Blackened",  2, "inky",       .{}),
+    _n(.Adj, "Shining",    2, "shining",    .{}),
+    _n(.Adj, "Towering",   3, "metallic",   .{}),
+    _n(.Adj, "Brazen",     3, "shimmering", .{}),
+    // zig fmt: on
 
     .{ .kind = .Noun, .str = "Crawler", .syl = 2 },
     .{ .kind = .Noun, .str = "Banisher", .syl = 2, .original_weight = 0 },
@@ -239,7 +253,7 @@ const NAMES = [_]Name{
     .{ .kind = .Noun, .str = "Furnace", .syl = 2, .original_weight = 0 },
 
     // Follower angels
-    .{ .kind = .Adj, .str = "Fledgeling", .syl = 2, .require = .Follower },
+    .{ .kind = .Adj, .str = "Fledgeling", .syl = 2, .moth_str = "floating", .require = .Follower },
     .{ .kind = .Noun, .str = "Assistant", .syl = 3, .require = .Follower },
     .{ .kind = .Noun, .str = "Apprentice", .syl = 3, .require = .Follower },
     .{ .kind = .Noun, .str = "Follower", .syl = 3, .require = .Follower },
@@ -670,12 +684,15 @@ fn calcMaxMP(kind: AngelKind, traits: []const Trait) usize {
 // Tiles are not unique and can be reused.
 //
 fn generateSingle(
-    out: *MobTemplate,
+    index: usize, // Index into mobs.ANGELS and mobs.MOTHS
     kind: AngelKind,
     traits: *StackBuffer(Trait, TRAITS.len),
     names: *StackBuffer(Name, NAMES.len),
     tiles: *StackBuffer(Char, CHARS.len),
 ) void {
+    const out = mobs.ANGELS[index];
+    const out_moth = mobs.MOTHS[index];
+
     for (traits.slice()) |*i| i.weight = i.original_weight;
     for (names.slice()) |*i| i.weight = i.original_weight;
     for (tiles.slice()) |*i| i.weight = i.original_weight;
@@ -849,6 +866,11 @@ fn generateSingle(
     out.mob.spells = spell_list.toOwnedSlice() catch err.oom();
     out.statuses = statuses.toOwnedSlice() catch err.oom();
     out.mob.ai.flags = aiflags.toOwnedSlice() catch err.oom();
+    out.mob.slain_trigger = b: {
+        const buf = state.alloc.alloc(*const MobTemplate, 1) catch err.oom();
+        buf[0] = out_moth;
+        break :b .{ .Disintegrate = buf };
+    };
 
     // Set the general AI behaviour.
     //
@@ -872,6 +894,14 @@ fn generateSingle(
         .meleedude, .warlock => .Melee,
         .blaster => .KeepDistance,
     };
+
+    // Generate the moth.
+    out_moth.mob.ai.profession_name = std.fmt.allocPrint(state.alloc, "{s} sun moth", .{adj.?.moth_str}) catch err.oom();
+    out_moth.mob.spells = b: {
+        const spbuf = state.alloc.alloc(SpellOptions, 1) catch err.oom();
+        spbuf[0] = .{ .MP_cost = 0, .spell = &spells.CAST_MOTH_TRANSFORM, .power = index };
+        break :b spbuf;
+    };
 }
 
 pub fn init() void {
@@ -884,13 +914,13 @@ pub fn init() void {
     //
     // Followers get leftovers.
 
-    generateSingle(&mobs.ArchangelTemplate1, .Arch, &traits, &names, &tiles);
-    generateSingle(&mobs.ArchangelTemplate2, .Arch, &traits, &names, &tiles);
-    generateSingle(&mobs.SoldierAngelTemplate1, .Soldier, &traits, &names, &tiles);
-    generateSingle(&mobs.SoldierAngelTemplate2, .Soldier, &traits, &names, &tiles);
-    generateSingle(&mobs.SoldierAngelTemplate3, .Soldier, &traits, &names, &tiles);
-    generateSingle(&mobs.FollowerAngelTemplate1, .Follower, &traits, &names, &tiles);
-    generateSingle(&mobs.FollowerAngelTemplate2, .Follower, &traits, &names, &tiles);
+    generateSingle(0, .Arch, &traits, &names, &tiles);
+    generateSingle(1, .Arch, &traits, &names, &tiles);
+    generateSingle(2, .Soldier, &traits, &names, &tiles);
+    generateSingle(3, .Soldier, &traits, &names, &tiles);
+    generateSingle(4, .Soldier, &traits, &names, &tiles);
+    generateSingle(5, .Follower, &traits, &names, &tiles);
+    generateSingle(6, .Follower, &traits, &names, &tiles);
 
     // Now choose a strength and a vulnerability.
     const RESISTS = [_]types.Resistance{ .rFire, .rElec, .rAcid, .Armor };
@@ -917,14 +947,14 @@ pub fn init() void {
         if ((vuln == .Armor and vuln_ptr.* == DEFAULT_ARMOR) or
             vuln_ptr.* == DEFAULT_RESIST)
         {
-            vuln_ptr.* -= 50;
+            vuln_ptr.* = math.clamp(vuln_ptr.* - 50, -100, 0);
         }
 
         const strength_ptr = _getResistPtr(angel_template, strength);
         if ((strength == .Armor and strength_ptr.* == DEFAULT_ARMOR) or
             strength_ptr.* == DEFAULT_RESIST)
         {
-            strength_ptr.* += 75;
+            strength_ptr.* = math.clamp(strength_ptr.* + 75, 0, 100);
         }
     }
 }
@@ -933,7 +963,13 @@ pub fn deinit() void {
     for (&mobs.ANGELS) |angel| {
         state.alloc.free(angel.mob.ai.flags);
         state.alloc.free(angel.mob.ai.profession_name.?);
+        state.alloc.free(angel.mob.slain_trigger.Disintegrate);
         state.alloc.free(angel.mob.spells);
         state.alloc.free(angel.statuses);
+    }
+
+    for (&mobs.MOTHS) |moth| {
+        state.alloc.free(moth.mob.ai.profession_name.?);
+        state.alloc.free(moth.mob.spells);
     }
 }
