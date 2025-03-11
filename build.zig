@@ -1,6 +1,33 @@
 const std = @import("std");
 const Build = std.Build;
 
+fn _addTermbox(b: *Build, exe: *Build.Step.Compile) void {
+    const termbox_sources = [_][]const u8{
+        "third_party/termbox/src/input.c",
+        "third_party/termbox/src/memstream.c",
+        "third_party/termbox/src/ringbuffer.c",
+        "third_party/termbox/src/termbox.c",
+        "third_party/termbox/src/term.c",
+        "third_party/termbox/src/utf8.c",
+    };
+
+    const termbox_cflags = [_][]const u8{
+        "-std=c99",
+        "-Wpedantic",
+        "-Wall",
+        //"-Werror", // Disabled to keep clang from tantruming about unused
+        //              function results in memstream.c
+        "-g",
+        "-I./third_party/termbox/src",
+        "-D_POSIX_C_SOURCE=200809L",
+        "-D_XOPEN_SOURCE",
+        "-D_DARWIN_C_SOURCE", // Needed for macOS and SIGWINCH def
+    };
+
+    for (termbox_sources) |termbox_source|
+        exe.addCSourceFile(.{ .file = b.path(termbox_source), .flags = &termbox_cflags });
+}
+
 pub fn build(b: *Build) void {
     // Standard target options allows the person running `zig build` to choose
     // what target to build for. Here we do not override the defaults, which
@@ -116,30 +143,7 @@ pub fn build(b: *Build) void {
     }
 
     if (!opt_use_sdl) {
-        const termbox_sources = [_][]const u8{
-            "third_party/termbox/src/input.c",
-            "third_party/termbox/src/memstream.c",
-            "third_party/termbox/src/ringbuffer.c",
-            "third_party/termbox/src/termbox.c",
-            "third_party/termbox/src/term.c",
-            "third_party/termbox/src/utf8.c",
-        };
-
-        const termbox_cflags = [_][]const u8{
-            "-std=c99",
-            "-Wpedantic",
-            "-Wall",
-            //"-Werror", // Disabled to keep clang from tantruming about unused
-            //              function results in memstream.c
-            "-g",
-            "-I./third_party/termbox/src",
-            "-D_POSIX_C_SOURCE=200809L",
-            "-D_XOPEN_SOURCE",
-            "-D_DARWIN_C_SOURCE", // Needed for macOS and SIGWINCH def
-        };
-
-        for (termbox_sources) |termbox_source|
-            exe.addCSourceFile(.{ .file = b.path(termbox_source), .flags = &termbox_cflags });
+        _addTermbox(b, exe);
     } else {
         if (is_windows) {
             exe.addIncludePath(b.path("third_party/mingw/SDL2/include/SDL2/"));
@@ -166,8 +170,20 @@ pub fn build(b: *Build) void {
     const run_step = b.step("run", "Run the roguelike");
     run_step.dependOn(&run_cmd.step);
 
-    var tests = b.addTest(.{ .root_source_file = b.path("tests/tests.zig") });
+    var build_tests = b.addTest(.{
+        .name = "rl_tests",
+        .root_source_file = b.path("src/test.zig"),
+        .link_libc = true,
+    });
+    build_tests.root_module.addOptions("build_options", options);
+    build_tests.addIncludePath(b.path("third_party/janet/"));
+    build_tests.addCSourceFiles(.{ .files = &[_][]const u8{"third_party/janet/janet.c"} });
+    _addTermbox(b, build_tests);
+    b.installArtifact(build_tests);
+    const tests = b.addRunArtifact(build_tests);
+    tests.step.dependOn(b.getInstallStep());
+    tests.step.dependOn(&build_tests.step);
+
     const tests_step = b.step("tests", "Run the various tests");
-    //tests_step.dependOn(&exe.step);
     tests_step.dependOn(&tests.step);
 }
