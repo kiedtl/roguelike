@@ -757,6 +757,10 @@ pub fn equipItem(item: Item) bool {
         .Shoe, .Weapon, .Head, .Armor, .Cloak, .Aux => {
             const slot = Mob.Inventory.EquSlot.slotFor(item);
             if (state.player.inventory.equipment(slot).*) |old_item| {
+                if (slot == .Weapon and old_item.Weapon.is_cursed) {
+                    ui.drawAlert("You can't bring yourself to drop the {s}.", .{old_item.Weapon.name});
+                    return false;
+                }
                 state.player.dequipItem(slot, state.player.coord);
                 state.message(.Inventory, "You drop the {s}.", .{
                     (old_item.longName() catch err.wat()).constSlice(),
@@ -1085,6 +1089,12 @@ pub fn dropItem(index: usize, is_inventory: bool) UserActionResult {
 
     if (!is_inventory and @as(Inventory.EquSlot, @enumFromInt(index)) == .Shoe)
         return .{ .Failure = "Sorry, you need shoes." };
+
+    if (!is_inventory and @as(Inventory.EquSlot, @enumFromInt(index)) == .Weapon and
+        state.player.inventory.equipment(.Weapon).*.?.Weapon.is_cursed)
+    {
+        return .{ .Failure = "You cannot bring yourself to let go of this item." };
+    }
 
     if (state.nextAvailableSpaceForItem(state.player.coord, state.alloc)) |coord| {
         const item = if (is_inventory) b: {
