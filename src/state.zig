@@ -164,10 +164,8 @@ pub var completed_events: [events.EVENTS.len]usize = [_]usize{0} ** events.EVENT
 
 // zig fmt: off
 pub var night_rep = [types.Faction.TOTAL]isize{
-    //
     // NEC    @   CG   REV   NC   HOLY
          0,   0,   0,  -10,  10,     9
-    //
 };
 // zig fmt: on
 
@@ -175,6 +173,39 @@ pub var player_upgrades: [3]player_m.PlayerUpgradeInfo = undefined;
 pub var player_conj_augments: [player_m.ConjAugment.TOTAL]player_m.ConjAugmentInfo = undefined;
 
 pub const __SER_STOP = {};
+
+// Numbers don't mean that much right now (unlike with night_rep). Only whether
+// it's negative/zero/positive is significant.
+//
+// Row is indexed by mob checking hostility, column indexed by mob being checked.
+//
+// zig fmt: off
+pub const REP_TABLE = [types.Faction.TOTAL][types.Faction.TOTAL]isize{
+    // NEC     @    CG   REV    NC   HOLY
+    .{  10,   -5,   -5,  -10,   -5,    -5  },  // NEC
+    .{ -10,   10,    5,  -10,    0,     0  },  // @
+    .{ -10,    5,   10,  -10,    1,     1  },  // CG
+    .{ -10,  -10,  -10,   10,  -10,   -10  },  // REV
+    .{   0,    0,    0,  -10,   10,     9  },  // NC      // NOTE: use night_rep table
+    .{  -1,    0,    5,  -10,    9,    10  },  // HOLY
+
+    //
+    // NOTE: player holy_rep really isn't used, what matters most is the rHoly
+    // stat. This table just ensures that Necromancer-aligned mobs will be
+    // hostile even if their rHoly isn't negative.
+};
+// zig fmt: on
+
+// Assert that factions are allied with themselves
+// TODO: add more checks
+comptime {
+    for (@typeInfo(types.Faction).@"enum".fields) |field_entry| {
+        const field = field_entry.value;
+        if (REP_TABLE[field][field] != 10) {
+            @compileError("Faction check: a faction isn't fully allied with itself.");
+        }
+    }
+}
 
 // Data files
 pub const MapgenInfos = struct {

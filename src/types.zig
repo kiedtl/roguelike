@@ -4527,19 +4527,19 @@ pub const Mob = struct { // {{{
 
         // If the other mob is a prisoner of my faction (and is actually in
         // prison) or we're both prisoners of the same faction, don't be hostile.
-        if (othermob.prisoner_status) |ps| {
-            if (ps.of == self.faction and
-                (state.dungeon.at(othermob.coord).prison or ps.held_by != null))
-            {
-                hostile = false;
-            }
+        // if (othermob.prisoner_status) |ps| {
+        //     if (ps.of == self.faction and
+        //         (state.dungeon.at(othermob.coord).prison or ps.held_by != null))
+        //     {
+        //         hostile = false;
+        //     }
 
-            if (self.prisoner_status) |my_ps| {
-                if (my_ps.of == ps.of) {
-                    hostile = false;
-                }
-            }
-        }
+        //     if (self.prisoner_status) |my_ps| {
+        //         if (my_ps.of == ps.of) {
+        //             hostile = false;
+        //         }
+        //     }
+        // }
 
         // If mob is prisoner of othermob, be docile...
         if (self.prisoner_status) |my_ps|
@@ -4549,23 +4549,37 @@ pub const Mob = struct { // {{{
                 hostile = false;
             };
 
-        if (self.faction == .Night and
-            state.night_rep[@intFromEnum(othermob.faction)] > -5 and
-            (state.night_rep[@intFromEnum(othermob.faction)] > 0 or
-                state.dungeon.terrainAt(othermob.coord) != &surfaces.SladeTerrain))
+        const rep = state.REP_TABLE[@intFromEnum(self.faction)][@intFromEnum(othermob.faction)];
+        const night_rep = state.night_rep[@intFromEnum(othermob.faction)];
+
+        if (self.faction == .Night and night_rep > -5 and
+            (night_rep > 0 or !othermob.isOnSlade()))
         {
             hostile = false;
+
+            // Night-creature specific exception.
+            //
+            // 2025-02-28: For future me who's implementing granular hostility
+            // mechanics for when player attacks angels, night creatures, etc: see
+            // commit message for a578181
+            //
+            const ouchy = for (self.enemyListConst().items) |*enemyrec| {
+                if (enemyrec.mob == othermob and enemyrec.attacked_me)
+                    break true;
+            } else false;
+
+            if (ouchy)
+                hostile = true;
+        } else if (self.faction == .Holy or othermob.faction == .Holy) {
+            if (rep >= 0 and
+                (self.faction == .Holy and othermob.resistance(.rHoly) >= 0) or
+                (othermob.faction == .Holy and self.resistance(.rHoly) >= 0))
+            {
+                hostile = false;
+            }
+        } else if (rep >= 0) {
+            hostile = false;
         }
-
-        const attacked_me = for (self.enemyListConst().items) |*enemyrec| {
-            if (enemyrec.mob == othermob and enemyrec.attacked_me)
-                break true;
-        } else false;
-
-        // 2025-02-28: For future me who's implementing Angel hostility
-        // mechanics: see commit message for a578181
-        if (attacked_me and self.faction == .Night)
-            hostile = true;
 
         return hostile;
     }
