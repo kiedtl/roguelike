@@ -435,7 +435,7 @@ pub const Coord = struct { // {{{
     fn insert_if_valid(z: usize, x: isize, y: isize, buf: *StackBuffer(Coord, 2048), limit: Coord) void {
         if (x < 0 or y < 0)
             return;
-        if (x > @as(isize, @intCast(limit.x)) or y > @as(isize, @intCast(limit.y)))
+        if (x >= @as(isize, @intCast(limit.x)) or y >= @as(isize, @intCast(limit.y)))
             return;
 
         buf.append(Coord.new2(z, @as(usize, @intCast(x)), @as(usize, @intCast(y)))) catch err.wat();
