@@ -4052,7 +4052,7 @@ pub const Mob = struct { // {{{
         }
 
         if (newcoord) |coord| {
-            state.dungeon.at(corpse_coord).surface = null;
+            state.dungeon.deleteSurface(corpse_coord);
             state.dungeon.at(coord).mob = self;
             self.coord = coord;
         } else {
@@ -4923,7 +4923,8 @@ pub const Machine = struct {
 
     coord: Coord = Coord.new(0, 0),
     on_power: *const fn (*Machine) void, // Called on each turn when the machine is powered
-    on_place: ?*const fn (*Machine) void = null, // Called when placed by mapgen
+    on_place: ?*const fn (*Machine) void = null, // When placed by mapgen
+    on_delete: ?*const fn (*Machine) void = null, // When machine is deleted from world (surface = null)
     power: usize = 0, // percentage (0..100)
     last_interaction: ?*Mob = null,
     ctx: Ctx = undefined,
@@ -5082,7 +5083,7 @@ pub const Machine = struct {
                         }
 
                         machine.disabled = true;
-                        state.dungeon.at(machine.coord).surface = null;
+                        state.dungeon.deleteSurface(machine.coord);
                     }
                 }
             }.f,
@@ -5206,7 +5207,10 @@ pub const SurfaceItem = union(SurfaceItemTag) {
 
     pub fn destroy(self: SurfaceItem, coord: Coord) void {
         switch (self) {
-            .Machine => |m| m.disabled = true,
+            .Machine => |m| {
+                if (m.on_delete) |on_delete| (on_delete)(m);
+                m.disabled = true;
+            },
             else => {},
         }
         state.dungeon.at(coord).surface = null;
@@ -5991,6 +5995,12 @@ pub const Dungeon = struct {
         }
 
         return false;
+    }
+
+    // Delete surface if it exists, running machine callbacks if applicable.
+    pub fn deleteSurface(self: *Dungeon, c: Coord) void {
+        if (self.at(c).surface) |surface|
+            surface.destroy(c);
     }
 
     pub fn hasContainer(self: *Dungeon, c: Coord) ?*Container {

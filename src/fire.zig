@@ -159,9 +159,9 @@ pub fn tickFire(level: usize) void {
             if (state.dungeon.at(coord).surface) |s| {
                 switch (s) {
                     .Machine => |m| if (!m.fireproof) {
-                        state.dungeon.at(coord).surface = null;
+                        state.dungeon.deleteSurface(coord);
                     },
-                    .Poster, .Corpse => state.dungeon.at(coord).surface = null,
+                    .Poster, .Corpse => state.dungeon.deleteSurface(coord),
                     else => {},
                 }
             }

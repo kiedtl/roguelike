@@ -1,5 +1,6 @@
 :g_subroom
 :priority 50
+% Mapgen and shrine bookkeeping code assumes only one shrine per level.
 :g_restriction 1
 :g_material gold
 

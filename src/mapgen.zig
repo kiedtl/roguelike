@@ -801,7 +801,7 @@ pub fn excavatePrefab(
             assert(rc.x < WIDTH);
             assert(rc.y < HEIGHT);
 
-            state.dungeon.at(rc).surface = null;
+            state.dungeon.deleteSurface(rc);
             state.dungeon.itemsAt(rc).clear();
 
             if (state.dungeon.at(rc).mob) |m| m.deinitNoCorpse();
@@ -1083,6 +1083,28 @@ pub fn resetLevel(level: usize) void {
     for (n_fabs.items) |*fab| fab.reset(level);
     for (s_fabs.items) |*fab| fab.reset(level);
 
+    var y: usize = 0;
+    while (y < HEIGHT) : (y += 1) {
+        var x: usize = 0;
+        while (x < WIDTH) : (x += 1) {
+            const is_edge = y == 0 or x == 0 or y == (HEIGHT - 1) or x == (WIDTH - 1);
+            const coord = Coord.new2(level, x, y);
+
+            const tile = state.dungeon.at(coord);
+            tile.prison = false;
+            tile.marked = false;
+            tile.type = if (is_edge) .Wall else Configs[level].tiletype;
+            tile.material = &materials.Basalt;
+            tile.mob = null;
+            tile.spatter = SpatterArray.initFill(0);
+
+            state.layout[level][y][x] = .Unknown;
+            state.dungeon.deleteSurface(coord);
+            state.dungeon.itemsAt(coord).clear();
+            state.dungeon.at(coord).terrain = &surfaces.DefaultTerrain;
+        }
+    }
+
     var mobiter = state.mobs.iterator();
     while (mobiter.next()) |mob| {
         if (mob == state.player)
@@ -1100,28 +1122,6 @@ pub fn resetLevel(level: usize) void {
         }
     }
     state.alarm_locations[level].reinit(null);
-
-    var y: usize = 0;
-    while (y < HEIGHT) : (y += 1) {
-        var x: usize = 0;
-        while (x < WIDTH) : (x += 1) {
-            const is_edge = y == 0 or x == 0 or y == (HEIGHT - 1) or x == (WIDTH - 1);
-            const coord = Coord.new2(level, x, y);
-
-            const tile = state.dungeon.at(coord);
-            tile.prison = false;
-            tile.marked = false;
-            tile.type = if (is_edge) .Wall else Configs[level].tiletype;
-            tile.material = &materials.Basalt;
-            tile.mob = null;
-            tile.surface = null;
-            tile.spatter = SpatterArray.initFill(0);
-
-            state.layout[level][y][x] = .Unknown;
-            state.dungeon.itemsAt(coord).clear();
-            state.dungeon.at(coord).terrain = &surfaces.DefaultTerrain;
-        }
-    }
 
     state.rooms[level].shrinkRetainingCapacity(0);
     state.stockpiles[level].shrinkRetainingCapacity(0);
@@ -2571,7 +2571,7 @@ pub fn setVaultFeatures(room: *Room) void {
                     assert(state.dungeon.at(coord).type == .Floor);
                     if (state.dungeon.at(coord).surface != null) {
                         state.dungeon.at(coord).surface.?.Machine.disabled = true;
-                        state.dungeon.at(coord).surface = null;
+                        state.dungeon.deleteSurface(coord);
                     }
                     _place_machine(coord, VAULT_DOORS[@intFromEnum(room.is_vault.?)]);
                 }
@@ -2607,7 +2607,7 @@ pub fn setLairFeatures(room: *Room) void {
     const door_c = room.connections.slice()[0].door.?;
     if (state.dungeon.at(door_c).surface != null) {
         state.dungeon.at(door_c).surface.?.Machine.disabled = true;
-        state.dungeon.at(door_c).surface = null;
+        state.dungeon.deleteSurface(door_c);
     }
     _place_machine(door_c, &surfaces.SladeDoor);
 

@@ -1018,8 +1018,16 @@ pub const Shrine = Machine{
     .on_power = powerNone,
     .on_place = struct {
         pub fn f(machine: *Machine) void {
-            // assert(state.shrine_locations[machine.coord.z] == null);
+            //assert(state.shrine_locations[machine.coord.z] == null);
             state.shrine_locations[machine.coord.z] = machine.coord;
+        }
+    }.f,
+    .on_delete = struct {
+        pub fn f(machine: *Machine) void {
+            if (state.shrine_locations[machine.coord.z]) |global_shrine_loc|
+                if (machine.coord.eq(global_shrine_loc)) {
+                    state.shrine_locations[machine.coord.z] = null;
+                };
         }
     }.f,
     .player_interact = .{
