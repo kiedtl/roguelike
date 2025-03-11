@@ -145,8 +145,8 @@ pub const Basalt = Material{
 pub const BasaltCrystal = Material{
     .id = "crystal_basalt",
     .name = "crystal_basalt",
-    .color_fg = 0x8f8fbf,
-    .color_fg_dance = .{ .each = 0x20203f, .all = 0x3 },
+    .color_fg = 0x6f6fbf,
+    .color_fg_dance = .{ .each = 0x181834, .all = 0x20 },
     .color_bg = null,
     .color_floor = 0x9e9e9e,
     .tileset = 0,
