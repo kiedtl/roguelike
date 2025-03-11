@@ -37,15 +37,6 @@ to 0 each time you ascend a floor. Ransacking Night lairs decreases reputation.
 * At $b-10 reputation$., Night creatures will occasionally leave your lairs to
   hunt you down.
 
-% concept_Holiness
-
-Your $orHoly$. stat determines your holiness, and your relations with the
-associated faction.
-
-
-If negative, you are $ounclean$.; you have been tainted, perhaps permanently,
-by the use or wearing of evil items. It is likely you will regret this.
-
 % stat_Health_player
 
 Keep it above zero at all costs.
@@ -63,6 +54,11 @@ You can acquire magic by draining shrines and the corpses of magic-Wielders.
 
 The chance to hit a foe. It does NOT take into account that enemy's Evasion
 stat.
+
+% stat_Missile
+
+The chance to strike a foe with a thrown missile, bolt, or other $bmissable$.
+spell. It does NOT take into account that enemy's Evasion stat.
 
 % stat_Evade
 
@@ -137,6 +133,15 @@ Electricity resistance. Each point of damage has rElec% chance to be ignored.
 % stat_rAcid
 
 Ah, acid resistance, the hardest to come by. Usual rules apply.
+
+% stat_rHoly
+
+Your $orHoly$. stat determines your holiness (and resistance to $bHoly$.
+damage), as well as your relations with the associated faction.
+
+
+If negative, you are $ounclean$.; you have been tainted, perhaps permanently,
+by the use or wearing of evil items. It is likely you will regret this.
 
 % stat_rFume
 

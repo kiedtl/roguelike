@@ -1639,7 +1639,7 @@ fn drawHUD(moblist: []const *Mob) void {
     const holifmt = ui_utils.HolinessFormatter{};
     if (holifmt.dewIt()) {
         y += hud_win.main.drawTextAtf(0, y, "{}", .{holifmt}, .{});
-        hud_win.main.addTooltipForText("Holiness", .{}, "concept_Holiness", .{});
+        hud_win.main.addTooltipForText("Holiness", .{}, "stat_rHoly", .{});
     }
 
     if (repfmt.dewIt() or holifmt.dewIt()) {
@@ -2924,6 +2924,7 @@ pub fn drawPlayerInfoScreen() void {
                             } else {
                                 iy += pinfo_win.right.drawTextAtf(0, iy, "$c{s: <11}$.  {: >5}{s: >1}\n", .{ stat.string(), stat_val, stat.formatAfter() }, .{});
                             }
+                            pinfo_win.right.addTooltipForText("{s} stat", .{stat.string()}, "stat_{s}", .{@tagName(stat)});
                         }
                     }
                     iy += pinfo_win.right.drawTextAt(0, iy, "\n", .{});
@@ -2932,6 +2933,7 @@ pub fn drawPlayerInfoScreen() void {
                         const resist_val = utils.SignedFormatter{ .v = state.player.resistance(resist) };
                         const resist_str = resist.string();
                         iy += pinfo_win.right.drawTextAtf(0, iy, "$c{s: <11}$.  {: >5}%\n", .{ resist_str, resist_val }, .{});
+                        pinfo_win.right.addTooltipForText("{s} stat", .{resist_str}, "stat_{s}", .{resist_str});
                     }
                     iy += pinfo_win.right.drawTextAt(0, iy, "\n", .{});
 
@@ -2943,7 +2945,7 @@ pub fn drawPlayerInfoScreen() void {
                     const holifmt = ui_utils.HolinessFormatter{};
                     if (holifmt.dewIt()) {
                         iy += pinfo_win.right.drawTextAtf(0, iy, "{}", .{holifmt}, .{});
-                        pinfo_win.right.addTooltipForText("Holiness", .{}, "concept_Holiness", .{});
+                        pinfo_win.right.addTooltipForText("Holiness", .{}, "stat_rHoly", .{});
                     }
 
                     if (repfmt.dewIt() or holifmt.dewIt()) {
@@ -3015,6 +3017,7 @@ pub fn drawPlayerInfoScreen() void {
     var tab: usize = @intFromEnum(@as(Tab, .Stats));
     var tab_hover: ?usize = null;
     var tab_changed = true;
+    var tab_changed_minor = true;
 
     main: while (true) {
         pinfo_win.container.clearLineTo(0, pinfo_win.container.width - 1, 0, .{ .ch = '▀', .fg = colors.LIGHT_STEEL_BLUE, .bg = colors.BG });
@@ -3034,11 +3037,15 @@ pub fn drawPlayerInfoScreen() void {
         pinfo_win.left.highlightMouseArea(colors.BG_L);
         pinfo_win.left.stepRevealAnimation();
 
-        if (tab_changed) {
+        if (tab_changed or tab_changed_minor) {
+            pinfo_win.right.clearMouseTriggers();
             pinfo_win.right.clear();
             @as(Tab, @enumFromInt(tab)).draw();
-            pinfo_win.right.addRevealAnimation(.{ .factor = 2, .idelay = 1 });
+            if (tab_changed)
+                pinfo_win.right.addRevealAnimation(.{ .factor = 2, .idelay = 1 });
+            pinfo_win.right.highlightMouseArea(colors.BG_L);
             tab_changed = false;
+            tab_changed_minor = false;
         }
 
         pinfo_win.right.stepRevealAnimation();
@@ -3053,7 +3060,10 @@ pub fn drawPlayerInfoScreen() void {
             },
             .Hover => |c| switch (pinfo_win.container.handleMouseEvent(c, .Hover)) {
                 .Coord, .Signal => err.wat(),
-                .Void, .Outside, .Unhandled => {},
+                .Void => {
+                    tab_changed_minor = true;
+                },
+                .Outside, .Unhandled => {},
             },
             .Click => |c| switch (pinfo_win.container.handleMouseEvent(c, .Click)) {
                 .Signal => |sig| {
@@ -3061,9 +3071,9 @@ pub fn drawPlayerInfoScreen() void {
                     tab_hover = null;
                     tab_changed = true;
                 },
-                .Coord, .Void => err.wat(),
+                .Coord => err.wat(),
                 .Outside => break :main,
-                .Unhandled => {},
+                .Void, .Unhandled => {},
             },
             .Key => |k| switch (k) {
                 .CtrlC, .CtrlG, .Esc => break :main,
