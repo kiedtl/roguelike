@@ -95,6 +95,7 @@ pub fn build(b: *Build) void {
             "third_party/microtar/src/microtar.c", // FIXME: why is this needed
             "third_party/janet/janet.c",
         },
+        .flags = &[_][]const u8{ "-O3", "-fomit-frame-pointer", "-march=native" },
     });
 
     if (opt_tun_gif) {
