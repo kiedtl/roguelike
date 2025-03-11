@@ -406,33 +406,6 @@ pub const CountingAllocator = struct {
     }
 };
 
-// Used to deduplicate code in HUD and drawPlayerInfoScreen
-//
-// A bit idiosyncratic...
-pub const ReputationFormatter = struct {
-    pub fn dewIt(_: @This()) bool {
-        const rep = state.night_rep[@intFromEnum(state.player.faction)];
-        const is_on_slade = state.dungeon.terrainAt(state.player.coord) == &surfaces.SladeTerrain;
-        return rep != 0 or is_on_slade;
-    }
-
-    pub fn format(self: *const @This(), comptime f: []const u8, _: std.fmt.FormatOptions, writer: anytype) !void {
-        if (comptime !mem.eql(u8, f, "")) @compileError("Unknown format string: '" ++ f ++ "'");
-
-        const rep = state.night_rep[@intFromEnum(state.player.faction)];
-        const is_on_slade = state.dungeon.terrainAt(state.player.coord) == &surfaces.SladeTerrain;
-
-        if (self.dewIt()) {
-            const str = if (rep == 0) "$g$~ NEUTRAL $." else if (rep > 0) "$a$~ FRIENDLY $." else if (rep >= -5) "$p$~ DISLIKED $." else "$r$~ HATED $.";
-            if (is_on_slade and rep < 1) {
-                try std.fmt.format(writer, "$cNight rep:$. {} $r$~ TRESPASSING $.\n", .{rep});
-            } else {
-                try std.fmt.format(writer, "$cNight rep:$. {} {s}\n", .{ rep, str });
-            }
-        }
-    }
-};
-
 // A utility struct to get around the fact that std.fmt puts a "+" on signed
 // integers if padding is used.
 //

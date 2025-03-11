@@ -808,6 +808,9 @@ pub const SymbolEvoc = Evocable{
                         _ = mob.raiseAsUndead(mob.coord);
                     }
                 };
+
+            state.player.innate_resists.rHoly -= 5;
+            state.player.innate_resists.rHoly = math.clamp(state.player.innate_resists.rHoly, -100, 100);
         }
     }.f,
 };
@@ -905,6 +908,7 @@ pub const InsurrectionRing = Ring{ // {{{
     .required_MP = 3,
     .hated_by_nc = true,
     .hated_by_holy = true,
+    .resists = .{ .rHoly = -10 },
     .effect = struct {
         pub fn f() bool {
             const lifetime = 14;
@@ -1116,6 +1120,7 @@ pub const DeceptionRing = Ring{ // {{{
     .name = "deception",
     .required_MP = 2,
     .stats = .{ .Willpower = 1 },
+    .resists = .{ .rHoly = -10 },
     .hated_by_holy = true,
     .requires_uncorrupt = true,
     .effect = struct {
@@ -1218,6 +1223,7 @@ pub const DeterminationRing = Ring{ // {{{
     .name = "determination",
     .required_MP = mobs.PLAYER_MAX_MP + 1,
     .hated_by_holy = true,
+    .resists = .{ .rHoly = -10 },
     .effect = struct {
         pub fn f() bool {
             state.player.MP += mobs.PLAYER_MAX_MP / 3 * 2;
@@ -2140,6 +2146,7 @@ pub const SceptreWeapon = Weapon{
     .name = "Ambassador's Sceptre",
     .damage = 1,
     .stats = .{ .Melee = 25, .Evade = 10, .Martial = 1, .Potential = 30 },
+    .resists = .{ .rHoly = -50 },
     .ego = .Drain,
     .is_cursed = true,
     .is_hated_by_nc = true,

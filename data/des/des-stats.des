@@ -37,6 +37,15 @@ to 0 each time you ascend a floor. Ransacking Night lairs decreases reputation.
 * At $b-10 reputation$., Night creatures will occasionally leave your lairs to
   hunt you down.
 
+% concept_Holiness
+
+Your $orHoly$. stat determines your holiness, and your relations with the
+associated faction.
+
+
+If negative, you are $ounclean$.; you have been tainted, perhaps permanently,
+by the use or wearing of evil items. It is likely you will regret this.
+
 % stat_Health_player
 
 Keep it above zero at all costs.

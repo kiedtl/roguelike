@@ -3153,6 +3153,10 @@ pub const Mob = struct { // {{{
         underling.faction = self.faction;
     }
 
+    pub fn isOnSlade(self: *const Mob) bool {
+        return state.dungeon.terrainAt(self.coord) == &surfaces.SladeTerrain;
+    }
+
     // Check if a mob, when trying to move into a space that already has a mob,
     // can swap with that other mob.
     //
@@ -4755,6 +4759,8 @@ pub const Mob = struct { // {{{
         r += utils.getFieldByEnum(Resistance, terrain.resists, resist);
 
         // Check armor and cloaks
+        if (self.inventory.equipmentConst(.Weapon).*) |clk|
+            r += utils.getFieldByEnum(Resistance, clk.Weapon.resists, resist);
         if (self.inventory.equipmentConst(.Cloak).*) |clk|
             r += utils.getFieldByEnum(Resistance, clk.Cloak.resists, resist);
         if (self.inventory.equipmentConst(.Head).*) |hd|
@@ -4775,6 +4781,12 @@ pub const Mob = struct { // {{{
                 r += utils.getFieldByEnum(Resistance, aux.Aux.resists, resist);
             }
         }
+
+        // Check rings.
+        for (Inventory.RING_SLOTS) |ring_slot|
+            if (self.inventory.equipmentConst(ring_slot).*) |ring| {
+                r += utils.getFieldByEnum(Resistance, ring.Ring.resists, resist);
+            };
 
         // Check statuses
         switch (resist) {
@@ -5229,6 +5241,7 @@ pub const Weapon = struct {
     ego: Ego = .None,
 
     stats: enums.EnumFieldStruct(Stat, isize, 0) = .{},
+    resists: enums.EnumFieldStruct(Resistance, isize, 0) = .{},
     effects: []const StatusDataInfo = &[_]StatusDataInfo{},
     equip_effects: []const StatusDataInfo = &[_]StatusDataInfo{},
 
@@ -5369,6 +5382,7 @@ pub const Ring = struct {
 
     required_MP: usize,
     stats: enums.EnumFieldStruct(Stat, isize, 0) = .{},
+    resists: enums.EnumFieldStruct(Resistance, isize, 0) = .{},
     hated_by_nc: bool = false,
     hated_by_holy: bool = false,
     requires_uncorrupt: bool = false,

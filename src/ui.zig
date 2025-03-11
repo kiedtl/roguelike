@@ -53,6 +53,7 @@ const WIDTH = state.WIDTH;
 
 // -----------------------------------------------------------------------------
 pub const labels = @import("ui/labels.zig");
+pub const ui_utils = @import("ui/utils.zig");
 pub const drawLabels = @import("ui/labels.zig").drawLabels;
 pub const Console = @import("ui/Console.zig");
 
@@ -1628,12 +1629,24 @@ fn drawHUD(moblist: []const *Mob) void {
         y += 1;
     y += 1;
 
-    const repfmt = utils.ReputationFormatter{};
+    // ---------- Reputation stuff ------------
+
+    const repfmt = ui_utils.ReputationFormatter{};
     if (repfmt.dewIt()) {
         y += hud_win.main.drawTextAtf(0, y, "{}", .{repfmt}, .{});
         hud_win.main.addTooltipForText("Reputation", .{}, "concept_Reputation", .{});
+    }
+    const holifmt = ui_utils.HolinessFormatter{};
+    if (holifmt.dewIt()) {
+        y += hud_win.main.drawTextAtf(0, y, "{}", .{holifmt}, .{});
+        hud_win.main.addTooltipForText("Holiness", .{}, "concept_Holiness", .{});
+    }
+
+    if (repfmt.dewIt() or holifmt.dewIt()) {
         y += 1;
     }
+
+    // ----------- Bars ---------------------
 
     const bar_endx = endx - 8;
     // const bar_endx2 = endx - 18;
@@ -2922,9 +2935,18 @@ pub fn drawPlayerInfoScreen() void {
                     }
                     iy += pinfo_win.right.drawTextAt(0, iy, "\n", .{});
 
-                    const repfmt = utils.ReputationFormatter{};
+                    const repfmt = ui_utils.ReputationFormatter{};
                     if (repfmt.dewIt()) {
                         iy += pinfo_win.right.drawTextAtf(0, iy, "{}", .{repfmt}, .{});
+                        pinfo_win.right.addTooltipForText("Reputation", .{}, "concept_Reputation", .{});
+                    }
+                    const holifmt = ui_utils.HolinessFormatter{};
+                    if (holifmt.dewIt()) {
+                        iy += pinfo_win.right.drawTextAtf(0, iy, "{}", .{holifmt}, .{});
+                        pinfo_win.right.addTooltipForText("Holiness", .{}, "concept_Holiness", .{});
+                    }
+
+                    if (repfmt.dewIt() or holifmt.dewIt()) {
                         iy += 1;
                     }
                 },
