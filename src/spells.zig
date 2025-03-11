@@ -614,13 +614,11 @@ pub const BOLT_DISINTEGRATE = Spell{
                 const will: usize = @intCast(caster.stat(.Willpower));
                 const overhang = will - caster.coord.distance(dest);
                 const path = caster.coord.drawLine(dest, state.mapgeometry, overhang);
-                std.log.info("drawing line from {} to {}", .{ caster.coord, dest });
 
                 var i: usize = will;
                 var d: usize = 2; // damage
                 var v: usize = 0; // victims so far
                 for (path.constSlice()) |coord| {
-                    std.log.info("*    Child coord: {}", .{coord});
                     if (coord.eq(caster.coord)) continue;
 
                     if (state.is_walkable(coord, .{ .only_if_breaks_lof = true })) {
