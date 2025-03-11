@@ -1938,6 +1938,14 @@ pub fn placeDrunkenWalkerCave(level: usize, alloc: mem.Allocator) void {
         state.dungeon.at(coord).type = .Floor;
 
     placeRandomRooms(level, alloc);
+
+    // Make a guaranteed border.
+    const middle = Rect.new(Coord.new(1, 1), WIDTH - 2, HEIGHT - 2);
+    var iter = state.mapRect(level).iter();
+    while (iter.next()) |coord|
+        if (!coord.asRect().intersects(&middle, 0)) {
+            state.dungeon.at(coord).type = .Wall;
+        };
 }
 
 pub fn placeBSPRooms(grandma_rect: Rect, _min_room_width: usize, _min_room_height: usize, _max_room_width: usize, _max_room_height: usize, allocator: mem.Allocator) void {
