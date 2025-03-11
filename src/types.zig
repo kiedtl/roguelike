@@ -4526,20 +4526,24 @@ pub const Mob = struct { // {{{
         assert(self.faction != othermob.faction);
 
         // If the other mob is a prisoner of my faction (and is actually in
-        // prison) or we're both prisoners of the same faction, don't be hostile.
-        // if (othermob.prisoner_status) |ps| {
-        //     if (ps.of == self.faction and
-        //         (state.dungeon.at(othermob.coord).prison or ps.held_by != null))
-        //     {
-        //         hostile = false;
-        //     }
+        // prison), don't be hostile.
+        if (othermob.prisoner_status) |ps| {
+            if (ps.of == self.faction and
+                (state.dungeon.at(othermob.coord).prison or ps.held_by != null))
+            {
+                hostile = false;
+            }
 
-        //     if (self.prisoner_status) |my_ps| {
-        //         if (my_ps.of == ps.of) {
-        //             hostile = false;
-        //         }
-        //     }
-        // }
+            // Used to be that if we're both prisoners of the same faction,
+            // don't be hostile. But this caused issues with Revgen being neutral
+            // to player.
+            //
+            // if (self.prisoner_status) |my_ps| {
+            //     if (my_ps.of == ps.of) {
+            //         hostile = false;
+            //     }
+            // }
+        }
 
         // If mob is prisoner of othermob, be docile...
         if (self.prisoner_status) |my_ps|
