@@ -613,19 +613,19 @@ fn _writerMobStats(self: *Console, starty: usize, mob: *Mob) usize {
             .Melee, .Evade, .Missile => {
                 if (@as(usize, @intCast(math.clamp(stat_val_raw, 0, 100))) != stat_val_real) {
                     const c = if (@as(usize, @intCast(stat_val_real)) < stat_val_raw) @as(u21, 'r') else 'b';
-                    y += self.drawTextAtf(0, y, "$c{s: <9}$. {: >5}{s: >1}  $g(${u}{}{s}$g)$.", .{ stat.string(), stat_val, stat.formatAfter(), c, stat_val_real, stat.formatAfter() }, .{});
+                    y += self.drawTextAtf(0, y, "$c{s: <17}$. {: >5}{s: >1}  $g(${u}{}{s}$g)$.", .{ stat.string(), stat_val, stat.formatAfter(), c, stat_val_real, stat.formatAfter() }, .{});
                     continue;
                 }
             },
             .Willpower => if (stat_val_raw == mobs.WILL_IMMUNE) {
-                y += self.drawTextAtf(0, y, "$c{s: <9}$. {u: >5}{s: >1}", .{ stat.string(), '∞', stat.formatAfter() }, .{});
+                y += self.drawTextAtf(0, y, "$c{s: <17}$. {u: >5}{s: >1}", .{ stat.string(), '∞', stat.formatAfter() }, .{});
                 continue;
             },
             else => {},
         }
 
         // Regular case
-        y += self.drawTextAtf(0, y, "$c{s: <9}$. {: >5}{s: >1}", .{ stat.string(), stat_val, stat.formatAfter() }, .{});
+        y += self.drawTextAtf(0, y, "$c{s: <17}$. {: >5}{s: >1}", .{ stat.string(), stat_val, stat.formatAfter() }, .{});
     }
     y += self.drawTextAt(0, y, "\n", .{});
 
@@ -633,8 +633,10 @@ fn _writerMobStats(self: *Console, starty: usize, mob: *Mob) usize {
         const resist: Resistance = @enumFromInt(resistancev.value);
         const resist_val = utils.SignedFormatter{ .v = mob.resistance(resist) };
         const resist_str = resist.string();
-        if (resist_val.v != 0)
-            y += self.drawTextAtf(0, y, "$c{s: <9}$. {: >5}%\n", .{ resist_str, resist_val }, .{});
+        if (@field(mob.innate_resists, @tagName(resist)) == mobs.RESIST_IMMUNE)
+            y += self.drawTextAtf(0, y, "$c{s: <17}$. {u: >5}\n", .{ resist_str, '∞' }, .{})
+        else if (resist_val.v != 0)
+            y += self.drawTextAtf(0, y, "$c{s: <17}$. {: >5}%\n", .{ resist_str, resist_val }, .{});
     }
     y += self.drawTextAt(0, y, "\n", .{});
     return y - starty;
