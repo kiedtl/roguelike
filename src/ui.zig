@@ -1027,8 +1027,6 @@ fn _getMonsSpellsDescription(self: *Console, starty: usize, mob: *Mob, _: usize)
                 },
                 .UndeadAlly => "undead ally",
                 .ConstructAlly => "construct ally",
-                .HolyAngel => "angel",
-                .AnyTile, .Mob => "you", // See note on AnyTile in spells.zig
                 .AngelAlly => "angelic ally",
                 .AnyTile, .Mob => "you", // See note on AnyTile in spells.zig
                 .Corpse => "corpse",
