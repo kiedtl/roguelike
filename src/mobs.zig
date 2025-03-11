@@ -2408,9 +2408,15 @@ pub const RevgenunkimTemplate = MobTemplate{
         .ai = AI{
             .profession_description = "wandering",
             .work_fn = ai.wanderWork,
-            .fight_fn = ai.meleeFight,
+            .fight_fn = ai.mageFight,
+            .spellcaster_backup_action = .Melee,
         },
-        .max_HP = 12,
+        .max_HP = 9,
+
+        .spells = &[_]SpellOptions{
+            .{ .MP_cost = 10, .spell = &spells.CAST_RESIST_WRATH, .power = 2 },
+        },
+        .max_MP = 10,
 
         .memory_duration = 15,
         .faction = .Revgenunkim,

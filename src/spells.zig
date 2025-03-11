@@ -510,6 +510,53 @@ pub const CAST_FIREBLAST = Spell{
     },
 };
 
+// Could make this will-checked, but it'd never succeed against angels then.
+pub const CAST_RESIST_WRATH_CHANCE: usize = 20;
+pub const CAST_RESIST_WRATH = Spell{
+    .id = "sp_resist_wrath",
+    .name = "resist divine wrath",
+    .cast_type = .Smite,
+    //.animation = .{ .Particles = .{ .name = "chargeover-orange-red" } },
+    .noise = .Silent,
+    .check_has_effect = struct {
+        fn f(_: *Mob, _: SpellOptions, target_coord: Coord) bool {
+            const target = state.dungeon.at(target_coord).mob orelse return false;
+            // In practice would be good to have an "AngelEnemy" smite target,
+            // but too much complexity for one spell I think.
+            return target.innate_resists.rHoly == mobs.RESIST_IMMUNE and
+                target.life_type == .Spectral;
+        }
+    }.f,
+    .effects = &[_]Effect{.{
+        .Custom = struct {
+            fn f(caster_coord: Coord, opts: SpellOptions, target_coord: Coord) void {
+                const caster = state.dungeon.at(caster_coord).mob.?;
+                const target = state.dungeon.at(target_coord).mob.?;
+                if (rng.percent(CAST_RESIST_WRATH_CHANCE)) {
+                    // Only use animation if it succeeds.
+                    ui.Animation.apply(.{ .Particle = .{
+                        .name = "zap-resist-divine-wrath",
+                        .coord = caster_coord,
+                        .target = .{ .C = target_coord },
+                    } });
+
+                    target.takeDamage(.{
+                        .amount = opts.power,
+                        .by_mob = caster,
+                        .kind = .Irresistible,
+                        .blood = false,
+                        .source = .RangedAttack,
+                    }, .{
+                        .strs = &[_]types.DamageStr{
+                            items._dmgstr(1, "desperately resist", "desperately resists", ""),
+                        },
+                    });
+                }
+            }
+        }.f,
+    }},
+};
+
 pub const BOLT_AIRBLAST = Spell{
     .id = "sp_airblast",
     .name = "airblast",
@@ -871,7 +918,7 @@ pub const BOLT_HELLFIRE_ELECTRIC = Spell{
     .effects = &[_]Effect{
         .{ .Damage = .{ .kind = .Holy, .msg = .{
             .noun = "The electric damnation",
-            .strs = &[_]types.DamageStr{items._dmgstr(0, "sears", "BUG", "")},
+            .strs = &[_]types.DamageStr{items._dmgstr(0, "sears", "sears", "")},
         } } },
         .{ .Damage = .{ .kind = .Electric, .msg = .{
             .noun = "The red lightning",

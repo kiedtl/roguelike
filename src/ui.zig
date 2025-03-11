@@ -633,8 +633,10 @@ fn _writerMobStats(self: *Console, starty: usize, mob: *Mob) usize {
         const resist: Resistance = @enumFromInt(resistancev.value);
         const resist_val = utils.SignedFormatter{ .v = mob.resistance(resist) };
         const resist_str = resist.string();
-        if (resist_val.v != 0)
-            y += self.drawTextAtf(0, y, "$c{s: <9}$. {: >5}%\n", .{ resist_str, resist_val }, .{});
+        if (resist_val.v == mobs.RESIST_IMMUNE)
+            y += self.drawTextAtf(0, y, "$c{s: <14}$. {u: >5}%\n", .{ resist_str, '∞' }, .{})
+        else if (resist_val.v != 0)
+            y += self.drawTextAtf(0, y, "$c{s: <14}$. {: >5}%\n", .{ resist_str, resist_val }, .{});
     }
     y += self.drawTextAt(0, y, "\n", .{});
     return y - starty;

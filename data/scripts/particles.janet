@@ -20,6 +20,7 @@
 
 (def SYMB1_CHARS "~!@#$%^&*()[]\\{}|/<>?;:1234567890")
 (def ROUND_CHARS "oO0@CQ") # Unicode not supported :( "°ØøÖÓÕÔŌQCÇ"
+(def POINT_CHARS "XVNMLWTEFZ")
 (def ASCII_CHARS "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz`1234567890-=~!@#$%^&*()_+[]\\{}|;':\",./<>?")
 
 (def CONCRETE 0x9f8f74)
@@ -1000,6 +1001,24 @@
       :lifetime 0
      })
   ]
+  "zap-resist-divine-wrath" @[
+    (new-emitter @{
+      :particle (new-particle @{
+        :tile (new-tile @{ :ch "X" :fg 0xcc0000 :bg 0x880000 :bg-mix 0.8 })
+        :speed 1.8
+        :triggers @[
+          [[:COND-percent? 40] [:TRIG-scramble-glyph POINT_CHARS]]
+          [[:COND-reached-target? true]
+           [:TRIG-create-emitter
+            (template-chargeover POINT_CHARS 0x660000 0xcc0000 :direction :in :speed 0.7 :lifetime 5 :mindist 1 :maxdist 3)
+            ]
+          ]
+        ]
+      })
+      :lifetime 2
+      :spawn-count 1
+    })
+  ]
   "zap-hellfire" @[
     (new-emitter @{
       :particle (new-particle @{
@@ -1398,7 +1417,7 @@
     })
   ]
   "chargeover-electric"     @[ (template-chargeover SYMB1_CHARS ELEC_BLUE1 0x453555 :direction :in  :speed 0.5 :lifetime 12) ]
-  "chargeover-orange-red"   @[ (template-chargeover SYMB1_CHARS   0xff4500 0x440000 :direction :in  :speed 0.5 :lifetime 12 :style :nobg) ]
+  "chargeover-orange-red"   @[ (template-chargeover SYMB1_CHARS   0xff4500 0x440000 :direction :in  :speed 0.5 :lifetime 7 :style :nobg) ]
   "chargeover-white-pink"   @[ (template-chargeover SYMB1_CHARS   0xffffff 0x440000 :direction :in  :speed 0.5 :lifetime 12) ]
   "chargeover-blue-pink"    @[ (template-chargeover SYMB1_CHARS   0x4488aa 0x440000 :direction :in  :speed 0.5 :lifetime 12) ]
   "chargeover-purple-green" @[ (template-chargeover SYMB1_CHARS   0x995599 0x33ff33 :direction :in  :speed 0.5 :lifetime 12) ]

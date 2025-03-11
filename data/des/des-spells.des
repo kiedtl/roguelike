@@ -184,6 +184,11 @@ Awakens adjacent walls into living stone that attack the target.
 Only cardinally-adjacent walls are affected, and the living stone will revert
 to being walls within a short period.
 
+% sp_resist_wrath
+The ghost of long-quelled rebellion, from a time before the Sea Tyrants were
+chained to the bottom of the primordial oceans, now driven to vain resistance
+against a deity's terror.
+
 % sp_ferment_bartender
 % sp_flammable
 % sp_freeze
