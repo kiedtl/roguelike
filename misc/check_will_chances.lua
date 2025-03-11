@@ -51,7 +51,7 @@ function get_chance(mine, their)
 
     for i = 1, 10000 do
         local defeated = (range_clumping(1, 100, 2) * their) >
-            (range_clumping(1, 180, 2) * mine) and their >= mine;
+            (range_clumping(1, 120, 2) * mine) and their >= mine;
         if defeated then
             defeated_times = defeated_times + 1
         end

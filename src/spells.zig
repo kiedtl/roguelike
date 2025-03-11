@@ -1556,7 +1556,7 @@ pub fn willSucceedAgainstMobStats(cw: isize, tw: isize) bool {
     if (tw == mobs.WILL_IMMUNE or cw < tw)
         return false;
     return (rng.rangeClumping(isize, 1, 100, 2) * cw) >
-        (rng.rangeClumping(isize, 1, 150, 2) * tw);
+        (rng.rangeClumping(isize, 1, 120, 2) * tw);
 }
 
 pub fn willSucceedAgainstMob(caster: *const Mob, target: *const Mob) bool {
