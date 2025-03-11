@@ -124,10 +124,12 @@ pub const Terrain = struct {
     };
 };
 
-pub var CavernsTerrain1 = Terrain{ .id = "t_caverns_1", .for_levels = &[_][]const u8{"CAV"}, .placement = .RoomBlob, .weight = 3, .flammability = 5, .fg = undefined, .tile = undefined, .name = undefined };
-pub var CavernsTerrain2 = Terrain{ .id = "t_caverns_2", .for_levels = &[_][]const u8{"CAV"}, .placement = .RoomBlob, .weight = 3, .flammability = 5, .fg = undefined, .tile = undefined, .name = undefined };
-pub var CavernsTerrain3 = Terrain{ .id = "t_caverns_3", .for_levels = &[_][]const u8{"CAV"}, .placement = .RoomBlob, .weight = 3, .flammability = 5, .fg = undefined, .tile = undefined, .name = undefined };
-pub var CavernsTerrain4 = Terrain{ .id = "t_caverns_4", .for_levels = &[_][]const u8{"CAV"}, .placement = .RoomBlob, .weight = 3, .flammability = 5, .fg = undefined, .tile = undefined, .name = undefined };
+pub const CAVERN_TERRAIN_TEMPLATE = Terrain{ .id = "t_caverns_1", .for_levels = &[_][]const u8{"CAV"}, .placement = .RoomBlob, .weight = 3, .flammability = 5, .fg = undefined, .tile = undefined, .name = undefined };
+
+pub var CavernsTerrain1 = CAVERN_TERRAIN_TEMPLATE;
+pub var CavernsTerrain2 = CAVERN_TERRAIN_TEMPLATE;
+pub var CavernsTerrain3 = CAVERN_TERRAIN_TEMPLATE;
+pub var CavernsTerrain4 = CAVERN_TERRAIN_TEMPLATE;
 
 pub const DefaultTerrain = Terrain{
     .id = "t_default",

@@ -393,4 +393,11 @@ pub fn deinit() void {
         state.alloc.free(surfaces.CavernsTerrain3.effects);
     if (surfaces.CavernsTerrain4.effects.len > 0)
         state.alloc.free(surfaces.CavernsTerrain4.effects);
+
+    // Do a healthy reset. Not useful ordinarily, but required for test harness.
+    //
+    surfaces.CavernsTerrain1 = surfaces.CAVERN_TERRAIN_TEMPLATE;
+    surfaces.CavernsTerrain2 = surfaces.CAVERN_TERRAIN_TEMPLATE;
+    surfaces.CavernsTerrain3 = surfaces.CAVERN_TERRAIN_TEMPLATE;
+    surfaces.CavernsTerrain4 = surfaces.CAVERN_TERRAIN_TEMPLATE;
 }
