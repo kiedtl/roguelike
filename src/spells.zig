@@ -416,11 +416,13 @@ pub const BOLT_DISINTEGRATE = Spell{
                 const will: usize = @intCast(caster.stat(.Willpower));
                 const overhang = will - caster.coord.distance(dest);
                 const path = caster.coord.drawLine(dest, state.mapgeometry, overhang);
+                std.log.info("drawing line from {} to {}", .{ caster.coord, dest });
 
                 var i: usize = will;
                 var d: usize = 2; // damage
                 var v: usize = 0; // victims so far
                 for (path.constSlice()) |coord| {
+                    std.log.info("*    Child coord: {}", .{coord});
                     if (coord.eq(caster.coord)) continue;
 
                     if (state.is_walkable(coord, .{ .only_if_breaks_lof = true })) {
@@ -1346,7 +1348,10 @@ pub fn initAvgWillChances() void {
 }
 
 pub fn checkAvgWillChances(caster: *Mob, target: *Mob) usize {
-    const tw = target.stat(.Willpower);
+    const tw = switch (target.stat(.Willpower)) {
+        mobs.WILL_IMMUNE => 10,
+        else => |w| w,
+    };
     const cw = switch (caster.stat(.Willpower)) {
         mobs.WILL_IMMUNE => 10,
         else => |w| w,
