@@ -1588,11 +1588,6 @@ pub fn initAvgWillChances() void {
             AVG_WILL_CHANCES[atk][def] = defeated / K;
         }
     }
-    std.log.info("4 against 1: {}", .{AVG_WILL_CHANCES[4][1]});
-    std.log.info("4 against 2: {}", .{AVG_WILL_CHANCES[4][2]});
-    std.log.info("4 against 3: {}", .{AVG_WILL_CHANCES[4][3]});
-    std.log.info("4 against 4: {}", .{AVG_WILL_CHANCES[4][4]});
-    std.log.info("4 against 5: {}", .{AVG_WILL_CHANCES[4][5]});
 }
 
 pub fn checkAvgWillChances(caster: *Mob, target: *Mob) usize {
