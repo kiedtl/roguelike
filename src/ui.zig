@@ -613,19 +613,19 @@ fn _writerMobStats(self: *Console, starty: usize, mob: *Mob) usize {
             .Melee, .Evade, .Missile => {
                 if (@as(usize, @intCast(math.clamp(stat_val_raw, 0, 100))) != stat_val_real) {
                     const c = if (@as(usize, @intCast(stat_val_real)) < stat_val_raw) @as(u21, 'r') else 'b';
-                    y += self.drawTextAtf(0, y, "$c{s: <9}$. {: >5}{s: >1}  $g(${u}{}{s}$g)$.", .{ stat.string(), stat_val, stat.formatAfter(), c, stat_val_real, stat.formatAfter() }, .{});
+                    y += self.drawTextAtf(0, y, "$c{s: <17}$. {: >5}{s: >1}  $g(${u}{}{s}$g)$.", .{ stat.string(), stat_val, stat.formatAfter(), c, stat_val_real, stat.formatAfter() }, .{});
                     continue;
                 }
             },
             .Willpower => if (stat_val_raw == mobs.WILL_IMMUNE) {
-                y += self.drawTextAtf(0, y, "$c{s: <9}$. {u: >5}{s: >1}", .{ stat.string(), '∞', stat.formatAfter() }, .{});
+                y += self.drawTextAtf(0, y, "$c{s: <17}$. {u: >5}{s: >1}", .{ stat.string(), '∞', stat.formatAfter() }, .{});
                 continue;
             },
             else => {},
         }
 
         // Regular case
-        y += self.drawTextAtf(0, y, "$c{s: <9}$. {: >5}{s: >1}", .{ stat.string(), stat_val, stat.formatAfter() }, .{});
+        y += self.drawTextAtf(0, y, "$c{s: <17}$. {: >5}{s: >1}", .{ stat.string(), stat_val, stat.formatAfter() }, .{});
     }
     y += self.drawTextAt(0, y, "\n", .{});
 
@@ -633,10 +633,10 @@ fn _writerMobStats(self: *Console, starty: usize, mob: *Mob) usize {
         const resist: Resistance = @enumFromInt(resistancev.value);
         const resist_val = utils.SignedFormatter{ .v = mob.resistance(resist) };
         const resist_str = resist.string();
-        if (resist_val.v == mobs.RESIST_IMMUNE)
-            y += self.drawTextAtf(0, y, "$c{s: <14}$. {u: >5}%\n", .{ resist_str, '∞' }, .{})
+        if (@field(mob.innate_resists, @tagName(resist)) == mobs.RESIST_IMMUNE)
+            y += self.drawTextAtf(0, y, "$c{s: <17}$. {u: >5}\n", .{ resist_str, '∞' }, .{})
         else if (resist_val.v != 0)
-            y += self.drawTextAtf(0, y, "$c{s: <14}$. {: >5}%\n", .{ resist_str, resist_val }, .{});
+            y += self.drawTextAtf(0, y, "$c{s: <17}$. {: >5}%\n", .{ resist_str, resist_val }, .{});
     }
     y += self.drawTextAt(0, y, "\n", .{});
     return y - starty;
@@ -1027,6 +1027,8 @@ fn _getMonsSpellsDescription(self: *Console, starty: usize, mob: *Mob, _: usize)
                 },
                 .UndeadAlly => "undead ally",
                 .ConstructAlly => "construct ally",
+                .HolyAngel => "angel",
+                .AnyTile, .Mob => "you", // See note on AnyTile in spells.zig
                 .AngelAlly => "angelic ally",
                 .AnyTile, .Mob => "you", // See note on AnyTile in spells.zig
                 .Corpse => "corpse",
@@ -1563,13 +1565,19 @@ fn _drawStr(_x: usize, _y: usize, endx: usize, str: []const u8, opts: DrawStrOpt
 }
 
 fn drawHUD(moblist: []const *Mob) void {
+    //const ts = std.time.milliTimestamp();
+
+    var arena = std.heap.ArenaAllocator.init(state.alloc);
+    defer arena.deinit();
+    // var counting = utils.CountingAllocator.init(arena.allocator());
+    // defer counting.deinit();
+    // const localalloc = counting.allocator();
+    const localalloc = arena.allocator();
+
     // const last_action_cost = if (state.player.activities.current()) |lastaction| b: {
     //     const spd = @floatFromInt(f64, state.player.speed());
     //     break :b (spd * @floatFromInt(f64, lastaction.cost())) / 100.0 / 10.0;
     // } else 0.0;
-
-    var arena = std.heap.ArenaAllocator.init(state.alloc);
-    defer arena.deinit();
 
     const endx = hud_win.main.width - 1;
 
@@ -1716,7 +1724,7 @@ fn drawHUD(moblist: []const *Mob) void {
             player: bool,
         };
 
-        var features = std.ArrayList(FeatureInfo).init(arena.allocator());
+        var features = std.ArrayList(FeatureInfo).init(localalloc);
         defer features.deinit();
 
         var dijk = dijkstra.Dijkstra.init(
@@ -1725,7 +1733,7 @@ fn drawHUD(moblist: []const *Mob) void {
             @intCast(state.player.stat(.Vision)),
             dijkstra.dummyIsValid,
             .{},
-            arena.allocator(),
+            localalloc,
         );
         defer dijk.deinit();
 
@@ -1835,7 +1843,7 @@ fn drawHUD(moblist: []const *Mob) void {
         const name = mob.displayName();
         _ = hud_win.main.drawTextAtf(0 + 3, y, "$c{s}$.", .{name}, .{ .bg = null });
 
-        const infoset = _getMonsInfoSet(mob, arena.allocator());
+        const infoset = _getMonsInfoSet(mob, localalloc);
         defer MobInfoLine.deinitList(infoset);
         //var info_x: isize = startx + 2 + @intCast(isize, name.len) + 2;
         var info_x: usize = endx - (infoset.items.len - 1);
@@ -1877,6 +1885,8 @@ fn drawHUD(moblist: []const *Mob) void {
     }
 
     hud_win.main.highlightMouseArea(colors.BG_L);
+
+    //std.log.info("Time taken: {} ms", .{std.time.milliTimestamp() - ts});
 }
 
 fn drawLog() void {

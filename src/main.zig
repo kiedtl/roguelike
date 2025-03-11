@@ -183,6 +183,7 @@ fn initGameState() void {
     state.messages = MessageArrayList.init(state.alloc);
 
     mapgen.fungi.init();
+    mapgen.angels.init();
     alert.init();
     events.init();
     player.choosePlayerUpgrades();
@@ -273,6 +274,7 @@ fn deinitGameState() void {
     state.evocables.deinit();
 
     mapgen.fungi.deinit();
+    mapgen.angels.deinit();
     alert.deinit();
     events.deinit();
 
@@ -1141,6 +1143,7 @@ fn profilerMain() void {
         var alive_rev: [2]usize = [2]usize{ 0, 0 };
         var alive_cav: [2]usize = [2]usize{ 0, 0 };
         var alive_drk: [2]usize = [2]usize{ 0, 0 };
+        var alive_hly: [2]usize = [2]usize{ 0, 0 };
 
         var iter = state.mobs.iterator();
         while (iter.next()) |mob| if (!mob.is_dead) {
@@ -1161,13 +1164,18 @@ fn profilerMain() void {
                     if (mob.ai.phase == .Flee) alive_drk[0] += 1;
                     alive_drk[1] += 1;
                 },
+                .Holy => {
+                    if (mob.ai.phase == .Flee) assert(false); //alive_hly[0] += 1;
+                    alive_hly[1] += 1;
+                },
                 .Player => err.wat(),
             }
         };
 
-        std.log.info("{}\tnec: {} ({})\tcav: {} ({})\trev: {} ({})\tnight: {} ({})", .{
+        std.log.info("{}\tnec: {} ({})\tcav: {} ({})\trev: {} ({})\tnight: {} ({})\tholy: {} ({})", .{
             i,            alive_nec[0], alive_nec[1], alive_cav[0], alive_cav[1],
-            alive_rev[0], alive_rev[1], alive_drk[0], alive_drk[1],
+            alive_rev[0], alive_rev[1], alive_drk[0], alive_drk[1], alive_hly[0],
+            alive_hly[1],
         });
 
         tickGame(0) catch err.wat();

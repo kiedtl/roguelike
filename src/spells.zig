@@ -424,7 +424,7 @@ pub const CAST_REGEN = Spell{
     .smite_target_type = .Self,
     .check_has_effect = struct {
         // Only use the spell if the caster's HP is below
-        // the (regeneration_amount * 2).
+        // the (regeneration_amount * 3).
         //
         // TODO: we should have a way to flag this spell as an "emergency"
         // spell, ensuring it's only used when the caster is clearly losing a
@@ -596,6 +596,73 @@ pub const BOLT_FIERY_JAVELIN = Spell{
         .{ .Damage = .{ .msg = .{ .noun = "The blazing javelin", .strs = &items.PIERCING_STRS } } },
         .{ .Damage = .{ .kind = .Fire, .msg = .{ .noun = "The blazing javelin", .strs = &items.PIERCING_STRS } } },
     },
+};
+
+pub const BOLT_DISINTEGRATE = Spell{
+    .id = "sp_disintegration",
+    .name = "disintegrating bolt",
+    .cast_type = .Smite,
+    .smite_target_type = .AnyTile,
+    .animation = .{ .Particles = .{ .name = "zap-disintegrate" } },
+    .noise = .Silent,
+    .needs_visible_target = false,
+    .effects = &[_]Effect{.{
+        .Custom = struct {
+            pub fn f(caster_coord: Coord, _: SpellOptions, dest: Coord) void {
+                const caster = state.dungeon.at(caster_coord).mob.?;
+
+                const will: usize = @intCast(caster.stat(.Willpower));
+                const overhang = will - caster.coord.distance(dest);
+                const path = caster.coord.drawLine(dest, state.mapgeometry, overhang);
+                std.log.info("drawing line from {} to {}", .{ caster.coord, dest });
+
+                var i: usize = will;
+                var d: usize = 2; // damage
+                var v: usize = 0; // victims so far
+                for (path.constSlice()) |coord| {
+                    std.log.info("*    Child coord: {}", .{coord});
+                    if (coord.eq(caster.coord)) continue;
+
+                    if (state.is_walkable(coord, .{ .only_if_breaks_lof = true })) {
+                        if (v > 0)
+                            d -|= 1;
+                    } else {
+                        if (state.dungeon.at(coord).mob) |mob| {
+                            mob.takeDamage(.{
+                                .amount = d,
+                                .by_mob = caster,
+                                .kind = .Irresistible,
+                                .blood = false,
+                                .source = .RangedAttack,
+                                .stealth = v == 0,
+                            }, .{
+                                .strs = &[_]types.DamageStr{
+                                    items._dmgstr(10, "zap", "zaps", ""),
+                                    items._dmgstr(99, "disintegrate", "disintegrates", ""),
+                                    items._dmgstr(200, "annihilate", "annihilates", ""),
+                                },
+                            });
+                            v += 1;
+                        } else if (state.dungeon.at(coord).surface) |surface| {
+                            // It's not walkable
+                            if (surface != .Stair) {
+                                surface.destroy(coord);
+                                if (v == 0)
+                                    d += 1;
+                            }
+                        } else if (state.dungeon.at(coord).type == .Wall) {
+                            state.dungeon.at(coord).type = .Floor;
+                            if (v == 0)
+                                d += 3;
+                        }
+                    }
+
+                    i -= 1;
+                    if (i == 0 or d == 0) break;
+                }
+            }
+        }.f,
+    }},
 };
 
 pub const BOLT_JAVELIN = Spell{
@@ -1528,7 +1595,10 @@ pub fn initAvgWillChances() void {
 }
 
 pub fn checkAvgWillChances(caster: *Mob, target: *Mob) usize {
-    const tw = target.stat(.Willpower);
+    const tw = switch (target.stat(.Willpower)) {
+        mobs.WILL_IMMUNE => 10,
+        else => |w| w,
+    };
     const cw = switch (caster.stat(.Willpower)) {
         mobs.WILL_IMMUNE => 10,
         else => |w| w,
@@ -1634,6 +1704,11 @@ pub const Spell = struct {
         Mob,
         SpecificMob: []const u8, // mob's ID
         Corpse,
+
+        // This one is special, treat it as .Mob for AI-related purposes,
+        // but the player can also use it in other ways (i.e. the spell is used
+        // by rings)
+        AnyTile,
     } = .Mob,
 
     // Only used if cast_type == .Bolt
@@ -1974,7 +2049,7 @@ pub const Spell = struct {
                             .SpecificMob,
                             => |wanted_id| if (!mem.eql(u8, target_mob.id, wanted_id)) {
                                 err.bug("Mage cast {s} at wrong mob! (Wanted {s}; got {s})", .{
-                                    self.id, wanted_id, got_id,
+                                    self.id, wanted_id, target_mob.id,
                                 });
                             },
                             .AngelAlly => if (target_mob.faction != .Holy and target_mob.life_type != .Spectral)

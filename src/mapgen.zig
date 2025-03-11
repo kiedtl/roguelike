@@ -24,6 +24,7 @@ const utils = @import("utils.zig");
 
 pub const tunneler = @import("mapgen/tunneler.zig");
 pub const fungi = @import("mapgen/fungi.zig");
+pub const angels = @import("mapgen/angels.zig");
 
 const LinkedList = @import("list.zig").LinkedList;
 // const Generator = @import("generators.zig").Generator;
@@ -3110,6 +3111,7 @@ pub const BlobConfig = struct {
     number: MinMax(usize) = MinMax(usize){ .min = 1, .max = 1 },
 
     type: ?TileType,
+    material: ?*const Material = null,
     terrain: *const surfaces.Terrain = &surfaces.DefaultTerrain,
     min_blob_width: MinMax(usize),
     min_blob_height: MinMax(usize),
@@ -3154,6 +3156,7 @@ fn placeBlob(cfg: BlobConfig, start: Coord) void {
 
             if (grid[blob_x][blob_y] != 0) {
                 if (cfg.type) |tiletype| state.dungeon.at(coord).type = tiletype;
+                if (cfg.material) |material| state.dungeon.at(coord).material = material;
                 setTerrain(coord, cfg.terrain);
             }
         }
@@ -3781,7 +3784,7 @@ pub const Prefab = struct {
     player_position: ?Coord = null,
     height: usize = 0,
     width: usize = 0,
-    content: [25][40]FabTile = undefined,
+    content: [40][60]FabTile = undefined,
     connections: [30]?Connection = undefined,
     features: [128]?Feature = [_]?Feature{null} ** 128,
     features_global: [128]bool = [_]bool{false} ** 128,
@@ -4998,6 +5001,22 @@ pub fn createLevelConfig_WRK(crowd: usize, comptime prefabs: []const []const u8)
     };
 }
 
+pub fn _crystalBlob(m: *const Material, nmin: usize, nmax: usize) BlobConfig {
+    return .{
+        .number = minmax(usize, nmin, nmax),
+        .type = null, // Don't overwrite walls
+        .material = m,
+        .min_blob_width = minmax(usize, 2, 3),
+        .min_blob_height = minmax(usize, 2, 3),
+        .max_blob_width = minmax(usize, 4, 6),
+        .max_blob_height = minmax(usize, 4, 6),
+        .ca_rounds = 7,
+        .ca_percent_seeded = 58,
+        .ca_birth_params = "ffffffftt",
+        .ca_survival_params = "ffftttttt",
+    };
+}
+
 pub fn _fungiBlob(f: *const surfaces.Terrain, nmin: usize, nmax: usize) BlobConfig {
     return .{
         .number = minmax(usize, nmin, nmax),
@@ -5068,6 +5087,8 @@ pub const CAV_BASE_LEVELCONFIG = LevelConfig{
     .door = &surfaces.VaultDoor,
 
     .blobs = &[_]BlobConfig{
+        _crystalBlob(&materials.BasaltCrystal, 10, 15),
+
         _fungiBlob(&surfaces.CavernsTerrain1, 2, 5),
         _fungiBlob(&surfaces.CavernsTerrain2, 2, 5),
         _fungiBlob(&surfaces.CavernsTerrain3, 2, 5),

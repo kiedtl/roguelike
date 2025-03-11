@@ -13,6 +13,7 @@ pub const MATERIALS = [_]*const Material{
     &Gold,
     &Slade,
     &Basalt,
+    &BasaltCrystal,
     &Rust,
     &Dobalene,
     &PlatedDobalene,
@@ -135,6 +136,18 @@ pub const Basalt = Material{
     .name = "basalt",
     .color_fg = 0x505050,
     .color_bg = 0x9e9e9e,
+    .color_floor = 0x9e9e9e,
+    .tileset = 0,
+    .luminescence = 0,
+    .opacity = 1.0,
+};
+
+pub const BasaltCrystal = Material{
+    .id = "crystal_basalt",
+    .name = "crystal_basalt",
+    .color_fg = 0x8f8fbf,
+    .color_fg_dance = .{ .each = 0x20203f, .all = 0x3 },
+    .color_bg = null,
     .color_floor = 0x9e9e9e,
     .tileset = 0,
     .luminescence = 0,

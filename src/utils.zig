@@ -353,6 +353,59 @@ pub fn findFirstNeedle(
     } else null;
 }
 
+pub const CountingAllocator = struct {
+    parent_alloc: mem.Allocator,
+    total_alloced: usize = 0,
+    total_allocations: usize = 0,
+    failed_resizes: usize = 0,
+
+    const Self = @This();
+
+    pub fn init(parent: mem.Allocator) Self {
+        return .{ .parent_alloc = parent };
+    }
+
+    pub fn deinit(self: *Self) void {
+        std.log.debug("Alloced: {} bytes, Total allocations: {}, Failed resizes: {}", .{ self.total_alloced, self.total_allocations, self.failed_resizes });
+        self.* = undefined;
+    }
+
+    pub fn allocator(self: *Self) mem.Allocator {
+        return .{
+            .ptr = self,
+            .vtable = &.{ .alloc = alloc, .resize = resize, .remap = remap, .free = free },
+        };
+    }
+
+    fn alloc(ctx: *anyopaque, len: usize, ptr_align: mem.Alignment, ret_addr: usize) ?[*]u8 {
+        const self: *Self = @alignCast(@ptrCast(ctx));
+        self.total_alloced += len;
+        self.total_allocations += 1;
+        return self.parent_alloc.rawAlloc(len, ptr_align, ret_addr);
+    }
+
+    fn remap(ctx: *anyopaque, buf: []u8, buf_align: mem.Alignment, new_len: usize, ra: usize) ?[*]u8 {
+        const self: *Self = @alignCast(@ptrCast(ctx));
+        self.total_alloced = (self.total_alloced - buf.len) + new_len;
+        return self.parent_alloc.rawRemap(buf, buf_align, new_len, ra);
+    }
+
+    fn resize(ctx: *anyopaque, buf: []u8, buf_align: mem.Alignment, new_len: usize, ret_addr: usize) bool {
+        const self: *Self = @alignCast(@ptrCast(ctx));
+        self.total_alloced = (self.total_alloced - buf.len) + new_len;
+        const res = self.parent_alloc.rawResize(buf, buf_align, new_len, ret_addr);
+        if (!res) self.failed_resizes += 1;
+        return res;
+    }
+
+    fn free(ctx: *anyopaque, buf: []u8, buf_align: mem.Alignment, ret_addr: usize) void {
+        const self: *Self = @alignCast(@ptrCast(ctx));
+        //self.total_alloced -= buf.len;
+        //self.total_allocations -= 1;
+        return self.parent_alloc.rawFree(buf, buf_align, ret_addr);
+    }
+};
+
 // Used to deduplicate code in HUD and drawPlayerInfoScreen
 //
 // A bit idiosyncratic...

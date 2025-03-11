@@ -434,7 +434,7 @@ pub const Coord = struct { // {{{
     fn insert_if_valid(z: usize, x: isize, y: isize, buf: *StackBuffer(Coord, 2048), limit: Coord) void {
         if (x < 0 or y < 0)
             return;
-        if (x > @as(isize, @intCast(limit.x)) or y > @as(isize, @intCast(limit.y)))
+        if (x >= @as(isize, @intCast(limit.x)) or y >= @as(isize, @intCast(limit.y)))
             return;
 
         buf.append(Coord.new2(z, @as(usize, @intCast(x)), @as(usize, @intCast(y)))) catch err.wat();
@@ -930,6 +930,7 @@ pub const Material = struct {
 
     // Tile used to represent walls.
     color_fg: u32,
+    color_fg_dance: ?colors.ColorDance = null,
     color_bg: ?u32,
     sprite: ?font.Sprite = .S_G_Wall_Rough,
     color_sfg: ?u32 = null,
@@ -1010,6 +1011,7 @@ pub const Resistance = enum {
     rFire,
     rElec,
     rAcid,
+    rHoly,
     Armor,
     rFume,
 
@@ -1018,6 +1020,7 @@ pub const Resistance = enum {
             .rFire => "rFire",
             .rElec => "rElec",
             .rAcid => "rAcid",
+            .rHoly => "rHoly",
             .Armor => "Armor",
             .rFume => "rFume",
         };
@@ -1055,6 +1058,7 @@ pub const Damage = struct {
         Fire,
         Electric,
         Acid,
+        Holy,
         Irresistible,
 
         pub fn resist(self: DamageKind) ?Resistance {
@@ -1063,6 +1067,7 @@ pub const Damage = struct {
                 .Fire => .rFire,
                 .Electric => .rElec,
                 .Acid => .rAcid,
+                .Holy => .rHoly,
                 .Irresistible => null,
             };
         }
@@ -1073,6 +1078,7 @@ pub const Damage = struct {
                 .Fire => "fire",
                 .Electric => "elec",
                 .Acid => "acid",
+                .Holy => "holy",
                 .Irresistible => "irresist",
             };
         }
@@ -1083,6 +1089,7 @@ pub const Damage = struct {
                 .Fire => "fire",
                 .Electric => "electric",
                 .Acid => "acid",
+                .Holy => "holy",
                 .Irresistible => "irresistible",
             };
         }
@@ -1216,6 +1223,7 @@ pub const Faction = enum(usize) {
     CaveGoblins = 2,
     Revgenunkim = 3,
     Night = 4,
+    Holy = 5,
 
     pub const TOTAL = std.meta.fields(@This()).len;
 };
@@ -3827,6 +3835,7 @@ pub const Mob = struct { // {{{
                 const basic_helper_verb: []const u8 = if (self == state.player) "are" else "is";
                 const basic_verb = switch (d.kind) {
                     .Irresistible, .Physical => "damaged",
+                    .Holy => "engulfed in tormenting fire",
                     .Fire => "burnt with fire",
                     .Electric => "electrocuted",
                     .Acid => "splashed with acid",
@@ -5751,13 +5760,40 @@ pub const Tile = struct {
     }
 
     pub fn animateAs(coord: Coord) ?ui.CellAnimation {
+        const material = state.dungeon.at(coord).material;
         const terrain = state.dungeon.terrainAt(coord);
 
         const there_is_gas = for (state.dungeon.atGas(coord)) |q| {
             if (q > 0) break true;
         } else false;
 
-        if (state.dungeon.at(coord).mob) |mob| {
+        if (state.dungeon.at(coord).type == .Wall and material.color_fg_dance != null) {
+            // FIXME: duplicated code between here and terrain
+            //
+            const rand = ui.uirng.random();
+            var cells = StackBuffer(display.Cell, 4).init(null);
+            const count: usize = if (rng.onein(7)) 3 else 2;
+
+            for (0..count) |_| {
+                const fg = material.color_fg_dance.?.apply(material.color_fg, rand);
+
+                cells.append(.{
+                    .ch = materials.tileFor(coord, material.tileset),
+                    .fg = fg,
+                    .bg = material.color_bg orelse colors.BG,
+                    .sch = material.sprite,
+                    .sfg = fg, //material.color_sfg orelse fg,
+                    .sbg = material.color_sbg orelse material.color_bg orelse colors.BG,
+                }) catch err.wat();
+            }
+
+            return ui.CellAnimation{
+                .kind = ui.CellAnimation.Kind{
+                    .RotateCells = .{ .cells = cells },
+                },
+                .interval = 15,
+            };
+        } else if (state.dungeon.at(coord).mob) |mob| {
             var ch: ?u21 = null;
             var interval: usize = 25;
 

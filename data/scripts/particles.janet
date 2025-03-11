@@ -1066,8 +1066,8 @@
           [[:COND-true] [:TRIG-lerp-color :fg 0x0a0a90 "rgb" @(:completed-journey)]]
         ]
       })
-      :lifetime (fn [self &] 4)
-      :spawn-count (fn [self &] (* 4 90))
+      :lifetime 1
+      :spawn-count 180
       :get-spawn-params (SPAR-explosion :which-origin :target :distance 3 :sparsity-factor 4)
     })
   ]
