@@ -1574,22 +1574,25 @@ pub fn willSucceedAgainstMob(caster: *const Mob, target: *const Mob) bool {
 pub var AVG_WILL_CHANCES: [11][11]usize = undefined;
 
 pub fn initAvgWillChances() void {
-    var atk: usize = 1;
-    while (atk < AVG_WILL_CHANCES.len) : (atk += 1) {
-        var def: usize = 1;
-        while (def < AVG_WILL_CHANCES[atk].len) : (def += 1) {
+    const K = 100;
+    for (1..11) |atk| {
+        for (1..11) |def| {
             var defeated: usize = 1;
-            var i: usize = 10_000;
-            while (i > 0) : (i -= 1) {
+            for (0..100 * K) |_| {
                 const cw: isize = @intCast(atk);
                 const tw: isize = @intCast(def);
                 if (willSucceedAgainstMobStats(cw, tw)) {
                     defeated += 1;
                 }
             }
-            AVG_WILL_CHANCES[atk][def] = defeated / 100;
+            AVG_WILL_CHANCES[atk][def] = defeated / K;
         }
     }
+    std.log.info("4 against 1: {}", .{AVG_WILL_CHANCES[4][1]});
+    std.log.info("4 against 2: {}", .{AVG_WILL_CHANCES[4][2]});
+    std.log.info("4 against 3: {}", .{AVG_WILL_CHANCES[4][3]});
+    std.log.info("4 against 4: {}", .{AVG_WILL_CHANCES[4][4]});
+    std.log.info("4 against 5: {}", .{AVG_WILL_CHANCES[4][5]});
 }
 
 pub fn checkAvgWillChances(caster: *Mob, target: *Mob) usize {

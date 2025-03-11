@@ -135,7 +135,6 @@ fn initGame(no_display: bool, display_scale: f32) bool {
     mobs.spawns.readSpawnTables(state.alloc);
     mapgen.readPrefabs(state.alloc);
     readDescriptions(state.alloc);
-    spells.initAvgWillChances();
 
     initGameState();
 
@@ -188,6 +187,7 @@ fn initGameState() void {
     events.init();
     player.choosePlayerUpgrades();
     events.executeGlobalEvents();
+    spells.initAvgWillChances();
 
     for (&state.dungeon.map, 0..) |*map, level| {
         state.stockpiles[level] = StockpileArrayList.init(state.alloc);

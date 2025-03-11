@@ -199,14 +199,14 @@ test "range" {
 // what a Gaussian distribution is, and what effects the clumping factor
 // had on the results.
 //
-//pub fn main() anyerror!void {
-//    init();
-//    const max = 25;
-//    var occurs = [_]usize{0} ** (max + 1);
-//    for ([_]usize{0} ** 2000) |_, i| {
-//        occurs[rangeClumping(usize, 0, max, 5)] += 1;
-//    }
-//    for (&occurs) |occurance, number| {
-//        std.debug.print("{},{}\n", .{ number, occurance });
-//    }
-//}
+// pub fn main() anyerror!void {
+//     init();
+//     const max = 25;
+//     var occurs = [_]usize{0} ** (max + 1);
+//     for (0..10_000) |_| {
+//         occurs[rangeClumping(usize, 0, max, 4)] += 1;
+//     }
+//     for (&occurs, 0..) |occurance, number| {
+//         std.debug.print("{},{}\n", .{ number, occurance });
+//     }
+// }
