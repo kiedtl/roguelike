@@ -837,9 +837,9 @@ fn generateSingle(
     const resists = kind.resists();
 
     // Done, print it
-    std.log.info("*** {s}: {s} {s} ({u}) ({} HP)", .{ @tagName(kind), adj.?.str, noun.?.str, chosen_tile.ch, maxHP });
-    for (chosen_traits.constSlice()) |chosen_trait|
-        std.log.info("  - Trait: {s} ({})", .{ chosen_trait.name, chosen_trait.kind });
+    // std.log.info("*** {s}: {s} {s} ({u}) ({} HP)", .{ @tagName(kind), adj.?.str, noun.?.str, chosen_tile.ch, maxHP });
+    // for (chosen_traits.constSlice()) |chosen_trait|
+    //     std.log.info("  - Trait: {s} ({})", .{ chosen_trait.name, chosen_trait.kind });
 
     // Now apply to the MobTemplate
 

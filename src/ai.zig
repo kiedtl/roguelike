@@ -1587,6 +1587,7 @@ pub fn sunMothFight(mob: *Mob) void {
 fn castAnySpell(mob: *Mob) bool {
     if (mob.ai.flag(.RandomSpells)) {
         var possibles = std.ArrayList(struct { Coord, SpellOptions }).init(state.alloc);
+        defer possibles.deinit();
         for (mob.spells) |spell| {
             if (spell.MP_cost > mob.MP) continue;
             if (_findValidTargetForSpell(mob, spell)) |coord|
