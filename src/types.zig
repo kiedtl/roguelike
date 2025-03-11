@@ -5742,7 +5742,7 @@ pub const Tile = struct {
 
         if (!ignore_lights and self.type == .Floor) {
             if (!state.dungeon.lightAt(coord).*) {
-                cell.fg = colors.percentageOf(cell.fg, 60);
+                cell.fg = colors.percentageOf(cell.fg, 50);
             }
         }
 

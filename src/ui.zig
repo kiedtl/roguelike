@@ -1994,7 +1994,7 @@ fn modifyTile(moblist: []const *Mob, coord: Coord, p_tile: display.Cell) display
 
             const light = state.dungeon.lightAt(state.player.coord).*;
             if (state.player.coord.eq(coord)) {
-                tile.fg = if (light) colors.LIGHT_CONCRETE else colors.LIGHT_STEEL_BLUE;
+                tile.fg = if (light) colors.LIGHT_CONCRETE else colors.STEEL_BLUE;
             }
 
             if (_mobs_can_see(moblist, coord)) {
@@ -2095,10 +2095,10 @@ pub fn drawMap(console: *Console, moblist: []const *Mob, refpoint: Coord) void {
 
                     const old_sbg = tile.sbg;
 
-                    tile.bg = colors.filterBluescale(tile.bg);
-                    tile.fg = colors.filterBluescale(tile.fg);
-                    tile.sbg = colors.filterBluescale(tile.sbg);
-                    tile.sfg = colors.filterBluescale(tile.sfg);
+                    tile.bg = colors.percentageOf(colors.filterBluescale(tile.bg), 60);
+                    tile.fg = colors.percentageOf(colors.filterBluescale(tile.fg), 60);
+                    tile.sbg = colors.percentageOf(colors.filterBluescale(tile.sbg), 60);
+                    tile.sfg = colors.percentageOf(colors.filterBluescale(tile.sfg), 60);
 
                     if (tile.bg < colors.BG) tile.bg = colors.BG;
 
