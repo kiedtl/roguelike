@@ -14,8 +14,14 @@
 :notraps
 :priority 100
 
-@a Cmons angel_arch_1 ([facing]East)
-@v Cmons bone_rat ([prm_status1]Paralysis)
+:subroom_area 2,2 4 4 PRI_s_cell_4
+:subroom_area 8,2 4 4 PRI_s_cell_4
+%:subroom_area 8,7 4 4 PRI_s_cell_4
+
+@b p iron_bars
+@p p iron_bars_broken
+@g Cmons guard ([prm_status1]Sleeping)
+
 
 @0 i potion_smoke
 @1 i potion_paralysis
@@ -23,12 +29,16 @@
 @3 i potion_distract
 
 #####****#####
-#..≈≈≈≈≈≈≈≈≈.#
-#.≈≈≈≈≈≈≈≈≈≈.#
-*.≈a.......≈.*
-#.≈..........*
-*.#..........*
 #............#
-#.@..........#
 #............#
+*............*
+#............#
+*............*
+#............#
+#.####..####.#
+#.b..b..b01#.#
+#.b..p@.+23#.#
+#.####..####.#
+#............#
+#g..........g#
 #####****#####
