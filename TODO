@@ -1459,7 +1459,6 @@ x Workshop enhancements
 x Spell/ability flavor text and HUD description improvements
   x Popups for spell description/flavor
   x Describe custom effects properly
-- Fire: don't destroy corpses entirely, only char them
 x Water rework, Water status
 x Holding map
   x Tunneling + BSP mapgen
@@ -1494,25 +1493,13 @@ x Unholy temple map + faction
       x Dijkstra vision
       x Bone rat mechanics
       x Inability to swap
-  ~ Workshop/2 and Workshop/3
+  x Workshop/2 and Workshop/3
     ~ Additional fluff prefabs (see REXPaint sketch, rooms marked w/ '*')
-      - Note 2025-02-08: I'm not seeing any such rooms :P
-    ~ Enh. Emberling
-      - Note 2025-02-08: ???
-    ~ Enh. Emberling event
-      - Note 2025-02-08: No clue what this was supposed to be!
-- More rings
-  - Ring of suggestion
-  - Ring of contriction
-  - Ring of excavation
-  - Ring of execution
-  x Ring of exclusion
-  x Ring of retaliation
-- Ring identification (only if finalized, just putting it here so I don't forget)
-  - Artwork
-  - Traits & categories
-  - Auto-identification
+      ~ Note 2025-02-08: I'm not seeing any such rooms :P
 - Holy temple map + faction
+  - Visuals
+    - New roundish-looking wall sprite
+    - Choose green gold colors (unify across particle effects, material, etc)
   - Shrine mechanics
     - Holy-themed shrine in temple map ("altar")
     - Shrines exploding in normal maps
@@ -1530,31 +1517,46 @@ x Unholy temple map + faction
     - Potion of regeneration
       - +2 max_MP (permanent), -10% Potential (permanent)
       - Fully replenishes MP, regardless of Potential stat
-  - Angels spells
-    - Hellfire spell (irresist damage)
-    - Disintegration (punch through walls, same as ring)
-    - Dispelling bolt (dispell undead, will-checked)
-    - Torment undead (different from dispelling bolt somehow)
-    - Turn undead (fear, AoE)
-    - Abjure earth demon (anti-revgenunkim). Irresist damage; effects:
-      - Limbs exploding into gore (fewer claw/innate attacks)
-      - Skin blistering horribly (loss of rArmor and rAcid)
-      - Head explodes into gore (instant death, 10% chance)
-      - Torment (HP is cut in half; no damage otherwise; only if HP > 1)
-    - Abjure Night creature
-    - Rolling boulder
-    - Martial, Spikes/riposte
-    - Frozen fiend living ice ability (basalt themed, like basalt fiend)
-    - Speeding bolt (more damage per distance)
-  - Angelic life_type
-    - Immune to dazing, pain, nausea
-    - Cannot be surprised
-    - Not immune to fear (unless specified in template)
-  - Angel procgen
-    - Initial generation
-    - Name generation
-    - Strength rating, tweaking
-    - Simulation testing
+  x Angels spells/traits
+    x Existing spells
+      x Disintegration (punch through walls, same as ring)
+      x Enrage Angel
+      x Crossbow bolt
+      x Lightning, iron, crystal bolt
+    x New spells
+      x Divine Regeneration (targets others)
+      x Hellfire spell
+      x Electric Hellfire
+      x Dispelling bolt
+      x Abjure earth demon (anti-revgenunkim). Irresist damage; effects:
+        x Loss of claw/innate attacks ("X's claw explodes into gore!")
+        x Loss of rArmor and rAcid ("X's skin blisters horribly!")
+        x Negative rArmor ("X's flesh melts and sloughs off!")
+        x Fear status ("X shudders in primal terror!", "X is overcome by the fear of death!")
+        x Paralysis (2-4 turns) ("X's devouring spirit is momentarily torn from its body!")
+        x Loss of mobility ("X's bones shatter, and it writhes in agony!")
+        x Instant death, 10% chance ("X's head explodes into gore!!")
+        x HP is cut in half if HP > 1 ("X convulses in torment!")
+      x Rolling boulder
+        x Flying status
+          x Apply to mellaents, spectral swords, stalkers
+      x Frozen fiend living ice ability (basalt themed, like basalt fiend)
+      x Speeding bolt (more damage per distance)
+    x Stats
+      x Martial, Spikes/riposte
+      x Slow, decreased melee+missile, decreased evade (negative power rating)
+    x Spell descriptions
+  x Angel AI
+    x Mage AI (randomly picks instead of checking spells in order)
+    x Work AI (turn into sun moth)
+    x Sun moth AI
+  x Anti-angel spell (20% chance of 2 damage, 10 MP)
+    x Add to all earth demons
+  x Angel procgen
+    x Initial generation
+    x Sun moth generation
+    x Strength rating, tweaking
+    x Simulation testing
   - Caverns rework (pt 2)
     x Lava rework
       x Lava -> Glowing water
@@ -1569,15 +1571,24 @@ x Unholy temple map + faction
       x Dustling fire test room
       x Dustling production machines
     - Guaranteed border around map
-- Caverns (pt 3)
-  - Procgen descriptions for fungi
-    - Nothing fancy like with angels; each trait should have a piece of text
-      that's tacked onto a very basic description.
-  - Trees or fungi towers/groups
-    - Placed in the middle(ish) of fungi blobs
-  - Dustling analyzer prefabs
-  - Dustling storage areas
-  - Vapor mage throwing/blowing dustlings at enemies
+    x Rock crystal chunks
+- Fire: don't destroy corpses entirely, only char them
+- More rings
+  - Ring of suggestion
+  - Ring of contriction
+  - Ring of excavation
+  - Ring of execution
+  x Ring of exclusion
+  x Ring of retaliation
+- Ring identification (only if finalized, just putting it here so I don't forget)
+  - Artwork
+  - Traits & categories
+  - Auto-identification
+- Events
+  - Workshop/2 and Workshop/3
+    - enh. Emberling, enh. Emberling event
+  - Crypt
+    - Ambassador, Revgen (see notes in green notebook)
 - Fix particle effects
   x Shrine-blowup effect (rework, simplify and speedup)
   - Lightning mage static discharge (speedup/rework)
@@ -1780,6 +1791,18 @@ x Unholy temple map + faction
   - Engineer shows up to clean and oil spires
   - Engineer shows up to repair spires (just theater, spires aren't actually broken)
 - Living dungeon: scheduled prisoner transport
+- Caverns (pt 3)
+  - Procgen descriptions for fungi
+    - Nothing fancy like with angels; each trait should have a piece of text
+      that's tacked onto a very basic description.
+  - Trees or fungi towers/groups
+    - Placed in the middle(ish) of fungi blobs
+  - Mark certain traits as "bad" and ensure pathfinding is restricted for fungi that choose them
+    - Need multiple levels of restriction: "avoid", "avoid_hard", "consider_unwalkable".
+    - Also need tile danger system.
+  - Dustling analyzer prefabs
+  - Dustling storage areas
+  - Vapor mage throwing/blowing dustlings at enemies
 *** Untriaged/obsolete ***
 - Add bookshelves and book types
   - Maps

@@ -1,9 +1,18 @@
-- Stabbing
-
 - Visual filters
   - Water: blue filter
   - Bubbling water: green filter
   - Fire: red filter
+
+Add gas, don't set it.
+Reduce initial player health
+Build options
+Fix CI
+Rock crystals should be more sparkly
+Make draining corpses an active thing? (i.e. press 'a' to do it)
+  - Need to find another keybinding though
+
+Line
+Glyphs for prisoner/sparklings
 
 - Water
   - Restricts vision, along with slade
