@@ -27,7 +27,7 @@
 @1 i potion_paralysis
 @2 i potion_blind
 %@3 i potion_distract
-@3 i =damnation
+@3 i potion_distract
 
 ###•#****#•###
 #............#
