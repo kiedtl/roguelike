@@ -18,6 +18,7 @@ jobs:
       - uses: goto-bus-stop/setup-zig@v2
         with:
           version: 0.14.0
+      - run: git submodule update --init --recursive
       - run: zig build test --summary all
   integration-tests:
     runs-on: ubuntu-latest
