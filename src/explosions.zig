@@ -60,6 +60,13 @@ pub fn fireBurst(ground0: Coord, max_radius: usize, opts: FireBurstOpts) void {
         cell.* = 0;
     };
 
+    sound.makeNoise(ground0, .Explosion, switch (max_radius) {
+        // These are *fire* explosions, after all, so not quite as loud as regular ones
+        0...1 => .Medium,
+        2...4 => .Loud,
+        else => .Louder,
+    });
+
     var deg: usize = 0;
     while (deg < 360) : (deg += 30) {
         const radius = rng.range(usize, max_radius / 2, max_radius);
@@ -76,7 +83,7 @@ pub fn fireBurst(ground0: Coord, max_radius: usize, opts: FireBurstOpts) void {
             const cellc = Coord.new2(ground0.z, x, y);
             if (state.dungeon.at(cellc).mob) |mob| {
                 if (opts.initial_damage > 0 and !mob.isFullyResistant(.rFire) and
-                    mob_cache.get(mob) != null)
+                    mob_cache.get(mob) == null)
                 {
                     mob_cache.put(mob, {}) catch err.wat();
                     mob.takeDamage(.{
