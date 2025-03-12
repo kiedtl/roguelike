@@ -4554,12 +4554,14 @@ pub const Mob = struct { // {{{
             };
 
         const rep = state.REP_TABLE[@intFromEnum(self.faction)][@intFromEnum(othermob.faction)];
-        const night_rep = state.night_rep[@intFromEnum(othermob.faction)];
+        const their_night_rep = state.night_rep[@intFromEnum(othermob.faction)];
 
-        if (self.faction == .Night and night_rep > -5 and
-            (night_rep > 0 or !othermob.isOnSlade()))
-        {
-            hostile = false;
+        if (self.faction == .Night) {
+            if (their_night_rep > -5 and
+                (their_night_rep > 0 or !othermob.isOnSlade()))
+            {
+                hostile = false;
+            }
 
             // Night-creature specific exception.
             //
