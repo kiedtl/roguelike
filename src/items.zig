@@ -878,13 +878,13 @@ pub const DistractionRing = Ring{ // {{{
 
 pub const DamnationRing = Ring{ // {{{
     .name = "damnation",
-    .required_MP = 4,
+    .required_MP = 5,
     .hated_by_nc = true,
     .effect = struct {
         pub fn f() bool {
             const rFire_pips = @as(usize, @intCast(@max(0, state.player.resistance(.rFire)))) / 25;
             const power = 2 + rFire_pips;
-            const duration = 4 + (rFire_pips * 4);
+            const duration = 2 + (rFire_pips * 2);
 
             state.player.addStatus(.RingDamnation, power, .{ .Tmp = duration });
             return true;
