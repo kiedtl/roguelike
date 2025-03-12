@@ -595,7 +595,7 @@ pub const GoblinTemplate = MobTemplate{
     .mob = .{
         .id = "goblin",
         .species = &GoblinSpecies,
-        .tile = 'i',
+        .tile = 'p',
         .ai = AI{
             .profession_name = "prisoner",
             .profession_description = "wandering",
@@ -1341,7 +1341,7 @@ pub const SparkMageTemplate = MobTemplate{
     .mob = .{
         .id = "spark_mage",
         .species = &GoblinSpecies,
-        .tile = 'P',
+        .tile = 'S',
         .ai = AI{
             .profession_name = "spark mage",
             .profession_description = "watching",
@@ -1559,7 +1559,7 @@ pub const StalkerTemplate = MobTemplate{
                 .strs = &[_]DamageStr{items._dmgstr(0, "ram", "rams", "")},
             },
         },
-        .tile = 's',
+        .tile = 'f',
         .ai = AI{
             .profession_description = "watching",
             .work_fn = ai.standStillAndGuardWork,
@@ -1721,7 +1721,7 @@ pub const SparklingTemplate = MobTemplate{
             .name = "sparkling",
             .default_attack = &Weapon{ .name = "shock prod", .damage = 1, .damage_kind = .Electric, .strs = &items.SHOCK_STRS, .delay = 120 },
         },
-        .tile = 'p',
+        .tile = 's',
         .ai = AI{
             .profession_description = "watching",
             .work_fn = ai.standStillAndGuardWork,
