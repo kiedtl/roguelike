@@ -109,10 +109,7 @@ pub fn build(b: *Build) void {
     const rexpaint = b.addModule("rexpaint", .{
         .root_source_file = b.path("third_party/zig-rexpaint/lib.zig"),
     });
-    //const libcoro = b.dependency("zigcoro", .{}).module("libcoro");
-
     exe.root_module.addImport("rexpaint", rexpaint);
-    //exe.root_module.addImport("libcoro", libcoro);
 
     exe.addIncludePath(b.path("third_party/janet/")); // janet.h
     exe.addIncludePath(b.path("third_party/microtar/src/"));
@@ -170,6 +167,7 @@ pub fn build(b: *Build) void {
     const run_step = b.step("run", "Run the roguelike");
     run_step.dependOn(&run_cmd.step);
 
+    const tests_step = b.step("test", "Run the various tests");
     var build_tests = b.addTest(.{
         .name = "rl_tests",
         .root_source_file = b.path("src/test.zig"),
@@ -179,11 +177,8 @@ pub fn build(b: *Build) void {
     build_tests.addIncludePath(b.path("third_party/janet/"));
     build_tests.addCSourceFiles(.{ .files = &[_][]const u8{"third_party/janet/janet.c"} });
     _addTermbox(b, build_tests);
-    b.installArtifact(build_tests);
-    const tests = b.addRunArtifact(build_tests);
-    tests.step.dependOn(b.getInstallStep());
-    tests.step.dependOn(&build_tests.step);
-
-    const tests_step = b.step("tests", "Run the various tests");
-    tests_step.dependOn(&tests.step);
+    // b.installArtifact(build_tests);
+    const run_tests = b.addRunArtifact(build_tests);
+    // run_tests.step.dependOn(b.getInstallStep());
+    tests_step.dependOn(&run_tests.step);
 }
