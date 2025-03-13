@@ -5900,7 +5900,9 @@ pub const Dungeon = struct {
     light: [LEVELS][HEIGHT][WIDTH]bool = [1][HEIGHT][WIDTH]bool{[1][WIDTH]bool{[1]bool{false} ** WIDTH} ** HEIGHT} ** LEVELS,
     fire: [LEVELS][HEIGHT][WIDTH]usize = [1][HEIGHT][WIDTH]usize{[1][WIDTH]usize{[1]usize{0} ** WIDTH} ** HEIGHT} ** LEVELS,
     stairs: [LEVELS]StairBuffer = [_]StairBuffer{StairBuffer.init(null)} ** LEVELS,
-    entries: [LEVELS]Coord = [_]Coord{Coord.new2(0, 0, 0)} ** LEVELS,
+    entries: [LEVELS]Coord = [_]Coord{ENTRY_NOT_INITED} ** LEVELS,
+
+    pub const ENTRY_NOT_INITED = Coord.new2(0, 0, 0);
 
     pub const ItemBuffer = StackBuffer(Item, 4);
     pub const StairBuffer = StackBuffer(Coord, MAX_STAIRS);

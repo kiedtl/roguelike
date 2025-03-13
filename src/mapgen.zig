@@ -859,6 +859,9 @@ pub fn excavatePrefab(
                         switch (feature) {
                             .Stair => |stair| {
                                 state.dungeon.at(rc).surface = .{ .Stair = stair };
+                                if (stair.stairtype == .Down)
+                                    state.dungeon.entries[rc.z] = rc;
+                                room.has_stair = true;
                             },
                             .Key => |key| {
                                 state.dungeon.itemsAt(rc).append(Item{ .Key = .{
@@ -1129,7 +1132,7 @@ pub fn resetLevel(level: usize) void {
     state.inputs[level].shrinkRetainingCapacity(0);
     state.outputs[level].shrinkRetainingCapacity(0);
 
-    state.dungeon.entries[level] = undefined;
+    state.dungeon.entries[level] = types.Dungeon.ENTRY_NOT_INITED;
     state.dungeon.stairs[level].clear();
     state.mapgen_infos[level] = .{};
     state.shrine_locations[level] = null;
@@ -3034,6 +3037,9 @@ pub fn placeStair(level: usize, dest_floor: usize, alloc: mem.Allocator) void {
 // Note: must be run before placeStairs()
 //
 pub fn placeEntry(level: usize, alloc: mem.Allocator) bool {
+    if (!state.dungeon.entries[level].eq(types.Dungeon.ENTRY_NOT_INITED))
+        return true; // Entry point already exists.
+
     var reciever_locations = CoordArrayList.init(alloc);
     defer reciever_locations.deinit();
 
