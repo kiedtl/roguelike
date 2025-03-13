@@ -243,7 +243,12 @@ pub const NIGHT_ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 5, .i = .{ .X = &EtherealShieldAux } },
 };
 pub const HOLY_ITEM_DROPS = [_]ItemTemplate{
+    .{ .w = 50, .i = .{ .c = &LifeBreadConsumable } },
+    .{ .w = 50, .i = .{ .c = &LifeWaterConsumable } },
+    .{ .w = 50, .i = .{ .P = &RegeneratePotion } },
     .{ .w = 10, .i = .{ .X = &DispelUndeadAux } },
+    .{ .w = 5, .i = .{ .r = CondemnationRing } },
+    .{ .w = 5, .i = .{ .r = ConcentrationRing } },
 };
 pub const UNHOLY_ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 99, .i = .{ .c = &GoldOrbConsumable } },
@@ -270,8 +275,6 @@ pub const RINGS = [_]ItemTemplate{
     .{ .w = 9, .i = .{ .r = AccelerationRing } },
     .{ .w = 9, .i = .{ .r = TransformationRing } },
     .{ .w = 9, .i = .{ .r = DetonationRing } },
-    .{ .w = 9, .i = .{ .r = CondemnationRing } },
-    .{ .w = 2, .i = .{ .r = ConcentrationRing } },
     .{ .w = 2, .i = .{ .r = TeleportationRing } },
     .{ .w = 9, .i = .{ .r = ObscurationRing } },
     .{ .w = 9, .i = .{ .r = RetaliationRing } },
@@ -280,6 +283,10 @@ pub const RINGS = [_]ItemTemplate{
     .{ .w = 3, .i = .{ .r = InsurrectionRing } },
     .{ .w = 3, .i = .{ .r = DeterminationRing } },
     .{ .w = 3, .i = .{ .r = DeceptionRing } },
+    // Holy rings, don't appear at all.
+    //
+    // .{ .w = 9, .i = .{ .r = CondemnationRing } },
+    // .{ .w = 2, .i = .{ .r = ConcentrationRing } },
 };
 pub const NIGHT_RINGS = [_]ItemTemplate{
     .{ .w = 9, .i = .{ .r = ExcisionRing } },
@@ -289,6 +296,7 @@ pub const ALL_ITEMS = [_]ItemTemplate{
     .{ .w = 0, .i = .{ .List = &ITEM_DROPS } },
     .{ .w = 0, .i = .{ .List = &NIGHT_ITEM_DROPS } },
     .{ .w = 0, .i = .{ .List = &UNHOLY_ITEM_DROPS } },
+    .{ .w = 0, .i = .{ .List = &HOLY_ITEM_DROPS } },
     .{ .w = 0, .i = .{ .List = &RINGS } },
     .{ .w = 0, .i = .{ .List = &NIGHT_RINGS } },
     .{ .w = 0, .i = .{ .E = SymbolEvoc } },
@@ -909,7 +917,6 @@ pub const InsurrectionRing = Ring{ // {{{
     .name = "insurrection",
     .required_MP = 3,
     .hated_by_nc = true,
-    .hated_by_holy = true,
     .resists = .{ .rHoly = -10 },
     .effect = struct {
         pub fn f() bool {
@@ -1123,7 +1130,6 @@ pub const DeceptionRing = Ring{ // {{{
     .required_MP = 2,
     .stats = .{ .Willpower = 1 },
     .resists = .{ .rHoly = -10 },
-    .hated_by_holy = true,
     .requires_uncorrupt = true,
     .effect = struct {
         pub fn f() bool {
@@ -1142,6 +1148,7 @@ pub const CondemnationRing = Ring{ // {{{
     .name = "condemnation",
     .required_MP = 5,
     .requires_uncorrupt = true,
+    .requires_nounholy = true,
     .effect = struct {
         pub fn f() bool {
             const target = state.dungeon.at(ui.chooseCell(.{
@@ -1174,6 +1181,8 @@ pub const ConcentrationRing = Ring{ // {{{
     .required_MP = 1,
     .stats = .{ .Willpower = 1 },
     .requires_nopain = true,
+    .requires_uncorrupt = true,
+    .requires_nounholy = true,
     .effect = struct {
         pub fn f() bool {
             const will: usize = @intCast(state.player.stat(.Willpower));
@@ -1224,7 +1233,6 @@ pub const DecelerationRing = Ring{ // {{{
 pub const DeterminationRing = Ring{ // {{{
     .name = "determination",
     .required_MP = mobs.PLAYER_MAX_MP + 1,
-    .hated_by_holy = true,
     .resists = .{ .rHoly = -10 },
     .effect = struct {
         pub fn f() bool {
@@ -1359,6 +1367,7 @@ pub const Consumable = struct {
 
     const Effect = union(enum) {
         Status: Status,
+        CureStatus: Status,
         Gas: usize,
         Kit: *const Machine,
         Damage: struct { amount: usize, kind: Damage.DamageKind, lethal: bool = true },
@@ -1366,6 +1375,8 @@ pub const Consumable = struct {
         Resist: struct { r: Resistance, change: isize },
         Stat: struct { s: Stat, change: isize },
         MaxMP: isize,
+        MaxHP: isize,
+        RegenerateMP,
         Custom: *const fn (?*Mob, Coord) void,
     };
 
@@ -1450,6 +1461,36 @@ pub const CopperIngotConsumable = Consumable{
     .color = 0xcacbca,
     .verbs_player = &[_][]const u8{ "choke down", "swallow" },
     .verbs_other = &[_][]const u8{"chokes down"},
+};
+
+pub const LifeBreadConsumable = Consumable{
+    .id = "cons_life_bread",
+    .name = "bread of life",
+    .effects = &[_]Consumable.Effect{
+        .{ .MaxHP = 3 },
+        .{ .Stat = .{ .s = .Potential, .change = -10 } },
+    },
+    .color = 0xba9510,
+    .verbs_player = &[_][]const u8{"eat"},
+    .verbs_other = &[_][]const u8{"eats"},
+};
+
+pub const LifeWaterConsumable = Consumable{
+    .id = "cons_life_water",
+    .name = "living water",
+    .effects = &[_]Consumable.Effect{
+        .{ .Stat = .{ .s = .Willpower, .change = 1 } },
+        .{ .CureStatus = .Corruption }, // Evil
+        .{ .CureStatus = .Absorbing }, // Evil
+        .{ .CureStatus = .Pain }, // Nice to have
+        .{ .CureStatus = .Exhausted }, // Nice to have
+        .{ .CureStatus = .Nausea }, // Thematic :P
+    },
+    .color = colors.DARK_GREEN,
+    .is_potion = true,
+    .verbs_player = Consumable.VERBS_PLAYER_POTION,
+    .verbs_other = Consumable.VERBS_OTHER_POTION,
+    .throwable = false,
 };
 
 pub const GoldOrbConsumable = Consumable{
@@ -1556,6 +1597,21 @@ pub const MineKit = Consumable{
     .verbs_player = Consumable.VERBS_PLAYER_KIT,
     .verbs_other = Consumable.VERBS_OTHER_KIT,
     .hated_by_nc = true,
+};
+
+pub const RegeneratePotion = Consumable{
+    .id = "potion_regenerate",
+    .name = "potion of regeneration",
+    .effects = &[_]Consumable.Effect{
+        .{ .MaxMP = 2 },
+        .{ .Stat = .{ .s = .Potential, .change = -5 } },
+        .RegenerateMP,
+    },
+    .is_potion = true,
+    .color = 0xa7e234, // Same color as gas
+    .verbs_player = Consumable.VERBS_PLAYER_POTION,
+    .verbs_other = Consumable.VERBS_OTHER_POTION,
+    .throwable = true,
 };
 
 pub const CorrodePotion = Consumable{

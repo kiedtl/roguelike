@@ -1176,14 +1176,17 @@ pub const RingError = enum {
     CannotBeCorrupted,
     CannotBeInPain,
     CannotBeGlowing,
+    CannotBeUnholy,
 
     pub fn text1(self: @This()) []const u8 {
         return switch (self) {
             .NotEnoughMP => "low mana",
             .HatedByNight => "hated by the Night",
+            // TODO: compress the text here with "musn't" ?
             .CannotBeCorrupted => "must be uncorrupted",
             .CannotBeInPain => "must not be in pain",
             .CannotBeGlowing => "must not be glowing",
+            .CannotBeUnholy => "must not be unclean",
         };
     }
 };
@@ -1198,6 +1201,9 @@ pub fn checkRing(index: usize) ?RingError {
     }
     if (ring.requires_uncorrupt and state.player.hasStatus(.Corruption)) {
         return .CannotBeCorrupted;
+    }
+    if (ring.requires_nounholy and state.player.resistance(.rHoly) < 0) {
+        return .CannotBeUnholy;
     }
     if (ring.requires_nopain and state.player.hasStatus(.Pain)) {
         return .CannotBeInPain;

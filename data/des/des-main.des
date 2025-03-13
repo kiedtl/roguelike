@@ -355,6 +355,12 @@ rivets adorn both sides.
 
 % Yes, it was bored through and filled with gold, which is why it's so heavy.
 
+% cons_life_bread
+Sacred food of cave-goblin craft, now stale and forgotten.
+
+% cons_life_water
+It looks cool and refreshing.
+
 % cons_gold_orb
 A orb of gold so pure, it is nearly transparent.
 
@@ -457,6 +463,11 @@ A very heavy and thick container, with labeling indicating that it contains
 some kind of caustic sludge. The labeling, written in cursive Dremos, is
 hastily scrawled over the container's silver surface and repeatedly references
 the Revgenunhelkim. A symbol of a goblin's skull adorns the lid.
+
+% potion_regenerate
+A strange potion in a tiny bottle of beautiful crystal glass, inset with four
+emeralds. It will replenish your MP regardless of your $oPotential$. stat, but
+permanently reduce your ability to absorb the Necromancer's power.
 
 % t_default
 

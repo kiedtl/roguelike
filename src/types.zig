@@ -2964,6 +2964,7 @@ pub const Mob = struct { // {{{
 
         for (item.effects) |effect| switch (effect) {
             .Status => |s| if (direct) self.addStatus(s, 0, .{ .Tmp = Status.MAX_DURATION }),
+            .CureStatus => |s| if (direct) self.cancelStatus(s),
             .Gas => |s| state.dungeon.atGas(self.coord)[s] = 100,
             .Damage => |d| self.takeDamage(.{
                 .lethal = d.lethal,
@@ -2989,6 +2990,8 @@ pub const Mob = struct { // {{{
                 state.dungeon.at(self.coord).surface = SurfaceItem{ .Machine = state.machines.last().? };
             },
             .MaxMP => |change| self.max_MP = @intCast(@max(0, @as(isize, @intCast(self.max_MP)) + change)),
+            .MaxHP => |change| self.max_HP = @intCast(@max(0, @as(isize, @intCast(self.max_HP)) + change)),
+            .RegenerateMP => self.MP = self.max_MP,
             .Custom => |c| c(self, self.coord),
         };
     }
@@ -5409,10 +5412,10 @@ pub const Ring = struct {
     stats: enums.EnumFieldStruct(Stat, isize, 0) = .{},
     resists: enums.EnumFieldStruct(Resistance, isize, 0) = .{},
     hated_by_nc: bool = false,
-    hated_by_holy: bool = false,
     requires_uncorrupt: bool = false,
     requires_nopain: bool = false,
     requires_noglow: bool = false,
+    requires_nounholy: bool = false,
     drained: bool = false,
     effect: *const fn () bool,
 };

@@ -1278,7 +1278,10 @@ fn _getItemDescription(self: *Console, starty: usize, item: Item, linewidth: usi
                 .Stat => |s| y += self.drawTextAtf(0, y, "· $gPrm$. {s: <9} $b{:>4}$.", .{ s.s.string(), s.change }, .{}),
                 .Gas => |g| y += self.drawTextAtf(0, y, "· $gGas$. {s}", .{gas.Gases[g].name}, .{}),
                 .Status => |s| y += self.drawTextAtf(0, y, "· $gTmp$. {s}", .{s.string(state.player)}, .{}),
+                .CureStatus => |s| y += self.drawTextAtf(0, y, "· $gIns$. cure {s}", .{s.string(state.player)}, .{}),
                 .MaxMP => |chg| y += self.drawTextAtf(0, y, "· $gPrm$. {s: <9} $b{:>4}$.", .{ "max MP", chg }, .{}),
+                .MaxHP => |chg| y += self.drawTextAtf(0, y, "· $gPrm$. {s: <9} $b{:>4}$.", .{ "max HP", chg }, .{}),
+                .RegenerateMP => y += self.drawTextAtf(0, y, "· $gPrm$. regenerate MP", .{}, .{}),
                 .Custom => y += self.drawTextAt(0, y, "· $G(See description)$.", .{}),
             };
             y += self.drawTextAt(0, y, "\n", .{});
