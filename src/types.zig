@@ -1224,6 +1224,7 @@ pub const Faction = enum(usize) {
     Revgenunkim = 3,
     Night = 4,
     Holy = 5,
+    Vermin = 6,
 
     pub const TOTAL = std.meta.fields(@This()).len;
 };
@@ -5810,7 +5811,7 @@ pub const Tile = struct {
             //
             const rand = ui.uirng.random();
             var cells = StackBuffer(display.Cell, 4).init(null);
-            const count: usize = if (rng.onein(7)) 3 else 2;
+            const count: usize = if (rng.oneInManaged(rand, 4)) 3 else 1;
 
             for (0..count) |_| {
                 const fg = material.color_fg_dance.?.apply(material.color_fg, rand);
@@ -5825,11 +5826,12 @@ pub const Tile = struct {
                 }) catch err.wat();
             }
 
-            return ui.CellAnimation{
+            return if (count == 1) null else ui.CellAnimation{
                 .kind = ui.CellAnimation.Kind{
                     .RotateCells = .{ .cells = cells },
                 },
-                .interval = 15,
+                //.interval = 15,
+                .interval = rng.rangeManaged(rand, usize, 15, 25),
             };
         } else if (state.dungeon.at(coord).mob) |mob| {
             var ch: ?u21 = null;

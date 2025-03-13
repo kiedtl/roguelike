@@ -387,7 +387,7 @@ pub fn executeWizardFun(w: WizardFun) void {
                 .Necromancer => .CaveGoblins,
                 .CaveGoblins => .Night,
                 .Night => .Player,
-                .Holy, .Revgenunkim => unreachable,
+                .Vermin, .Holy, .Revgenunkim => unreachable,
             };
             state.message(.Info, "[wizard] new faction: {}", .{state.player.faction});
         },

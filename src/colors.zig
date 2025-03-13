@@ -25,6 +25,10 @@ pub const GOLD: u32 = 0xddb733;
 pub const LIGHT_GOLD: u32 = 0xfdd753;
 pub const COPPER_RED: u32 = 0x985744;
 
+pub const DARK_GREEN = 0x075f00;
+pub const GREEN = 0x37af00;
+pub const LIGHT_GREEN = 0x37af00;
+
 pub const BG: u32 = percentageOf(CONCRETE, 10);
 pub const BG_L: u32 = percentageOf(CONCRETE, 30);
 pub const ABG: u32 = percentageOf(LIGHT_STEEL_BLUE, 20);

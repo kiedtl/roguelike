@@ -70,6 +70,11 @@ pub fn onein(number: usize) bool {
     return range(@TypeOf(number), 1, number) == 1;
 }
 
+pub fn oneInManaged(myrng: anytype, number: anytype) bool {
+    const T = if (@TypeOf(number) == comptime_int) usize else @TypeOf(number);
+    return rangeManaged(myrng, T, 1, number) == 1;
+}
+
 // Ported from BrogueCE's source. (src/brogue/Math.c:40, randClumpedRange())
 pub fn rangeClumping(comptime T: type, min: T, max: T, clump: T) T {
     std.debug.assert(max >= min);

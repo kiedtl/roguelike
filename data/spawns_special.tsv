@@ -16,34 +16,36 @@
 # in order to not break profiler (which does everything on floor 0)
 
 #
-# monster id               class      -8/Pri  -7/Pri  -6/Wrk  -6/Sin  -6/Wrk2 -6/Wrk3  -6/Nec  -5/Pri  -5/Smi  -4/Pri  -3/Vlt  -3/Sin   3/Lab2 3/Lab3  3/Hold -2/Pri  -1/Pri -1/Cry -1/Cry2 -1/Cry3
+# monster id               class      -8/Pri  -7/Pri  -6/Wrk  -6/Sin  -6/Wrk2 -6/Wrk3  -6/Nec  -5/Pri  -5/Cav -5/Cav2 -5/Cav3  -5/Tem  -4/Pri  -3/Vlt  -3/Sin   3/Lab2 3/Lab3  3/Hold -2/Pri  -1/Pri -1/Cry -1/Cry2 -1/Cry3
 
-"guard"                	    "g" 	 100 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  - 	   - 	  - 	  - 	  -
-"defender"             	    "g" 	   - 	 100 	 100 	   - 	   - 	   - 	   - 	 100 	  90 	   - 	   5 	   - 	   5 	   5 	   - 	  - 	   - 	  - 	  - 	  -
-"armored_guard"        	    "g" 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  90 	  90 	   - 	  90 	  90 	  90 	 90 	  90 	  - 	  - 	  -
-"iron_spire"           	    "g" 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  10 	  10 	  10 	   - 	  10 	  10 	  20 	 10 	  10 	  - 	  - 	  -
-"lightning_spire"      	    "g" 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  10 	  10 	  10 	   - 	  10 	  10 	  20 	 10 	  10 	  - 	  - 	  -
-"hulk_writhing"        	    "g" 	   - 	   - 	   - 	 100 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	 100 	   - 	   - 	   - 	  - 	   - 	  - 	  - 	  -
-"skeleton"             	    "g" 	   - 	   - 	   - 	   - 	   - 	   - 	 100 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  - 	   - 	  - 	  - 	  -
+"mellaent"             	    "g" 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	 100 	   - 	   - 	   - 	   - 	   - 	   - 	  - 	   - 	  - 	  - 	  -
 
-#"guard"               	    "C" 	 100 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  - 	   - 	  - 	  - 	  -
-"bone_rat"             	    "C" 	 100 	 100 	 100 	   - 	  50 	  20 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  - 	   - 	  - 	  - 	  -
-"skeleton"             	    "C" 	   - 	   - 	   - 	   - 	  50 	  80 	 100 	 100 	   - 	 100 	 100 	   - 	 100 	  90 	  40 	  - 	   - 	  - 	  - 	  -
-"skeletal_blademaster" 	    "C" 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  10 	  60 	100 	 100 	  - 	  - 	  -
+"guard"                	    "g" 	 100 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  - 	   - 	  - 	  - 	  -
+"defender"             	    "g" 	   - 	 100 	 100 	   - 	   - 	   - 	   - 	 100 	  90 	  90 	  90 	   - 	   - 	   5 	   - 	   5 	   5 	   - 	  - 	   - 	  - 	  - 	  -
+"armored_guard"        	    "g" 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  10 	  10 	   - 	  90 	  90 	   - 	  90 	  90 	  90 	 90 	  90 	  - 	  - 	  -
+"iron_spire"           	    "g" 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  10 	  20 	  30 	   - 	  10 	  10 	   - 	  10 	  10 	  20 	 10 	  10 	  - 	  - 	  -
+"lightning_spire"      	    "g" 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  10 	  20 	  30 	   - 	  10 	  10 	   - 	  10 	  10 	  20 	 10 	  10 	  - 	  - 	  -
+"hulk_writhing"        	    "g" 	   - 	   - 	   - 	 100 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	 100 	   - 	   - 	   - 	  - 	   - 	  - 	  - 	  -
+"skeleton"             	    "g" 	   - 	   - 	   - 	   - 	   - 	   - 	 100 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  - 	   - 	  - 	  - 	  -
 
-"bone_mage"            	    "r" 	 100 	 100 	 100 	   - 	 100 	  80 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  - 	   - 	  - 	  - 	  -
-"death_knight"         	    "r" 	   - 	   - 	   - 	   - 	   - 	  20 	   - 	 100 	   - 	 100 	 100 	   - 	 100 	  90 	  40 	  - 	   - 	  - 	  - 	  -
-"death_mage"           	    "r" 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  10 	  60 	100 	 100 	  - 	  - 	  1
+#"guard"               	    "C" 	 100 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  - 	   - 	  - 	  - 	  -
+"bone_rat"             	    "C" 	 100 	 100 	 100 	   - 	  50 	  20 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  - 	   - 	  - 	  - 	  -
+"skeleton"             	    "C" 	   - 	   - 	   - 	   - 	  50 	  80 	 100 	 100 	   - 	   - 	   - 	   - 	 100 	 100 	   - 	 100 	  90 	  40 	  - 	   - 	  - 	  - 	  -
+"skeletal_blademaster" 	    "C" 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  10 	  60 	100 	 100 	  - 	  - 	  -
 
-"guard"                	    "p" 	   - 	   - 	 100 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  40 	   - 	  10 	   - 	   - 	  - 	   - 	  - 	  - 	  -
-"armored_guard"        	    "p" 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  60 	   - 	  90 	 100 	 100 	  - 	   - 	  - 	  - 	  -
+"bone_mage"            	    "r" 	 100 	 100 	 100 	   - 	 100 	  80 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  - 	   - 	  - 	  - 	  -
+"death_knight"         	    "r" 	   - 	   - 	   - 	   - 	   - 	  20 	   - 	 100 	   - 	   - 	   - 	   - 	 100 	 100 	   - 	 100 	  90 	  40 	  - 	   - 	  - 	  - 	  -
+"death_mage"           	    "r" 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  10 	  60 	100 	 100 	  - 	  - 	  1
 
-"guard"                	    "a" 	 100 	 100 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  - 	   - 	  - 	  - 	  -
-"ember_mage"           	    "a" 	   - 	   - 	  40 	   - 	  40 	  40 	   - 	  40 	   - 	  40 	   - 	   - 	   - 	   - 	   - 	  - 	   - 	  - 	  - 	  -
-"brimstone_mage"       	    "a" 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  40 	   - 	  40 	  40 	  40 	 40 	  40 	  - 	  - 	  -
-"spark_mage"           	    "a" 	   - 	   - 	  40 	   - 	  40 	  40 	   - 	  40 	   - 	  40 	   - 	   - 	   - 	   - 	   - 	  - 	   - 	  - 	  - 	  -
-"lightning_mage"       	    "a" 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  40 	   - 	  40 	  40 	  40 	 40 	  40 	  - 	  - 	  -
-"bone_mage"            	    "a" 	   - 	   - 	  20 	   - 	  20 	  20 	 100 	  20 	   - 	  20 	   - 	   - 	   - 	   - 	   - 	  - 	   - 	  - 	  - 	  -
-"death_mage"           	    "a" 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  20 	   - 	  20 	  20 	  20 	 20 	  20 	  - 	  - 	  -
+"guard"                	    "p" 	   - 	   - 	 100 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  40 	   - 	  10 	   - 	   - 	  - 	   - 	  - 	  - 	  -
+"armored_guard"        	    "p" 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  60 	   - 	  90 	 100 	 100 	  - 	   - 	  - 	  - 	  -
+
+"guard"                	    "a" 	 100 	 100 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  - 	   - 	  - 	  - 	  -
+"ember_mage"           	    "a" 	   - 	   - 	  40 	   - 	  40 	  40 	   - 	  40 	   - 	   - 	   - 	   - 	  40 	   - 	   - 	   - 	   - 	   - 	  - 	   - 	  - 	  - 	  -
+"brimstone_mage"       	    "a" 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  40 	   - 	  40 	  40 	  40 	 40 	  40 	  - 	  - 	  -
+"spark_mage"           	    "a" 	   - 	   - 	  40 	   - 	  40 	  40 	   - 	  40 	   - 	   - 	   - 	   - 	  40 	   - 	   - 	   - 	   - 	   - 	  - 	   - 	  - 	  - 	  -
+"lightning_mage"       	    "a" 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  40 	   - 	  40 	  40 	  40 	 40 	  40 	  - 	  - 	  -
+"bone_mage"            	    "a" 	   - 	   - 	  20 	   - 	  20 	  20 	 100 	  20 	   - 	   - 	   - 	   - 	  20 	   - 	   - 	   - 	   - 	   - 	  - 	   - 	  - 	  - 	  -
+"death_mage"           	    "a" 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  20 	   - 	  20 	  20 	  20 	 20 	  20 	  - 	  - 	  -
 
 # monster id               class      -8/Pri  -7/Pri  -6/Wrk  -6/Sin  -6/Wrk2 -6/Wrk3  -6/Nec  -5/Pri  -5/Smi  -4/Pri  -3/Vlt  -3/Sin   3/Lab2 3/Lab3  3/Hold -2/Pri  -1/Pri -1/Cry -1/Cry2 -1/Cry3

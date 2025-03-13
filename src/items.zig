@@ -148,7 +148,6 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 10, .i = .{ .X = &MinersMapAux } },
     .{ .w = 10, .i = .{ .X = &DetectHeatAux } },
     .{ .w = 10, .i = .{ .X = &DetectElecAux } },
-    // .{ .w = 10, .i = .{ .X = &DispelUndeadAux } },
     .{ .w = 5, .i = .{ .X = &TowerShieldAux } },
     // Potions
     .{ .w = 190, .i = .{ .P = &DisorientPotion } },
@@ -242,6 +241,9 @@ pub const NIGHT_ITEM_DROPS = [_]ItemTemplate{
     // Auxes
     .{ .w = 10, .i = .{ .X = &ShadowShieldAux } },
     .{ .w = 5, .i = .{ .X = &EtherealShieldAux } },
+};
+pub const HOLY_ITEM_DROPS = [_]ItemTemplate{
+    .{ .w = 10, .i = .{ .X = &DispelUndeadAux } },
 };
 pub const UNHOLY_ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 99, .i = .{ .c = &GoldOrbConsumable } },

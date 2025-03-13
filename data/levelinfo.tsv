@@ -16,9 +16,10 @@
 "SIN" 	     3 	      "Sin" 	            "3/Shrine" 	 yea       	nay       	    yea 	      "2/Prison" 	                 -
 "LAB" 	     3 	      "Lab" 	        "3/Laboratory" 	 yea       	yea       	    nay 	      "2/Prison" 	  "3/Laboratory/2"
 "PRI" 	     4 	      "Pri" 	            "4/Prison" 	 yea       	nay       	    nay 	  "3/Laboratory" 	                 -
-#"CAV" 	     5 	     "Cav3" 	         "5/Caverns/3" 	 yea       	nay       	    yea 	               - 	        "4/Prison"
-#"CAV" 	     5 	     "Cav2" 	         "5/Caverns/2" 	 yea       	nay       	    yea 	               - 	     "5/Caverns/3"
-"CAV" 	     5 	      "Cav" 	           "5/Caverns" 	 yea       	nay       	    yea 	               - 	                 -
+"TEM" 	     5 	      "Tem" 	            "5/Temple" 	 nay       	nay       	    yea 	               - 	        "4/Prison"
+"CAV" 	     5 	     "Cav3" 	         "5/Caverns/3" 	 yea       	nay       	    yea 	      "4/Prison" 	        "5/Temple"
+"CAV" 	     5 	     "Cav2" 	         "5/Caverns/2" 	 yea       	nay       	    yea 	               - 	     "5/Caverns/3"
+"CAV" 	     5 	      "Cav" 	           "5/Caverns" 	 yea       	nay       	    yea 	      "4/Prison" 	     "5/Caverns/2"
 "PRI" 	     5 	      "Pri" 	            "5/Prison" 	 yea       	yea       	    nay 	      "4/Prison" 	       "5/Caverns"
 "CRY" 	     6 	      "Cry" 	             "6/Crypt" 	 nay       	nay       	    yea 	      "5/Prison" 	                 -
 "WRK" 	     6 	     "Wrk3" 	        "6/Workshop/3" 	 yea       	nay       	    yea 	      "5/Prison" 	         "6/Crypt"

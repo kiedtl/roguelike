@@ -356,6 +356,7 @@ pub fn drawHUD(st: *fabedit.EdState) void {
                     .LockedDoor => displayAs(st, .LockedDoor),
                     .Connection => displayAs(st, .Connection),
                     .Corpse => displayAs(st, .Corpse),
+                    .Floor => displayAs(st, .Floor),
                     .Any => displayAs(st, .Any),
                 };
                 if (st.cursor == .Basic and v == st.cursor.Basic)
@@ -378,7 +379,7 @@ pub fn drawHUD(st: *fabedit.EdState) void {
             //if (display_row >= 4)
             //display_row -= 4;
 
-            const selected = &mobs.MOBS[selected_i];
+            const selected = mobs.MOBS[selected_i];
             y += hud_win.main.drawTextAtf(0, y, "$cSelected:$. {s}", .{selected.mob.id}, .{});
             y += 1;
 

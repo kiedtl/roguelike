@@ -22,11 +22,9 @@
 @p p iron_bars_broken
 @g Cmons guard ([prm_status1]Sleeping)
 
-
 @0 i potion_smoke
 @1 i potion_paralysis
 @2 i potion_blind
-%@3 i potion_distract
 @3 i potion_distract
 
 ###•#****#•###

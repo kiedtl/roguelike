@@ -56,6 +56,19 @@ pub const Gold = Material{
     .opacity = 1.0,
 };
 
+pub const GreenGold = Material{
+    .id = "gold_green",
+    .name = "green gold",
+    .color_fg = colors.GREEN,
+    .color_fg_dance = .{ .each = 0x152b08, .all = 0x10 },
+    .color_bg = null,
+    .color_floor = colors.GREEN,
+    .sprite = .S_G_Wall_Circular,
+    .tileset = 0,
+    .luminescence = 0,
+    .opacity = 1.0,
+};
+
 pub const PolishedSlade = Material{
     .name = "polished slade",
     .color_fg = 0xb00bb0,

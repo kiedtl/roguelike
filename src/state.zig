@@ -64,8 +64,8 @@ pub const Layout = union(enum) { Unknown, Room: usize };
 
 pub const HEIGHT = 100;
 pub const WIDTH = 60;
-pub const LEVELS = 20; //21;
-pub const PLAYER_STARTING_LEVEL = 19; // TODO: define in data file
+pub const LEVELS = 23; //21;
+pub const PLAYER_STARTING_LEVEL = 22; // TODO: define in data file
 
 // Should only be used directly by functions in main.zig. For other applications,
 // should be passed as a parameter by caller.
@@ -164,8 +164,8 @@ pub var completed_events: [events.EVENTS.len]usize = [_]usize{0} ** events.EVENT
 
 // zig fmt: off
 pub var night_rep = [types.Faction.TOTAL]isize{
-    // NEC    @   CG   REV   NC   HOLY
-         0,   0,   0,  -10,  10,     9
+    // NEC    @   CG   REV   NC   HOLY   VERM
+         0,   0,   0,  -10,  10,     9,     5
 };
 // zig fmt: on
 
@@ -181,13 +181,14 @@ pub const __SER_STOP = {};
 //
 // zig fmt: off
 pub const REP_TABLE = [types.Faction.TOTAL][types.Faction.TOTAL]isize{
-    // NEC     @    CG   REV    NC   HOLY
-    .{  10,   -5,   -5,  -10,   -5,    -5  },  // NEC
-    .{ -10,   10,    5,  -10,    0,     0  },  // @
-    .{ -10,    5,   10,  -10,    1,     1  },  // CG
-    .{ -10,  -10,  -10,   10,  -10,   -10  },  // REV
-    .{   0,    0,    0,  -10,   10,     9  },  // NC      // NOTE: use night_rep table
-    .{  -1,    0,    5,  -10,    9,    10  },  // HOLY
+    // NEC     @    CG   REV    NC   HOLY   VERM
+    .{  10,   -5,   -5,  -10,   -5,    -5,     5  },  // NEC
+    .{ -10,   10,    5,  -10,    0,     0,     5  },  // @
+    .{ -10,    5,   10,  -10,    1,     1,     5  },  // CG
+    .{ -10,  -10,  -10,   10,  -10,   -10,     5  },  // REV
+    .{   0,    0,    0,  -10,   10,     9,     5  },  // NC      // NOTE: use night_rep table
+    .{  -1,    0,    5,  -10,    9,    10,     5  },  // HOLY
+    .{  10,   10,   10,   10,   10,    10,    10  },  // VERM
 
     //
     // NOTE: player holy_rep really isn't used, what matters most is the rHoly

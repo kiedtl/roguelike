@@ -120,8 +120,9 @@ pub const VAULT_LEVELS = [LEVELS][]const VaultType{
     &.{                          }, // -3/Shrine
     &.{        .Marble,          }, // -3/Laboratory
     &.{        .Marble,          }, // -4/Prison
-    // &.{                          }, // -5/Caverns/3
-    // &.{                          }, // -5/Caverns/2
+    &.{                          }, // -5/Temple
+    &.{                          }, // -5/Caverns/3
+    &.{                          }, // -5/Caverns/2
     &.{                          }, // -5/Caverns
     &.{        .Marble,          }, // -5/Prison
     &.{                          }, // -6/Necropolis
@@ -1194,7 +1195,8 @@ pub fn validateLevel(level: usize, alloc: mem.Allocator) !void {
     // Ensure that all required prefabs were used.
     for (Configs[level].required_prefabs) |required_fab| {
         const fab = Prefab.findPrefabByName(required_fab, &n_fabs) orelse
-            Prefab.findPrefabByName(required_fab, &s_fabs).?;
+            Prefab.findPrefabByName(required_fab, &s_fabs) orelse
+            err.bug("Required prefab {s} doesn't exist.", .{required_fab});
 
         const rec = state.fab_records.getPtr(fab.name.constSlice());
         if (rec == null or rec.?.level[level] == 0) {
@@ -1328,8 +1330,9 @@ pub fn selectLevelLairs(level: usize) void {
     const LAIR_WIDTH_MIN = 7;
     const LAIR_HEIGHT_MIN = 7;
 
-    if (Configs[level].max_room_height < LAIR_HEIGHT_MIN or
-        Configs[level].max_room_width < LAIR_WIDTH_MIN)
+    if ((Configs[level].max_room_height < LAIR_HEIGHT_MIN or
+        Configs[level].max_room_width < LAIR_WIDTH_MIN) and
+        Configs[level].lair_max > 0)
     {
         // This should be a comptime check...
         err.bug("Lairs are impossible to generate on this level.", .{});
@@ -3407,6 +3410,11 @@ fn levelFeatureUnholyDrops(_: usize, coord: Coord, _: *const Room, _: *const Pre
     state.dungeon.itemsAt(coord).append(items.createItemFromTemplate(loot)) catch err.wat();
 }
 
+fn levelFeatureHolyDrops(_: usize, coord: Coord, _: *const Room, _: *const Prefab, _: mem.Allocator) void {
+    const loot = _chooseLootItem(&items.HOLY_ITEM_DROPS, minmax(usize, 0, 999), null);
+    state.dungeon.itemsAt(coord).append(items.createItemFromTemplate(loot)) catch err.wat();
+}
+
 fn levelFeatureDormantConstruct(_: usize, coord: Coord, _: *const Room, _: *const Prefab, alloc: mem.Allocator) void {
     while (true) {
         const mob = mobs.spawns.chooseMob(.Main, coord.z, null) catch err.wat();
@@ -3785,7 +3793,7 @@ pub const Prefab = struct {
     height: usize = 0,
     width: usize = 0,
     content: [40][60]FabTile = undefined,
-    connections: [30]?Connection = undefined,
+    connections: [40]?Connection = undefined,
     features: [128]?Feature = [_]?Feature{null} ** 128,
     features_global: [128]bool = [_]bool{false} ** 128,
     mobs: StackBuffer(FeatureMob, 16) = StackBuffer(FeatureMob, 16).init(null),
@@ -4906,6 +4914,39 @@ pub fn createLevelConfig_NEC() LevelConfig {
     };
 }
 
+const TEM_MAIN_FAB_H = 25; // I'm definitely going to forget about this
+const TEM_BASE_LEVELCONFIG = LevelConfig{
+    .required_prefabs = &[_][]const u8{ "TEM_circles", "TEM_main" },
+    .prefab_chance = 100,
+    .mapgen_iters = 4096,
+    .mapgen_func = placeRandomRooms,
+    .randroom_opts = .{
+        .starting_fabs = &[_]RandomRoomOpts.StartingFab{
+            .{
+                .n = "TEM_main",
+                .y = MinMax(usize){ .min = TEM_MAIN_FAB_H, .max = HEIGHT - TEM_MAIN_FAB_H - 1 },
+            },
+        },
+    },
+    .lair_max = 0,
+
+    .min_room_width = 2,
+    .min_room_height = 2,
+    .max_room_width = 5,
+    .max_room_height = 5,
+
+    .level_features = [_]?LevelConfig.LevelFeatureFunc{ levelFeatureHolyDrops, null, null, null },
+
+    .material = &materials.GreenGold,
+    .no_windows = true,
+    .door = &surfaces.VaultDoor,
+    .light = &surfaces.Lamp,
+    .subroom_chance = 0, // No subrooms defined for this level.
+    .allow_statues = false,
+
+    .machines = &[_]*const Machine{},
+};
+
 const CRY_MAIN_FAB_H = 17; // I'm definitely going to forget about this
 const CRY_BASE_LEVELCONFIG = LevelConfig{
     .required_prefabs = &[_][]const u8{ "CRY_circles", "CRY_main" },
@@ -4914,10 +4955,6 @@ const CRY_BASE_LEVELCONFIG = LevelConfig{
     .mapgen_func = placeRandomRooms,
     .randroom_opts = .{
         .starting_fabs = &[_]RandomRoomOpts.StartingFab{
-            // .{
-            //     .n = "CRY_circles",
-            //     .y = MinMax(usize){ .min = 2, .max = 2 },
-            // },
             .{
                 .n = "CRY_main",
                 .y = MinMax(usize){ .min = HEIGHT - CRY_MAIN_FAB_H - 1, .max = HEIGHT - CRY_MAIN_FAB_H - 1 },
@@ -5147,8 +5184,9 @@ pub var Configs = [LEVELS]LevelConfig{
     createLevelConfig_SIN(6),
     createLevelConfig_LAB(&[_][]const u8{"LAB_s_SIN_stair_1"}),
     createLevelConfig_PRI(2, true, &[_][]const u8{}),
-    // CAV_BASE_LEVELCONFIG,
-    // CAV_BASE_LEVELCONFIG,
+    TEM_BASE_LEVELCONFIG,
+    CAV_BASE_LEVELCONFIG,
+    CAV_BASE_LEVELCONFIG,
     CAV_BASE_LEVELCONFIG,
     createLevelConfig_PRI(2, true, &[_][]const u8{}),
     CRY_BASE_LEVELCONFIG,

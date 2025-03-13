@@ -421,6 +421,14 @@ test "parse lists with tags" {
 }
 
 pub fn deserializeValue(comptime T: type, val: Value, default: ?T) !T {
+    switch (T) {
+        []const u8 => return switch (val) {
+            .String => |b| b.constSlice(),
+            else => error.E,
+        },
+        else => {},
+    }
+
     return switch (@typeInfo(T)) {
         .noreturn, .void, .type => error.E,
         .vector, .comptime_int, .comptime_float, .undefined => error.E,
@@ -472,7 +480,7 @@ pub fn deserializeValue(comptime T: type, val: Value, default: ?T) !T {
             .List => |l| try deserializeStruct(T, l, default.?),
             else => error.E,
         },
-        else => @panic("TODO"),
+        else => @compileError(@tagName(@typeInfo(T)) ++ " isn't implemented."),
     };
 }
 

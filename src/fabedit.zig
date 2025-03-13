@@ -72,6 +72,7 @@ pub const EdState = struct {
         Connection = 4,
         Corpse = 5,
         Any = 6,
+        Floor = 7,
     };
 };
 var st = EdState{};
@@ -141,6 +142,7 @@ pub fn applyCursorBasic() void {
         .Connection => .Connection,
         .Corpse => .Corpse,
         .Any => .Any,
+        .Floor => .Floor,
     };
     st.fab_redraw = true;
     st.fab_info[st.fab_index].unsaved = true;
@@ -149,7 +151,7 @@ pub fn applyCursorBasic() void {
 pub fn applyCursorMob() void {
     const blank = removeUnusedFeatures();
 
-    const selected = &mobs.MOBS[st.cursor.Mob];
+    const selected = mobs.MOBS[st.cursor.Mob];
     const feature = for (st.fab.features, 0..) |maybe_feature, i| {
         if (maybe_feature) |feature|
             if (feature == .Mob and feature.Mob == selected)
@@ -217,13 +219,13 @@ fn _saveVariant(ind: usize, writer: anytype) void {
             .Mob => 'M',
             .Machine => 'm',
             .Prop => 'p',
-            .CMob, .Poster => {
+            .Stair, .CMob, .Poster => {
                 std.log.warn("Assuming Cmons/P definition is prior to FABEDIT_REPLACE directive", .{});
                 continue;
             },
             else => {
-                std.log.err("Can only serialize i/M/m/p features. Aborting save.", .{});
-                return;
+                std.log.err("Can only serialize i/M/m/p features. Save may be corrupted.", .{});
+                continue;
             },
         };
         const str: []const u8 = switch (feature) {
@@ -232,8 +234,8 @@ fn _saveVariant(ind: usize, writer: anytype) void {
             .Machine => |m| m.mach.id,
             .Prop => |p| p.id,
             else => {
-                std.log.err("Can only serialize i/M/m/p features. Aborting save.", .{});
-                return;
+                std.log.err("Can only serialize i/M/m/p features. Save may be corrupted.", .{});
+                continue;
             },
         };
         writer.print("@{u} {u} {s}\n", .{ @as(u8, @intCast(i)), chr, str }) catch err.wat();

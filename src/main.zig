@@ -1169,6 +1169,7 @@ fn profilerMain() void {
                     alive_hly[1] += 1;
                 },
                 .Player => err.wat(),
+                .Vermin => {},
             }
         };
 
