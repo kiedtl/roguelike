@@ -96,6 +96,26 @@ pub fn StackBuffer(comptime T: type, comptime capacity: usize) type {
             for (items) |item| try self.append(item);
         }
 
+        pub fn eq(a: *const Self, b: *const Self) bool {
+            if (a.len != b.len)
+                return false;
+            return for (a.constSlice(), 0..) |first, i| {
+                const second = b.data[i];
+                if (@typeInfo(T) == .int or
+                    @typeInfo(T) == .@"enum" or
+                    @typeInfo(T) == .pointer)
+                {
+                    if (first != second) break false;
+                } else if (T == []const u8) {
+                    if (!mem.eql(u8, first, second)) break false;
+                } else if (@hasDecl(T, "eq")) {
+                    if (!first.eq(second)) break false;
+                } else {
+                    @compileError(@typeName(T) ++ " doesn't define an .eq() method.");
+                }
+            } else true;
+        }
+
         pub usingnamespace if (@typeInfo(T) == .int or @typeInfo(T) == .@"enum" or @typeInfo(T) == .pointer) struct {
             pub fn linearSearch(self: *const Self, value: T) ?usize {
                 return for (self.constSlice(), 0..) |item, i| {

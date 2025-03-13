@@ -61,6 +61,17 @@ pub const Cell = struct {
         wide: bool = false,
         skip: bool = false,
     };
+
+    pub fn eq(a: @This(), b: @This()) bool {
+        return a.fg == b.fg and
+            a.bg == b.bg and
+            a.ch == b.ch and
+            a.sch == b.sch and
+            a.sfg == b.sfg and
+            a.sbg == b.sbg and
+            a.trans == b.trans and
+            a.fl == b.fl;
+    }
 };
 
 pub const Event = union(enum) {

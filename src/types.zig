@@ -5830,6 +5830,7 @@ pub const Tile = struct {
             }
 
             return if (count == 1) null else ui.CellAnimation{
+                .id = @intFromPtr(material),
                 .kind = ui.CellAnimation.Kind{
                     .RotateCells = .{ .cells = cells },
                 },
@@ -5849,6 +5850,7 @@ pub const Tile = struct {
 
             if (ch != null)
                 return ui.CellAnimation{
+                    .id = @intFromPtr(mob),
                     .kind = ui.CellAnimation.Kind{
                         .RotateCells = .{ .cells = StackBuffer(display.Cell, 4).init(&.{
                             .{ .trans = true },
@@ -5881,6 +5883,7 @@ pub const Tile = struct {
             }
 
             return ui.CellAnimation{
+                .id = @intFromPtr(terrain),
                 .kind = ui.CellAnimation.Kind{
                     .RotateCells = .{ .cells = cells },
                 },

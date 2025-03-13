@@ -151,7 +151,7 @@ pub var map_win: struct {
 
     // For particle animations and such.
     animations: Console = undefined,
-    cell_animation_grid: []?CellAnimation = undefined, // This is a grid, btw
+    cell_animations: [HEIGHT][WIDTH]?CellAnimation = @splat(@splat(null)),
 
     pub fn init(self: *@This()) void {
         const d = dimensions(.Main);
@@ -177,8 +177,8 @@ pub var map_win: struct {
         self.animations.default_transparent = true;
         self.animations.clear();
 
-        self.cell_animation_grid = state.alloc.alloc(?CellAnimation, d.width() * d.height()) catch err.oom();
-        @memset(self.cell_animation_grid, null);
+        for (0..HEIGHT) |y|
+            @memset(&self.cell_animations[y], null);
 
         self.map.addSubconsole(&self.text_line, 0, 0);
         self.map.addSubconsole(&self.grid_annotations, 0, 0);
@@ -186,28 +186,27 @@ pub var map_win: struct {
         self.map.addSubconsole(&self.animations, 0, 0);
     }
 
-    pub fn gridAnimAt(self: *@This(), x: usize, y: usize) *?CellAnimation {
-        return &self.cell_animation_grid[y * self.grid_annotations.width + x];
+    pub fn gridAnimAt(self: *@This(), coord: Coord) *?CellAnimation {
+        return &self.cell_animations[coord.y][coord.x];
     }
 
-    pub fn gridAnimAt2(self: *@This(), x: usize, y: usize) ?*CellAnimation {
-        return if (self.cell_animation_grid[y * self.grid_annotations.width + x]) |*anim|
+    pub fn gridAnimAt2(self: *@This(), coord: Coord) ?*CellAnimation {
+        return if (self.cell_animations[coord.y][coord.x]) |*anim|
             anim
         else
             null;
     }
 
-    pub fn stepGridAnimations(self: *@This()) void {
-        var y: usize = 0;
-        while (y < self.grid_annotations.height) : (y += 1) {
-            var x: usize = 0;
-            while (x < self.grid_annotations.width) : (x += 1) {
-                if (map_win.gridAnimAt2(x, y)) |anim| {
-                    anim.step();
-                    map_win.grid_annotations.setCell(x, y, anim.get());
-                }
-            }
-        }
+    pub fn stepCellAnimations(self: *@This()) void {
+        for (0..HEIGHT) |y|
+            for (0..WIDTH) |x| {
+                const coord = Coord.new(x, y);
+                if (coordToScreen(coord)) |screenc|
+                    if (map_win.gridAnimAt2(coord)) |anim| {
+                        anim.step();
+                        self.grid_annotations.setCell(screenc.x, screenc.y, anim.get());
+                    };
+            };
     }
 
     // Clear grid_annotations before this.
@@ -291,7 +290,7 @@ pub var map_win: struct {
 
     pub fn deinit(self: *@This()) void {
         self.map.deinit();
-        state.alloc.free(self.cell_animation_grid);
+        //state.alloc.free(self.cell_animation_grid);
         // if (self.text_line_anim) |ptr|
         //     state.alloc.destroy(ptr);
     }
@@ -2084,9 +2083,6 @@ pub fn drawMap(console: *Console, moblist: []const *Mob, refpoint: Coord) void {
         }) {
             // if out of bounds on the map, draw a black tile
             if (y < 0 or x < 0 or y >= HEIGHT or x >= WIDTH) {
-                if (console == &map_win.map) // yuck
-                    map_win.gridAnimAt(cursorx, cursory).* = null;
-
                 console.setCell(cursorx, cursory, .{ .bg = colors.BG, .fl = .{ .wide = true } });
                 console.setCell(cursorx + 1, cursory, .{ .fl = .{ .skip = true } });
                 continue;
@@ -2131,7 +2127,7 @@ pub fn drawMap(console: *Console, moblist: []const *Mob, refpoint: Coord) void {
                 };
 
                 if (console == &map_win.map) // yuck
-                    map_win.gridAnimAt(cursorx, cursory).* = null;
+                    map_win.gridAnimAt(coord).* = null;
             } else {
                 tile = modifyTile(moblist, coord, Tile.displayAs(coord, false, false));
             }
@@ -2146,8 +2142,15 @@ pub fn drawMap(console: *Console, moblist: []const *Mob, refpoint: Coord) void {
                 console.addMouseTrigger(cursor_coord.asRect(), .Hover, .{ .RecordElem = &map_win.annotations });
                 console.addMouseTrigger(cursor_coord.asRect(), .Click, .{ .ExamineScreen = .{ .start_coord = coord } });
 
-                map_win.gridAnimAt(cursorx, cursory).* = Tile.animateAs(coord);
-                if (map_win.gridAnimAt2(cursorx, cursory)) |anim|
+                const maybe_new_anim = Tile.animateAs(coord);
+                if (map_win.gridAnimAt2(coord)) |old_anim| {
+                    if (maybe_new_anim == null or !old_anim.eq(&maybe_new_anim.?))
+                        map_win.gridAnimAt(coord).* = maybe_new_anim;
+                } else {
+                    map_win.gridAnimAt(coord).* = maybe_new_anim;
+                }
+
+                if (map_win.gridAnimAt2(coord)) |anim|
                     map_win.grid_annotations.setCell(cursorx, cursory, anim.get());
             }
         }
@@ -2166,7 +2169,7 @@ pub fn drawAnimationNoPresentTimeout(timeout: ?usize) void {
         map_win.grid_annotations.clear();
         map_win.stepBorderAnimations(state.player.coord);
         map_win.stepTextLineAnimations();
-        map_win.stepGridAnimations();
+        map_win.stepCellAnimations();
 
         if (timeout == null) return;
 
@@ -4252,6 +4255,15 @@ fn _evToMEvType(ev: display.Event) Console.MouseTrigger.Kind {
 // Animations {{{
 
 pub const CellAnimation = struct {
+    // If nonzero, can be used to check if animations are equal.
+    //
+    // If this is the color dance animation for a material or surface, for
+    // example, it'll be the integer-ized value of the pointer to the surface
+    // or material.
+    //
+    // Same with mobs, it'll be the integer-ized value of the mob pointer.
+    id: usize,
+
     kind: Kind,
 
     // Options
@@ -4267,6 +4279,10 @@ pub const CellAnimation = struct {
         RotateCells: struct {
             cells: StackBuffer(display.Cell, 4),
 
+            pub fn eq(a: @This(), b: @This()) bool {
+                return a.cells.eq(&b.cells);
+            }
+
             pub fn get(self: *@This(), anim: *CellAnimation) display.Cell {
                 var c = self.cells.slice()[anim.ctr % self.cells.len];
                 c.fl.wide = true;
@@ -4274,6 +4290,18 @@ pub const CellAnimation = struct {
             }
         },
     };
+
+    pub fn eq(a: *const CellAnimation, b: *const CellAnimation) bool {
+        if (a.id != 0 and b.id != 0 and a.id == b.id)
+            return true;
+
+        if (@as(meta.Tag(Kind), a.kind) != b.kind)
+            return false;
+
+        return switch (a.kind) {
+            .RotateCells => |a_rotatecells| a_rotatecells.eq(b.kind.RotateCells),
+        };
+    }
 
     pub fn get(self: *CellAnimation) display.Cell {
         return switch (self.kind) {
