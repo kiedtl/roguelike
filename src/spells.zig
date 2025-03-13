@@ -606,6 +606,28 @@ pub const BOLT_DISINTEGRATE = Spell{
     .animation = .{ .Particles = .{ .name = "zap-disintegrate" } },
     .noise = .Silent,
     .needs_visible_target = false,
+    .check_has_effect = struct {
+        // Single check: are there allies in the way?
+        //
+        // Don't bother checking if spell will actually reach player, it's fine
+        // for gameplay purposes and players will rationalize it anyway as "oh
+        // it's trying to carve a path" etc.
+        //
+        // (also I'm too lazy)
+        //
+        // (recurring theme huh?)
+        //
+        fn f(caster: *Mob, _: SpellOptions, target: Coord) bool {
+            const line = caster.coordMT(target).drawLine(target, state.mapgeometry, 0);
+            return for (line.constSlice()) |c| {
+                if (c.eq(target))
+                    continue;
+                if (state.dungeon.at(c).mob) |mob|
+                    if (!mob.isHostileTo(caster))
+                        break false;
+            } else true;
+        }
+    }.f,
     .effects = &[_]Effect{.{
         .Custom = struct {
             pub fn f(caster_coord: Coord, _: SpellOptions, dest: Coord) void {
