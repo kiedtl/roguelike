@@ -3083,8 +3083,19 @@ pub fn placeEntry(level: usize, alloc: mem.Allocator) bool {
 }
 
 // Remove mobs nearby entry points to avoid punishing player too hard.
+//
+// ...unless the prefab was designed to do just that, of course.
+//
 pub fn removeEnemiesNearEntry(level: usize) void {
     const down_staircase = state.dungeon.entries[level];
+
+    switch (state.layout[level][down_staircase.y][down_staircase.x]) {
+        .Unknown => {},
+        .Room => |r| if (state.rooms[level].items[r].prefab) |prefab|
+            if (prefab.leave_stairs_alone)
+                return,
+    }
+
     var dijk = dijkstra.Dijkstra.init(
         down_staircase,
         state.mapgeometry,
@@ -3774,6 +3785,7 @@ pub const Prefab = struct {
     global_restriction: usize = LEVELS,
     restriction: usize = 1,
     individual_restriction: usize = 999,
+    leave_stairs_alone: bool = false,
     priority: usize = 0,
     noitems: bool = false,
     noguards: bool = false,
@@ -4151,6 +4163,9 @@ pub const Prefab = struct {
                     } else if (mem.eql(u8, key, "g_global_restriction")) {
                         if (val.len == 0) return error.ExpectedMetadataValue;
                         f.global_restriction = std.fmt.parseInt(usize, val, 0) catch return error.InvalidMetadataValue;
+                    } else if (mem.eql(u8, key, "g_leave_stairs_alone")) {
+                        if (val.len != 0) return error.UnexpectedMetadataValue;
+                        f.leave_stairs_alone = true;
                     } else if (mem.eql(u8, key, "g_individual_restriction")) {
                         if (val.len == 0) return error.ExpectedMetadataValue;
                         f.individual_restriction = std.fmt.parseInt(usize, val, 0) catch return error.InvalidMetadataValue;
