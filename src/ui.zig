@@ -4099,6 +4099,7 @@ pub fn drawChoicePrompt(comptime fmt: []const u8, args: anytype, options: []cons
                 'w', 'k', 'l' => if (chosen > 0) {
                     chosen -= 1;
                 },
+                ' ' => break :main,
                 '0'...'9' => {
                     const num: usize = c - '0';
                     if (num < options.len) {
