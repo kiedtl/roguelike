@@ -2479,72 +2479,6 @@ pub fn chooseCell(opts: ChooseCellOpts) ?Coord {
     }
 }
 
-pub fn chooseDirection() ?Direction {
-    var direction: Direction = .North;
-
-    defer map_win.annotations.clear();
-    defer map_win.map.renderFullyW(.Main);
-
-    while (true) {
-        map_win.annotations.clear();
-        map_win.map.renderFullyW(.Main);
-
-        const maybe_coord = state.player.coord.move(direction, state.mapgeometry);
-
-        if (maybe_coord != null and coordToScreen(maybe_coord.?) != null) {
-            const dcoord = coordToScreen(maybe_coord.?).?;
-            const char: u21 = switch (direction) {
-                .North => '↑',
-                .South => '↓',
-                .East => '→',
-                .West => '←',
-                .NorthEast => '↗',
-                .NorthWest => '↖',
-                .SouthEast => '↘',
-                .SouthWest => '↙',
-            };
-            map_win.annotations.setCell(dcoord.x, dcoord.y, .{ .ch = char, .fg = colors.LIGHT_CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
-        }
-
-        map_win.map.renderFullyW(.Main);
-        display.present();
-
-        drawModalText(colors.CONCRETE, "direction: {}", .{direction});
-
-        var evgen = display.getEvents(null);
-        while (evgen.next()) |ev| switch (ev) {
-            .Quit => {
-                state.state = .Quit;
-                return null;
-            },
-            .Key => |k| switch (k) {
-                .CtrlC, .Esc => return null,
-                .Enter => {
-                    if (maybe_coord == null) {
-                        //drawAlert("Invalid coord!", .{});
-                        drawModalText(0xffaaaa, "Invalid direction!", .{});
-                    } else {
-                        return direction;
-                    }
-                },
-                else => {},
-            },
-            .Char => |c| switch (c) {
-                'a', 'h' => direction = .West,
-                'x', 'j' => direction = .South,
-                'w', 'k' => direction = .North,
-                'd', 'l' => direction = .East,
-                'q', 'y' => direction = .NorthWest,
-                'e', 'u' => direction = .NorthEast,
-                'z', 'b' => direction = .SouthWest,
-                'c', 'n' => direction = .SouthEast,
-                else => {},
-            },
-            else => {},
-        };
-    }
-}
-
 pub const LoadingScreen = struct {
     main_con: Console,
     logo_con: *Console,
@@ -3994,32 +3928,8 @@ pub fn drawInventoryScreen() bool {
     }
 }
 
-pub fn drawModalText(color: u32, comptime fmt: []const u8, args: anytype) void {
-    const wind = dimensions(.Main);
-
-    var buf: [65535]u8 = undefined;
-    var fbs = std.io.fixedBufferStream(&buf);
-    std.fmt.format(fbs.writer(), fmt, args) catch err.bug("format error!", .{});
-    const str = fbs.getWritten();
-
-    assert(str.len < WIDTH - 4);
-
-    const y = if (state.player.coord.y > (HEIGHT / 2) * 2) wind.starty + 2 else wind.endy - 2;
-    const x = 1;
-
-    display.setCell(x, y, .{ .ch = '█', .fg = color, .bg = colors.BG });
-    _ = _drawStrf(x + 1, y, wind.endx, " {s} ", .{str}, .{ .bg = colors.percentageOf(color, 30) });
-    display.setCell(x + str.len + 3, y, .{ .ch = '█', .fg = color, .bg = colors.BG });
-
-    display.present();
-}
-
 pub fn drawAlert(comptime fmt: []const u8, args: anytype) void {
     map_win.drawTextLinef(fmt, args, .{ .fg = colors.PALE_VIOLET_RED });
-}
-
-pub fn drawAlertThenLog(comptime fmt: []const u8, args: anytype) void {
-    drawAlert(fmt, args);
 }
 
 fn _setupTextModal(comptime fmt: []const u8, args: anytype) Console {

@@ -277,7 +277,7 @@ pub fn triggerStair(stair: surfaces.Stair, cur_stair: Coord) bool {
             }
         } else null;
         if (stair_key == null) {
-            ui.drawAlertThenLog("The stair is locked and you don't have a matching key.", .{});
+            ui.drawAlert("The stair is locked and you don't have a matching key.", .{});
             return false;
         }
     }
@@ -287,7 +287,7 @@ pub fn triggerStair(stair: surfaces.Stair, cur_stair: Coord) bool {
         // Don't bother removing key
         return true;
     } else if (stair.stairtype == .Down) {
-        ui.drawAlertThenLog("Why would you want to go back?", .{});
+        ui.drawAlert("Why would you want to go back?", .{});
         return false;
     }
 
@@ -562,7 +562,7 @@ pub fn bookkeepingFOV() void {
 
 pub fn tryRest() bool {
     if (state.player.hasStatus(.Pain)) {
-        ui.drawAlertThenLog("You cannot rest while in pain!", .{});
+        ui.drawAlert("You cannot rest while in pain!", .{});
         return false;
     }
 
@@ -588,7 +588,7 @@ pub fn moveOrFight(direction: Direction) bool {
     };
 
     if (direction.is_cardinal() and state.player.isUnderStatus(.Disorient) != null) {
-        ui.drawAlertThenLog("You cannot move or attack cardinally whilst disoriented!", .{});
+        ui.drawAlert("You cannot move or attack cardinally whilst disoriented!", .{});
         return false;
     }
 
@@ -823,7 +823,7 @@ pub fn grabItem() bool {
     // }
 
     const item = state.dungeon.itemsAt(state.player.coord).last() orelse {
-        ui.drawAlertThenLog("There's nothing here.", .{});
+        ui.drawAlert("There's nothing here.", .{});
         return false;
     };
     const item_index = state.dungeon.itemsAt(state.player.coord).len - 1;
@@ -840,7 +840,7 @@ pub fn grabItem() bool {
         },
         else => {
             if (state.player.inventory.pack.isFull()) {
-                ui.drawAlertThenLog("Your pack is full!", .{});
+                ui.drawAlert("Your pack is full!", .{});
                 return false;
             }
 
@@ -866,12 +866,12 @@ pub fn throwItem(index: usize) bool {
     const item = state.player.inventory.pack.slice()[index];
 
     if (item != .Projectile and !(item == .Consumable and item.Consumable.throwable)) {
-        ui.drawAlertThenLog("You can't throw that.", .{});
+        ui.drawAlert("You can't throw that.", .{});
         return false;
     }
 
     if (item == .Consumable and item.Consumable.hated_by_nc and hasAlignedNC()) {
-        ui.drawAlertThenLog("Using that would anger the Night!", .{});
+        ui.drawAlert("Using that would anger the Night!", .{});
         return false;
     }
 
@@ -921,25 +921,25 @@ pub fn activateSurfaceItem(coord: Coord) bool {
             .Machine => |m| if (m.player_interact) |_| {
                 mach = m;
             } else {
-                ui.drawAlertThenLog("You can't activate that.", .{});
+                ui.drawAlert("You can't activate that.", .{});
                 return false;
             },
             else => {
-                ui.drawAlertThenLog("There's nothing here to activate.", .{});
+                ui.drawAlert("There's nothing here to activate.", .{});
                 return false;
             },
         }
     } else {
-        ui.drawAlertThenLog("There's nothing here to activate.", .{});
+        ui.drawAlert("There's nothing here to activate.", .{});
         return false;
     }
 
     const interaction = &mach.player_interact.?;
     mach.evoke(state.player, interaction) catch |e| {
         switch (e) {
-            error.UsedMax => ui.drawAlertThenLog("You can't use the {s} again.", .{mach.name}),
+            error.UsedMax => ui.drawAlert("You can't use the {s} again.", .{mach.name}),
             error.NoEffect => if (interaction.no_effect_msg) |msg| {
-                ui.drawAlertThenLog("{s}", .{msg});
+                ui.drawAlert("{s}", .{msg});
             },
         }
         return false;
@@ -970,7 +970,7 @@ pub fn useItem(index: usize) bool {
         .Shoe, .Ring, .Armor, .Cloak, .Head, .Aux => return equipItem(item),
         .Weapon => |w| {
             if (w.is_hated_by_nc) {
-                ui.drawAlertThenLog("You can't equip that (hated by the Night)!", .{});
+                ui.drawAlert("You can't equip that (hated by the Night)!", .{});
                 return false;
             }
 
@@ -978,18 +978,18 @@ pub fn useItem(index: usize) bool {
         },
         .Consumable => |p| {
             if (p.hated_by_nc and hasAlignedNC()) {
-                ui.drawAlertThenLog("You can't use that item (hated by the Night)!", .{});
+                ui.drawAlert("You can't use that item (hated by the Night)!", .{});
                 return false;
             }
 
             if (p.is_potion and state.player.isUnderStatus(.Nausea) != null) {
-                ui.drawAlertThenLog("You can't drink potions while nauseated!", .{});
+                ui.drawAlert("You can't drink potions while nauseated!", .{});
                 return false;
             }
 
             state.player.useConsumable(p, true) catch |e| switch (e) {
                 error.BadPosition => {
-                    ui.drawAlertThenLog("You can't use this kit here.", .{});
+                    ui.drawAlert("You can't use this kit here.", .{});
                     return false;
                 },
             };
@@ -1001,11 +1001,11 @@ pub fn useItem(index: usize) bool {
             return false;
         },
         .Key => {
-            ui.drawAlertThenLog("You stare at the key, wondering which staircase it unlocks.", .{});
+            ui.drawAlert("You stare at the key, wondering which staircase it unlocks.", .{});
             return false;
         },
         .Projectile, .Boulder => {
-            ui.drawAlertThenLog("You want to *eat* that?", .{});
+            ui.drawAlert("You want to *eat* that?", .{});
             return false;
         },
         .Prop => |p| {
@@ -1015,8 +1015,8 @@ pub fn useItem(index: usize) bool {
         .Evocable => |v| {
             v.evoke(state.player) catch |e| {
                 switch (e) {
-                    error.NoCharges => ui.drawAlertThenLog("You can't use the {s} anymore!", .{v.name}),
-                    error.HatedByNight => ui.drawAlertThenLog("Using that would anger the Night!", .{}),
+                    error.NoCharges => ui.drawAlert("You can't use the {s} anymore!", .{v.name}),
+                    error.HatedByNight => ui.drawAlert("Using that would anger the Night!", .{}),
                     else => {},
                 }
                 return false;

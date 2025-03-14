@@ -705,11 +705,11 @@ pub const BrazierWandEvoc = Evocable{
 
                     state.message(.Info, "The wand disables the {s}.", .{mach.name});
                 } else {
-                    ui.drawAlertThenLog("That's not a light source.", .{});
+                    ui.drawAlert("That's not a light source.", .{});
                     return error.BadPosition;
                 }
             } else {
-                ui.drawAlertThenLog("There's no light source there.", .{});
+                ui.drawAlert("There's no light source there.", .{});
                 return error.BadPosition;
             }
         }
