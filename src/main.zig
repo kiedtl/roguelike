@@ -398,7 +398,9 @@ fn readInput() !bool {
         switch (ev) {
             .Quit => state.state = .Quit,
             .Resize => ui.draw(),
-            .Wheel, .Hover, .Click => if (ui.handleMouseEvent(ev)) ui.draw(),
+            .Wheel, .Hover, .Click => if (ui.handleMouseEvent(ev)) {
+                ui.draw();
+            },
             .Key => |k| {
                 switch (k) {
                     .Esc => ui.drawEscapeMenu(),
@@ -537,7 +539,8 @@ fn tickGame(p_cur_level: ?usize) !void {
                 if (mob == state.player) {
                     ui.draw();
                     if (state.state == .Quit) break;
-                    while (!try readInput()) ui.drawAnimations();
+                    while (!try readInput())
+                        ui.drawAnimations();
                     ui.draw();
                     if (state.state == .Quit) break;
                 } else {

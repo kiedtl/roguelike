@@ -2142,7 +2142,7 @@ pub fn drawMap(console: *Console, moblist: []const *Mob, refpoint: Coord) void {
             if (cansee and
                 console == &map_win.map) // yuck
             {
-                console.addMouseTrigger(cursor_coord.asRect(), .Hover, .{ .RecordElem = &map_win.annotations });
+                //console.addMouseTrigger(cursor_coord.asRect(), .Hover, .{ .RecordElem = &map_win.annotations });
                 console.addMouseTrigger(cursor_coord.asRect(), .Click, .{ .ExamineScreen = .{ .start_coord = coord } });
 
                 const maybe_new_anim = Tile.animateAs(coord);
@@ -2159,7 +2159,8 @@ pub fn drawMap(console: *Console, moblist: []const *Mob, refpoint: Coord) void {
         }
     }
 
-    // console.highlightMouseArea(colors.BG_L);
+    // if (console == &map_win.map) // yuck
+    //     console.highlightMouseArea(colors.BG_L);
 }
 
 pub fn drawAnimationNoPresentTimeout(timeout: ?usize) void {
