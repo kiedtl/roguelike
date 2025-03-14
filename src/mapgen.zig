@@ -417,7 +417,7 @@ const VALID_FEATURE_TILE_PATTERNS = [_][]const u8{
     "#?.#..#?.",
 };
 
-fn isTileAvailable(coord: Coord) bool {
+pub fn isTileAvailable(coord: Coord) bool {
     return state.dungeon.at(coord).type == .Floor and state.dungeon.at(coord).mob == null and state.dungeon.at(coord).surface == null and state.dungeon.itemsAt(coord).len == 0;
 }
 
@@ -2378,6 +2378,34 @@ pub fn placeTraps(level: usize) void {
             num_of_vents -= 1;
         }
         _place_machine(trap_coord, &trap);
+    }
+}
+
+// Place a single mob scattered around the level in random rooms.
+//
+// <buf> parameter is any struct that has the .append() method. It should be large
+// enough to hold <count> mobs.
+//
+// Utility function, called by events.zig. Not used in this file (at least at
+// the time I'm writing it :P)
+pub fn placeMobScattered(
+    level: usize,
+    template: *const MobTemplate,
+    count: usize,
+    max_tries: usize,
+    buf: anytype,
+) void {
+    var placements: usize = count;
+    var tries: usize = max_tries;
+    while (tries > 0 and placements > 0) : (tries -= 1) {
+        const room = rng.chooseUnweighted(Room, state.rooms[level].items);
+        const coord = room.rect.randomCoord();
+        if (!isTileAvailable(coord))
+            continue;
+        const mob = mobs.placeMob(state.alloc, template, coord, .{});
+        if (@TypeOf(buf) != void)
+            buf.append(mob) catch err.wat();
+        placements -= 1;
     }
 }
 

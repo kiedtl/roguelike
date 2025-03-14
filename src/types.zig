@@ -1995,6 +1995,7 @@ pub const AIJob = struct {
     pub const CTX_OVERRIDE_FIGHT = "ctx_override_fight";
 
     pub const CTX_DIALOG = "ctx_dialog";
+    pub const CTX_COUNTERATTACK_TIMER = "ctx_counterattack_timer";
 
     pub const CTX_CORPSE_LOCATION = "ctx_corpse_location";
     pub const CTX_ROOM_ID = "ctx_room_id";
@@ -2023,6 +2024,7 @@ pub const AIJob = struct {
         ALM_PullAlarm,
         SPC_NCAlignment,
         SPC_TellPlayer,
+        SPC_InviteCounterattack,
         CAV_ProduceDustlings,
         CAV_RunDrillRoom,
         CAV_RunSwimmingRoom,
@@ -2051,6 +2053,7 @@ pub const AIJob = struct {
                 .ALM_PullAlarm => ai._Job_ALM_PullAlarm,
                 .SPC_NCAlignment => ai._Job_SPC_NCAlignment,
                 .SPC_TellPlayer => ai._Job_SPC_TellPlayer,
+                .SPC_InviteCounterattack => ai._Job_SPC_InviteCounterattack,
                 .CAV_ProduceDustlings => ai.caverns._Job_CAV_ProduceDustlings,
                 .CAV_RunDrillRoom => ai.caverns._Job_CAV_RunDrillRoom,
                 .CAV_RunSwimmingRoom => ai.caverns._Job_CAV_RunSwimmingRoom,

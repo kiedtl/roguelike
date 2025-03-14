@@ -673,6 +673,7 @@ fn viewerMain() void {
         for (&state.rooms, 0..) |*smh, i| {
             if (smh.items.len == 0) {
                 mapgen.initLevel(i);
+                events.check(i, .EnteringNewLevel);
             }
         }
 

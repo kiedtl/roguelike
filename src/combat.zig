@@ -9,6 +9,7 @@ const items = @import("items.zig");
 const player = @import("player.zig");
 const rng = @import("rng.zig");
 const state = @import("state.zig");
+const surfaces = @import("surfaces.zig");
 const types = @import("types.zig");
 const ui = @import("ui.zig");
 const utils = @import("utils.zig");
@@ -322,8 +323,13 @@ pub fn disruptAllUndead(level: usize) void {
         mob.stats.Willpower -|= @intCast(state.destroyed_candles / UNDEAD_DISRUPT_WILL_FDECREASE);
         mob.max_HP -|= state.destroyed_candles / UNDEAD_DISRUPT_HLTH_FDECREASE;
 
-        if (mob.max_HP == 0 or rng.percent(state.destroyed_candles * UNDEAD_DISRUPT_DESTROY_CHANCE))
+        if (mob.max_HP == 0 or rng.percent(state.destroyed_candles * UNDEAD_DISRUPT_DESTROY_CHANCE)) {
             mob.deinit();
+            if (mob.corpse == .None)
+                if (utils.findById(surfaces.props.items, "undead_ash")) |prop| {
+                    _ = @import("mapgen.zig").placeProp(mob.coord, &surfaces.props.items[prop]);
+                };
+        }
     }
 }
 

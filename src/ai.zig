@@ -26,14 +26,15 @@ const ui = @import("ui.zig");
 const utils = @import("utils.zig");
 
 const AIJob = types.AIJob;
-const Dungeon = types.Dungeon;
-const Mob = types.Mob;
-const EnemyRecord = types.EnemyRecord;
-const SuspiciousTileRecord = types.SuspiciousTileRecord;
-const Coord = types.Coord;
 const CoordArrayList = types.CoordArrayList;
+const Coord = types.Coord;
 const Direction = types.Direction;
+const Dungeon = types.Dungeon;
+const EnemyRecord = types.EnemyRecord;
+const minmax = types.minmax;
+const Mob = types.Mob;
 const Status = types.Status;
+const SuspiciousTileRecord = types.SuspiciousTileRecord;
 
 const StackBuffer = buffer.StackBuffer;
 const SpellOptions = spells.SpellOptions;
@@ -2291,6 +2292,49 @@ pub fn _Job_SPC_NCAlignment(mob: *Mob, job: *AIJob) AIJob.JStatus {
     } else {
         return .Defer;
     }
+}
+
+// A hack to make sure that counterattacks will happen if Revgenunkim (or other
+// similar creatures) overrun a level. Because this game doesn't have "fuses"
+// and won't have them either (they're hard to serialize)
+//
+pub fn _Job_SPC_InviteCounterattack(mob: *Mob, job: *AIJob) AIJob.JStatus {
+    const timer = job.ctx.get(usize, AIJob.CTX_COUNTERATTACK_TIMER, 50);
+
+    if (timer > 0) {
+        job.ctx.set(usize, AIJob.CTX_COUNTERATTACK_TIMER, timer - 1);
+        return .Defer;
+    }
+    tryRest(mob);
+
+    var mod_ancient_mage = mobs.AncientMageTemplate;
+    mod_ancient_mage.squad = &[_][]const mobs.MobTemplate.SquadMember{
+        &[_]mobs.MobTemplate.SquadMember{
+            .{ .mob = "skeletal_blademaster", .weight = 1, .count = minmax(usize, 2, 5) },
+            .{ .mob = "skeletal_arbalist", .weight = 1, .count = minmax(usize, 2, 4) },
+        },
+    };
+
+    // Ordering is deliberate.
+    //
+    // - Place Ancient Mage first, bailing out if that's not possible.
+    // - Place Necromancer second, they'll resurrect Revgen and make things more fun
+    // - Death mage and death knight last. Death mage first because it's stronger.
+    //
+
+    const am = mobs.placeMobNearStairs(&mod_ancient_mage, mob.coord.z, .{}) catch return .Ongoing;
+
+    for (&[_]*const mobs.MobTemplate{
+        &mobs.TorturerNecromancerTemplate,
+        &mobs.DeathMageTemplate,
+        &mobs.DeathKnightTemplate,
+    }) |t|
+        if (state.nextSpotForMob(am.coord, null)) |spot| {
+            const m = mobs.placeMob(state.alloc, t, spot, .{});
+            m.ai.work_fn = patrolWork;
+        } else break;
+
+    return .Complete;
 }
 
 pub fn workJobs(mob: *Mob) bool {

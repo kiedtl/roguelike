@@ -6,10 +6,20 @@ const mapgen = @import("mapgen.zig");
 const mobs = @import("mobs.zig");
 const rng = @import("rng.zig");
 const state = @import("state.zig");
+const surfaces = @import("surfaces.zig");
 const types = @import("types.zig");
+const utils = @import("utils.zig");
 
+const Coord = types.Coord;
+const Mob = types.Mob;
 const MobTemplate = mobs.MobTemplate;
 const AIJob = types.AIJob;
+
+const StackBuffer = @import("buffer.zig").StackBuffer;
+
+const LEVELS = state.LEVELS;
+const HEIGHT = state.HEIGHT;
+const WIDTH = state.WIDTH;
 
 // const Generator = @import("generators.zig").Generator;
 // const GeneratorCtx = @import("generators.zig").GeneratorCtx;
@@ -57,12 +67,24 @@ pub const Trigger = enum {
     EnteringNewLevel, // Player has just entered a new level. player.zig, triggerStair()
 };
 
+pub const Condition = union(enum) {
+    Level: []const u8,
+    Custom: *const fn (level: usize) bool,
+
+    pub fn check(self: @This(), level: usize) bool {
+        return switch (self) {
+            .Level => |name| mem.eql(u8, name, state.levelinfo[level].name),
+            .Custom => |func| (func)(level),
+        };
+    }
+};
+
 pub const Effect = union(enum) {
     SetPrefabGlobalRestriction: struct { prefab: []const u8, val: usize },
     AppendPrefabWhitelist: struct { prefab: []const u8, val: []const u8 },
-    Custom: *const fn (*const Event) void,
+    Custom: *const fn (*const Event, level: usize) void,
 
-    pub fn apply(self: @This(), ev: *const Event) !void {
+    pub fn apply(self: @This(), ev: *const Event, level: usize) !void {
         switch (self) {
             .SetPrefabGlobalRestriction => |ctx| {
                 var gen = gimmePrefabs(ctx.prefab);
@@ -82,7 +104,7 @@ pub const Effect = union(enum) {
                         prefab.whitelist.append(z) catch err.wat();
                 }
             },
-            .Custom => |func| (func)(ev),
+            .Custom => |func| (func)(ev, level),
         }
     }
 };
@@ -90,7 +112,7 @@ pub const Effect = union(enum) {
 pub const Event = struct {
     id: []const u8,
     triggers: []const Trigger,
-    conditions: []const *const fn (level: usize) bool = &[0]*const fn (usize) bool{},
+    conditions: []const Condition = &[0]Condition{},
     global_maximum: usize = 1,
     global_incompats: []const []const u8 = &[_][]const u8{},
     effect: []const Effect,
@@ -129,14 +151,14 @@ pub const EV_PUNISH_EVIL_PLAYER = Event{
     .triggers = &.{.EnteringNewLevel},
     .global_maximum = 3,
     .conditions = &.{
-        struct {
+        .{ .Custom = struct {
             pub fn f(_: usize) bool {
                 return state.player.hasStatus(.Sceptre);
             }
-        }.f,
+        }.f },
     },
     .effect = &[_]Effect{.{ .Custom = struct {
-        pub fn f(_: *const Event) void {
+        pub fn f(_: *const Event, _: usize) void {
             const dialog = "Good morning.";
 
             const spot = state.nextSpotForMob(state.player.coord, null) orelse return;
@@ -148,11 +170,66 @@ pub const EV_PUNISH_EVIL_PLAYER = Event{
     }.f }},
 };
 
+pub const EV_CRYPT_OVERRUN = Event{
+    .id = "ev_crypt_overrun",
+    .triggers = &.{.EnteringNewLevel},
+    .conditions = &.{
+        .{ .Level = "6/Crypt" },
+    },
+    .effect = &[_]Effect{.{
+        .Custom = struct {
+            pub fn f(_: *const Event, level: usize) void {
+                for (0..HEIGHT) |y|
+                    for (0..WIDTH) |x| {
+                        const c = Coord.new2(level, x, y);
+                        if (state.dungeon.at(c).mob) |mob|
+                            if (mob.faction == .Necromancer) {
+                                if (rng.onein(3)) {
+                                    mob.HP = mob.HP / 2;
+                                } else {
+                                    mob.deinit();
+                                    if (rng.onein(3)) {
+                                        const ash = utils.findById(surfaces.props.items, "undead_ash").?;
+                                        _ = mapgen.placeProp(mob.coord, &surfaces.props.items[ash]);
+                                    }
+                                }
+                            };
+                    };
+
+                var edemons = StackBuffer(*Mob, 14).init(null);
+                mapgen.placeMobScattered(level, &mobs.RevgenunkimTemplate, 14, 256, &edemons);
+
+                const angels = rng.onein(10);
+                const counterattack = !angels and rng.onein(10);
+
+                if (angels) {
+                    for (edemons.constSlice()) |dem| {
+                        if (rng.onein(2))
+                            dem.HP = rng.range(usize, dem.max_HP / 5, dem.max_HP / 3)
+                        else
+                            dem.deinit();
+                    }
+
+                    for (0..mobs.ANGELS.len) |_| {
+                        const t = rng.chooseUnweighted(*MobTemplate, &mobs.ANGELS);
+                        mapgen.placeMobScattered(level, t, 1, 7, {});
+                    }
+                } else if (counterattack) {
+                    const rev = rng.chooseUnweighted(*Mob, edemons.constSlice());
+                    rev.newJob(.SPC_InviteCounterattack);
+                    rev.newestJob().?.ctx.set(usize, AIJob.CTX_COUNTERATTACK_TIMER, 50);
+                }
+            }
+        }.f,
+    }},
+};
+
 pub const EVENTS = [_]struct { p: usize, v: *const Event }{
     .{ .p = 30, .v = &EV_SYMBOL_DISALLOW },
     .{ .p = 30, .v = &EV_SYMBOL_RESTRICT_TO_UPPER_SHRINE },
     .{ .p = 45, .v = &EV_DISINT_DISALLOW },
     .{ .p = 45, .v = &EV_SHIELD_DISALLOW },
+    .{ .p = 10, .v = &EV_CRYPT_OVERRUN },
     .{ .p = 5, .v = &EV_PUNISH_EVIL_PLAYER },
 };
 
@@ -179,8 +256,8 @@ pub fn eventCanBeUsed(event: *const Event, level: usize, trigger: Trigger) bool 
         if (t == trigger) break;
     } else return false;
 
-    for (event.conditions) |func| {
-        if (!(func)(level))
+    for (event.conditions) |condition| {
+        if (!condition.check(level))
             return false;
     }
 
@@ -200,7 +277,7 @@ pub fn check(level: usize, trigger: Trigger) void {
         if (eventCanBeUsed(event.v, level, trigger) and rng.percent(event.p)) {
             const new_event = event.v.*;
             for (new_event.effect) |effect|
-                effect.apply(&new_event) catch unreachable;
+                effect.apply(&new_event, level) catch unreachable;
             state.completed_events[i] += 1;
         }
     }
