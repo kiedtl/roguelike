@@ -102,7 +102,8 @@ pub var log_win: struct {
         return switch (ev) {
             .Click, .Hover => |c| switch (self.main.handleMouseEvent(c, _evToMEvType(ev))) {
                 .Coord, .Signal => err.wat(),
-                .Unhandled, .Void => true,
+                .Unhandled => false,
+                .Void => true,
                 .Outside => false,
             },
             .Wheel => false,
@@ -124,7 +125,8 @@ pub var hud_win: struct {
         return switch (ev) {
             .Click, .Hover => |c| switch (self.main.handleMouseEvent(c, _evToMEvType(ev))) {
                 .Coord, .Signal => err.wat(),
-                .Unhandled, .Void => true,
+                .Unhandled => false,
+                .Void => true,
                 .Outside => false,
             },
             .Wheel => false,
@@ -280,7 +282,8 @@ pub var map_win: struct {
         return switch (ev) {
             .Click, .Hover => |c| switch (self.map.handleMouseEvent(c, _evToMEvType(ev))) {
                 .Coord, .Signal => err.wat(),
-                .Unhandled, .Void => true,
+                .Unhandled => false,
+                .Void => true,
                 .Outside => false,
             },
             .Wheel => false,

@@ -1,3 +1,7 @@
+// In some of the hot loops here in present(), there's ChatGPT-optimized code.
+//
+// Yes I'm embarrassed. No I won't rewrite it myself.
+
 const build_options = @import("build_options");
 
 const std = @import("std");
@@ -362,6 +366,39 @@ pub fn height() usize {
     };
 }
 
+// Written by ChatGPT (with a ton of silly mistakes), cleaned up by me
+//
+// With great regret I, a certified LLM hater, must admit that I am somewhat
+// impressed.
+//
+inline fn blendSIMD(fg: u32, bg: u32, pixels: []const u8) @Vector(8, u32) {
+    const V = @Vector(8, u32);
+    const _s = struct {
+        pub fn f(comptime x: u32) V {
+            return @as(V, @splat(x));
+        }
+    }.f;
+
+    const fg_vec: V = @splat(fg);
+    const bg_vec: V = @splat(bg);
+    const alpha_vec = V{
+        pixels[0], pixels[1], pixels[2], pixels[3],
+        pixels[4], pixels[5], pixels[6], pixels[7],
+    };
+
+    // Scale foreground color using alpha (only if font pixel is nonzero)
+    const rg_scaled = ((fg_vec & _s(0xFF00FF)) * alpha_vec) & _s(0xFF00FF00);
+    const g_scaled = ((fg_vec & _s(0x00FF00)) * alpha_vec) & _s(0x00FF0000);
+
+    // Select either bg (if font pixel is 0) or blended fg
+    return @select(
+        u32,
+        alpha_vec != _s(0),
+        rg_scaled | g_scaled,
+        bg_vec << @as(V, @splat(8)),
+    ) | _s(0xFF);
+}
+
 pub fn present() void {
     switch (driver) {
         .Termbox => driver_m.tb_present(),
@@ -373,15 +410,15 @@ pub fn present() void {
 
             _ = driver_m.SDL_LockTexture(texture, null, @as([*c]?*anyopaque, @ptrCast(&pixels)), &pitch);
 
-            var dy: usize = 0;
             var py: usize = 0;
-            while (dy < height()) : (dy += 1) {
-                var dx: usize = 0;
-                var px: usize = 0;
-                while (dx < width()) : (dx += 1) {
-                    const cell = grid[dy * width() + dx];
+            for (0..height()) |dy| {
+                const row_offset = dy * width();
 
-                    if (!dirty[dy * width() + dx] or cell.fl.skip) {
+                var px: usize = 0;
+                for (0..width()) |dx| {
+                    const cell = grid[row_offset + dx];
+
+                    if (!dirty[row_offset + dx] or cell.fl.skip) {
                         px += font.FONT_WIDTH;
                         continue;
                     }
@@ -398,19 +435,33 @@ pub fn present() void {
                         continue;
                     }
 
-                    var fy: usize = 0;
-                    while (fy < font.FONT_HEIGHT) : (fy += 1) {
-                        var fx: usize = 0;
-                        while (fx < f_width) : (fx += 1) {
-                            const font_ch_y = ((ch - 32) / 16) * font.FONT_HEIGHT;
-                            const font_ch_x = ((ch - 32) % 16) * f_width;
-                            const font_ch = f_data[(font_ch_y + fy) * (16 * f_width) + font_ch_x + fx];
+                    const font_ch_y = ((ch - 32) >> 4) * font.FONT_HEIGHT;
+                    const font_ch_x = ((ch - 32) & 15) * f_width;
 
-                            const color = (if (font_ch == 0) bg else colors.percentageOf(fg, @as(usize, font_ch) * 100 / 255)) << 8 | 0xFF;
-                            pixels[((py + fy) * (w_width * font.FONT_WIDTH) + (px + fx))] = color;
-
-                            //pixels[(((dy * f_height) + fy) * (w_width * font.FONT_WIDTH) + ((dx * f_width) + fx))] = color;
+                    for (0..font.FONT_HEIGHT) |fy| {
+                        for (0..f_width >> 3) |fx| {
+                            const ptr = pixels[((py + fy) * (w_width * font.FONT_WIDTH) + (px + fx * 8))..];
+                            const ind = (font_ch_y + fy) * (16 * f_width) + font_ch_x + fx * 8;
+                            const res = blendSIMD(fg, bg, f_data[ind .. ind + 8]);
+                            ptr[0], ptr[1], ptr[2], ptr[3], ptr[4], ptr[5], ptr[6], ptr[7] = res;
                         }
+
+                        //for (0..f_width) |fx| {
+                        //    const pixel = f_data[(font_ch_y + fy) * (16 * f_width) + font_ch_x + fx];
+
+                        //    const color = switch (pixel) {
+                        //        0 => bg,
+                        //        0xff => fg,
+                        //        else => b: {
+                        //            //colors.percentageOf(fg, @as(usize, pixel) * 100 / 255),
+
+                        //            const rb = ((fg & 0xFF00FF) * pixel) & 0xFF00FF00;
+                        //            const g = ((fg & 0x00FF00) * pixel) & 0x00FF0000;
+                        //            break :b @as(u32, @bitCast((rb | g) >> 8));
+                        //        },
+                        //    } << 8 | 0xFF;
+                        //    pixels[((py + fy) * (w_width * font.FONT_WIDTH) + (px + fx))] = color;
+                        //}
                     }
 
                     px += font.FONT_WIDTH;
