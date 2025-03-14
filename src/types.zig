@@ -1991,6 +1991,11 @@ pub const AIJob = struct {
 
     pub const JStatus = enum { Defer, Ongoing, Complete };
 
+    // If this is set (boolean), the attack AI will prioritize the job.
+    pub const CTX_OVERRIDE_FIGHT = "ctx_override_fight";
+
+    pub const CTX_DIALOG = "ctx_dialog";
+
     pub const CTX_CORPSE_LOCATION = "ctx_corpse_location";
     pub const CTX_ROOM_ID = "ctx_room_id";
     pub const CTX_ALARM_TARGET = "ctx_alarm_target";
@@ -2017,6 +2022,7 @@ pub const AIJob = struct {
         GRD_SweepRoom,
         ALM_PullAlarm,
         SPC_NCAlignment,
+        SPC_TellPlayer,
         CAV_ProduceDustlings,
         CAV_RunDrillRoom,
         CAV_RunSwimmingRoom,
@@ -2044,6 +2050,7 @@ pub const AIJob = struct {
                 .GRD_SweepRoom => ai._Job_GRD_SweepRoom,
                 .ALM_PullAlarm => ai._Job_ALM_PullAlarm,
                 .SPC_NCAlignment => ai._Job_SPC_NCAlignment,
+                .SPC_TellPlayer => ai._Job_SPC_TellPlayer,
                 .CAV_ProduceDustlings => ai.caverns._Job_CAV_ProduceDustlings,
                 .CAV_RunDrillRoom => ai.caverns._Job_CAV_RunDrillRoom,
                 .CAV_RunSwimmingRoom => ai.caverns._Job_CAV_RunSwimmingRoom,
@@ -2079,9 +2086,11 @@ pub const Ctx = struct {
     inner: std.StringHashMap(Value),
 
     pub const Value = union(enum) {
+        void: void,
         usize: usize,
         bool: bool,
         f64: f64,
+        @"[]const u8": []const u8,
         @"types.AIJob.Type": AIJob.Type,
         @"types.Coord": Coord,
         @"*types.Mob": *Mob,

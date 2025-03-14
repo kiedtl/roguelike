@@ -12,6 +12,7 @@ const alert = @import("alert.zig");
 const colors = @import("colors.zig");
 const combat = @import("combat.zig");
 const err = @import("err.zig");
+const events = @import("events.zig");
 const explosions = @import("explosions.zig");
 const gas = @import("gas.zig");
 const items = @import("items.zig");
@@ -347,6 +348,8 @@ pub fn triggerStair(stair: surfaces.Stair, cur_stair: Coord) bool {
 
     if (stair_key) |pack_ind|
         _ = state.player.inventory.pack.orderedRemove(pack_ind) catch err.wat();
+
+    events.check(dest_stair.z, .EnteringNewLevel);
 
     return true;
 }

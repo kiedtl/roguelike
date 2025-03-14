@@ -2230,6 +2230,18 @@ pub fn _Job_ALM_PullAlarm(mob: *Mob, job: *AIJob) AIJob.JStatus {
     }
 }
 
+pub fn _Job_SPC_TellPlayer(mob: *Mob, job: *AIJob) AIJob.JStatus {
+    if (!state.player.canSeeMob(mob)) {
+        mob.tryMoveTo(state.player.coord);
+        return .Ongoing;
+    }
+
+    mob.facing = mob.coord.closestDirectionTo(state.player.coord, state.mapgeometry);
+    state.dialog(mob, job.ctx.getOrNone([]const u8, AIJob.CTX_DIALOG).?);
+    tryRest(mob);
+    return .Complete;
+}
+
 pub fn _Job_SPC_NCAlignment(mob: *Mob, job: *AIJob) AIJob.JStatus {
     const CTX_DIALOG1_GIVEN = "dialog1_given";
     const CTX_DIALOG2_GIVEN = "dialog2_given";
@@ -2408,6 +2420,11 @@ pub fn main(mob: *Mob) void {
     } else if (mob.ai.phase == .Hunt) {
         assert(mob.ai.is_combative);
         assert(mob.enemyList().items.len > 0);
+
+        if (mob.newestJob()) |job|
+            if (job.ctx.getOrNone(void, AIJob.CTX_OVERRIDE_FIGHT)) |_|
+                if (workJobs(mob))
+                    return;
 
         (mob.ai.fight_fn)(mob);
     } else if (mob.ai.phase == .Flee) {

@@ -186,7 +186,7 @@ fn initGameState() void {
     alert.init();
     events.init();
     player.choosePlayerUpgrades();
-    events.executeGlobalEvents();
+    events.check(0, .InitGameState);
     spells.initAvgWillChances();
 
     for (&state.dungeon.map, 0..) |*map, level| {
