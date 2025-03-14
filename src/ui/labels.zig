@@ -17,7 +17,7 @@ pub const MapLabel = struct {
         Mob: *Mob,
     },
     color: u32,
-    max_age: usize = 1000 / ui.FRAMERATE * 3, // ~3 seconds
+    max_age: usize = 1000 / ui.FRAMERATE * 2, // ~2 seconds
     max_tick_age: usize,
     malloced: bool,
 

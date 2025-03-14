@@ -3933,8 +3933,16 @@ pub fn drawAlert(comptime fmt: []const u8, args: anytype) void {
 }
 
 fn _setupTextModal(comptime fmt: []const u8, args: anytype) Console {
-    const str = std.fmt.allocPrint(state.alloc, fmt, args) catch err.oom();
-    defer state.alloc.free(str);
+    var alloced = false;
+    const str = if (comptime mem.eql(u8, fmt, "{s}"))
+        args.@"0"
+    else if (args.len == 0)
+        fmt
+    else b: {
+        alloced = true;
+        break :b std.fmt.allocPrint(state.alloc, fmt, args) catch err.oom();
+    };
+    defer if (alloced) state.alloc.free(str);
 
     const width = if (str.len < 200) @as(usize, 30) else 50;
 
@@ -3995,6 +4003,83 @@ pub fn drawTextModal(comptime fmt: []const u8, args: anytype) void {
             else => {},
         };
     }
+}
+
+pub fn drawTextModalAt(
+    coord: Coord,
+    comptime title_fmt: []const u8,
+    title_args: anytype,
+    comptime fmt: []const u8,
+    args: anytype,
+) !void {
+    var container_c = _setupTextModal(fmt, args);
+    const text_c = container_c.subconsoles.items[0].console;
+
+    // (Mostly) copied from src/ui/labels.zig.
+    //
+    const w_loc = coordToScreen(coord) orelse return error.CannotDisplay;
+    const possibles = [_]struct { z: usize, s: u21, c: Coord, r: Rect }{
+        // Left: z == 0, right: z == 1
+
+        .{ .z = 0, .s = '┐', .c = Coord.new(w_loc.x, w_loc.y -| 1), .r = Rect.new(Coord.new(w_loc.x -| container_c.width, w_loc.y -| container_c.height + 2), container_c.width + 2, container_c.height) },
+        .{ .z = 1, .s = '┌', .c = Coord.new(w_loc.x, w_loc.y -| 1), .r = Rect.new(Coord.new(w_loc.x, w_loc.y -| container_c.height + 2), container_c.width + 2, container_c.height) },
+
+        .{ .z = 0, .s = '─', .c = Coord.new(w_loc.x -| 2, w_loc.y), .r = Rect.new(Coord.new(w_loc.x -| container_c.width -| 2, w_loc.y -| (container_c.height / 2)), container_c.width + 2, container_c.height) },
+        .{ .z = 1, .s = '─', .c = Coord.new(w_loc.x + 2, w_loc.y), .r = Rect.new(Coord.new(w_loc.x + 2, w_loc.y -| (container_c.height / 2)), container_c.width + 2, container_c.height) },
+        .{ .z = 0, .s = '┘', .c = Coord.new(w_loc.x, w_loc.y + 1), .r = Rect.new(Coord.new(w_loc.x -| container_c.width, w_loc.y -| (container_c.height / 3)), container_c.width + 2, container_c.height) },
+        .{ .z = 1, .s = '└', .c = Coord.new(w_loc.x, w_loc.y + 1), .r = Rect.new(Coord.new(w_loc.x, w_loc.y -| (container_c.height / 3)), container_c.height, container_c.width + 2) },
+    };
+    const chosen = for (possibles) |possible| {
+        if (possible.r.end().x <= map_win.map.width and possible.r.start.x > 2 and
+            possible.r.end().y <= map_win.map.height and possible.r.start.y > 2)
+        {
+            break possible;
+        }
+    } else return error.CannotDisplay;
+
+    drawNoPresent(); // Update map, in case this was called in middle of a turn.
+    text_c.addRevealAnimation(.{ .rvtype = .TopDown });
+    map_win.annotations.clear();
+
+    const offset: usize = if (chosen.z == 0) 0 else 2;
+    map_win.annotations.setCell(chosen.c.x, chosen.c.y, .{ .ch = chosen.s, .fg = colors.LIGHT_STEEL_BLUE, .fl = .{ .wide = true } });
+    map_win.annotations.addSubconsole(&container_c, chosen.r.start.x + offset, chosen.r.start.y);
+
+    const title_str = std.fmt.allocPrint(state.alloc, fmt, args) catch err.oom();
+    _ = container_c.drawTextAtf(2, 0, " " ++ title_fmt ++ " ", title_args, .{ .bg = colors.ABG });
+    defer state.alloc.free(title_str);
+
+    defer container_c.deinit();
+    defer _ = map_win.annotations.subconsoles.pop();
+    defer map_win.annotations.clear();
+
+    while (true) {
+        text_c.stepRevealAnimation();
+        map_win.map.renderFullyW(.Main);
+        display.present();
+
+        var evgen = display.getEvents(FRAMERATE);
+        while (evgen.next()) |ev| switch (ev) {
+            .Quit => {
+                state.state = .Quit;
+                return;
+            },
+            .Click => |c| if (container_c.handleMouseEvent(c, .Click) == .Outside) return,
+            .Key => |k| switch (k) {
+                .CtrlC, .Esc, .CtrlG, .Enter => return,
+                else => {},
+            },
+            .Char => |c| switch (c) {
+                ' ' => return,
+                else => {},
+            },
+            else => {},
+        };
+    }
+}
+
+pub fn drawTextModalAtMob(mob: *const Mob, comptime fmt: []const u8, args: anytype) !void {
+    return drawTextModalAt(mob.coord, "{Ac}", .{mob}, fmt, args);
 }
 
 pub fn drawChoicePrompt(comptime fmt: []const u8, args: anytype, options: []const []const u8) ?usize {

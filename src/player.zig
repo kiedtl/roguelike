@@ -479,13 +479,13 @@ pub fn executeWizardFun(w: WizardFun) void {
             //     .target = state.player,
             // } });
 
-            mapgen.initLevel(5);
-            const c = for (&DIRECTIONS) |d| {
-                if (state.dungeon.entries[5].move(d, state.mapgeometry)) |n|
-                    if (state.is_walkable(n, .{ .right_now = true }))
-                        break n;
-            } else unreachable;
-            _ = state.player.teleportTo(c, null, false, false);
+            // mapgen.initLevel(5);
+            // const c = for (&DIRECTIONS) |d| {
+            //     if (state.dungeon.entries[5].move(d, state.mapgeometry)) |n|
+            //         if (state.is_walkable(n, .{ .right_now = true }))
+            //             break n;
+            // } else unreachable;
+            // _ = state.player.teleportTo(c, null, false, false);
             //@panic("nooooooooooooo");
         },
         .Particles => {
