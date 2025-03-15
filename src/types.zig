@@ -3446,6 +3446,8 @@ pub const Mob = struct { // {{{
     // the second...
     //
     pub fn coordMT(self: *Mob, to: Coord) Coord {
+        if (self.multitile == null)
+            return self.coord;
         var closest = self.coord;
         {
             var gen = self.areaRect().iter();

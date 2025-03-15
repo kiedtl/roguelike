@@ -1,6 +1,7 @@
 const std = @import("std");
 const mem = std.mem;
 
+const ai = @import("ai.zig");
 const err = @import("err.zig");
 const mapgen = @import("mapgen.zig");
 const mobs = @import("mobs.zig");
@@ -153,7 +154,7 @@ pub const EV_PUNISH_EVIL_PLAYER = Event{
     .conditions = &.{
         .{ .Custom = struct {
             pub fn f(_: usize) bool {
-                return state.player.hasStatus(.Sceptre);
+                return state.defiled_temple and state.player.hasStatus(.Sceptre);
             }
         }.f },
     },
@@ -224,13 +225,41 @@ pub const EV_CRYPT_OVERRUN = Event{
     }},
 };
 
+pub const EV_TEMPLE_ANGELS_AWAKE = Event{
+    .id = "ev_temple_angels_awake",
+    .triggers = &.{.EnteringNewLevel},
+    .conditions = &.{
+        .{ .Level = "5/Temple" },
+        .{ .Custom = struct {
+            pub fn f(_: usize) bool {
+                return state.player.resistance(.rHoly) < 0;
+            }
+        }.f },
+    },
+    .effect = &[_]Effect{.{
+        .Custom = struct {
+            pub fn f(_: *const Event, level: usize) void {
+                err.ensure(!state.defiled_temple, "Player already defiled temple somehow?!", .{}) catch {};
+                state.defiled_temple = true;
+                for (0..HEIGHT) |y|
+                    for (0..WIDTH) |x|
+                        if (state.dungeon.at(Coord.new2(level, x, y)).mob) |mob|
+                            if (mob.faction == .Holy) {
+                                mob.cancelStatus(.Sleeping);
+                                ai.glanceAt(mob, state.player);
+                            };
+            }
+        }.f,
+    }},
+};
+
 pub const EVENTS = [_]struct { p: usize, v: *const Event }{
     .{ .p = 30, .v = &EV_SYMBOL_DISALLOW },
     .{ .p = 30, .v = &EV_SYMBOL_RESTRICT_TO_UPPER_SHRINE },
     .{ .p = 45, .v = &EV_DISINT_DISALLOW },
     .{ .p = 45, .v = &EV_SHIELD_DISALLOW },
-    .{ .p = 10, .v = &EV_CRYPT_OVERRUN },
     .{ .p = 5, .v = &EV_PUNISH_EVIL_PLAYER },
+    .{ .p = 100, .v = &EV_TEMPLE_ANGELS_AWAKE },
 };
 
 pub fn init() void {

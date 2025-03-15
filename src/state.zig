@@ -145,6 +145,7 @@ pub var player_turns: usize = 0;
 pub var score: usize = 0;
 
 // Global mechanic-specific variables
+pub var defiled_temple: bool = false;
 pub var destroyed_candles: usize = 0;
 pub var shrines_in_lockdown: [LEVELS]bool = [1]bool{false} ** LEVELS;
 pub var shrine_locations: [LEVELS]?Coord = [1]?Coord{null} ** LEVELS;

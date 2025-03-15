@@ -702,6 +702,10 @@ fn getCurrentRoom(mob: *Mob) ?usize {
     };
 }
 
+pub fn glanceAt(me: *Mob, at: *Mob) void {
+    me.facing = me.coordMT(at.coord).closestDirectionTo(at.coordMT(me.coord), state.mapgeometry);
+}
+
 pub fn guardGlanceRandom(mob: *Mob) void {
     if (rng.onein(6)) {
         mob.facing = rng.chooseUnweighted(Direction, &DIRECTIONS);
