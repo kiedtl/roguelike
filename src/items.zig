@@ -1468,7 +1468,7 @@ pub const LifeBreadConsumable = Consumable{
     .name = "bread of life",
     .effects = &[_]Consumable.Effect{
         .{ .MaxHP = 3 },
-        .{ .Stat = .{ .s = .Potential, .change = -10 } },
+        .{ .Stat = .{ .s = .Potential, .change = -5 } },
     },
     .color = 0xba9510,
     .verbs_player = &[_][]const u8{"eat"},
@@ -1604,7 +1604,7 @@ pub const RegeneratePotion = Consumable{
     .name = "potion of regeneration",
     .effects = &[_]Consumable.Effect{
         .{ .MaxMP = 2 },
-        .{ .Stat = .{ .s = .Potential, .change = -5 } },
+        .{ .Stat = .{ .s = .Potential, .change = -10 } },
         .RegenerateMP,
     },
     .is_potion = true,
