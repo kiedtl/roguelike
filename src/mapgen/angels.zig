@@ -27,6 +27,7 @@ const StackBuffer = @import("../buffer.zig").StackBuffer;
 const Stat = types.Stat;
 const Terrain = surfaces.Terrain;
 
+const MOTH_DESC = "This unearthly insect darts to and fro, its seven mesmerizing wings working in an almost mechanical fashion.";
 const DEFAULT_ARMOR = 30;
 const DEFAULT_RESIST = 0;
 const DEFAULT_AI_FLAGS = [_]AI.Flag{.RandomSpells};
@@ -37,6 +38,12 @@ const Filter = enum { Mob, Machine, Terrain };
 const Char = struct {
     ch: u21,
     original_weight: usize,
+    weight: usize = 0,
+};
+
+const Body = struct {
+    str: []const u8,
+    original_weight: usize = 10,
     weight: usize = 0,
 };
 
@@ -177,6 +184,79 @@ const CHARS = [_]Char{
     .{ .ch = 'ק', .original_weight = 10 },
     .{ .ch = 'ש', .original_weight = 10 },
     .{ .ch = 'ת', .original_weight = 10 },
+};
+
+fn _b(bs: []const u8) Body {
+    return .{ .str = bs };
+}
+
+// Duplicated because each array needs to be at least 7 items
+//
+const CONCRETE_BODY = [_]Body{
+    _b("insectoid"), _b("arachnid"), _b("arthropod"),
+    _b("centipede"), _b("biped"),    _b("quadruped"),
+    _b("monolith"),  _b("humanoid"), _b("centipede"),
+};
+const VAGUE_BODY = [_]Body{
+    _b("shape"),  _b("form"),  _b("figure"),        _b("being"),
+    _b("shadow"), _b("shape"), _b("spectral mist"),
+};
+const SIZE_BODY = [_]Body{
+    _b("huge"), _b("towering"), _b("enormous"),
+    _b("huge"), _b("towering"), _b("enormous"),
+    _b("huge"), _b("towering"), _b("enormous"),
+};
+
+// TODO: align this with moth descriptions.
+// E.g. "charred" should lead to sun moth being "blackened", "graphite", etc
+// (see notes on this topic)
+const ADJ_BODY = [_]Body{
+    _b("inscrutable"),            _b("shadowed"),              _b("shadowy"),               _b("winged"),
+    _b("scintillating"),          _b("emaciated"),             _b("gaunt"),                 _b("scaled"),
+    _b("charred"),                _b("blackened,"),            _b("metallic"),              _b("rust-colored,"),
+    _b("blazing"),                _b("shimmering"),            _b("iridescent"),            _b("menacing"),
+    _b("terrifyingly beautiful"), _b("unnaturally beautiful"), _b("intricately beautiful"), _b("perfectly symmetric"),
+    _b("indescribable"),          _b("ponderous"),
+};
+const FLAVOR_BODY = b: {
+    var base: []const Body = &[_]Body{
+        _b("covered in black plates"),
+        _b("covered in silver plates"),
+        _b("covered in a plated black exoskeleton"),
+        _b("hundreds of eyes leering through slits in its scales"),
+        _b("hundreds of eyes leering through slits in its armor"),
+        _b("covered in intricate patterns and mystic sigils"),
+        _b("strikingly yet terrifyingly beautiful"),
+        _b("seemingly of perfect beauty"),
+        _b("with an ancient wisdom blazing through its eyes"),
+        _b("with a fearful supernatural wrath echoing in its eyes"),
+        _b("with a cold expression of divine disfavor"),
+        _b("with an eerie depth in its eyes"),
+        _b("with the unseen depths of stars in its eyes"),
+        _b("of a stoic and expressionless demeanor"),
+        _b("with an aura of terrible authority"),
+        _b("with an aura of unyielding authority"),
+        _b("with an aura of irresistible authority"),
+        _b("with an aura of brilliant white light"),
+        _b("with rhythmic intonations that pierce its foes with suffocating terror"),
+        _b("constantly intones in a tongue no mortal can understand"),
+        _b("its armor twisted into fantastic patterns"),
+        _b("its armor twisted into incredible patterns"),
+        _b("its armor twisted into indescribable patterns"),
+    };
+    const ns = .{
+        "lightning",       "frost", "smoke",  "fire",
+        "ethereal mist",   "light", "shadow", "hellfire",
+        "brilliant light",
+    };
+
+    for (.{ "wreathed", "cloaked", "crowned" }) |f1|
+        for (.{ "impenetrable", "unapproachable", "profound", "thick" }) |adj|
+            for (ns) |n| {
+                base = base ++ &[1]Body{_b(f1 ++ " in " ++ adj ++ " " ++ n)};
+            };
+
+    break :b base;
 };
 
 fn _n(kind: Name.Kind, str: []const u8, syl: usize, moth: []const u8, opts: struct {
@@ -678,6 +758,41 @@ fn calcMaxMP(kind: AngelKind, traits: []const Trait) usize {
     return highest_cost + rng.range(usize, max_bonus / 2, max_bonus);
 }
 
+fn generateDesc(
+    index: usize,
+    body_size: *StackBuffer(Body, SIZE_BODY.len),
+    body_adj: *StackBuffer(Body, ADJ_BODY.len),
+    body_concrete: *StackBuffer(Body, CONCRETE_BODY.len),
+    body_vague: *StackBuffer(Body, VAGUE_BODY.len),
+    body_flavor: *StackBuffer(Body, FLAVOR_BODY.len),
+) void {
+    const concrete_ind = rng.chooseInd2(Body, body_concrete.constSlice(), "weight");
+    const concrete = (body_concrete.orderedRemove(concrete_ind) catch err.wat()).str;
+
+    const vague_ind = rng.chooseInd2(Body, body_vague.constSlice(), "weight");
+    const vague = (body_vague.orderedRemove(vague_ind) catch err.wat()).str;
+
+    const size_ind = rng.chooseInd2(Body, body_size.constSlice(), "weight");
+    const size = (body_size.orderedRemove(size_ind) catch err.wat()).str;
+
+    const adj_ind = rng.chooseInd2(Body, body_adj.constSlice(), "weight");
+    const adj = (body_adj.orderedRemove(adj_ind) catch err.wat()).str;
+
+    const flavor_ind = rng.chooseInd2(Body, body_flavor.constSlice(), "weight");
+    const flavor = (body_flavor.orderedRemove(flavor_ind) catch err.wat()).str;
+
+    const desc = switch (rng.range(usize, 1, 3)) {
+        1 => std.fmt.allocPrint(state.alloc, "A {s} spectre of divine hatred, looming as a {s} menace of despair in the minds of its enemies.", .{ adj, size }),
+        2 => std.fmt.allocPrint(state.alloc, "A {s} assuming the form of a {s} {s}, {s} -- a dreadful intruding Presence of the unseen world.", .{ vague, size, concrete, flavor }),
+        3 => std.fmt.allocPrint(state.alloc, "A horribly powerful and swift {s}, {s}.", .{ concrete, flavor }),
+        else => err.wat(),
+    } catch err.oom();
+
+    //std.log.info("Description: {s}", .{desc});
+    const id = state.alloc.dupe(u8, mobs.ANGELS[index].mob.id) catch err.oom();
+    state.descriptions.putNoClobber(id, desc) catch err.wat();
+}
+
 // Generates a single angel into a given mob template, and removes its name and
 // traits so it can't be used in future generation cycles.
 //
@@ -689,13 +804,19 @@ fn generateSingle(
     traits: *StackBuffer(Trait, TRAITS.len),
     names: *StackBuffer(Name, NAMES.len),
     tiles: *StackBuffer(Char, CHARS.len),
+    body_size: *StackBuffer(Body, SIZE_BODY.len),
+    body_adj: *StackBuffer(Body, ADJ_BODY.len),
+    body_concrete: *StackBuffer(Body, CONCRETE_BODY.len),
+    body_vague: *StackBuffer(Body, VAGUE_BODY.len),
+    body_flavor: *StackBuffer(Body, FLAVOR_BODY.len),
 ) void {
     const out = mobs.ANGELS[index];
     const out_moth = mobs.MOTHS[index];
 
-    for (traits.slice()) |*i| i.weight = i.original_weight;
-    for (names.slice()) |*i| i.weight = i.original_weight;
-    for (tiles.slice()) |*i| i.weight = i.original_weight;
+    inline for (.{ traits, names, tiles, body_size, body_adj, body_concrete, body_vague }) |set|
+        for (set.slice()) |*i| {
+            i.weight = i.original_weight;
+        };
 
     for (traits.slice()) |*trait|
         if (trait.require_kind) |requires| {
@@ -828,6 +949,8 @@ fn generateSingle(
     } else err.wat();
     _ = names.orderedRemove(noun_ind) catch err.wat();
 
+    generateDesc(index, body_size, body_adj, body_concrete, body_vague, body_flavor);
+
     // Choose remaining stuff
     const chosen_tile_ind = rng.chooseInd2(Char, tiles.constSlice(), "weight");
     const chosen_tile = tiles.orderedRemove(chosen_tile_ind) catch err.wat();
@@ -902,6 +1025,10 @@ fn generateSingle(
         spbuf[0] = .{ .MP_cost = 0, .spell = &spells.CAST_MOTH_TRANSFORM, .power = index };
         break :b spbuf;
     };
+
+    const moth_desc = state.alloc.dupe(u8, MOTH_DESC) catch err.oom();
+    const moth_id = state.alloc.dupe(u8, mobs.MOTHS[index].mob.id) catch err.oom();
+    state.descriptions.putNoClobber(moth_id, moth_desc) catch err.wat();
 }
 
 pub fn init() void {
@@ -909,18 +1036,24 @@ pub fn init() void {
     var names = StackBuffer(Name, NAMES.len).init(&NAMES);
     var tiles = StackBuffer(Char, CHARS.len).init(&CHARS);
 
+    var body_size = StackBuffer(Body, SIZE_BODY.len).init(&SIZE_BODY);
+    var body_adj = StackBuffer(Body, ADJ_BODY.len).init(&ADJ_BODY);
+    var body_concrete = StackBuffer(Body, CONCRETE_BODY.len).init(&CONCRETE_BODY);
+    var body_vague = StackBuffer(Body, VAGUE_BODY.len).init(&VAGUE_BODY);
+    var body_flavor = StackBuffer(Body, FLAVOR_BODY.len).init(FLAVOR_BODY);
+
     // Generation order is deliberate. We want Archangels to have first priority
     // for spells, in particular the ones which "return" power.
     //
     // Followers get leftovers.
 
-    generateSingle(0, .Arch, &traits, &names, &tiles);
-    generateSingle(1, .Arch, &traits, &names, &tiles);
-    generateSingle(2, .Soldier, &traits, &names, &tiles);
-    generateSingle(3, .Soldier, &traits, &names, &tiles);
-    generateSingle(4, .Soldier, &traits, &names, &tiles);
-    generateSingle(5, .Follower, &traits, &names, &tiles);
-    generateSingle(6, .Follower, &traits, &names, &tiles);
+    generateSingle(0, .Arch, &traits, &names, &tiles, &body_size, &body_adj, &body_concrete, &body_vague, &body_flavor);
+    generateSingle(1, .Arch, &traits, &names, &tiles, &body_size, &body_adj, &body_concrete, &body_vague, &body_flavor);
+    generateSingle(2, .Soldier, &traits, &names, &tiles, &body_size, &body_adj, &body_concrete, &body_vague, &body_flavor);
+    generateSingle(3, .Soldier, &traits, &names, &tiles, &body_size, &body_adj, &body_concrete, &body_vague, &body_flavor);
+    generateSingle(4, .Soldier, &traits, &names, &tiles, &body_size, &body_adj, &body_concrete, &body_vague, &body_flavor);
+    generateSingle(5, .Follower, &traits, &names, &tiles, &body_size, &body_adj, &body_concrete, &body_vague, &body_flavor);
+    generateSingle(6, .Follower, &traits, &names, &tiles, &body_size, &body_adj, &body_concrete, &body_vague, &body_flavor);
 
     // Now choose a strength and a vulnerability.
     const RESISTS = [_]types.Resistance{ .rFire, .rElec, .rAcid, .Armor };
