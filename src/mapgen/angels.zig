@@ -789,8 +789,7 @@ fn generateDesc(
     } catch err.oom();
 
     //std.log.info("Description: {s}", .{desc});
-    const id = state.alloc.dupe(u8, mobs.ANGELS[index].mob.id) catch err.oom();
-    state.descriptions.putNoClobber(id, desc) catch err.wat();
+    state.descriptions.putNoClobber(mobs.ANGELS[index].mob.id, desc) catch err.wat();
 }
 
 // Generates a single angel into a given mob template, and removes its name and
@@ -1027,8 +1026,7 @@ fn generateSingle(
     };
 
     const moth_desc = state.alloc.dupe(u8, MOTH_DESC) catch err.oom();
-    const moth_id = state.alloc.dupe(u8, mobs.MOTHS[index].mob.id) catch err.oom();
-    state.descriptions.putNoClobber(moth_id, moth_desc) catch err.wat();
+    state.descriptions.putNoClobber(mobs.MOTHS[index].mob.id, moth_desc) catch err.wat();
 }
 
 pub fn init() void {
@@ -1104,5 +1102,12 @@ pub fn deinit() void {
     for (&mobs.MOTHS) |moth| {
         state.alloc.free(moth.mob.ai.profession_name.?);
         state.alloc.free(moth.mob.spells);
+    }
+
+    for (0..mobs.ANGELS.len) |i| {
+        state.alloc.free(state.descriptions.get(mobs.ANGELS[i].mob.id).?);
+        state.alloc.free(state.descriptions.get(mobs.MOTHS[i].mob.id).?);
+        _ = state.descriptions.remove(mobs.ANGELS[i].mob.id);
+        _ = state.descriptions.remove(mobs.MOTHS[i].mob.id);
     }
 }
