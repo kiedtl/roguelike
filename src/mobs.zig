@@ -1943,7 +1943,6 @@ pub const RollingBoulderTemplate = MobTemplate{
             .fight_fn = ai.suicideWork, // Should never be called, but just in case
             .is_curious = false,
             .is_fearless = true,
-            .is_combative = false,
             .flags = &[_]AI.Flag{ .NoRaiseAllyMorale, .IgnoredByEnemies },
         },
 
@@ -1974,7 +1973,6 @@ pub const SphereHellfireTemplate = MobTemplate{
             .fight_fn = ai.suicideWork, // Should never be called, but just in case
             .is_curious = false,
             .is_fearless = true,
-            .is_combative = false,
             .flags = &[_]AI.Flag{ .NoRaiseAllyMorale, .IgnoredByEnemies },
         },
 

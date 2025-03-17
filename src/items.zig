@@ -28,24 +28,25 @@ const spells = @import("spells.zig");
 const utils = @import("utils.zig");
 
 const Activity = types.Activity;
-const Coord = types.Coord;
-const CoordArrayList = types.CoordArrayList;
-const Item = types.Item;
-const Ring = types.Ring;
-const DamageStr = types.DamageStr;
-const Weapon = types.Weapon;
-const Resistance = types.Resistance;
-const StatusDataInfo = types.StatusDataInfo;
+const AIJob = types.AIJob;
 const Armor = types.Armor;
-const SurfaceItem = types.SurfaceItem;
-const Mob = types.Mob;
+const CoordArrayList = types.CoordArrayList;
+const Coord = types.Coord;
+const DamageStr = types.DamageStr;
 const Damage = types.Damage;
-const Stat = types.Stat;
-const Spatter = types.Spatter;
-const Rect = types.Rect;
-const Status = types.Status;
-const Machine = types.Machine;
 const Direction = types.Direction;
+const Item = types.Item;
+const Machine = types.Machine;
+const Mob = types.Mob;
+const Rect = types.Rect;
+const Resistance = types.Resistance;
+const Ring = types.Ring;
+const Spatter = types.Spatter;
+const Stat = types.Stat;
+const StatusDataInfo = types.StatusDataInfo;
+const Status = types.Status;
+const SurfaceItem = types.SurfaceItem;
+const Weapon = types.Weapon;
 
 const DIRECTIONS = types.DIRECTIONS;
 const DIAGONAL_DIRECTIONS = types.DIAGONAL_DIRECTIONS;
@@ -246,6 +247,7 @@ pub const HOLY_ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 50, .i = .{ .c = &LifeBreadConsumable } },
     .{ .w = 50, .i = .{ .c = &LifeWaterConsumable } },
     .{ .w = 50, .i = .{ .P = &RegeneratePotion } },
+    .{ .w = 30, .i = .{ .E = SphereHellfireEvoc } },
     .{ .w = 10, .i = .{ .X = &DispelUndeadAux } },
     .{ .w = 5, .i = .{ .r = CondemnationRing } },
     .{ .w = 5, .i = .{ .r = ConcentrationRing } },
@@ -661,7 +663,7 @@ pub const Evocable = struct {
 
     // TODO: targeting functionality
 
-    pub const EvokeError = error{ HatedByNight, NoCharges, BadPosition };
+    pub const EvokeError = error{ HatedByNight, NoCharges, BadPosition, NeedSpaceNearPlayer };
 
     pub fn evoke(self: *Evocable, by: *Mob) EvokeError!void {
         if (by == state.player and player.hasAlignedNC() and self.hated_by_nc) {
@@ -821,6 +823,44 @@ pub const SymbolEvoc = Evocable{
 
             state.player.innate_resists.rHoly -= 5;
             state.player.innate_resists.rHoly = math.clamp(state.player.innate_resists.rHoly, -100, 100);
+        }
+    }.f,
+};
+
+pub const SphereHellfireEvoc = Evocable{
+    .id = "evoc_hellfire",
+    .name = "sphere of hellfire",
+    .tile_fg = 0xba4100,
+    .max_charges = 1,
+    .rechargable = false,
+    .delete_when_inert = true,
+    .trigger_fn = struct {
+        fn f(_: *Mob, _: *Evocable) Evocable.EvokeError!void {
+            const SPEED = 0.5;
+            const MAX_DAMAGE = 7; // XXX: Update evocable description if changing
+            const MIN_DAMAGE = 3; // XXX: Update evocable description if changing
+            const DIST = 999; // Practically unlimited
+
+            const target = state.dungeon.at(ui.chooseCell(.{
+                .max_distance = DIST,
+                .require_enemy_on_tile = true,
+            }) orelse return error.BadPosition).mob.?;
+
+            const target_coord = target.coordMT(state.player.coord);
+            const direction = state.player.coord.closestDirectionTo(target_coord, state.mapgeometry);
+            const spot = state.player.coord.move(direction, state.mapgeometry) orelse
+                return error.NeedSpaceNearPlayer;
+            if (!state.is_walkable(spot, .{}))
+                return error.NeedSpaceNearPlayer;
+            const damage = rng.rangeClumping(usize, MIN_DAMAGE, MAX_DAMAGE, 3);
+
+            const b = mobs.placeMob(state.alloc, &mobs.SphereHellfireTemplate, spot, .{});
+            b.newJob(.ATK_Homing);
+            b.newestJob().?.ctx.set(*Mob, AIJob.CTX_HOMING_TARGET, target);
+            b.newestJob().?.ctx.set(usize, AIJob.CTX_HOMING_DAMAGE, damage);
+            b.newestJob().?.ctx.set(f64, AIJob.CTX_HOMING_SPEED, SPEED);
+            b.newestJob().?.ctx.set(bool, AIJob.CTX_HOMING_BLAST, true);
+            b.newestJob().?.ctx.set(void, AIJob.CTX_OVERRIDE_FIGHT, {});
         }
     }.f,
 };

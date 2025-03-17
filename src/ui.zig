@@ -485,21 +485,9 @@ pub fn dimensions(w: DisplayWindow) Dimension {
 
 // Formatting descriptions for stuff. {{{
 
-// XXX: Uses a static internal buffer. Buffer must be consumed before next call,
-// not thread safe, etc.
-//
 // FIXME: convert this to a formatting struct
 fn _formatBool(val: bool) []const u8 {
-    // 4 control chars, max 3 for actual "yes" or "no"
-    var buf: [3 + 4]u8 = undefined;
-    var fbs = std.io.fixedBufferStream(&buf);
-    var w = fbs.writer();
-
-    const color: u21 = if (val) 'b' else 'r';
-    const string = if (val) @as([]const u8, "yes") else "no";
-    w.print("${u}{s}$.", .{ color, string }) catch err.wat();
-
-    return fbs.getWritten();
+    return if (val) "$btrue$." else "$rno$.";
 }
 
 // XXX: Uses a static internal buffer. Buffer must be consumed before next call,

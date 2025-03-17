@@ -2004,6 +2004,7 @@ pub const AIJob = struct {
     pub const CTX_ADVERTISE_KIND = "ctx_advertise_kind";
 
     pub const CTX_HOMING_TARGET = "ctx_homing_target";
+    pub const CTX_HOMING_DAMAGE = "ctx_homing_damage";
     pub const CTX_HOMING_BLAST = "ctx_homing_blast";
     pub const CTX_HOMING_ANGLE = "ctx_homing_velocity_dir";
     pub const CTX_HOMING_SPEED = "ctx_homing_velocity_speed";

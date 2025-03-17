@@ -1020,7 +1020,8 @@ pub fn useItem(index: usize) bool {
                 switch (e) {
                     error.NoCharges => ui.drawAlert("You can't use the {s} anymore!", .{v.name}),
                     error.HatedByNight => ui.drawAlert("Using that would anger the Night!", .{}),
-                    else => {},
+                    error.BadPosition => ui.drawAlert("Invalid target position.", .{}),
+                    error.NeedSpaceNearPlayer => ui.drawAlert("There needs to be a free spot adjacent you.", .{}),
                 }
                 return false;
             };

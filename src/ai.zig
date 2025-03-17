@@ -2007,19 +2007,19 @@ pub fn _Job_ATK_Homing(homer: *Mob, job: *AIJob) AIJob.JStatus {
             return .Complete;
         }
 
-        pub fn _dieWithVictim(me: *Mob, target: *Mob, is_blast: bool) AIJob.JStatus {
+        pub fn _dieWithVictim(me: *Mob, target: *Mob, damage: usize, is_blast: bool) AIJob.JStatus {
             if (is_blast) {
                 if (state.player.canSeeMob(me))
                     state.message(.SpellCast, "{c} explodes!!", .{me});
                 spells.BLAST_HELLFIRE.use(me, me.coord, me.coord, .{
-                    .power = spells.CAST_ROLLING_BOULDER_DAMAGE,
+                    .power = damage,
                     .free = true,
                     .MP_cost = 0,
                     .no_message = true,
                 });
             } else {
                 target.takeDamage(.{
-                    .amount = spells.CAST_ROLLING_BOULDER_DAMAGE,
+                    .amount = damage,
                     .by_mob = me,
                     .kind = .Physical,
                     .blood = false,
@@ -2047,6 +2047,7 @@ pub fn _Job_ATK_Homing(homer: *Mob, job: *AIJob) AIJob.JStatus {
     // target, speed, and is_blast should be set by spawner (e.g. spells.CAST_ROLLING_BOULDER)
     const target = job.ctx.getOrNone(*Mob, AIJob.CTX_HOMING_TARGET).?;
     const target_coord = target.coordMT(homer.coord);
+    const damage = job.ctx.getOrNone(usize, AIJob.CTX_HOMING_DAMAGE).?;
     const speed = job.ctx.getOrNone(f64, AIJob.CTX_HOMING_SPEED).?;
     const is_blast = job.ctx.getOrNone(bool, AIJob.CTX_HOMING_BLAST).?;
     const angle = job.ctx.get(f64, AIJob.CTX_HOMING_ANGLE, S._calcAngle(homer.coord, target_coord));
@@ -2056,7 +2057,7 @@ pub fn _Job_ATK_Homing(homer: *Mob, job: *AIJob) AIJob.JStatus {
 
     // Do a check before-hand, in case target very helpfully moved
     if (homer.coord.distanceManhattan(target_coord) == min_distance) {
-        return S._dieWithVictim(homer, target, is_blast);
+        return S._dieWithVictim(homer, target, damage, is_blast);
     }
 
     const x = (@max(1, speed) * @cos(angle)) + @as(f64, @floatFromInt(homer.coord.x));
@@ -2091,7 +2092,7 @@ pub fn _Job_ATK_Homing(homer: *Mob, job: *AIJob) AIJob.JStatus {
 
     if (slammed_into_something) {
         if (slammed_into_mob) |victim| {
-            return S._dieWithVictim(homer, victim, is_blast);
+            return S._dieWithVictim(homer, victim, damage, is_blast);
         } else {
             return S._die(homer);
         }
@@ -2100,7 +2101,7 @@ pub fn _Job_ATK_Homing(homer: *Mob, job: *AIJob) AIJob.JStatus {
     // Check again after movement. So that victim can't force the
     // boulder/sphere to play catch-up.
     if (homer.coord.distanceManhattan(target.coordMT(homer.coord)) == min_distance) {
-        return S._dieWithVictim(homer, target, is_blast);
+        return S._dieWithVictim(homer, target, damage, is_blast);
     }
 
     // Now set new variables, and potentially transform
@@ -2125,6 +2126,8 @@ pub fn _Job_ATK_Homing(homer: *Mob, job: *AIJob) AIJob.JStatus {
         const soh = mobs.placeMob(state.alloc, &mobs.SphereHellfireTemplate, homer.coord, .{});
         soh.newJob(.ATK_Homing);
         soh.newestJob().?.ctx.set(*Mob, AIJob.CTX_HOMING_TARGET, target);
+        soh.newestJob().?.ctx.set(usize, AIJob.CTX_HOMING_DAMAGE, damage);
+        soh.newestJob().?.ctx.set(void, AIJob.CTX_OVERRIDE_FIGHT, {});
         soh.newestJob().?.ctx.set(f64, AIJob.CTX_HOMING_SPEED, speed * 2);
         soh.newestJob().?.ctx.set(bool, AIJob.CTX_HOMING_BLAST, true);
 

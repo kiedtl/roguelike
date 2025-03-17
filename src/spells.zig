@@ -287,8 +287,10 @@ pub const CAST_ROLLING_BOULDER = Spell{
                     const b = mobs.placeMob(state.alloc, &mobs.RollingBoulderTemplate, n, .{});
                     b.newJob(.ATK_Homing);
                     b.newestJob().?.ctx.set(*Mob, AIJob.CTX_HOMING_TARGET, target);
+                    b.newestJob().?.ctx.set(usize, AIJob.CTX_HOMING_DAMAGE, CAST_ROLLING_BOULDER_DAMAGE);
                     b.newestJob().?.ctx.set(f64, AIJob.CTX_HOMING_SPEED, 0.6);
                     b.newestJob().?.ctx.set(bool, AIJob.CTX_HOMING_BLAST, false);
+                    b.newestJob().?.ctx.set(void, AIJob.CTX_OVERRIDE_FIGHT, {});
                 }
             }.f,
         },

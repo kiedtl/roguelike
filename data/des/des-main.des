@@ -355,6 +355,14 @@ rivets adorn both sides.
 
 % Yes, it was bored through and filled with gold, which is why it's so heavy.
 
+% evoc_hellfire
+Places a Sphere of Hellfire, aimed at a targeted enemy. The orb will home in
+on the enemy, but cannot make sharp turns to capture an agile foe. It will
+explode if it hits an obstacle or if the target is adjacent at any time.
+
+The blast will deal $o3$.-$o7$. damage (with a bias toward damage in the middle of
+the range).
+
 % cons_life_bread
 Sacred food of cave-goblin craft, now stale and forgotten.
 
