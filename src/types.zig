@@ -4597,8 +4597,8 @@ pub const Mob = struct { // {{{
                 hostile = true;
         } else if (self.faction == .Holy or othermob.faction == .Holy) {
             if (rep >= 0 and
-                (self.faction == .Holy and othermob.resistance(.rHoly) >= 0) or
-                (othermob.faction == .Holy and self.resistance(.rHoly) >= 0))
+                ((self.faction == .Holy and othermob.resistance(.rHoly) >= 0) or
+                    (othermob.faction == .Holy and self.resistance(.rHoly) >= 0)))
             {
                 hostile = false;
             }
