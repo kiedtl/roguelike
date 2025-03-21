@@ -4815,7 +4815,11 @@ pub const Mob = struct { // {{{
             return 100;
         }
         //std.log.info("{}: {}: {}", .{ self, resist, innate });
-        assert(innate <= 100 and innate >= -100);
+        err.ensure(
+            innate <= 100 and innate >= -100,
+            "{cf} has out-of-bounds resist ({}, {})",
+            .{ self, resist, innate },
+        ) catch {};
         r += innate;
 
         // Check terrain.
