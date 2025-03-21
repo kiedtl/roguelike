@@ -110,6 +110,10 @@ pub fn build(b: *Build) void {
         .root_source_file = b.path("third_party/zig-rexpaint/lib.zig"),
     });
     exe.root_module.addImport("rexpaint", rexpaint);
+    const strig = b.addModule("strig", .{
+        .root_source_file = b.path("third_party/zig-strig/src/root.zig"),
+    });
+    exe.root_module.addImport("strig", strig);
 
     exe.addIncludePath(b.path("third_party/janet/")); // janet.h
     exe.addIncludePath(b.path("third_party/microtar/src/"));
