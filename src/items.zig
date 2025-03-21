@@ -2245,7 +2245,7 @@ pub const SceptreWeapon = Weapon{
     .damage = 1,
     .stats = .{ .Melee = 25, .Evade = 10, .Martial = 1, .Potential = 30 },
     .resists = .{ .rHoly = -50 },
-    .ego = .Drain,
+    .ego = .Sceptre,
     .is_cursed = true,
     .is_hated_by_nc = true,
     .equip_effects = &[_]StatusDataInfo{

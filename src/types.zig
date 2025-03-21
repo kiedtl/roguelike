@@ -3684,6 +3684,31 @@ pub const Mob = struct { // {{{
 
         // Weapon ego effects.
         switch (attacker_weapon.ego) {
+            .Sceptre => {
+                if (attacker == state.player and rng.percent(@as(usize, 33)))
+                    player.drainMob(recipient);
+
+                if (recipient.life_type == .Undead and rng.percent(@as(usize, 33))) {
+                    ui.Animation.blinkMob(&.{recipient}, '@', colors.LIGHT_STEEL_BLUE, .{});
+                    recipient.faction = attacker.faction;
+                    if (state.player.canSeeMob(recipient))
+                        state.message(.Info, "{c} is turned.", .{recipient});
+                } else if (recipient.life_type == .Construct and recipient.resistance(.rElec) < 0 and
+                    rng.percent(@as(usize, 33)))
+                {
+                    recipient.takeDamage(.{
+                        .amount = 1,
+                        .kind = .Electric,
+                        .source = if (is_stab) .Stab else .MeleeAttack,
+                        .by_mob = attacker,
+                    }, .{
+                        .noun = "The Sceptre",
+                        .strs = &items.SHOCK2_STRS,
+                        .is_surprise = is_stab,
+                        .is_bonus = true,
+                    });
+                }
+            },
             .Drain => {
                 assert(attacker == state.player);
                 player.drainMob(recipient);
@@ -5299,6 +5324,7 @@ pub const Weapon = struct {
         NC_Duplicate,
         Swap,
         Drain,
+        Sceptre,
 
         pub fn id(self: Ego) ?[]const u8 {
             return switch (self) {
@@ -5310,6 +5336,7 @@ pub const Weapon = struct {
                 .NC_Duplicate => "ego_nc_duplicate",
                 .Swap => "ego_swap",
                 .Drain => "ego_drain",
+                .Sceptre => "ego_sceptre",
             };
         }
 
@@ -5323,6 +5350,7 @@ pub const Weapon = struct {
                 .NC_Duplicate => "duplicity",
                 .Swap => "swapping",
                 .Drain => "draining",
+                .Sceptre => "sceptre",
             };
         }
     };

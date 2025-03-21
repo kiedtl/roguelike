@@ -113,3 +113,7 @@ When a successful hit is landed, the attacker and defender will swap places.
 Attacking a $oWielder$. $g(see the creature's description)$. will drain them of
 their MP, absorbing it and preventing them from channeling the Necromancer's
 power.
+
+% ego_sceptre
+$b33%$. chance to drain $oWielders$. (i.e. $oDrain$. ego); $b33%$. chance to
+electrocute vulnerable constructs; $b33%$. chance to turn undead.
