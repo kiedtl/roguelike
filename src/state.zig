@@ -243,7 +243,8 @@ pub var status_str_infos: std.enums.EnumArray(Status, ?StatusStringInfo) =
 // Uses state.alloc
 //
 pub fn nextSpotForMob(crd: Coord, mob: ?*Mob) ?Coord {
-    var dijk = dijkstra.Dijkstra.init(crd, mapgeometry, 3, is_walkable, .{
+    var dijk: dijkstra.Dijkstra = undefined;
+    dijk.init(crd, mapgeometry, 3, is_walkable, .{
         .mob = mob,
         .ignore_mobs = true,
         .right_now = true,
@@ -287,7 +288,8 @@ pub fn nextAvailableSpaceForItem(c: Coord, a: mem.Allocator) ?Coord {
             if (is_walkable(crd, .{ .right_now = true }) and !S._isFull(strict, crd))
                 return crd;
 
-            var dijk = dijkstra.Dijkstra.init(crd, mapgeometry, 3, is_walkable, .{ .right_now = true }, myalloc);
+            var dijk: dijkstra.Dijkstra = undefined;
+            dijk.init(crd, mapgeometry, 3, is_walkable, .{ .right_now = true }, myalloc);
             defer dijk.deinit();
 
             return while (dijk.next()) |child| {

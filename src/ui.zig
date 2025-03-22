@@ -1733,7 +1733,7 @@ fn drawHUD(moblist: []const *Mob) void {
         defer features.deinit();
         defer for (features.items) |f| f.name.deinit(localalloc);
 
-        var dijk = dijkstra.Dijkstra.init(
+        var dijk: dijkstra.Dijkstra = undefined; dijk.init(
             state.player.coord,
             state.mapgeometry,
             @intCast(state.player.stat(.Vision)),
@@ -2335,7 +2335,7 @@ pub const ChooseCellOpts = struct {
                     pub fn f(targeter: Targeter, _: bool, coord: Coord, buf: *Result.AList) Error!void {
                         // First do the squares that the player can see
                         {
-                            var dijk = dijkstra.Dijkstra.init(coord, state.mapgeometry, targeter.AoE1.dist, state.is_walkable, targeter.AoE1.opts, state.alloc);
+                            var dijk: dijkstra.Dijkstra = undefined; dijk.init(coord, state.mapgeometry, targeter.AoE1.dist, state.is_walkable, targeter.AoE1.opts, state.alloc);
                             defer dijk.deinit();
 
                             while (dijk.next()) |child| if (state.player.cansee(child)) {
@@ -2347,7 +2347,7 @@ pub const ChooseCellOpts = struct {
 
                         // ...And now the squares the player can't see
                         {
-                            var dijk = dijkstra.Dijkstra.init(coord, state.mapgeometry, targeter.AoE1.dist, struct {
+                            var dijk: dijkstra.Dijkstra = undefined; dijk.init(coord, state.mapgeometry, targeter.AoE1.dist, struct {
                                 pub fn f(c: Coord, opts: state.IsWalkableOptions) bool {
                                     if (state.player.cansee(c)) return state.is_walkable(c, opts);
                                     return true;

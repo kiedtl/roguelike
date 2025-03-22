@@ -799,7 +799,7 @@ pub const SymbolEvoc = Evocable{
             var coordlist = types.CoordArrayList.init(state.alloc);
             defer coordlist.deinit();
 
-            var dijk = dijkstra.Dijkstra.init(dest, state.mapgeometry, DIST, state.is_walkable, OPTS, state.alloc);
+            var dijk: dijkstra.Dijkstra = undefined; dijk.init(dest, state.mapgeometry, DIST, state.is_walkable, OPTS, state.alloc);
             defer dijk.deinit();
 
             while (dijk.next()) |child|
@@ -909,7 +909,7 @@ pub const DistractionRing = Ring{ // {{{
             const RADIUS = 4;
 
             var anim_buf = StackBuffer(Coord, (RADIUS * 2) * (RADIUS * 2)).init(null);
-            var dijk = dijkstra.Dijkstra.init(state.player.coord, state.mapgeometry, RADIUS, state.is_walkable, .{ .ignore_mobs = true, .only_if_breaks_lof = true }, state.alloc);
+            var dijk: dijkstra.Dijkstra = undefined; dijk.init(state.player.coord, state.mapgeometry, RADIUS, state.is_walkable, .{ .ignore_mobs = true, .only_if_breaks_lof = true }, state.alloc);
             defer dijk.deinit();
             while (dijk.next()) |coord2| {
                 if (utils.getHostileAt(state.player, coord2)) |hostile| {

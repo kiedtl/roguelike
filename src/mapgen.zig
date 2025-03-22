@@ -2660,7 +2660,7 @@ pub fn setLairFeatures(room: *Room) void {
     }
 
     // Set polished slade areas
-    var dijk = dijkstra.Dijkstra.init(walkable_point, state.mapgeometry, 100, dijkstra.dummyIsValid, .{}, state.alloc);
+    var dijk: dijkstra.Dijkstra = undefined; dijk.init(walkable_point, state.mapgeometry, 100, dijkstra.dummyIsValid, .{}, state.alloc);
     defer dijk.deinit();
     while (dijk.next()) |child| {
         if (child.asRect().overflowsLimit(&room.rect)) {
@@ -3124,7 +3124,7 @@ pub fn removeEnemiesNearEntry(level: usize) void {
                 return,
     }
 
-    var dijk = dijkstra.Dijkstra.init(
+    var dijk: dijkstra.Dijkstra = undefined; dijk.init(
         down_staircase,
         state.mapgeometry,
         8,

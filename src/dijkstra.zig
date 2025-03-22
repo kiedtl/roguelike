@@ -69,10 +69,6 @@ pub fn dummyIsValid(_: Coord, _: state.IsWalkableOptions) bool {
     return true;
 }
 
-// Previous size: 288208
-// Size after using struct-of-matrixes pattern: 198208
-// Size after further optimizations: 12176
-
 pub const Dijkstra = struct {
     current: Node,
     max: u8,
@@ -88,22 +84,22 @@ pub const Dijkstra = struct {
     const Self = @This();
 
     pub fn init(
+        s: *Dijkstra,
         start: Coord,
         limit: Coord,
         max_distance: usize,
         is_valid: *const fn (Coord, state.IsWalkableOptions) bool,
         is_valid_opts: state.IsWalkableOptions,
         allocator: mem.Allocator,
-    ) Self {
+    ) void {
         const n = Node{ .c = start, .n = 0 };
-        var s = Self{
-            .current = n,
-            .max = @intCast(max_distance),
-            .limit = limit,
-            .is_valid = is_valid,
-            .is_valid_opts = is_valid_opts,
-            .open = NodeList.init(allocator),
-        };
+
+        s.current = n;
+        s.max = @intCast(max_distance);
+        s.limit = limit;
+        s.is_valid = is_valid;
+        s.is_valid_opts = is_valid_opts;
+        s.open = NodeList.init(allocator);
 
         for (0..HEIGHT) |y|
             for (0..WIDTH) |x| {
@@ -113,8 +109,6 @@ pub const Dijkstra = struct {
         s.open.writeItem(n) catch unreachable;
         s.node_ns[start.y][start.x] = 0;
         s.node_states[start.y][start.x] = .Open;
-
-        return s;
     }
 
     pub fn deinit(self: *Self) void {

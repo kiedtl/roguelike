@@ -1650,7 +1650,8 @@ pub const Status = enum {
             var possible_tiles = CoordArrayList.init(state.alloc);
 
             const dist = SCEPTRE_VISION + 4;
-            var dijk = dijkstra.Dijkstra.init(state.player.coord, state.mapgeometry, dist, struct {
+            var dijk: dijkstra.Dijkstra = undefined;
+            dijk.init(state.player.coord, state.mapgeometry, dist, struct {
                 pub fn f(c: Coord, _: state.IsWalkableOptions) bool {
                     return !Dungeon.isTileOpaque(c);
                 }
@@ -1776,7 +1777,8 @@ pub const Status = enum {
                 if (state.player.canHear(coord) == null)
                     continue;
 
-                var dijk = dijkstra.Dijkstra.init(
+                var dijk: dijkstra.Dijkstra = undefined;
+                dijk.init(
                     coord,
                     state.mapgeometry,
                     st.power,
@@ -2660,7 +2662,8 @@ pub const Mob = struct { // {{{
         // Special-case: Player has sceptre and Dijkstra vision
         if (self.hasStatus(.Sceptre)) {
             assert(self == state.player);
-            var dijk = dijkstra.Dijkstra.init(state.player.coord, state.mapgeometry, SCEPTRE_VISION, struct {
+            var dijk: dijkstra.Dijkstra = undefined;
+            dijk.init(state.player.coord, state.mapgeometry, SCEPTRE_VISION, struct {
                 pub fn f(c: Coord, _: state.IsWalkableOptions) bool {
                     return !Dungeon.isTileOpaque(c);
                 }
@@ -3961,7 +3964,8 @@ pub const Mob = struct { // {{{
             var membuf: [4096]u8 = undefined;
             var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
 
-            var dijk = dijkstra.Dijkstra.init(self.coord, state.mapgeometry, 9, S.isConductive, .{}, fba.allocator());
+            var dijk: dijkstra.Dijkstra = undefined;
+            dijk.init(self.coord, state.mapgeometry, 9, S.isConductive, .{}, fba.allocator());
             defer dijk.deinit();
 
             var list = StackBuffer(*Mob, 64).init(null);
@@ -4040,7 +4044,8 @@ pub const Mob = struct { // {{{
     // Returns null if there wasn't any nearby walkable spot to put the new
     // spectral creature
     pub fn duplicateIntoSpectral(self: *Mob) ?*Mob {
-        var dijk = dijkstra.Dijkstra.init(self.coord, state.mapgeometry, 5, state.is_walkable, .{}, state.alloc);
+        var dijk: dijkstra.Dijkstra = undefined;
+        dijk.init(self.coord, state.mapgeometry, 5, state.is_walkable, .{}, state.alloc);
         defer dijk.deinit();
 
         const newcoord = while (dijk.next()) |child| {
@@ -4087,7 +4092,8 @@ pub const Mob = struct { // {{{
             var membuf: [4096]u8 = undefined;
             var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
 
-            var dijk = dijkstra.Dijkstra.init(self.coord, state.mapgeometry, 10, state.is_walkable, .{ .right_now = true }, fba.allocator());
+            var dijk: dijkstra.Dijkstra = undefined;
+            dijk.init(self.coord, state.mapgeometry, 10, state.is_walkable, .{ .right_now = true }, fba.allocator());
             defer dijk.deinit();
 
             newcoord = while (dijk.next()) |child| {
@@ -4276,7 +4282,8 @@ pub const Mob = struct { // {{{
             var membuf: [4096]u8 = undefined;
             var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
 
-            var dijk = dijkstra.Dijkstra.init(self.coord, state.mapgeometry, 2, S._isNotWall, .{}, fba.allocator());
+            var dijk: dijkstra.Dijkstra = undefined;
+            dijk.init(self.coord, state.mapgeometry, 2, S._isNotWall, .{}, fba.allocator());
             defer dijk.deinit();
 
             const corpsetile: ?Coord = while (dijk.next()) |child| {
