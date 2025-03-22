@@ -58,6 +58,7 @@ pub fn build(b: *Build) void {
     options.addOption([]const u8, "release", release);
     options.addOption([]const u8, "dist", dist);
 
+    const opt_emit_llvm_ir = b.option(bool, "emit-llvm-ir", "Emit generated LLVM IR") orelse false;
     const opt_tun_gif = b.option(bool, "tunneler-gif", "Link GIFLIB and use to export a GIF of the tunneler mapgen") orelse false;
     options.addOption(bool, "tunneler_gif", opt_tun_gif);
 
@@ -156,6 +157,11 @@ pub fn build(b: *Build) void {
         }
     }
 
+    if (opt_emit_llvm_ir) {
+        b.getInstallStep()
+            .dependOn(&b.addInstallBinFile(exe.getEmittedLlvmIr(), "rl.ll").step);
+    }
+
     exe.root_module.addOptions("build_options", options);
 
     b.installDirectory(.{
@@ -178,6 +184,7 @@ pub fn build(b: *Build) void {
         .link_libc = true,
     });
     build_tests.root_module.addOptions("build_options", options);
+    build_tests.root_module.addImport("strig", strig);
     build_tests.addIncludePath(b.path("third_party/janet/"));
     build_tests.addCSourceFiles(.{ .files = &[_][]const u8{"third_party/janet/janet.c"} });
     _addTermbox(b, build_tests);

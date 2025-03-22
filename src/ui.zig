@@ -7,6 +7,7 @@ const mem = std.mem;
 const meta = std.meta;
 const enums = std.enums;
 
+const Strig = @import("strig").Strig;
 const RexMap = @import("rexpaint").RexMap;
 
 const janet = @import("janet.zig");
@@ -1720,7 +1721,7 @@ fn drawHUD(moblist: []const *Mob) void {
 
     {
         const FeatureInfo = struct {
-            name: BStr(32),
+            name: Strig,
             tile: display.Cell,
             coord: Coord,
             ex_focus: ExamineTileFocus,
@@ -1730,6 +1731,7 @@ fn drawHUD(moblist: []const *Mob) void {
 
         var features = std.ArrayList(FeatureInfo).init(localalloc);
         defer features.deinit();
+        defer for (features.items) |f| f.name.deinit(localalloc);
 
         var dijk = dijkstra.Dijkstra.init(
             state.player.coord,
@@ -1742,21 +1744,24 @@ fn drawHUD(moblist: []const *Mob) void {
         defer dijk.deinit();
 
         while (dijk.next()) |coord| if (state.player.cansee(coord)) {
-            var name = BStr(32).init(null);
+            var name = Strig.initLit("");
             var priority: usize = 0;
             var focus: ExamineTileFocus = .Item;
 
             if (state.dungeon.itemsAt(coord).len > 0) {
                 const item = state.dungeon.itemsAt(coord).last().?;
                 if (item != .Vial and item != .Prop and item != .Boulder) {
-                    name.appendSlice((item.shortName() catch err.wat()).constSlice()) catch err.wat();
+                    name.appendBytes(
+                        (item.shortName() catch err.wat()).constSlice(),
+                        localalloc,
+                    ) catch err.wat();
                 }
                 priority = 3;
                 focus = .Item;
             } else if (state.dungeon.at(coord).surface) |surf| {
                 priority = 2;
                 focus = .Surface;
-                name.appendSlice(switch (surf) {
+                name.appendBytes(switch (surf) {
                     .Machine => |m| if (m.player_interact != null or m.show_on_hud) m.name else "",
                     .Prop => "",
                     .Corpse => "corpse",
@@ -1767,26 +1772,32 @@ fn drawHUD(moblist: []const *Mob) void {
                         .Access => "main stairway",
                         .Down => "",
                     },
-                }) catch err.wat();
+                }, localalloc) catch err.wat();
             } else if (!mem.eql(u8, state.dungeon.terrainAt(coord).id, "t_default")) {
                 priority = 1;
                 focus = .Surface;
-                name.appendSlice(state.dungeon.terrainAt(coord).name) catch err.wat();
+                name.appendBytes(state.dungeon.terrainAt(coord).name, localalloc) catch err.wat();
             } else if (state.dungeon.at(coord).type != .Wall) {
                 const material = state.dungeon.at(coord).material;
                 focus = .Surface;
                 switch (state.dungeon.at(coord).type) {
-                    .Wall => name.fmt("{s} wall", .{material.name}),
-                    .Floor => name.fmt("{s} floor", .{material.name}),
-                    .Lava => name.appendSlice("lava") catch err.wat(),
-                    .Water => name.appendSlice("water") catch err.wat(),
+                    .Wall => {
+                        name.appendBytes(material.name, localalloc) catch err.wat();
+                        name.appendBytes(" wall", localalloc) catch err.wat();
+                    },
+                    .Floor => {
+                        name.appendBytes(material.name, localalloc) catch err.wat();
+                        name.appendBytes(" floor", localalloc) catch err.wat();
+                    },
+                    .Lava => name.appendBytes("lava", localalloc) catch err.wat(),
+                    .Water => name.appendBytes("water", localalloc) catch err.wat(),
                 }
             }
 
-            if (name.len > 0) {
-                const existing = utils.findFirstNeedlePtr(features.items, name, struct {
-                    pub fn func(f: *const FeatureInfo, n: BStr(32)) bool {
-                        return mem.eql(u8, n.constSlice(), f.name.constSlice());
+            if (name.len() > 0) {
+                const existing = utils.findFirstNeedlePtr(features.items, &name, struct {
+                    pub fn func(f: *const FeatureInfo, n: *Strig) bool {
+                        return n.eqToBytes(f.name.bytes());
                     }
                 }.func);
                 if (existing == null) {
@@ -1818,7 +1829,7 @@ fn drawHUD(moblist: []const *Mob) void {
             hud_win.main.setCell(0, y, feature.tile);
             hud_win.main.setCell(0 + 1, y, .{ .fl = .{ .skip = true } });
 
-            _ = hud_win.main.drawTextAtf(0 + 3, y, "$c{s}$.", .{feature.name.constSlice()}, .{});
+            _ = hud_win.main.drawTextAtf(0 + 3, y, "$c{}$.", .{feature.name}, .{});
             if (feature.player) {
                 _ = hud_win.main.drawTextAtf(endx, y, "@", .{}, .{});
             }
