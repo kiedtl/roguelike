@@ -1238,7 +1238,7 @@ pub fn nightCreatureWork(mob: *Mob) void {
             // begin moving to the closest wall.
             if (mob.ai.flag(.WallLover) and state.dungeon.neighboringWalls(mob.coord, true) == 0) {
                 assert(!mob.immobile);
-                var dijk = dijkstra.Dijkstra.init(mob.coord, state.mapgeometry, 9999, state.is_walkable, .{}, state.alloc);
+                var dijk = dijkstra.Dijkstra.init(mob.coord, state.mapgeometry, 255, state.is_walkable, .{}, state.alloc);
                 defer dijk.deinit();
                 while (dijk.next()) |item|
                     if (state.dungeon.neighboringWalls(item, true) > 0) {
