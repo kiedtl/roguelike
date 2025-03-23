@@ -765,16 +765,12 @@ pub fn equipItem(item: Item) bool {
                     return false;
                 }
                 state.player.dequipItem(slot, state.player.coord);
-                state.message(.Inventory, "You drop the {s}.", .{
-                    (old_item.longName() catch err.wat()).constSlice(),
-                });
+                state.message(.Inventory, "You drop the {l}.", .{old_item});
                 state.player.declareAction(.Drop);
             }
 
             state.player.equipItem(slot, item);
-            state.message(.Inventory, "Equipped a {s}.", .{
-                (item.longName() catch err.wat()).constSlice(),
-            });
+            state.message(.Inventory, "Equipped a {l}.", .{item});
             state.player.declareAction(.Use);
         },
         .Ring => |r| {
@@ -800,17 +796,13 @@ pub fn equipItem(item: Item) bool {
 
                 const old_ring = state.player.inventory.equipment(empty_slot.?).*.?;
                 state.player.dequipItem(empty_slot.?, state.player.coord);
-                state.message(.Inventory, "You drop the {s}.", .{
-                    (old_ring.longName() catch err.wat()).constSlice(),
-                });
+                state.message(.Inventory, "You drop the {l}.", .{old_ring});
                 state.player.declareAction(.Drop);
             }
 
             state.player.equipItem(empty_slot.?, item);
             state.player.declareAction(.Use);
-            state.message(.Inventory, "Equipped the {s}.", .{
-                (item.longName() catch err.wat()).constSlice(),
-            });
+            state.message(.Inventory, "Equipped the {l}.", .{item});
         },
         else => unreachable,
     }
@@ -849,8 +841,8 @@ pub fn grabItem() bool {
 
             state.player.inventory.pack.append(item) catch err.wat();
             state.player.declareAction(.Grab);
-            state.message(.Inventory, "Acquired: {s}", .{
-                (state.player.inventory.pack.last().?.longName() catch err.wat()).constSlice(),
+            state.message(.Inventory, "Acquired: {l}", .{
+                state.player.inventory.pack.last().?,
             });
 
             // Delete item on the ground
@@ -1113,9 +1105,7 @@ pub fn dropItem(index: usize, is_inventory: bool) UserActionResult {
             break :b i;
         };
 
-        state.message(.Inventory, "Dropped: {s}.", .{
-            (item.shortName() catch err.wat()).constSlice(),
-        });
+        state.message(.Inventory, "Dropped: {h}.", .{item});
         return .Success;
     } else {
         return .{ .Failure = "No nearby space to drop the item." };

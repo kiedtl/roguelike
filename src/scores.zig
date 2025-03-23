@@ -210,7 +210,7 @@ pub const Info = struct {
         s.inventory_names.reinit(null);
         for (state.player.inventory.pack.constSlice()) |item| {
             s.inventory_ids.append(item.id().?) catch err.wat();
-            s.inventory_names.append(BStr(128).init((item.longName() catch err.wat()).constSlice())) catch err.wat();
+            s.inventory_names.append(BStr(128).initFmt("{l}", .{item})) catch err.wat();
         }
 
         s.equipment.reinit(null);
@@ -221,7 +221,7 @@ pub const Info = struct {
                 .slot_id = @tagName(slot),
                 .slot_name = slot.name(),
                 .id = if (item) |i| i.id().? else "",
-                .name = BStr(128).init(if (item) |i| (i.longName() catch err.wat()).constSlice() else ""),
+                .name = if (item) |i| BStr(128).initFmt("{l}", .{i}) else BStr(128).init(null),
             }) catch err.wat();
         }
 
@@ -376,7 +376,7 @@ pub const Tag = union(enum) {
     pub fn intoString(self: Tag) StackBuffer(u8, 64) {
         return switch (self) {
             .M => |mob| StackBuffer(u8, 64).initFmt("{s}", .{mob.displayName()}),
-            .I => |item| StackBuffer(u8, 64).init((item.shortName() catch err.wat()).constSlice()),
+            .I => |item| StackBuffer(u8, 64).initFmt("{h}", .{item}),
             .W => |wiz| StackBuffer(u8, 64).init(@tagName(wiz)),
             .s => |str| StackBuffer(u8, 64).init(str),
         };

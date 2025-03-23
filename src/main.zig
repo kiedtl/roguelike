@@ -416,9 +416,7 @@ fn readInput() !bool {
                     '\'' => {
                         state.player.swapWeapons();
                         if (state.player.inventory.equipment(.Weapon).*) |weapon| {
-                            state.message(.Inventory, "Now wielding a {s}.", .{
-                                (weapon.longName() catch err.wat()).constSlice(),
-                            });
+                            state.message(.Inventory, "Now wielding a {l}.", .{weapon});
                         } else {
                             state.message(.Inventory, "You aren't wielding anything now.", .{});
                         }

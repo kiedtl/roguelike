@@ -14,6 +14,7 @@ const LinkedList = @import("list.zig").LinkedList;
 const RingBuffer = @import("ringbuffer.zig").RingBuffer;
 const StackBuffer = @import("buffer.zig").StackBuffer;
 const BStr = @import("utils.zig").BStr;
+const Strig = @import("strig").Strig;
 
 const ai = @import("ai.zig");
 const alert = @import("alert.zig");
@@ -3043,10 +3044,8 @@ pub const Mob = struct { // {{{
     }
 
     pub fn throwItem(self: *Mob, item: *const Item, at: Coord, alloc: mem.Allocator) void {
-        const item_name = (item.*.shortName() catch err.wat()).constSlice();
-
         self.declareAction(.Throw);
-        state.messageAboutMob(self, self.coord, .Info, "throw a {s}!", .{item_name}, "throws a {s}!", .{item_name});
+        state.messageAboutMob(self, self.coord, .Info, "throw a {h}!", .{item}, "throws a {h}!", .{item});
 
         if (self == state.player) {
             scores.recordTaggedUsize(.ItemsThrown, .{ .I = item.* }, 1);
@@ -3070,7 +3069,7 @@ pub const Mob = struct { // {{{
                     const land_chance = combat.chanceOfMissileLanding(mob);
                     const evade_chance = combat.chanceOfAttackEvaded(mob, null);
                     if (dodgeable and (!rng.percent(land_chance) or rng.percent(evade_chance))) {
-                        state.messageAboutMob(mob, self.coord, .CombatUnimportant, "dodge the {s}.", .{item_name}, "dodges the {s}.", .{item_name});
+                        state.messageAboutMob(mob, self.coord, .CombatUnimportant, "dodge the {h}.", .{item}, "dodges the {h}.", .{item});
                         continue; // Evaded, onward!
                     } else {
                         //state.messageAboutMob(mob, self.coord, .Combat, "are hit by the {s}.", .{item_name}, "is hit by the {s}.", .{item_name});
@@ -5568,54 +5567,70 @@ pub const Item = union(ItemType) {
         return cell;
     }
 
-    // FIXME: can't we just return the constSlice() of the stack buffer?
-    pub fn shortName(self: *const Item) !StackBuffer(u8, 64) {
-        var buf = StackBuffer(u8, 64).init(&([_]u8{0} ** 64));
-        var fbs = std.io.fixedBufferStream(buf.slice());
-        switch (self.*) {
-            .Ring => |r| try fmt.format(fbs.writer(), "*{s}", .{r.name}),
-            .Consumable => |p| try fmt.format(fbs.writer(), "{s}", .{p.name}),
-            .Vial => |v| try fmt.format(fbs.writer(), "♪{s}", .{v.name()}),
-            .Key => try fmt.format(fbs.writer(), "stair key", .{}),
-            .Projectile => |p| try fmt.format(fbs.writer(), "{s}", .{p.name}),
-            .Armor => |a| try fmt.format(fbs.writer(), "]{s}", .{a.name}),
-            .Cloak => |c| try fmt.format(fbs.writer(), "clk of {s}", .{c.name}),
-            .Head => |c| try fmt.format(fbs.writer(), "{s}", .{c.name}),
-            .Shoe => |c| try fmt.format(fbs.writer(), "{s}", .{c.name}),
-            .Aux => |c| try fmt.format(fbs.writer(), "[{s}", .{c.name}),
-            .Weapon => |w| try fmt.format(fbs.writer(), "){s}", .{w.name}),
-            .Boulder => |b| try fmt.format(fbs.writer(), "•{s} of {s}", .{ b.chunkName(), b.name }),
-            .Prop => |b| try fmt.format(fbs.writer(), "{s}", .{b.name}),
-            .Evocable => |v| try fmt.format(fbs.writer(), "}}{s}", .{v.name}),
+    pub fn format(self: *const Item, comptime f: []const u8, _: fmt.FormatOptions, writer: anytype) !void {
+        comptime var func = &shortNameWrite;
+
+        if (comptime mem.eql(u8, f, "l")) {
+            func = longNameWrite;
+        } else if (comptime mem.eql(u8, f, "h")) {
+            // Already shortNameWrite by default...
+        } else if (comptime mem.eql(u8, f, "")) {
+            @compileError("Must specify long or short name for item.");
+        } else {
+            @compileError("Unknown format string: '" ++ f ++ "'");
         }
-        buf.resizeTo(@as(usize, @intCast(fbs.getPos() catch err.wat())));
-        return buf;
+
+        try (func)(self, writer);
     }
 
-    // FIXME: can't we just return the constSlice() of the stack buffer?
-    pub fn longName(self: *const Item) !StackBuffer(u8, 128) {
-        var buf = StackBuffer(u8, 128).init(&([_]u8{0} ** 128));
-        var fbs = std.io.fixedBufferStream(buf.slice());
-        switch (self.*) {
-            .Ring => |r| try fmt.format(fbs.writer(), "ring of {s}", .{r.name}),
-            .Consumable => |p| try fmt.format(fbs.writer(), "{s}", .{p.name}),
-            .Vial => |v| try fmt.format(fbs.writer(), "vial of {s}", .{v.name()}),
-            .Key => |k| try fmt.format(fbs.writer(), "stair key ({s})", .{
-                state.levelinfo[k.level].name,
-            }),
-            .Projectile => |p| try fmt.format(fbs.writer(), "{s}", .{p.name}),
-            .Armor => |a| try fmt.format(fbs.writer(), "{s}", .{a.name}),
-            .Cloak => |c| try fmt.format(fbs.writer(), "cloak of {s}", .{c.name}),
-            .Head => |c| try fmt.format(fbs.writer(), "{s}", .{c.name}),
-            .Shoe => |c| try fmt.format(fbs.writer(), "{s}", .{c.name}),
-            .Aux => |c| try fmt.format(fbs.writer(), "{s}", .{c.name}),
-            .Weapon => |w| try fmt.format(fbs.writer(), "{s}", .{w.name}),
-            .Boulder => |b| try fmt.format(fbs.writer(), "{s} of {s}", .{ b.chunkName(), b.name }),
-            .Prop => |b| try fmt.format(fbs.writer(), "{s}", .{b.name}),
-            .Evocable => |v| try fmt.format(fbs.writer(), "{s}", .{v.name}),
-        }
-        buf.resizeTo(@as(usize, @intCast(fbs.getPos() catch err.wat())));
-        return buf;
+    pub fn shortName(self: *const Item, alloc: mem.Allocator) Strig {
+        var str = Strig.empty;
+        self.shortNameWrite(str.writer(alloc));
+        return str;
+    }
+
+    pub fn shortNameWrite(self: *const Item, wri: anytype) @TypeOf(wri).Error!void {
+        try (switch (self.*) {
+            .Ring => |r| wri.print("*{s}", .{r.name}),
+            .Consumable => |p| wri.print("{s}", .{p.name}),
+            .Vial => |v| wri.print("♪{s}", .{v.name()}),
+            .Key => wri.print("stair key", .{}),
+            .Projectile => |p| wri.print("{s}", .{p.name}),
+            .Armor => |a| wri.print("]{s}", .{a.name}),
+            .Cloak => |c| wri.print("clk of {s}", .{c.name}),
+            .Head => |c| wri.print("{s}", .{c.name}),
+            .Shoe => |c| wri.print("{s}", .{c.name}),
+            .Aux => |c| wri.print("[{s}", .{c.name}),
+            .Weapon => |w| wri.print("){s}", .{w.name}),
+            .Boulder => |b| wri.print("•{s} of {s}", .{ b.chunkName(), b.name }),
+            .Prop => |b| wri.print("{s}", .{b.name}),
+            .Evocable => |v| wri.print("}}{s}", .{v.name}),
+        });
+    }
+
+    pub fn longName(self: *const Item, alloc: mem.Allocator) Strig {
+        var str = Strig.empty;
+        self.longtNameWrite(str.writer(alloc));
+        return str;
+    }
+
+    pub fn longNameWrite(self: *const Item, wri: anytype) @TypeOf(wri).Error!void {
+        try (switch (self.*) {
+            .Ring => |r| wri.print("ring of {s}", .{r.name}),
+            .Consumable => |p| wri.print("{s}", .{p.name}),
+            .Vial => |v| wri.print("vial of {s}", .{v.name()}),
+            .Key => |k| wri.print("stair key ({s})", .{state.levelinfo[k.level].name}),
+            .Projectile => |p| wri.print("{s}", .{p.name}),
+            .Armor => |a| wri.print("{s}", .{a.name}),
+            .Cloak => |c| wri.print("cloak of {s}", .{c.name}),
+            .Head => |c| wri.print("{s}", .{c.name}),
+            .Shoe => |c| wri.print("{s}", .{c.name}),
+            .Aux => |c| wri.print("{s}", .{c.name}),
+            .Weapon => |w| wri.print("{s}", .{w.name}),
+            .Boulder => |b| wri.print("{s} of {s}", .{ b.chunkName(), b.name }),
+            .Prop => |b| wri.print("{s}", .{b.name}),
+            .Evocable => |v| wri.print("{s}", .{v.name}),
+        });
     }
 
     pub fn id(self: Item) ?[]const u8 {

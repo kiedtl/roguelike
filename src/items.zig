@@ -251,6 +251,7 @@ pub const HOLY_ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 10, .i = .{ .X = &DispelUndeadAux } },
     .{ .w = 5, .i = .{ .r = CondemnationRing } },
     .{ .w = 5, .i = .{ .r = ConcentrationRing } },
+    .{ .w = 5, .i = .{ .r = ProtectionRing } },
 };
 pub const UNHOLY_ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 99, .i = .{ .c = &GoldOrbConsumable } },
@@ -289,6 +290,7 @@ pub const RINGS = [_]ItemTemplate{
     //
     // .{ .w = 9, .i = .{ .r = CondemnationRing } },
     // .{ .w = 2, .i = .{ .r = ConcentrationRing } },
+    // .{ .w = 2, .i = .{ .r = ProtectionRing } },
 };
 pub const NIGHT_RINGS = [_]ItemTemplate{
     .{ .w = 9, .i = .{ .r = ExcisionRing } },
@@ -1350,6 +1352,18 @@ pub const ExclusionRing = Ring{ // {{{
                 }
             }
 
+            return true;
+        }
+    }.f,
+}; // }}}
+
+pub const ProtectionRing = Ring{ // {{{
+    .name = "protection",
+    .required_MP = 3,
+    .effect = struct {
+        pub fn f() bool {
+            // Placeholder
+            state.message(.Info, "You smell cooked mushrooms in the distance.", .{});
             return true;
         }
     }.f,

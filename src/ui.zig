@@ -1226,9 +1226,7 @@ fn _getMonsDescription(self: *Console, starty: usize, mob: *Mob, linewidth: usiz
 fn _getItemDescription(self: *Console, starty: usize, item: Item, linewidth: usize) usize {
     var y = starty;
 
-    const shortname = (item.shortName() catch err.wat()).constSlice();
-
-    y += self.drawTextAtf(0, y, "$c{s}$.", .{shortname}, .{});
+    y += self.drawTextAtf(0, y, "$c{h}$.", .{item}, .{});
 
     const itemtype: []const u8 = switch (item) {
         .Ring => "ring",
@@ -1733,7 +1731,8 @@ fn drawHUD(moblist: []const *Mob) void {
         defer features.deinit();
         defer for (features.items) |f| f.name.deinit(localalloc);
 
-        var dijk: dijkstra.Dijkstra = undefined; dijk.init(
+        var dijk: dijkstra.Dijkstra = undefined;
+        dijk.init(
             state.player.coord,
             state.mapgeometry,
             @intCast(state.player.stat(.Vision)),
@@ -1751,10 +1750,7 @@ fn drawHUD(moblist: []const *Mob) void {
             if (state.dungeon.itemsAt(coord).len > 0) {
                 const item = state.dungeon.itemsAt(coord).last().?;
                 if (item != .Vial and item != .Prop and item != .Boulder) {
-                    name.appendBytes(
-                        (item.shortName() catch err.wat()).constSlice(),
-                        localalloc,
-                    ) catch err.wat();
+                    item.shortNameWrite(name.writer(localalloc)) catch err.wat();
                 }
                 priority = 3;
                 focus = .Item;
@@ -2335,7 +2331,8 @@ pub const ChooseCellOpts = struct {
                     pub fn f(targeter: Targeter, _: bool, coord: Coord, buf: *Result.AList) Error!void {
                         // First do the squares that the player can see
                         {
-                            var dijk: dijkstra.Dijkstra = undefined; dijk.init(coord, state.mapgeometry, targeter.AoE1.dist, state.is_walkable, targeter.AoE1.opts, state.alloc);
+                            var dijk: dijkstra.Dijkstra = undefined;
+                            dijk.init(coord, state.mapgeometry, targeter.AoE1.dist, state.is_walkable, targeter.AoE1.opts, state.alloc);
                             defer dijk.deinit();
 
                             while (dijk.next()) |child| if (state.player.cansee(child)) {
@@ -2347,7 +2344,8 @@ pub const ChooseCellOpts = struct {
 
                         // ...And now the squares the player can't see
                         {
-                            var dijk: dijkstra.Dijkstra = undefined; dijk.init(coord, state.mapgeometry, targeter.AoE1.dist, struct {
+                            var dijk: dijkstra.Dijkstra = undefined;
+                            dijk.init(coord, state.mapgeometry, targeter.AoE1.dist, struct {
                                 pub fn f(c: Coord, opts: state.IsWalkableOptions) bool {
                                     if (state.player.cansee(c)) return state.is_walkable(c, opts);
                                     return true;
@@ -3709,10 +3707,9 @@ pub fn drawInventoryScreen() bool {
             y = 0;
             y += inv_win.drawTextAt(0, y, "$cInventory:$.", .{});
             for (state.player.inventory.pack.constSlice(), 0..) |item, i| {
-                const name = (item.longName() catch err.wat()).constSlice();
                 const color = if (i == chosen and chosen_itemlist == .Pack) colors.LIGHT_CONCRETE else colors.GREY;
                 const arrow = if (i == chosen and chosen_itemlist == .Pack) ">" else " ";
-                y += inv_win.drawTextAtf(0, y, "{s} {s}", .{ arrow, name }, .{ .fg = color });
+                y += inv_win.drawTextAtf(0, y, "{s} {l}", .{ arrow, item }, .{ .fg = color });
                 inv_win.addClickableTextBoth(.{ .Signal = mouse_ctr });
                 mouse_ctr += 1;
             }
@@ -3726,8 +3723,7 @@ pub fn drawInventoryScreen() bool {
                 const color = if (i == chosen and chosen_itemlist == .Equip) colors.LIGHT_CONCRETE else colors.GREY;
 
                 if (state.player.inventory.equipment(slot).*) |item| {
-                    const name = (item.longName() catch unreachable).constSlice();
-                    y += inv_win.drawTextAtf(startx, y, "{s} {s: >6}: {s}", .{ arrow, slot.name(), name }, .{ .fg = color });
+                    y += inv_win.drawTextAtf(startx, y, "{s} {s: >6}: {l}", .{ arrow, slot.name(), item }, .{ .fg = color });
                 } else {
                     y += inv_win.drawTextAtf(startx, y, "{s} {s: >6}:", .{ arrow, slot.name() }, .{ .fg = color });
                 }
@@ -4233,9 +4229,7 @@ pub fn drawItemChoicePrompt(comptime fmt: []const u8, args: anytype, items: []co
     }
 
     for (items) |item| {
-        const itemname = item.longName() catch err.wat();
-        const string = state.alloc.alloc(u8, itemname.len) catch err.wat();
-        std.mem.copy(u8, string, itemname.constSlice());
+        const string = std.fmt.allocPrint(state.alloc, "{l}", .{item}) catch err.oom();
         namebuf.append(string) catch err.wat();
     }
 
