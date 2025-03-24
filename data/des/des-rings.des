@@ -153,3 +153,10 @@ it.
 
 
 $cDuration:$. The sigils will last for $bWillpower * 2$. turns.
+
+% protection
+$cEffect:$. Creates 5 sigils of protection on the ground. When stepped on,
+you'll be shielded for a certain duration. The shielding will negate any amount
+of damage, but will be completely expended in the process.
+
+$cDuration:$. The shielding will last for $bWillpower * 2$. turns.

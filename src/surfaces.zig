@@ -396,6 +396,7 @@ pub const MACHINES = [_]Machine{
     Drain,
     FirstAidStation,
     EtherealBarrier,
+    ProtectionSigil,
     CombatDummyRepairLever,
     FireTestLever,
     Sparkplug,
@@ -1197,7 +1198,7 @@ pub const FirstAidStation = Machine{
 pub const EtherealBarrier = Machine{
     .id = "sigil_exclusion",
     .name = "sigil of exclusion",
-    .powered_tile = ':',
+    .powered_tile = '8',
     .unpowered_tile = ' ',
     .powered_fg = colors.AQUAMARINE,
     .power = 100, // Always powered
@@ -1239,6 +1240,32 @@ pub const EtherealBarrier = Machine{
                     machine.last_interaction = null;
                     machine.powered_walkable = true;
                     machine.powered_fg = colors.PALE_VIOLET_RED;
+                }
+            }
+        }
+    }.f,
+};
+
+pub const ProtectionSigil = Machine{
+    .id = "sigil_protection",
+    .name = "sigil of protection",
+    .powered_tile = ':',
+    .unpowered_tile = ':',
+    .powered_fg = colors.AQUAMARINE,
+    .unpowered_fg = colors.AQUAMARINE,
+    .power_drain = 100,
+    .powered_walkable = true,
+    .unpowered_walkable = true,
+
+    .on_power = struct {
+        fn f(machine: *Machine) void {
+            if (machine.last_interaction) |mob| {
+                if (!mob.hasStatus(.Protected)) {
+                    const duration: usize = @intCast(mob.stat(.Willpower) * 2);
+                    mob.addStatus(.Protected, 0, .{ .Tmp = duration });
+                    ui.Animation.apply(.{ .PopChar = .{ .coord = mob.coord, .char = ':', .delay = 90 } });
+                    machine.disabled = true;
+                    state.dungeon.at(machine.coord).surface = null;
                 }
             }
         }

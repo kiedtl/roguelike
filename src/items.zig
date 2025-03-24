@@ -801,7 +801,8 @@ pub const SymbolEvoc = Evocable{
             var coordlist = types.CoordArrayList.init(state.alloc);
             defer coordlist.deinit();
 
-            var dijk: dijkstra.Dijkstra = undefined; dijk.init(dest, state.mapgeometry, DIST, state.is_walkable, OPTS, state.alloc);
+            var dijk: dijkstra.Dijkstra = undefined;
+            dijk.init(dest, state.mapgeometry, DIST, state.is_walkable, OPTS, state.alloc);
             defer dijk.deinit();
 
             while (dijk.next()) |child|
@@ -911,7 +912,8 @@ pub const DistractionRing = Ring{ // {{{
             const RADIUS = 4;
 
             var anim_buf = StackBuffer(Coord, (RADIUS * 2) * (RADIUS * 2)).init(null);
-            var dijk: dijkstra.Dijkstra = undefined; dijk.init(state.player.coord, state.mapgeometry, RADIUS, state.is_walkable, .{ .ignore_mobs = true, .only_if_breaks_lof = true }, state.alloc);
+            var dijk: dijkstra.Dijkstra = undefined;
+            dijk.init(state.player.coord, state.mapgeometry, RADIUS, state.is_walkable, .{ .ignore_mobs = true, .only_if_breaks_lof = true }, state.alloc);
             defer dijk.deinit();
             while (dijk.next()) |coord2| {
                 if (utils.getHostileAt(state.player, coord2)) |hostile| {
@@ -1362,8 +1364,36 @@ pub const ProtectionRing = Ring{ // {{{
     .required_MP = 3,
     .effect = struct {
         pub fn f() bool {
-            // Placeholder
-            state.message(.Info, "You smell cooked mushrooms in the distance.", .{});
+            var coords = StackBuffer(Coord, 5).init(null);
+            var dijk: dijkstra.Dijkstra = undefined;
+            dijk.init(state.player.coord, state.mapgeometry, 3, struct {
+                pub fn f(c: Coord, _: state.IsWalkableOptions) bool {
+                    return state.dungeon.at(c).surface == null and
+                        state.dungeon.at(c).type == .Floor;
+                }
+            }.f, .{}, state.alloc);
+            defer dijk.deinit();
+            while (dijk.next()) |c| coords.append(c) catch break;
+
+            for (coords.constSlice()) |coord| {
+                var machine = surfaces.ProtectionSigil;
+                machine.coord = coord;
+                state.machines.append(machine) catch err.wat();
+                const machineptr = state.machines.last().?;
+                state.dungeon.at(coord).surface = SurfaceItem{ .Machine = machineptr };
+
+                const items = state.dungeon.itemsAt(coord);
+                var i: usize = 0;
+                while (i < items.len) {
+                    if (state.nextAvailableSpaceForItem(coord, state.alloc)) |new| {
+                        const item = items.orderedRemove(i) catch unreachable;
+                        state.dungeon.itemsAt(new).append(item) catch unreachable;
+                    } else {
+                        i += 1;
+                    }
+                }
+            }
+
             return true;
         }
     }.f,

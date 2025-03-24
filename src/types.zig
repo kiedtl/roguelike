@@ -1256,6 +1256,11 @@ pub const Status = enum {
     FumesVest, // Doesn't have a power field.
     Sceptre, // Doesn't have a power field.
 
+    // Single round of damage is completely negated.
+    //
+    // Doesn't have a power field (but should).
+    Protected,
+
     // Immunity to ground effects.
     //
     // Doesn't have a power field.
@@ -3840,6 +3845,16 @@ pub const Mob = struct { // {{{
                 if (enemyrec.mob == attacker) {
                     enemyrec.attacked_me = true;
                 };
+        }
+
+        // Apply protection and return early
+        if (self.hasStatus(.Protected)) {
+            self.cancelStatus(.Protected);
+            ui.Animation.blinkMob(&.{self}, '0', colors.PALE_VIOLET_RED, .{});
+            if (state.player.cansee(self.coord) or (d.by_mob != null and state.player.cansee(d.by_mob.?.coord))) {
+                state.message(.Combat, "{c} ignores the damage. $b*Protected*$.", .{self});
+            }
+            return;
         }
 
         // Record stats
