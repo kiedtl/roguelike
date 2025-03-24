@@ -248,10 +248,11 @@ pub const HOLY_ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 50, .i = .{ .c = &LifeWaterConsumable } },
     .{ .w = 50, .i = .{ .P = &RegeneratePotion } },
     .{ .w = 30, .i = .{ .E = SphereHellfireEvoc } },
-    .{ .w = 10, .i = .{ .X = &DispelUndeadAux } },
     .{ .w = 5, .i = .{ .r = CondemnationRing } },
     .{ .w = 5, .i = .{ .r = ConcentrationRing } },
     .{ .w = 5, .i = .{ .r = ProtectionRing } },
+    .{ .w = 4, .i = .{ .X = &DispelUndeadAux } },
+    .{ .w = 4, .i = .{ .H = &MagaltMask } },
 };
 pub const UNHOLY_ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 99, .i = .{ .c = &GoldOrbConsumable } },
@@ -439,6 +440,13 @@ pub const InsulatedMask = Headgear{
 pub const SilusMask = Headgear{
     .id = "head_mask_silus",
     .name = "silus mask",
+    .resists = .{ .rFire = 25 },
+};
+
+pub const MagaltMask = Headgear{
+    .id = "head_mask_magalt",
+    .name = "magalt mask",
+    .stats = .{ .Willpower = 2 },
     .resists = .{ .rFire = 25 },
 };
 
