@@ -2770,7 +2770,8 @@ pub fn placeMob(
         const squad = Squad.allocNew();
 
         while (i > 0) : (i -= 1) {
-            var dijk: dijkstra.Dijkstra = undefined; dijk.init(coord, state.mapgeometry, 3, state.is_walkable, .{ .right_now = true }, alloc);
+            var dijk: dijkstra.Dijkstra = undefined;
+            dijk.init(coord, state.mapgeometry, 3, state.is_walkable, .{ .right_now = true }, alloc);
             defer dijk.deinit();
 
             const s_coord = while (dijk.next()) |child| {

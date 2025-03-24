@@ -159,7 +159,8 @@ pub const Dijkstra = struct {
 test "Dijkstra visits each cell once" {
     var buf: [HEIGHT][WIDTH]usize = @splat(@splat(0));
 
-    var dijk = Dijkstra.init(
+    var dijk: Dijkstra = undefined;
+    dijk.init(
         Coord.new(HEIGHT / 2, WIDTH / 2),
         state.mapgeometry,
         @max(HEIGHT, WIDTH),
