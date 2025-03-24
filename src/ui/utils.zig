@@ -13,7 +13,7 @@ const err = @import("../err.zig");
 
 pub const HolinessFormatter = struct {
     pub fn dewIt(self: @This()) bool {
-        return self.getHoliness() < 0;
+        return self.getHoliness() != 0;
     }
 
     pub fn format(self: *const @This(), comptime f: []const u8, _: fmt.FormatOptions, writer: anytype) !void {
@@ -21,8 +21,8 @@ pub const HolinessFormatter = struct {
 
         if (self.dewIt()) {
             const val = self.getHoliness();
-            const str = if (val < 0) "$r$~ UNCLEAN $." else err.wat();
-            const clr = if (val < 0) 'p' else err.wat();
+            const str = if (val < 0) "$r$~ UNCLEAN $." else if (val > 0) "$b$~ CLEAN $." else err.wat();
+            const clr = if (val < 0) @as(u21, 'p') else if (val > 0) 'b' else err.wat();
             try fmt.format(writer, "$cHoliness: $. ${u}{} {s}\n", .{ clr, val, str });
         }
     }

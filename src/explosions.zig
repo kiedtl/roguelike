@@ -19,6 +19,7 @@ const StackBuffer = @import("buffer.zig").StackBuffer;
 const Mob = types.Mob;
 const DamageStr = types.DamageStr;
 const Coord = types.Coord;
+const CoordArrayList = types.CoordArrayList;
 const Direction = types.Direction;
 const Tile = types.Tile;
 const DIRECTIONS = types.DIRECTIONS;
@@ -187,6 +188,9 @@ pub const ExplosionOpts = struct {
 
     // Whether to pulverise the player if the blast hits them. The only time
     // this should be true is when the explosion was created with a wizkey.
+    //
+    // EDIT 2025-03-24: ...and when shrines explode
+    //
     spare_player: bool = false,
 
     // Who created the explosion, and is thus responsible for the damage to mobs?
@@ -197,7 +201,6 @@ pub const ExplosionOpts = struct {
 //
 // TODO: throw mobs backward
 // TODO: throw shrapnel at nearby mobs
-// TODO: take armour into account when giving damage
 //
 pub fn kaboom(ground0: Coord, opts: ExplosionOpts) void {
     const S = struct {
@@ -242,35 +245,52 @@ pub fn kaboom(ground0: Coord, opts: ExplosionOpts) void {
         fov.rayCastOctants(ground0, (s / 100), s, S._opacityFunc, &result, deg, deg + 31);
     }
 
-    var animation_coords = StackBuffer(Coord, 256).init(null);
+    var coords = CoordArrayList.init(state.alloc);
+    defer coords.deinit();
 
+    // Get list of coords affected, so that we can process animations before
+    // we apply any effects.
+    //
     result[ground0.y][ground0.x] = 100; // Ground zero is always harmed
     for (result, 0..) |row, y| for (row, 0..) |cell, x| {
         // Leave edge of map alone.
         if (y == 0 or x == 0 or y == (HEIGHT - 1) or x == (WIDTH - 1)) {
             continue;
+        } else if (cell == 0) {
+            continue;
         }
 
-        if (cell > 0) {
-            const coord = Coord.new2(ground0.z, x, y);
+        coords.append(Coord.new2(ground0.z, x, y)) catch err.wat();
+    };
 
-            animation_coords.append(coord) catch {};
+    // Do animation before damage, otherwise the damage animations appear
+    // before and it just looks weird.
+    ui.Animation.blink(coords.items, '#', colors.PALE_VIOLET_RED, .{}).apply();
 
-            const max_range = @max(1, opts.strength / 100);
-            const chance_for_fire = 100 - (coord.distance(ground0) * 100 / max_range);
-            if (rng.percent(chance_for_fire)) {
-                fire.setTileOnFire(coord, null);
-            }
+    // Do fire and object removal next
+    //
+    // Otherwise fire slowly "spreads" from top to bottom as mobs take damage
+    // and again, it just looks weird.
+    for (coords.items) |coord| {
+        const max_range = @max(1, opts.strength / 100);
+        const chance_for_fire = 100 - (coord.distance(ground0) * 100 / max_range);
+        if (rng.percent(chance_for_fire)) {
+            fire.setTileOnFire(coord, null);
+        }
 
-            if (state.dungeon.at(coord).surface) |surface| switch (surface) {
-                .Corpse, .Poster, .Prop, .Machine => surface.destroy(coord),
-                else => {},
-            };
+        if (state.dungeon.at(coord).surface) |surface| switch (surface) {
+            .Corpse, .Poster, .Prop, .Machine => surface.destroy(coord),
+            else => {},
+        };
 
-            if (state.dungeon.at(coord).type == .Wall)
-                state.dungeon.at(coord).type = .Floor;
+        if (state.dungeon.at(coord).type == .Wall)
+            state.dungeon.at(coord).type = .Floor;
+    }
 
-            if (state.dungeon.at(coord).mob) |unfortunate| {
+    // Finally, the damage
+    for (coords.items) |coord| {
+        if (state.dungeon.at(coord).mob) |unfortunate|
+            if (unfortunate != state.player or !opts.spare_player)
                 unfortunate.takeDamage(.{
                     .amount = 3,
                     .by_mob = opts.culprit,
@@ -284,9 +304,5 @@ pub fn kaboom(ground0: Coord, opts: ExplosionOpts) void {
                         items._dmgstr(300, "grinds", "grinds", " to powder"),
                     },
                 });
-            }
-        }
-    };
-
-    ui.Animation.blink(animation_coords.constSlice(), '#', colors.PALE_VIOLET_RED, .{}).apply();
+    }
 }

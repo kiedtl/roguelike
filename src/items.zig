@@ -1198,6 +1198,7 @@ pub const DeceptionRing = Ring{ // {{{
 
 pub const CondemnationRing = Ring{ // {{{
     .name = "condemnation",
+    .resists = .{ .rHoly = 1 },
     .required_MP = 5,
     .requires_uncorrupt = true,
     .requires_nounholy = true,
@@ -1232,6 +1233,7 @@ pub const ConcentrationRing = Ring{ // {{{
     .name = "concentration",
     .required_MP = 1,
     .stats = .{ .Willpower = 1 },
+    .resists = .{ .rHoly = 1 },
     .requires_nopain = true,
     .requires_uncorrupt = true,
     .requires_nounholy = true,
@@ -1370,6 +1372,7 @@ pub const ExclusionRing = Ring{ // {{{
 pub const ProtectionRing = Ring{ // {{{
     .name = "protection",
     .required_MP = 3,
+    .resists = .{ .rHoly = 1 },
     .effect = struct {
         pub fn f() bool {
             var coords = StackBuffer(Coord, 5).init(null);
@@ -1561,6 +1564,7 @@ pub const LifeBreadConsumable = Consumable{
     .effects = &[_]Consumable.Effect{
         .{ .MaxHP = 3 },
         .{ .Stat = .{ .s = .Potential, .change = -5 } },
+        .{ .Resist = .{ .r = .rHoly, .change = 1 } },
     },
     .color = 0xba9510,
     .verbs_player = &[_][]const u8{"eat"},
@@ -1577,6 +1581,7 @@ pub const LifeWaterConsumable = Consumable{
         .{ .CureStatus = .Pain }, // Nice to have
         .{ .CureStatus = .Exhausted }, // Nice to have
         .{ .CureStatus = .Nausea }, // Thematic :P
+        .{ .Resist = .{ .r = .rHoly, .change = 1 } },
     },
     .color = colors.DARK_GREEN,
     .is_potion = true,
@@ -1697,6 +1702,7 @@ pub const RegeneratePotion = Consumable{
     .effects = &[_]Consumable.Effect{
         .{ .MaxMP = 2 },
         .{ .Stat = .{ .s = .Potential, .change = -10 } },
+        .{ .Resist = .{ .r = .rHoly, .change = 1 } },
         .RegenerateMP,
     },
     .is_potion = true,

@@ -1050,6 +1050,10 @@ pub const Shrine = Machine{
 
                 if (state.shrines_in_lockdown[state.player.coord.z]) {
                     return false;
+                } else if (state.player.resistance(.rHoly) > 0 and rng.percent(70)) {
+                    state.message(.Drain, "The shrine explodes!", .{});
+                    explosions.kaboom(self.coord, .{ .strength = 500, .spare_player = true });
+                    return true;
                 }
 
                 state.player.max_MP += if (state.player.hasStatus(.Absorbing)) @as(usize, 5) else 2;
