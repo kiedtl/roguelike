@@ -1,7 +1,6 @@
 const std = @import("std");
 const sort = std.sort;
 const assert = std.debug.assert;
-const testing = std.testing;
 const math = std.math;
 const meta = std.meta;
 const mem = std.mem;
@@ -33,6 +32,8 @@ const CARDINAL_DIRECTIONS = types.CARDINAL_DIRECTIONS;
 const StackBuffer = buffer.StackBuffer;
 // const Generator = @import("generators.zig").Generator;
 // const GeneratorCtx = @import("generators.zig").GeneratorCtx;
+
+pub const testing = @import("utils/testing.zig");
 
 pub fn is(comptime id: std.builtin.TypeId) fn (type) bool {
     const Closure = struct {
@@ -247,7 +248,7 @@ pub fn countFmt(comptime fmt: []const u8, args: anytype) u64 {
 }
 
 test "countFmt" {
-    try testing.expectEqual(countFmt("$.$~$C$.foo$.", .{}), 3);
+    try std.testing.expectEqual(countFmt("$.$~$C$.foo$.", .{}), 3);
 }
 
 pub fn getFarthestWalkableCoord(d: Direction, coord: Coord, opts: state.IsWalkableOptions) Coord {
@@ -713,23 +714,23 @@ test "copy" {
 
     // []const u8 => *[32:0]u8
     copyZ(&one, "Hello, world!");
-    try testing.expect(mem.eql(u8, used(&one), "Hello, world!"));
+    try std.testing.expect(mem.eql(u8, used(&one), "Hello, world!"));
 
     // []const u8 => *[32:0]u8
     copyZ(&two, "This is a test!");
-    try testing.expect(mem.eql(u8, used(&two), "This is a test!"));
+    try std.testing.expect(mem.eql(u8, used(&two), "This is a test!"));
 
     // *[32:0]u8 => *[32:0]u8
     copyZ(&one, &two);
-    try testing.expect(mem.eql(u8, used(&one), "This is a test!"));
+    try std.testing.expect(mem.eql(u8, used(&one), "This is a test!"));
 
     // *[32:0]u8 => []u8
     copyZ(&three, &one);
-    try testing.expectEqualSlices(u8, &three, "This is a test!");
+    try std.testing.expectEqualSlices(u8, &three, "This is a test!");
 
     // []u8 => []u8
     copyZ(&three, "str is 15 chars");
-    try testing.expectEqualSlices(u8, &three, "str is 15 chars");
+    try std.testing.expectEqualSlices(u8, &three, "str is 15 chars");
 }
 
 // test "folding text" {
