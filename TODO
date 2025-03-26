@@ -385,7 +385,7 @@ headgear:
 - insulated helm:   5% armor            rElec+
 - silus mask:                           rFire+
 - silus hood:      10% armor            rFire+
-- magalt mask:      5% armor            Will+            [holy] Suicide bomb status (hellfire blast)
+- magalt mask:     10% armor            Will+ rFire+
 
 - shadow mask:                 Vision-  Will+1           [Night] Will+2
   - wrong theme (Will+ is for holy faction)
@@ -433,17 +433,19 @@ x ring of condemnation: [holy] instakill undead, at cost of 10 turns held.
   Ancient Mage should have some kind of countermeasure (transform into
   something else? explode into swarm of enemies?)
 
-- ring of fustigation: [holy] undead explode, causing other undead to explode,
+! ring of fustigation: [holy] undead explode, causing other undead to explode,
   chain reaction
   - Explosion only over cardinals... unless disoriented, then it's only
     diagonals
   - will/2-will damage, damage stacks
   - cannot be used while corrupt and target must be undead, doesn't affect
     non-undead
+  - Too "explicit", want more subtle magic...
 
-- ring of abjuration: [holy] mark any living creature (even foe, even death
+! ring of abjuration: [holy] mark any living creature (even foe, even death
   mage) as "dispelling undead" causing any adjacent undead (even allies) to
   take damage
+  - Too "explicit", want more subtle magic...
 
 x ring of deceleration: Adjacent mobs have their attack speeds slowed
   significantly.
@@ -455,8 +457,9 @@ x ring of deceleration: Adjacent mobs have their attack speeds slowed
 
 x ring of retaliation: +Spike and -10% Melee for each adjacent enemy.
 
-- ring of protection: shielding, more effective with increased willpower
-  - also has +Armor% that lasts a bit longer than the shielding
+x ring of protection: creates sigils of protection on ground
+  - Confers "Shielded" that negates first damage that occurs, and nothing afterwards
+  - Sigils disappear after one use
 
 - ring of precognition: 0 MP, +15% evasion, MP drained selectively
   - option: 1 MP each time attacked
@@ -1503,23 +1506,21 @@ x Unholy temple map + faction
   x Visuals
     x New roundish-looking wall sprite
     x Choose green gold colors (unify across particle effects, material, etc)
-  - Shrine mechanics
-    - Holy-themed shrine in temple map ("altar")
-    - Shrines exploding in normal maps
+  x Shrines exploding
   - Items
-    - Ring of fustigation, abjuration
-    - Ring of fortification: +Will
-    - Mark ring of concentration, condemnation as holy
-      - Move them exclusively to Holy temple
-    - Inability to use holy items w/ evil ones equipped
-      - Symbol is destroyed (since it's an item)
-    - Dispel Undead
-    - Bread of life: +max_HP, -Pot
-    - Magalt mask: +Will (see headgear)
-    - Living water: +Will
-    - Potion of regeneration
-      - +2 max_MP (permanent), -10% Potential (permanent)
-      - Fully replenishes MP, regardless of Potential stat
+    x Sanctuary sigils
+    x Ring of protection
+    x Sphere of Hellfire
+    x Mark ring of concentration, condemnation as holy
+      x Move them exclusively to Holy temple
+    x Inability to use holy items w/ evil ones equipped
+    x Dispel Undead
+    x Bread of life: +max_HP, -Pot
+    x Magalt mask: +Will (see headgear)
+    x Living water: +Will
+    x Potion of regeneration
+      x +2 max_MP (permanent), -10% Potential (permanent)
+      x Fully replenishes MP, regardless of Potential stat
   x Angels spells/traits
     x Existing spells
       x Disintegration (punch through walls, same as ring)
@@ -1555,12 +1556,12 @@ x Unholy temple map + faction
     x Sun moth AI
   x Anti-angel spell (20% chance of 2 damage, 10 MP)
     x Add to all earth demons
-  - Angel procgen
+  x Angel procgen
     x Initial generation
     x Sun moth generation
     x Strength rating, tweaking
     x Simulation testing
-    - Descriptions
+    x Descriptions
   x Caverns rework (pt 2)
     x Lava rework
       x Lava -> Glowing water
@@ -1577,10 +1578,10 @@ x Unholy temple map + faction
     x Guaranteed border around map
     x Rock crystal chunks
 - Hunter mechanics
-  - Acid damage, and possible rename
-  - Automatic hunter triggers on 1/Prison, 2/Prison
-  - Simplification: instead of having attack AI for stalker, have them actually
-    transform into sparklings when hunter captain dies
+  - Automatic hunter triggers on 1/Prison, 2/Prison, maybe Lab as well
+  - Stalkers: acid damage, and possible rename ("acid sprites" ?)
+    - Simplification: instead of having attack AI for stalker, have them actually
+      transform into sparklings/acid-sprites when hunter captain dies
 - Fire: don't destroy corpses entirely, only char them
 - More rings
   - Ring of suggestion
@@ -1590,10 +1591,14 @@ x Unholy temple map + faction
   x Ring of exclusion
   x Ring of retaliation
 - Events
+  - Lore quick speeches/monologues
   - Workshop/2 and Workshop/3
     - enh. Emberling, enh. Emberling event
   - Crypt
-    - Ambassador, Revgen (see notes in green notebook)
+    - Ambassador
+    x Revgen (see notes in green notebook)
+  - Shrines: Ancient Mage + Death Knight death squad if all candles extinguished
+  - Lairs: Demolition squad
 - Fix particle effects
   x Shrine-blowup effect (rework, simplify and speedup)
   - Lightning mage static discharge (speedup/rework)
@@ -1632,20 +1637,34 @@ x Fix prisoner hostility issues (with Revgen)
   - Decreased rep for:
     - Killing NC
     - Throwing fire/illuminations potions at NC
+  - Hiding lairs
+    - Doors appear to be concrete/dobalene
+      - Unless aligned w/ NC
+      - Unless adjacent
   - More "ethereal" feeling
-    - When standing on slade, nothing outside lair can be seen (player-only?)
-    - When not on slade, vision into lair is sharply decreased
-    - Night reaper drives enemies insane, then knocks them several tiles into
-      other enemies, then goes on minding its business
-    - When night creatures travel, they "hop" (teleport) from one dark tile to
-      another, only walking if the next dark tile is too far away
+    - Slade
+      - Indestructible by any means
+      - When standing on it, nothing outside lair can be seen (player-only?)
+      - When not on it, vision into lair is sharply decreased
+      - Color dance
+    - Grues
+      - Need to be more terrifying
+      - Always emit blinding/insane gas?
+    - NC travel: "hop" (teleport) from one dark tile to another, only walking
+      if the next dark tile is too far away
   - Items
+    - Item to find and reveal lairs
     - Make illumination/glow potions useful for raiding lairs
       - Aggroes all NC in vicinity
       - Corona/glowing damages NC, causes fleeing if wounded
       - Increased rarity + novel prefab for 7/ and 8/
     - Special, rare NC-blasting items in Shrine/Necropolis/Crypt/Lab
       - Destroys slade tiles, aggroes all NC, instant -10 rep
+  - Armory dedicated to NC destruction
+    - Many of above items
+    - Poster that explains how to do this
+  - Exterminator events
+  - Angel ambush/revenge event (see notes)
 - Necropolis floor
   x Modify level data and spawn files
   - New monsters:
@@ -1756,6 +1775,7 @@ x Fix prisoner hostility issues (with Revgen)
     - Stalking enemy AI
   - Infestation abilities
     - Cherbs/night beatles, actual spell
+      - Idea: Cherbs only cause paralysis but no damage? (from 2022 notes)
     - Winged terrors
     - Ring of Infestation
     - Exterminator specialists
@@ -1773,6 +1793,7 @@ x Fix prisoner hostility issues (with Revgen)
     - (100) Augment [k]: Each blade gets +1 Spikes and -25% Melee.
     - (100) Augment [y]: Blade attacks cause insanity for 1 turn in vulnerable foes.
     - (100) Augment [f]: Blade attacks have minor chance to infest foe.
+    - Causes infestation
 - Revgenunkim pt 2
   - Slime
     - 'slimy' status (knockback in direction of last move + rFire)
@@ -1794,7 +1815,8 @@ x Fix prisoner hostility issues (with Revgen)
   - Cinder Brutes
     - Renaming (to "cinder beast")
     - Unsure if any other changes needed
-- Caverns (pt 3)
+- Angels, Caverns (pt 3)
+  - Crypt event: have angels destroy loot with fireballs
   - Procgen descriptions for fungi
     - Nothing fancy like with angels; each trait should have a piece of text
       that's tacked onto a very basic description.
@@ -1834,6 +1856,7 @@ x Fix prisoner hostility issues (with Revgen)
   - Further counterattack waves
   - Final counter attack with Archmagi
   - Possible Night Creature counterattack event
+    - 2025-03-15: Wouldn't be like them, so most likely no
   - Possible Angel counterattack event
 - Ring identification (only if finalized, just putting it here so I don't forget)
   - Artwork

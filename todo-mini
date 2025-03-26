@@ -1,26 +1,118 @@
+Lore speeches
+- Curse you, @! Traitor! Mendicant!
+  - You were sent here to help us destroy these cave goblins! Not to join them!
+- [to prisoner] Blast you, miserable creature.
+  - I can't wait until the day when we knock all your heads off.
+  - Then I can spend my day on more productive tasks than having to keep an eye
+    on you bastards.
+- ...you? Again? Didn't we recapture you twice already?
+  - Clearly, pain must be something you enjoy.
+- You escaped? AGAIN?
+- Obmirnul? Is that you?
+  - Curse you, traitor. Your breath is a stain on the bones of your father.
+  - Because of you, we are all disfavored in the eyes of our hill-goblins
+    masters.
+  - To them, we are all liable to become turncoats, as you did.
+- [hunter to @] Looking for something?
+- [hunter to @] Did you lose something here?
+  - Maybe we can help you find it.
+- [hunter to @] No no, please, don't worry.
+  - We're not going to capture you again.
+  - We'll just kill you this time.
+  - Slowly.
+- [death mage to @] So, you're the escaped prisoner I've been hearing so much about.
+  - How have you eluded the guards for so long?
+  - These idiot mercenaries and hill-goblins really need to get their act together.
+- You bastard! YOU KILLED MY BROTHER ARBALD!
+  - I'M GOING TO TURN YOU INTO A COLANDER! [bold/italic text]
+  - (Wields a spear, and becomes invigorated + enraged)
+  - (Must be higher levels, so maybe armored guard?)
+- Treachery doesn't pay off, @.
+  - The only reason these filthy cave-goblins like you is because they're more
+    of the same.
+  - They betrayed us and left us helpless in our greatest need.
+  - Now look at them.
+  - And look at you.
+  - Pathetic.
+- ...Obmirnul? Friend of the Earth Demons?
+  - ...what? ...how?
+  - ...
+  - ...I can't even...
+- [guard to companion] Did you hear about Magaren Dorazil?
+  - Other: ?
+  - He was mocking some of the caged Night Creatures in Lab/7.
+  - Then, when he wasn't looking, some of them broke free and tore his head off.
+  - We found it inside a nearby air-duct.
+  - Other: What was he doing on Lab/7?!?
+  - Looking for trouble I guess.
+  - [both exit level]
+- [Insurrection] Hey, look at this.
+  - It's the body of... [checks poster] Magaren Dorazil.
+  - Three days ago, my brother Nath said he saw a night creature here.
+  - When we investigated, we found this body lying mangled in a heap.
+  - I wonder what he did to invite the wrath of the Night.
+  - I hear the invaders were trying to tear up some of sacred lairs in the
+    lower Storage.
+  - Perhaps he was one of them?
+
+Rings
+- Force all visible hostiles to prioritize another visible hostile (e.g.
+  escaped prisoner)
+  - Prisoner: "w..what? why are they all chasing me now?!"
+  - Will-checked (or not?)
+- Protection: creates protection sigils (terrain) on ground
+  - Terrain is trampled into nothingness (or dead moss?)
+  - Anything standing on it is protected for a single instance of damage, no
+    matter how high
+  - Need to think about mechanics, flavor, etc
+
+- Sigil of Damnation
+  - While undead/unclean is on it, angel is summoned (but will disappear if
+    enemy steps off of it)
+- Sigil of Hiding
+  - Hide corpse, make it invisible until it's stepped on enough times (or enough
+    time has passed).
+- Sigil of Disarming
+  - Anything that steps on it will be commanded to drop/throw their weapon. (They
+    can then be assigned a job to re-equip it again later.)
+
+- Opt
+  - Packed coords
+  - TinyAllocator
+
+- Occasions for lore
+  - Meeting player (when alert is low, so probably first occasion)
+  - Meeting player (when alert is higher)
+  - Player seeing guard who's near prisoner
+
+- Italic/bold uxn font for certain lore
+   - Goblin language?
+
 - Visual filters
   - Water: blue filter
   - Bubbling water: green filter
   - Fire: red filter
 
-- Change glyphs for prisoner/sparklings/stalkers around
-- Bottle of fuel
-- Stalker Re-theme to acid sprite?
+- Hulkers reduce max HP as well as causing damage?
 
+Capital: Elegdruinneyl (forest of green stars)
+
+Hookah
+- Guards may occasionally smoke this? (Only if it wouldn't give negative effect
+  to player)
+- Effects for player:
+  - "Disgusting! It was full of cleaning solution!!" -- 1 acid damage (nonlethal)
+  - "Ew! It was full of mold spores!" -- disorientation
+  - "You inhale the fragrant smoke..." -- no effect
+  - "You relax, and suddenly remember parts of the map from before your
+    imprisonment." -- reveal staircase & area nearby
+    - UI: should focus the stair under examine mode.
 
 - Water
   - Restricts vision, along with slade
   - Allows seeing through shallow water though.
   - Causes random movement like in Brogue (implemented in .Water status)? Would be nice.
 
-- Grues should be more scary
-  - Always emit insane gas?
-  - Emit blinding gas as well?
-- Hide lairs behind walls
-  - 50% chance only for there to be a door
-  - If aligned with NC, then you can see through the wall, and can pass through.
-  - Otherwise, you have to get lucky with disintegration.
-    - There will be hints, like in TGGW's "mysterious vein"
 - Workshop
   - Needs to be harder? Still too easy to just pass through massive corridors
   - Chance for alchemist to "end shift" and leave the level. Another alchemist
@@ -28,13 +120,7 @@
   - Coffeebreak rooms (see living dungeon in ~/doc/notes)
 - Spectral items should somehow give MP
     - Visit lairs to instantly fill up on MP?
-- Sigil of Hiding
-  - Hide corpse, make it invisible until it's stepped on enough times (or enough
-    time has passed).
-- Sigil of Disarming
-  - Anything that steps on it will be commanded to drop/throw their weapon. (They
-    can then be assigned a job to re-equip it again later.)
-- Flashing Z on mobs
+
 - Fix Sentry before calling for testers
 
 Rework incineration/ignition potions
@@ -56,9 +142,16 @@ Rework incineration/ignition potions
 - serialization optimizations
   - optimize fov
   - don't serialize path_cache... or maybe we must :(
+    - idea: add "age" to each entry, if older than 100 turns can we get rid of it
+      - the actual pathing code would have to ignore it also.
 
 Done
 ----
+- Sceptre:
+  - 33% chance to turn undead
+  - 33% to shock constructs w/ elec vulnerability
+- Flashing Z on mobs
+- Change glyphs for prisoner/sparklings/stalkers around
 - Just freaking upgrade already.
   x "CLEANUP" tags
   x "MIGRATION" tags
