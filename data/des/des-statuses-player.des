@@ -109,6 +109,10 @@ or evade attacks.
 % player_Disorient
 You are disoriented and can only move diagonally.
 
+% player_Doomed
+You have been marked for destruction by an inexorable supernatural force. It is
+likely you will soon perish.
+
 % player_Enraged
 You are FURIOUS and will deal +50% damage and land hits more often, but evade
 attacks less often.
@@ -138,6 +142,9 @@ You have +25% fire resistance.
 
 % player_Flammable
 You have -25% fire resistance.
+
+% player_Fly
+You are flying for some reason.
 
 % player_Held
 You're stuck and can't move.
@@ -171,6 +178,10 @@ You are paralyzed, and will skip your turns entirely.
 % player_Perceptive
 You can see through any obstacle that isn't 100% opaque, including most gases
 and vision-obstructing terrain.
+
+% player_Protected
+You are shielded from a single round of damage. The protection will then expire,
+regardless of the time left.
 
 % player_Recuperate
 You are slowly regaining HP, at the cost of being able to evade attacks.

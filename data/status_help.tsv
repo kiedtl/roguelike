@@ -11,9 +11,9 @@
 .RingConcentration 	"ring: concentration" 	 "using the Force"     	 -
 .RingObscuration   	"ring: obscuration"   	 "cheating on taxes"   	 -
 .RingDeceleration  	"ring: deceleration"  	 "airbag testing"      	 -
-.RingDeterm        	"ring: determination" 	 "nuh uh"              	 -
+.RingDeterm        	"ring: determination" 	 "power of friendship" 	 -
 .RingDetermEnd     	"ring: -determination"	 "nuh uh"              	 -
-.RingRetaliation   	"ring: retaliation"   	 "nuh uh"              	 -
+.RingRetaliation   	"ring: retaliation"   	 "using the dark side" 	 -
 .DetectHeat        	"detect heat"         	 -                     	 -
 .DetectElec        	"detect electricity"  	 -                     	 -
 .EtherealShield    	"ethereal shield"     	 -                     	 -
@@ -21,6 +21,7 @@
 .FumesVest         	"fuming vest"         	 -                     	 -
 .CopperWeapon      	"copper"              	 -                     	 -
 .Sceptre           	"unholy sceptre"      	 -                     	 -
+.Doomed            	"doomed"              	 -                     	 "doomed"
 .Protected         	"protected"           	 -                     	 "protect"
 .Fly               	"flying"              	 -                     	 -
 .Riposte           	"riposte"             	 -                     	 -

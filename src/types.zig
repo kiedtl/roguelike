@@ -1256,6 +1256,11 @@ pub const Status = enum {
     FumesVest, // Doesn't have a power field.
     Sceptre, // Doesn't have a power field.
 
+    // Summons big nasties to beat the poor mob up.
+    //
+    // Doesn't have a power field (but should).
+    Doomed,
+
     // Single round of damage is completely negated.
     //
     // Doesn't have a power field (but should).
@@ -2028,6 +2033,7 @@ pub const AIJob = struct {
         WRK_WrkstationBusyWork,
         WRK_BuildMob,
         ATK_Homing,
+        ATK_FightOnlyDoomed,
         GRD_LookAround,
         GRD_SweepRoom,
         ALM_PullAlarm,
@@ -2057,6 +2063,7 @@ pub const AIJob = struct {
                 .WRK_BuildMob => ai._Job_WRK_BuildMob,
                 .WRK_WrkstationBusyWork => ai._Job_WRK_WrkstationBusyWork,
                 .ATK_Homing => ai._Job_ATK_Homing,
+                .ATK_FightOnlyDoomed => ai._Job_ATK_FightOnlyDoomed,
                 .GRD_LookAround => ai._Job_GRD_LookAround,
                 .GRD_SweepRoom => ai._Job_GRD_SweepRoom,
                 .ALM_PullAlarm => ai._Job_ALM_PullAlarm,

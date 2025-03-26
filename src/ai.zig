@@ -2138,6 +2138,23 @@ pub fn _Job_ATK_Homing(homer: *Mob, job: *AIJob) AIJob.JStatus {
     return .Ongoing;
 }
 
+pub fn _Job_ATK_FightOnlyDoomed(mob: *Mob, _: *AIJob) AIJob.JStatus {
+    const some_enemies_are_doomed = for (mob.enemyList().items) |enemy| {
+        if (enemy.mob.hasStatus(.Doomed)) break true;
+    } else false;
+
+    if (!some_enemies_are_doomed) {
+        if (state.player.canSeeMob(mob))
+            state.message(.Info, "{c} vanishes into thin air.", .{mob});
+        mob.deinitNoCorpse();
+        return .Complete;
+    }
+
+    (mob.ai.fight_fn)(mob);
+
+    return .Ongoing;
+}
+
 pub fn _Job_GRD_LookAround(mob: *Mob, job: *AIJob) AIJob.JStatus {
     const CTX_TURNS_LEFT_LOOKING = "ctx_turns_left_examining";
     const turns_left = job.ctx.get(usize, CTX_TURNS_LEFT_LOOKING, rng.range(usize, 2, 4));

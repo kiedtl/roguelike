@@ -88,6 +88,9 @@ It will have a much harder time trying to land hits or evade attacks.
 % nonplayer_Disorient
 It is disoriented and can only move diagonally.
 
+% nonplayer_Doomed
+It has been marked for destruction by supernatural foes.
+
 % nonplayer_Enraged
 It is in a crazed rage, and will deal +50% damage and land hits more often, but
 evade attacks less often.
@@ -116,6 +119,9 @@ It has +25% fire resistance.
 
 % nonplayer_Flammable
 It has -25% fire resistance.
+
+% nonplayer_Fly
+It is immune to effects propagated from the ground.
 
 % nonplayer_Held
 It is stuck and can't move.
@@ -154,6 +160,10 @@ It is paralyzed, and will skip its turns entirely.
 It can see through any obstacle that isn't 100% opaque, including most gases
 and vision-obstructing terrain.
 
+% nonplayer_Protected
+The next amount of damage it takes will be completely and totally negated. This
+status will then expire, regardless of the time left.
+
 % nonplayer_Recuperate
 It is slowly regaining HP, at the cost of being able to evade attacks.
 
@@ -170,7 +180,7 @@ It is moving 2x more slowly.
 It is in water.
 
 % nonplayer_DayBlindness
-(Bug) Seems the sun burnt it when it went outside.
+(Bug) Seems the sun burnt it when it went outside. Like you probably.
 
 % nonplayer_NightBlindness
 (Bug)

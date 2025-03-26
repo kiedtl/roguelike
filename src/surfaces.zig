@@ -397,6 +397,7 @@ pub const MACHINES = [_]Machine{
     FirstAidStation,
     EtherealBarrier,
     ProtectionSigil,
+    SanctuarySigil,
     CombatDummyRepairLever,
     FireTestLever,
     Sparkplug,
@@ -1270,6 +1271,67 @@ pub const ProtectionSigil = Machine{
                     ui.Animation.apply(.{ .PopChar = .{ .coord = mob.coord, .char = ':', .delay = 90 } });
                     machine.disabled = true;
                     state.dungeon.at(machine.coord).surface = null;
+                }
+            }
+        }
+    }.f,
+};
+
+pub const SanctuarySigil = Machine{
+    .id = "sigil_sanctuary",
+    .name = "sigil of sanctuary",
+    .powered_tile = ':',
+    .unpowered_tile = ':',
+    .powered_fg = 0xdf7239,
+    .powered_walkable = true,
+
+    // Always powered
+    .power = 100,
+    .power_drain = 0,
+    .unpowered_walkable = true,
+    .unpowered_fg = colors.AQUAMARINE,
+
+    .on_power = struct {
+        fn f(machine: *Machine) void {
+            const CTX_ANGEL = "ctx_angel";
+
+            const maybe_angel = if (machine.ctx.getOrNone(*Mob, CTX_ANGEL)) |angel|
+                if (!angel.is_dead) angel else null
+            else
+                null;
+
+            if (machine.last_interaction) |mob| {
+                if (mob.hasStatus(.Doomed))
+                    return;
+
+                const rep = state.REP_TABLE[@intFromEnum(types.Faction.Holy)][@intFromEnum(mob.faction)];
+                if (rep >= 0 and mob.resistance(.rHoly) >= 0)
+                    return;
+
+                if (rng.onein(5)) {
+                    mob.addStatus(.Doomed, 0, .Prm);
+                    state.dungeon.deleteSurface(machine.coord);
+                } else {
+                    mob.applyStatus(.{
+                        .status = .Doomed,
+                        .power = 0,
+                        .duration = .{ .Tmp = 2 },
+                        // Hack because Ctx statuses can't be applied for
+                        // machines, only terrain
+                        .add_duration = false,
+                    }, .{});
+                }
+
+                if (maybe_angel) |angel| {
+                    ai.updateEnemyKnowledge(angel, mob, null);
+                    ai.updateEnemyKnowledge(mob, angel, null);
+                } else {
+                    const spot = state.nextSpotForMob(state.player.coord, null) orelse return;
+                    const angel_template = rng.chooseUnweighted(*const mobs.MobTemplate, &mobs.ANGELS);
+                    const angel = mobs.placeMob(state.alloc, angel_template, spot, .{ .job = .ATK_FightOnlyDoomed });
+                    angel.newestJob().?.ctx.set(void, AIJob.CTX_OVERRIDE_FIGHT, {});
+
+                    machine.ctx.set(*Mob, CTX_ANGEL, angel);
                 }
             }
         }

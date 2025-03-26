@@ -248,6 +248,7 @@ pub const HOLY_ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 50, .i = .{ .c = &LifeWaterConsumable } },
     .{ .w = 50, .i = .{ .P = &RegeneratePotion } },
     .{ .w = 30, .i = .{ .E = SphereHellfireEvoc } },
+    .{ .w = 30, .i = .{ .E = SanctuarySigilEvoc } },
     .{ .w = 5, .i = .{ .r = CondemnationRing } },
     .{ .w = 5, .i = .{ .r = ConcentrationRing } },
     .{ .w = 5, .i = .{ .r = ProtectionRing } },
@@ -872,6 +873,49 @@ pub const SphereHellfireEvoc = Evocable{
             b.newestJob().?.ctx.set(f64, AIJob.CTX_HOMING_SPEED, SPEED);
             b.newestJob().?.ctx.set(bool, AIJob.CTX_HOMING_BLAST, true);
             b.newestJob().?.ctx.set(void, AIJob.CTX_OVERRIDE_FIGHT, {});
+        }
+    }.f,
+};
+
+pub const SanctuarySigilEvoc = Evocable{
+    .id = "evoc_sanctuary",
+    .name = "sanctuary sigils",
+    .tile_fg = 0xba4100,
+    .max_charges = 3,
+    .rechargable = false,
+    .delete_when_inert = true,
+    .trigger_fn = struct {
+        fn f(_: *Mob, _: *Evocable) Evocable.EvokeError!void {
+            var coords = StackBuffer(Coord, 2).init(null);
+            var dijk: dijkstra.Dijkstra = undefined;
+            dijk.init(state.player.coord, state.mapgeometry, 3, struct {
+                pub fn f(c: Coord, _: state.IsWalkableOptions) bool {
+                    return state.dungeon.at(c).surface == null and
+                        state.dungeon.at(c).type == .Floor;
+                }
+            }.f, .{}, state.alloc);
+            defer dijk.deinit();
+            while (dijk.next()) |c| coords.append(c) catch break;
+
+            for (coords.constSlice()) |coord| {
+                var machine = surfaces.SanctuarySigil;
+                machine.coord = coord;
+                machine.ctx = types.Ctx.init();
+                state.machines.append(machine) catch err.wat();
+                const machineptr = state.machines.last().?;
+                state.dungeon.at(coord).surface = SurfaceItem{ .Machine = machineptr };
+
+                const items = state.dungeon.itemsAt(coord);
+                var i: usize = 0;
+                while (i < items.len) {
+                    if (state.nextAvailableSpaceForItem(coord, state.alloc)) |new| {
+                        const item = items.orderedRemove(i) catch unreachable;
+                        state.dungeon.itemsAt(new).append(item) catch unreachable;
+                    } else {
+                        i += 1;
+                    }
+                }
+            }
         }
     }.f,
 };
