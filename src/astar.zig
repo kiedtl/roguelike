@@ -1,6 +1,5 @@
 const std = @import("std");
 const mem = std.mem;
-const testing = std.testing;
 const math = std.math;
 const assert = std.debug.assert;
 
@@ -206,6 +205,12 @@ pub fn path(
     return null;
 }
 
+// -----------------------------------------------------------------------------
+
+const testing = std.testing;
+const snap = utils.testing.snap;
+const Snap = utils.testing.Snap;
+
 test "coordFromPtr" {
     var nodes: [HEIGHT][WIDTH]Node = [_][WIDTH]Node{[_]Node{.{}} ** WIDTH} ** HEIGHT;
     const begin = &nodes[0][0];
@@ -222,4 +227,134 @@ test "coordFromPtr" {
         const got = coordFromPtr(&nodes[expected.y][expected.x], begin, z);
         try testing.expectEqual(expected, got);
     }
+}
+
+test "Basic straight-line pathing" {
+    try chk(
+        \\....................
+        \\...#...#..#.........
+        \\...#...#.#######....
+        \\.S................E.
+        \\...#...########.....
+        \\....................
+    , null, struct {
+        pub fn f(coord: Coord) void {
+            buf[coord.y][coord.x] = '@';
+        }
+    }.f, snap(@src(),
+        \\....................
+        \\...#...#..#.........
+        \\...#...#.#######....
+        \\.@@@@@@@@@@@@@@@@@@.
+        \\...#...########.....
+        \\....................
+    ));
+}
+
+test "Basic pathing around simple obstacle" {
+    try chk(
+        \\.........#..........
+        \\....................
+        \\.........#..........
+        \\.S.......#........E.
+        \\.........#..........
+        \\.........#..........
+    , null, struct {
+        pub fn f(coord: Coord) void {
+            buf[coord.y][coord.x] = '@';
+        }
+    }.f, snap(@src(),
+        \\.........#..........
+        \\...@@@@@@@..........
+        \\..@......#@.........
+        \\.@.......#.@@@@@@@@.
+        \\.........#..........
+        \\.........#..........
+    ));
+
+    try chk(
+        \\.........#..........
+        \\.........#..........
+        \\.........#..........
+        \\.S.......#........E.
+        \\.........#..........
+        \\.........#..........
+    , null, struct {
+        pub fn f(coord: Coord) void {
+            buf[coord.y][coord.x] = '@';
+        }
+    }.f, snap(@src(),
+        \\<no path>
+    ));
+}
+
+test "Pathing with penalties" {
+    try chk(
+        // Test set up so that there's a little spot of thinner :'s, where the
+        // path should go through. There's another possible path with no :'s
+        // that should not occur, because the overall cost is higher.
+        \\....::...#..........
+        \\...::::.........E...
+        \\....::::::::::::....
+        \\.....::::.:::::::#..
+        \\.S....##............
+        \\....................
+    , struct {
+        pub fn f(coord: Coord, _: state.IsWalkableOptions) usize {
+            return if (buf[coord.y][coord.x] == ':') 10 else 0;
+        }
+    }.f, struct {
+        pub fn f(coord: Coord) void {
+            buf[coord.y][coord.x] = '@';
+        }
+    }.f, snap(@src(),
+        \\....::...#..........
+        \\...::::....@@@@@@...
+        \\....::::::@:::::....
+        \\.....::::@:::::::#..
+        \\.@....##@...........
+        \\..@@@@@@............
+    ));
+}
+
+const TW = 20;
+const TH = 6;
+
+var buf: [TH][TW]u8 = undefined; // Has to be global unfortunately
+
+fn _testingIsWalkable(c: Coord, _: state.IsWalkableOptions) bool {
+    return switch (buf[c.y][c.x]) {
+        '#' => false,
+        else => true,
+    };
+}
+
+fn chk(
+    map: []const u8,
+    penalty_func: ?*const fn (Coord, state.IsWalkableOptions) usize,
+    postprocess_func: *const fn (Coord) void,
+    s: Snap,
+) !void {
+    var start: Coord = undefined;
+    var end: Coord = undefined;
+
+    for (0..TH) |y|
+        for (0..TW) |x|
+            switch (map[y * (TW + 1) + x]) {
+                'S' => start = Coord.new(x, y),
+                'E' => end = Coord.new(x, y),
+                else => |c| buf[y][x] = c,
+            };
+
+    const p = path(start, end, Coord.new(TW, TH), _testingIsWalkable, .{}, penalty_func orelse dummyPenaltyFunc, &types.DIRECTIONS, testing.allocator);
+    defer if (p) |plist| plist.deinit();
+
+    if (mem.eql(u8, s.bytes, "<no path>")) {
+        return testing.expectEqual(null, p);
+    }
+
+    for (p.?.items) |pitem|
+        (postprocess_func)(pitem);
+
+    try utils.testing.expectEqual(utils.testing.mapToString(TH, TW, &buf), s);
 }
