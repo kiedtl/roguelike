@@ -258,6 +258,7 @@ pub const EVENTS = [_]struct { p: usize, v: *const Event }{
     .{ .p = 30, .v = &EV_SYMBOL_RESTRICT_TO_UPPER_SHRINE },
     .{ .p = 45, .v = &EV_DISINT_DISALLOW },
     .{ .p = 45, .v = &EV_SHIELD_DISALLOW },
+    .{ .p = 5, .v = &EV_CRYPT_OVERRUN },
     .{ .p = 5, .v = &EV_PUNISH_EVIL_PLAYER },
     .{ .p = 100, .v = &EV_TEMPLE_ANGELS_AWAKE },
 };
