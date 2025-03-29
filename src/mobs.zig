@@ -697,7 +697,7 @@ pub const DustlingTemplate = MobTemplate{
         .corpse = .None,
         .base_night_vision = true,
         .innate_resists = .{ .rFire = -25, .rElec = -25, .rFume = 100 },
-        .stats = .{ .Willpower = 4, .Melee = 50, .Vision = 3 },
+        .stats = .{ .Willpower = 3, .Melee = 33, .Vision = 3 },
     },
     .squad = &[_][]const MobTemplate.SquadMember{
         &[_]MobTemplate.SquadMember{
