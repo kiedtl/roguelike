@@ -58,7 +58,7 @@ pub const templates_test = @import("mobs/templates_test.zig");
 // -----------------------------------------------------------------------------
 
 pub const PLAYER_MAX_MP = 20;
-pub const PLAYER_VISION = 12; // See also: types.SCEPTRE_VISION
+pub const PLAYER_VISION = 14; // See also: types.SCEPTRE_VISION
 pub const RESIST_IMMUNE = 1000;
 pub const WILL_IMMUNE = 1000;
 

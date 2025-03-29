@@ -84,7 +84,7 @@ pub const PropArrayList = std.ArrayList(Prop);
 pub const MachineList = LinkedList(Machine);
 pub const ContainerList = LinkedList(Container);
 
-pub const SCEPTRE_VISION = 16;
+pub const SCEPTRE_VISION = 8;
 pub const MOB_CORRUPTION_CHANCE = 33;
 pub const TORMENT_UNDEAD_DAMAGE = 2;
 pub const DETECT_HEAT_RADIUS = @min(ui.MAP_HEIGHT_R, ui.MAP_WIDTH_R);
@@ -1653,8 +1653,10 @@ pub const Status = enum {
     pub fn tickSceptre(should_be_player: *Mob) void {
         assert(should_be_player == state.player);
 
-        var chance: usize = 2;
-        if (state.player.HP <= state.player.HP / 4)
+        var chance: usize = 1;
+        if (state.player.HP <= state.player.max_HP / 2)
+            chance += 2;
+        if (state.player.HP <= state.player.max_HP / 4)
             chance += 2;
 
         if (rng.percent(chance)) {
@@ -2676,14 +2678,12 @@ pub const Mob = struct { // {{{
         if (self.hasStatus(.Sceptre)) {
             assert(self == state.player);
             var dijk: dijkstra.Dijkstra = undefined;
-            dijk.init(state.player.coord, state.mapgeometry, SCEPTRE_VISION, struct {
-                pub fn f(c: Coord, _: state.IsWalkableOptions) bool {
-                    return !Dungeon.isTileOpaque(c);
-                }
-            }.f, .{}, state.alloc);
+            dijk.init(state.player.coord, state.mapgeometry, SCEPTRE_VISION, dijkstra.dummyIsValid, .{}, state.alloc);
             defer dijk.deinit();
 
             while (dijk.next()) |child| {
+                if (Dungeon.isTileOpaque(child))
+                    dijk.skip();
                 self.fov[child.y][child.x] = 100;
             }
         }
