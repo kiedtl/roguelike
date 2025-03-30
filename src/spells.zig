@@ -874,7 +874,7 @@ fn _effectSummonEnemy(caster: Coord, _: SpellOptions, coord: Coord) void {
     }
 }
 
-pub const BLAST_DISPERSAL_AOE = 2;
+pub const BLAST_DISPERSAL_AOE = 1;
 pub const BLAST_DISPERSAL = Spell{
     .id = "sp_dismissal_aura",
     .name = "aura of dispersal",
@@ -1707,7 +1707,7 @@ pub const Spell = struct {
 
         // Area-of-effect centering on caster.
         Blast: struct {
-            aoe: usize,
+            aoe: usize, // Zero-based, unlike bolt aoe (which should eventually be changed also)
             avoids_allies: bool = false,
             avoids_caster: bool = false,
             checks_will: bool = false,
@@ -1956,8 +1956,8 @@ pub const Spell = struct {
                     affected_tiles.append(caster_coord) catch err.wat();
 
                 // Now we apply AOE effects if applicable
-                if (blast_opts.aoe > 1) {
-                    var gen = utils.iterCircle(caster_coord, blast_opts.aoe);
+                if (blast_opts.aoe > 0) {
+                    var gen = utils.iterCircle(caster_coord, blast_opts.aoe + 1);
                     while (gen.next()) |aoecoord|
                         if (affected_tiles.linearSearch(aoecoord, Coord.eqNotInline) == null and
                             (!aoecoord.eq(caster_coord) or !blast_opts.avoids_caster))
