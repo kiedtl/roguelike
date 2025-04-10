@@ -196,6 +196,25 @@ pub fn queueThreatResponse(response: ThreatResponseType) void {
     state.responses.append(.{ .type = response }) catch err.wat();
 }
 
+// Also used by events, esp the one which sends hunters
+pub fn spawnAssault(level: usize, target: *Mob, spawn_class: []const u8) !void {
+    const squad_template = mobs.spawns.chooseMob(.Special, level, spawn_class) catch err.wat();
+    const hunter = try mobs.placeMobNearStairs(&mobs.HunterTemplate, level, .{});
+    const squad_coord = state.nextSpotForMob(hunter.coord, null) orelse {
+        hunter.deinitEntirelyNoCorpse();
+        return error.NoSpace;
+    };
+    const squadl = mobs.placeMob(state.alloc, squad_template, squad_coord, .{});
+    if (squadl.squad) |squad| {
+        squad.mergeInto(hunter.squad.?);
+    } else {
+        hunter.addUnderling(squadl);
+    }
+    ai.updateEnemyKnowledge(hunter, target, null);
+    for (hunter.squad.?.members.constSlice()) |dude|
+        dude.newJob(.WRK_LeaveFloor);
+}
+
 fn executeResponse(response: ThreatResponse, level: usize) !void {
     switch (response.type) {
         .ReinforceAgainstEnemy => |r| {
@@ -260,21 +279,7 @@ fn executeResponse(response: ThreatResponse, level: usize) !void {
         .Assault => |a| {
             const send_wave = state.ticks > a._last_time + TURNS_BETWEEN_ASSAULT;
             if (send_wave) {
-                const squad_template = mobs.spawns.chooseMob(.Special, level, "a") catch err.wat();
-                const hunter = try mobs.placeMobNearStairs(&mobs.HunterTemplate, level, .{});
-                const squad_coord = state.nextSpotForMob(hunter.coord, null) orelse {
-                    hunter.deinitEntirelyNoCorpse();
-                    return error.NoSpace;
-                };
-                const squadl = mobs.placeMob(state.alloc, squad_template, squad_coord, .{});
-                if (squadl.squad) |squad| {
-                    squad.mergeInto(hunter.squad.?);
-                } else {
-                    hunter.addUnderling(squadl);
-                }
-                ai.updateEnemyKnowledge(hunter, a.target, null);
-                for (hunter.squad.?.members.constSlice()) |dude|
-                    dude.newJob(.WRK_LeaveFloor);
+                try spawnAssault(level, a.target, "a");
             }
             if (a._ctr < a.waves) {
                 var new = response;

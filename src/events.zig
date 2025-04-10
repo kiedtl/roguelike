@@ -2,6 +2,7 @@ const std = @import("std");
 const mem = std.mem;
 
 const ai = @import("ai.zig");
+const alert = @import("alert.zig");
 const err = @import("err.zig");
 const mapgen = @import("mapgen.zig");
 const mobs = @import("mobs.zig");
@@ -9,12 +10,14 @@ const rng = @import("rng.zig");
 const state = @import("state.zig");
 const surfaces = @import("surfaces.zig");
 const types = @import("types.zig");
+const ui = @import("ui.zig");
 const utils = @import("utils.zig");
 
-const Coord = types.Coord;
-const Mob = types.Mob;
-const MobTemplate = mobs.MobTemplate;
 const AIJob = types.AIJob;
+const Coord = types.Coord;
+const Fuse = types.Fuse;
+const MobTemplate = mobs.MobTemplate;
+const Mob = types.Mob;
 
 const StackBuffer = @import("buffer.zig").StackBuffer;
 
@@ -70,11 +73,15 @@ pub const Trigger = enum {
 
 pub const Condition = union(enum) {
     Level: []const u8,
+    Or: []const Condition,
     Custom: *const fn (level: usize) bool,
 
     pub fn check(self: @This(), level: usize) bool {
         return switch (self) {
             .Level => |name| mem.eql(u8, name, state.levelinfo[level].name),
+            .Or => |conditions| for (conditions) |condition| {
+                if (condition.check(level)) break true;
+            } else false,
             .Custom => |func| (func)(level),
         };
     }
@@ -253,6 +260,45 @@ pub const EV_TEMPLE_ANGELS_AWAKE = Event{
     }},
 };
 
+pub const EV_HUNT_PLAYER = Event{
+    .id = "ev_hunt_player",
+    .triggers = &.{.EnteringNewLevel},
+    .conditions = &.{
+        .{ .Or = &.{
+            .{ .Level = "1/Prison" },
+            .{ .Level = "2/Prison" },
+        } },
+    },
+    .effect = &[_]Effect{.{
+        .Custom = struct {
+            pub fn f(_: *const Event, event_level: usize) void {
+                const fuse = (Fuse{
+                    .name = "spawn hunter for upper levels",
+                    .level = .{ .specific = event_level },
+                    .on_tick = struct {
+                        pub fn f(self: *Fuse, level: usize) void {
+                            const CTX_CTR = "ctx_ctr";
+                            const ctr = self.ctx.get(usize, CTX_CTR, 100);
+
+                            if (ctr == 0) {
+                                alert.spawnAssault(level, state.player, "h") catch {
+                                    self.ctx.set(usize, CTX_CTR, 20);
+                                    return;
+                                };
+                                _ = ui.drawTextModal("You feel uneasy.", .{});
+                                self.disable();
+                            } else {
+                                self.ctx.set(usize, CTX_CTR, ctr - 1);
+                            }
+                        }
+                    }.f,
+                }).initFrom();
+                state.fuses.append(fuse) catch err.wat();
+            }
+        }.f,
+    }},
+};
+
 pub const EVENTS = [_]struct { p: usize, v: *const Event }{
     .{ .p = 30, .v = &EV_SYMBOL_DISALLOW },
     .{ .p = 30, .v = &EV_SYMBOL_RESTRICT_TO_UPPER_SHRINE },
@@ -261,6 +307,7 @@ pub const EVENTS = [_]struct { p: usize, v: *const Event }{
     .{ .p = 5, .v = &EV_CRYPT_OVERRUN },
     .{ .p = 5, .v = &EV_PUNISH_EVIL_PLAYER },
     .{ .p = 100, .v = &EV_TEMPLE_ANGELS_AWAKE },
+    .{ .p = 100, .v = &EV_HUNT_PLAYER },
 };
 
 pub fn init() void {

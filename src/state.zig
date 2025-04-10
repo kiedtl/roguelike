@@ -27,28 +27,29 @@ const types = @import("types.zig");
 const ui = @import("ui.zig");
 const utils = @import("utils.zig");
 
-const Squad = types.Squad;
-const Mob = types.Mob;
-const MessageType = types.MessageType;
-const Item = types.Item;
-const Coord = types.Coord;
-const Dungeon = types.Dungeon;
-const Tile = types.Tile;
-const Status = types.Status;
-const Stockpile = types.Stockpile;
-const StockpileArrayList = types.StockpileArrayList;
-const Rect = types.Rect;
-const MobList = types.MobList;
-const RingList = types.RingList;
 const ArmorList = types.ArmorList;
-const WeaponList = types.WeaponList;
-const MachineList = types.MachineList;
-const PropList = types.PropList;
 const ContainerList = types.ContainerList;
-const Message = types.Message;
-const MessageArrayList = types.MessageArrayList;
-const MobArrayList = types.MobArrayList;
+const Coord = types.Coord;
 const Direction = types.Direction;
+const Dungeon = types.Dungeon;
+const Fuse = types.Fuse;
+const Item = types.Item;
+const MachineList = types.MachineList;
+const MessageArrayList = types.MessageArrayList;
+const Message = types.Message;
+const MessageType = types.MessageType;
+const MobArrayList = types.MobArrayList;
+const MobList = types.MobList;
+const Mob = types.Mob;
+const PropList = types.PropList;
+const Rect = types.Rect;
+const RingList = types.RingList;
+const Squad = types.Squad;
+const Status = types.Status;
+const StockpileArrayList = types.StockpileArrayList;
+const Stockpile = types.Stockpile;
+const Tile = types.Tile;
+const WeaponList = types.WeaponList;
 const CARDINAL_DIRECTIONS = types.CARDINAL_DIRECTIONS;
 
 const SoundState = @import("sound.zig").SoundState;
@@ -130,6 +131,7 @@ pub var mobs: MobList = undefined;
 pub var armors: ArmorList = undefined;
 pub var rings: RingList = undefined;
 pub var machines: MachineList = undefined;
+pub var fuses: Fuse.List = undefined;
 pub var props: PropList = undefined;
 pub var containers: ContainerList = undefined;
 pub var evocables: EvocableList = undefined;
@@ -428,6 +430,20 @@ pub fn createMobList(include_player: bool, only_if_infov: bool, level: usize, my
     std.sort.insertion(*Mob, moblist.items, {}, S._sortFunc);
 
     return moblist;
+}
+
+pub fn tickFuses(level: usize) void {
+    var iter = fuses.iterator();
+    while (iter.next()) |fuse| {
+        if (fuse.is_disabled)
+            continue; // TODO: actually delete it from the linked list
+
+        switch (fuse.level) {
+            .specific => |req_lvl| if (req_lvl != level) continue,
+        }
+
+        (fuse.on_tick)(fuse, level);
+    }
 }
 
 pub fn tickLight(level: usize) void {

@@ -11,6 +11,7 @@
 #     r: direct reinforcement summoned when lots of Necromancer-faction guys
 #        get scared
 #     a: assault waves
+#     h: hunter waves (on upper levels)
 
 # note: some have values for crypt, when reinforcements shouldn't be sent out,
 # in order to not break profiler (which does everything on floor 0)
@@ -48,4 +49,11 @@
 "bone_mage"            	    "a" 	   - 	   - 	  20 	   - 	  20 	  20 	 100 	  20 	   - 	   - 	   - 	   - 	  20 	   - 	   - 	   - 	   - 	   - 	  - 	   - 	  - 	  - 	  -
 "death_mage"           	    "a" 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  20 	   - 	  20 	  20 	  20 	 20 	  20 	  - 	  - 	  -
 
-# monster id               class      -8/Pri  -7/Pri  -6/Wrk  -6/Sin  -6/Wrk2 -6/Wrk3  -6/Nec  -5/Pri  -5/Smi  -4/Pri  -3/Vlt  -3/Sin   3/Lab2 3/Lab3  3/Hold -2/Pri  -1/Pri -1/Cry -1/Cry2 -1/Cry3
+"mellaent"             	    "h" 	 100 	 100 	 100 	   - 	 100 	 100 	 100 	 100 	 100 	 100 	 100 	 100 	 100 	 100 	 100 	 100 	 100 	 100 	  - 	   - 	100 	100 	100
+"warrior"              	    "h" 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	 50 	  30 	  - 	  - 	  -
+"brimstone_mage"       	    "h" 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	 50 	  30 	  - 	  - 	  -
+"lightning_mage"       	    "h" 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	 50 	  30 	  - 	  - 	  -
+"skeletal_blademaster" 	    "h" 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	 20 	  20 	  - 	  - 	  -
+"death_mage"           	    "h" 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  - 	  20 	  - 	  - 	  -
+
+# monster id               class      -8/Pri  -7/Pri  -6/Wrk  -6/Sin  -6/Wrk2 -6/Wrk3  -6/Nec  -5/Pri  -5/Cav -5/Cav2 -5/Cav3  -5/Tem  -4/Pri  -3/Vlt  -3/Sin   3/Lab2 3/Lab3  3/Hold -2/Pri  -1/Pri -1/Cry -1/Cry2 -1/Cry3

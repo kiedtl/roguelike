@@ -4953,6 +4953,38 @@ pub const Mob = struct { // {{{
     }
 }; // }}}
 
+// Like a machine, but does something each tick while not being visible to the
+// player (or needing any "power" or other stimuli.
+//
+// Created by events, originally for delayed effects, but can be used for many
+// other things.
+pub const Fuse = struct {
+    // linked list stuff
+    __next: ?*Fuse = null,
+    __prev: ?*Fuse = null,
+
+    // For debugging and introspection purposes.
+    name: []const u8 = "",
+
+    level: union(enum) { specific: usize },
+    ctx: Ctx = undefined,
+    is_disabled: bool = false,
+
+    on_tick: *const fn (self: *Fuse, level: usize) void,
+
+    pub const List = LinkedList(Fuse);
+
+    pub fn initFrom(self: Fuse) Fuse {
+        var s = self;
+        s.ctx = Ctx.init();
+        return s;
+    }
+
+    pub fn disable(self: *Fuse) void {
+        self.is_disabled = true;
+    }
+};
+
 pub const Machine = struct {
     // linked list stuff
     __next: ?*Machine = null,

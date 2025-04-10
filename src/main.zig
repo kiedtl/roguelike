@@ -45,24 +45,25 @@ const Rect = types.Rect;
 const Tile = types.Tile;
 const Mob = types.Mob;
 
-const Squad = types.Squad;
-const MobList = types.MobList;
-const RingList = types.RingList;
-const PotionList = types.PotionList;
 const ArmorList = types.ArmorList;
-const WeaponList = types.WeaponList;
-const MachineList = types.MachineList;
-const PropList = types.PropList;
 const ContainerList = types.ContainerList;
-const Message = types.Message;
+const Fuse = types.Fuse;
+const MachineList = types.MachineList;
 const MessageArrayList = types.MessageArrayList;
+const Message = types.Message;
 const MobArrayList = types.MobArrayList;
+const MobList = types.MobList;
+const PotionList = types.PotionList;
+const PropList = types.PropList;
+const RingList = types.RingList;
+const Squad = types.Squad;
 const StockpileArrayList = types.StockpileArrayList;
+const WeaponList = types.WeaponList;
 const DIRECTIONS = types.DIRECTIONS;
 
-const TaskArrayList = tasks.TaskArrayList;
-const PosterList = literature.PosterList;
 const EvocableList = items.EvocableList;
+const PosterList = literature.PosterList;
+const TaskArrayList = tasks.TaskArrayList;
 
 const LEVELS = state.LEVELS;
 const HEIGHT = state.HEIGHT;
@@ -176,6 +177,7 @@ fn initGameState() void {
     state.rings = RingList.init(state.alloc);
     state.armors = ArmorList.init(state.alloc);
     state.machines = MachineList.init(state.alloc);
+    state.fuses = Fuse.List.init(state.alloc);
     state.props = PropList.init(state.alloc);
     state.containers = ContainerList.init(state.alloc);
     state.evocables = EvocableList.init(state.alloc);
@@ -268,6 +270,7 @@ fn deinitGameState() void {
     state.rings.deinit();
     state.armors.deinit();
     state.machines.deinit();
+    state.fuses.deinit();
     state.messages.deinit();
     state.props.deinit();
     state.containers.deinit();
@@ -463,6 +466,7 @@ fn tickGame(p_cur_level: ?usize) !void {
     fire.tickFire(cur_level);
     gas.tickGasEmitters(cur_level);
     gas.tickGases(cur_level);
+    state.tickFuses(cur_level);
     state.tickSound(cur_level);
     state.tickLight(cur_level);
     alert.tickThreats(cur_level);
