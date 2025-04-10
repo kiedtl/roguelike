@@ -1564,7 +1564,7 @@ pub const StalkerTemplate = MobTemplate{
         .ai = AI{
             .profession_description = "watching",
             .work_fn = ai.standStillAndGuardWork,
-            .fight_fn = ai.stalkerFight,
+            .fight_fn = ai.mageFight,
             .is_curious = false,
             .is_fearless = true,
             .flags = &[_]AI.Flag{ .DetectWithElec, .AvoidsEnemies },
@@ -1574,18 +1574,61 @@ pub const StalkerTemplate = MobTemplate{
         .deg360_vision = true,
         .base_night_vision = true,
 
-        // XXX: synchronize MP costs w/ mob speed so that it gets one shot every 3 turns
         .spells = &[_]SpellOptions{
-            .{ .MP_cost = 15, .spell = &spells.BOLT_LIGHTNING, .power = 1 },
+            .{ .MP_cost = 0, .spell = &spells.CAST_STALKER_TRANSFORM },
         },
-        .max_MP = 5,
+        .max_MP = 1,
 
         .blood = null,
         .corpse = .None,
 
-        .max_HP = 2,
+        .max_HP = 1,
         .memory_duration = 2, // Forget about enemies quickly in absence of hunter captain
-        .innate_resists = .{ .rFume = 100, .rElec = RESIST_IMMUNE },
+        .innate_resists = .{ .rFume = 100, .rElec = -20, .rFire = -20, .rAcid = 50 },
+        .stats = .{ .Willpower = 0, .Evade = 50, .Speed = 20, .Vision = 4 },
+    },
+    .statuses = &[_]StatusDataInfo{
+        .{ .status = .Sleeping, .duration = .Prm },
+    },
+};
+
+pub const AcidSpriteTemplate = MobTemplate{
+    .mob = .{
+        .id = "stalker_angry",
+        .species = &Species{
+            .name = "acid sprite",
+            .default_attack = &Weapon{
+                .name = "bonk",
+                .damage = 0,
+                .strs = &[_]DamageStr{items._dmgstr(0, "ram", "rams", "")},
+            },
+        },
+        .tile = 'F',
+        .ai = AI{
+            .profession_description = "watching",
+            .work_fn = ai.standStillAndGuardWork,
+            .fight_fn = ai.mageFight,
+            .is_curious = false,
+            .is_fearless = true,
+            .flags = &[_]AI.Flag{.DetectWithElec},
+            .spellcaster_backup_action = .KeepDistance,
+        },
+        .life_type = .Construct,
+        .base_night_vision = true,
+
+        .spells = &[_]SpellOptions{
+            .{ .MP_cost = 9, .spell = &spells.BOLT_ACID, .power = 1 },
+        },
+        .max_MP = 15,
+
+        // *** Below, should be exactly the same as with the stalker.
+
+        .blood = null,
+        .corpse = .None,
+
+        .max_HP = 1,
+        .memory_duration = 2, // Forget about enemies quickly in absence of hunter captain
+        .innate_resists = .{ .rFume = 100, .rElec = -20, .rFire = -20, .rAcid = 50 },
         .stats = .{ .Willpower = 0, .Evade = 50, .Speed = 20, .Vision = 4 },
     },
     .statuses = &[_]StatusDataInfo{
@@ -2586,6 +2629,7 @@ pub const MOBS = [_]*const MobTemplate{
     &ChildSkeletonTemplate,
     &SkeletonTemplate,
     &StalkerTemplate,
+    &AcidSpriteTemplate,
     &BoneRatTemplate,
     &EmberlingTemplate,
     &EmberBeastTemplate,

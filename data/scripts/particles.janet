@@ -746,6 +746,7 @@
   "test" @[]
   "null" @[]
   "lzap-electric" @[ (template-lingering-zap "AEFHIKLMNTYZ13457*-=+~?!@#%&" 0x9fefff 0x7fc7ef 7) ]
+  "lzap-acid" @[ (template-lingering-zap "RVB" 0xcc0000 0x770000 7) ]
   "lzap-golden" @[ (template-lingering-zap ".#.#.#." LIGHT_GOLD GOLD 12) ]
   "lzap-green" @[ (template-lingering-zap ROUND_CHARS GREEN LIGHT_GREEN 7) ]
   "lzap-green-concrete" @[ (template-lingering-zap ".#%," CONCRETE LIGHT_GREEN 4) ]

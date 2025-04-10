@@ -1415,32 +1415,6 @@ pub fn watcherFight(mob: *Mob) void {
     }
 }
 
-// pub fn coronerFight(mob: *Mob) void {
-//     const target = closestEnemy(mob).mob;
-//     alert.announceEnemyAlert(target);
-//     watcherFight(mob, alloc);
-// }
-
-pub fn stalkerFight(mob: *Mob) void {
-    const target = closestEnemy(mob).mob;
-
-    if (mob.squad != null and
-        mem.eql(u8, mob.squad.?.leader.?.id, "hunter"))
-    {
-        if (!mob.cansee(target.coord)) {
-            mob.tryMoveTo(target.coord);
-        } else {
-            const dist: usize = @intCast(mob.stat(.Vision) - 1);
-            if (!runAwayFromEnemies(mob, dist))
-                tryRest(mob);
-        }
-    } else if (mob.enemyList().items.len == 1) {
-        mageFight(mob);
-    } else {
-        work(mob);
-    }
-}
-
 // - Iterate through enemies. Foreach:
 //      - Is it adjacent, or does it have the status bestowed by our projectiles?
 //          - No:  Can we throw a projectile at it?

@@ -181,6 +181,33 @@ pub const CAST_ALERT_SIREN = Spell{
     }},
 };
 
+pub const CAST_STALKER_TRANSFORM = Spell{
+    .id = "sp_stalker_transform",
+    .name = "transform into acid sprite",
+    .cast_type = .Smite,
+    .smite_target_type = .Self,
+    .check_has_effect = struct {
+        fn f(caster: *Mob, _: SpellOptions, _: Coord) bool {
+            if (caster.squad) |squad|
+                if (mem.eql(u8, squad.leader.?.id, "hunter"))
+                    return false;
+            return true;
+        }
+    }.f,
+    .effects = &[_]Effect{.{
+        .Custom = struct {
+            fn f(caster_coord: Coord, _: SpellOptions, _: Coord) void {
+                const caster = state.dungeon.at(caster_coord).mob.?;
+                state.dungeon.at(caster_coord).mob = null; // Hack
+                const new = mobs.placeMob(state.alloc, &mobs.AcidSpriteTemplate, caster.coord, .{});
+                new.enemies = caster.enemyList().clone() catch err.oom();
+                caster.coord = Coord.new2(0, 0, 0);
+                caster.deinitNoCorpse();
+            }
+        }.f,
+    }},
+};
+
 // Power is the index into mobs.ANGELS. Yes, a weird hack.
 //
 pub const CAST_MOTH_TRANSFORM = Spell{
@@ -1264,6 +1291,23 @@ pub const BOLT_CRYSTAL = Spell{
     .noise = .Medium,
     .effects = &[_]Effect{
         .{ .Damage = .{ .amount = .PowerRangeHalf, .msg = .{ .noun = "The crystal shard", .strs = &items.PIERCING_STRS } } },
+    },
+};
+
+pub const BOLT_ACID = Spell{
+    .id = "sp_acid_bolt",
+    .name = "acid spray",
+    .animation = .{ .Particles = .{ .name = "lzap-acid" } },
+    .cast_type = .Bolt,
+    .check_has_effect = struct {
+        fn f(_: *Mob, _: SpellOptions, target: Coord) bool {
+            const mob = state.dungeon.at(target).mob.?;
+            return !mob.isFullyResistant(.rAcid);
+        }
+    }.f,
+    .noise = .Loud,
+    .effects = &[_]Effect{
+        .{ .Damage = .{ .kind = .Acid, .blood = false, .msg = .{ .noun = "The acid spray", .strs = &items.SHOCK_STRS } } },
     },
 };
 
