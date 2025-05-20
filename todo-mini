@@ -12,8 +12,10 @@ Lore speeches
   - Curse you, traitor. Your breath is a stain on the bones of your father.
   - Because of you, we are all disfavored in the eyes of our hill-goblins
     masters.
-  - To them, we are all liable to become turncoats, as you did.
+  - Now they watch us all closely, fearing that we also will turn.
 - [hunter to @] Looking for something?
+- [hunter to @] Peekaboo.
+- [hunter to @] How are you so bad at escaping?
 - [hunter to @] Did you lose something here?
   - Maybe we can help you find it.
 - [hunter to @] No no, please, don't worry.
@@ -22,12 +24,13 @@ Lore speeches
   - Slowly.
 - [death mage to @] So, you're the escaped prisoner I've been hearing so much about.
   - How have you eluded the guards for so long?
-  - These idiot mercenaries and hill-goblins really need to get their act together.
+  - These idiot hill-goblins and half-competent mercenaries really need to get
+    their act together.
 - You bastard! YOU KILLED MY BROTHER ARBALD!
-  - I'M GOING TO TURN YOU INTO A COLANDER! [bold/italic text]
+  - I'M GOING TO PUNCTURE YOU LIKE A COLANDER! [bold/italic text]
   - (Wields a spear, and becomes invigorated + enraged)
   - (Must be higher levels, so maybe armored guard?)
-- Treachery doesn't pay off, @.
+- [when found with cave-goblins] Treachery doesn't pay off, @.
   - The only reason these filthy cave-goblins like you is because they're more
     of the same.
   - They betrayed us and left us helpless in our greatest need.
@@ -46,12 +49,13 @@ Lore speeches
   - Other: What was he doing on Lab/7?!?
   - Looking for trouble I guess.
   - [both exit level]
-- [Insurrection] Hey, look at this.
+- [Insurrection] Hey, Obmirnul, look at this.
   - It's the body of... [checks poster] Magaren Dorazil.
   - Three days ago, my brother Nath said he saw a night creature here.
-  - When we investigated, we found this body lying mangled in a heap.
+  - When we investigated, we found this body lying mangled in a heap, probably
+    left by the night creature.
   - I wonder what he did to invite the wrath of the Night.
-  - I hear the invaders were trying to tear up some of sacred lairs in the
+  - I did hear the invaders were trying to tear up some of sacred lairs in the
     lower Storage.
   - Perhaps he was one of them?
 
@@ -60,25 +64,13 @@ Rings
   escaped prisoner)
   - Prisoner: "w..what? why are they all chasing me now?!"
   - Will-checked (or not?)
-- Protection: creates protection sigils (terrain) on ground
-  - Terrain is trampled into nothingness (or dead moss?)
-  - Anything standing on it is protected for a single instance of damage, no
-    matter how high
-  - Need to think about mechanics, flavor, etc
 
-- Sigil of Damnation
-  - While undead/unclean is on it, angel is summoned (but will disappear if
-    enemy steps off of it)
 - Sigil of Hiding
   - Hide corpse, make it invisible until it's stepped on enough times (or enough
     time has passed).
 - Sigil of Disarming
   - Anything that steps on it will be commanded to drop/throw their weapon. (They
     can then be assigned a job to re-equip it again later.)
-
-- Opt
-  - Packed coords
-  - TinyAllocator
 
 - Occasions for lore
   - Meeting player (when alert is low, so probably first occasion)
@@ -94,6 +86,8 @@ Rings
   - Fire: red filter
 
 - Hulkers reduce max HP as well as causing damage?
+
+- Clearup stupid thing with AOE distances
 
 Capital: Elegdruinneyl (forest of green stars)
 
@@ -147,6 +141,14 @@ Rework incineration/ignition potions
 
 Done
 ----
+- Protection: creates protection sigils (terrain) on ground
+  - Terrain is trampled into nothingness (or dead moss?)
+  - Anything standing on it is protected for a single instance of damage, no
+    matter how high
+  - Need to think about mechanics, flavor, etc
+- Sigil of Sanctuary
+  - While undead/unclean is on it, angel is summoned (but will disappear if
+    enemy steps off of it)
 - Sceptre:
   - 33% chance to turn undead
   - 33% to shock constructs w/ elec vulnerability

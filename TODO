@@ -1063,6 +1063,9 @@ x Use Manhattan distance for A* algorithm (overestimating heuristic might be bet
   without calling those functions again.
 - Use atan to calculate octant in which coord appears relative to mob's coord, instead
   of the slower method seen in Coord.closestDirectionTo()
+- Make Coord a packed struct...?
+- TinyAllocator: FixedBufferAllocator, but can deallocate.
+  - Probably similar architecture to Finwe's std allocator.
 
 
 Code cleanups
@@ -1502,12 +1505,12 @@ x Unholy temple map + faction
   x Workshop/2 and Workshop/3
     ~ Additional fluff prefabs (see REXPaint sketch, rooms marked w/ '*')
       ~ Note 2025-02-08: I'm not seeing any such rooms :P
-- Holy temple map + faction
+x Holy temple map + faction
   x Visuals
     x New roundish-looking wall sprite
     x Choose green gold colors (unify across particle effects, material, etc)
   x Shrines exploding
-  - Items
+  x Items
     x Sanctuary sigils
     x Ring of protection
     x Sphere of Hellfire
@@ -1577,10 +1580,10 @@ x Unholy temple map + faction
       x Dustling production machines
     x Guaranteed border around map
     x Rock crystal chunks
-- Hunter mechanics
-  - Automatic hunter triggers on 1/Prison, 2/Prison, maybe Lab as well
-  - Stalkers: acid damage, and possible rename ("acid sprites" ?)
-    - Simplification: instead of having attack AI for stalker, have them actually
+x Hunter mechanics
+  x Automatic hunter triggers on 1/Prison, 2/Prison, maybe Lab as well
+  x Stalkers: acid damage, and possible rename ("acid sprites" ?)
+    x Simplification: instead of having attack AI for stalker, have them actually
       transform into sparklings/acid-sprites when hunter captain dies
 - Fire: don't destroy corpses entirely, only char them
 - More rings
@@ -1589,6 +1592,7 @@ x Unholy temple map + faction
   - Ring of excavation
   - Ring of execution
   x Ring of exclusion
+  x Ring of protection
   x Ring of retaliation
 - Events
   - Lore quick speeches/monologues
@@ -1621,9 +1625,9 @@ x Fix prisoner hostility issues (with Revgen)
     - Potion of extermination
     - See glow potion buf item below
   - Dobalene rooms
+  - Ensure all vault types are sufficiently rare (can stuff it into map
+    prefab frequency analysis)
   - Level "feels" message when entering.
-    - Ensure all vault types are sufficiently rare (can stuff it into map
-      prefab frequency analysis)
     - Golden: "you feel death in the air."
     - Dobalene: "you recall a squad of constructs passing this way."
     - Marble: "this floor is unusually silent."
@@ -1633,6 +1637,12 @@ x Fix prisoner hostility issues (with Revgen)
     - Engineer shows up to clean and oil spires
     - Engineer shows up to repair spires (just theater, spires aren't actually broken)
   - Scheduled prisoner transport
+    - Thoughts to make this viable: instead of making the act of dragging
+      prisoner a passive thing that happens automatically when the mob moves,
+      make it an active thing (i.e. explicitely calling dragPrisoner() in
+      hauler's AI); and tickEnv will automatically release prisoner if its
+      guardian isn't adjacent. Yes, prisoner escapes far more often, but at
+      least it's less fragile and fewer unpredictable situations
 - Night Creatures, part two
   - Decreased rep for:
     - Killing NC
@@ -1646,7 +1656,7 @@ x Fix prisoner hostility issues (with Revgen)
       - Indestructible by any means
       - When standing on it, nothing outside lair can be seen (player-only?)
       - When not on it, vision into lair is sharply decreased
-      - Color dance
+      - Color dance (walls also)
     - Grues
       - Need to be more terrifying
       - Always emit blinding/insane gas?
