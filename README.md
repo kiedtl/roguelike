@@ -35,7 +35,20 @@ purposes... I promise I'm not this bad at my own game):*
 Head over to the Releases and grab a binary (you'll want to get the SDL2 version
 if you want passable graphics). Please note that macOS is not supported.
 
-In the future there will be instructions on building from source here.
+### Building from source
+
+To build from source, you'll need at least the following prerequisites:
+
+- [zig](https://ziglang.org/)
+- [just](https://github.com/casey/just)
+
+At the bare minimum, you'll need to do the following to build the game:
+
+- Clone this repository
+- Pull in third party submodules using `git submodule update --init --recursive`
+- Execute `just` in the project root to build the game binary, which will be located in `zig-out/bin/rl`
+
+(In the future there will be more detailled instructions on building from source here.)
 
 ## Gameplay
 
