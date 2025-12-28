@@ -1865,6 +1865,33 @@ pub const SkeletalArbalistTemplate = MobTemplate{
     .weapon = &items.W_BLUDG_1,
 };
 
+pub const ShamblingWeeperTemplate = MobTemplate{
+    .mob = .{
+        .id = "shambling_weeper",
+        .species = &HumanSpecies,
+        .tile = 'ũ',
+        .ai = AI{
+            .profession_name = "shambling weeper",
+            .profession_description = "guarding",
+            .work_fn = ai.patrolWork,
+            .fight_fn = ai.meleeFight,
+            .is_fearless = true,
+        },
+
+        .deaf = true,
+        .life_type = .Undead,
+
+        .max_HP = 15,
+        .memory_duration = 25,
+        .blood = null,
+        .corpse = .None,
+
+        .innate_resists = .{ .rHoly = -100, .rFume = 100 },
+        .stats = .{ .Speed = 150, .Melee = 50, .Willpower = 5, .Vision = 7 },
+    },
+    .weapon = &items.W_BLUDG_1,
+};
+
 pub const TorturerNecromancerTemplate = MobTemplate{
     .name_flags = &[_]NFlag{.H},
     .skip_family_name = true,
@@ -2636,6 +2663,7 @@ pub const MOBS = [_]*const MobTemplate{
     &SparklingTemplate,
     &SkeletalBlademasterTemplate,
     &SkeletalArbalistTemplate,
+    &ShamblingWeeperTemplate,
     &TorturerNecromancerTemplate,
 
     // Sub-mobs

@@ -32,10 +32,10 @@ to 0 each time you ascend a floor. Ransacking Night lairs decreases reputation.
 
 
 * At $b-5 reputation$., Night creatures will consider you an enemy and attack
-  you without provocation.
+you without provocation.
 
 * At $b-10 reputation$., Night creatures will occasionally leave your lairs to
-  hunt you down.
+hunt you down.
 
 % stat_Health_player
 
