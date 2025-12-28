@@ -1397,6 +1397,44 @@ fn _getItemDescription(self: *Console, starty: usize, item: Item, linewidth: usi
     return y - starty;
 }
 
+fn _getGasDescription(self: *Console, starty: usize, gases: []usize, linewidth: usize) usize {
+    var y = starty;
+
+    for (0..gas.GAS_NUM, gases) |gas_id, gas_amount| {
+        if (gas_amount == 0) {
+            continue;
+        }
+
+        const gas_info = gas.Gases[gas_id];
+        y += _writerHeader(self, y, linewidth, "$c{s}$g ($b{}$g)$.", .{ gas_info.name, gas_amount });
+
+        const dissipation_rate_color: u21 = switch (gas_info.dissipation_rate) {
+            .s1, .s2, .s3 => 'a',
+            .s4, .s5 => 'o',
+            .s6, .s7, .s8 => 'r',
+        };
+        y += _writerTwice(self, y, linewidth, "dissipation", "${u}{s}$.", .{
+            dissipation_rate_color, gas_info.dissipation_rate.to_string(),
+        });
+
+        const opacity_str =
+            if (gas_info.opacity == 0.0) "transparent" else if (gas_info.opacity <= 0.2) "clear" else if (gas_info.opacity <= 0.4) "partial" else if (gas_info.opacity <= 0.7) "low" else "opaque";
+        y += _writerTwice(self, y, linewidth, "visibility", "{s}", .{opacity_str});
+
+        if (gas_info.not_breathed) {
+            y += _writerTwice(self, y, linewidth, "breathed?", "$rno$.", .{});
+        }
+
+        if (gas_info.flammable) {
+            y += _writerTwice(self, y, linewidth, "flammable?", "$ryes$.", .{});
+        }
+
+        y += 1;
+    }
+
+    return y - starty;
+}
+
 // }}}
 
 fn _clearLineWith(from: usize, to: usize, y: usize, ch: u32, fg: u32, bg: u32) void {
@@ -3218,7 +3256,7 @@ pub fn drawZapScreen() void {
 }
 
 // Examine mode {{{
-pub const ExamineTileFocus = enum(usize) { Mob = 0, Surface = 1, Item = 2 };
+pub const ExamineTileFocus = enum(usize) { Mob = 0, Surface = 1, Item = 2, Gas = 3 };
 
 pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus, start_coord: ?Coord) bool {
     var arena = std.heap.ArenaAllocator.init(state.alloc);
@@ -3276,17 +3314,21 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus, start_coord: ?Coord)
         const has_item = state.dungeon.itemsAt(coord).len > 0;
         const has_mons = state.dungeon.at(coord).mob != null;
         const has_surf = state.dungeon.at(coord).surface != null or !mem.eql(u8, state.dungeon.terrainAt(coord).id, "t_default");
+        const has_gas = state.dungeon.anyGasAt(coord);
+        std.log.info("has_gas: {}", .{has_gas});
 
         if (!tile_focus_set_manually) {
             const has_something = switch (tile_focus) {
                 .Mob => has_mons,
                 .Surface => has_surf,
+                .Gas => has_gas,
                 .Item => has_item,
             };
 
             if (!has_something) {
                 if (has_item) tile_focus = .Item;
                 if (has_surf) tile_focus = .Surface;
+                if (has_gas) tile_focus = .Gas;
                 if (has_mons) tile_focus = .Mob;
             }
         }
@@ -3294,7 +3336,7 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus, start_coord: ?Coord)
         // Draw side info pane.
         inf_win.clear();
         inf_win.clearMouseTriggers();
-        if (state.player.cansee(coord) and has_mons or has_surf or has_item) {
+        if (state.player.cansee(coord) and has_mons or has_surf or has_item or has_gas) {
             var y: usize = 0;
 
             var tabx: usize = 0;
@@ -3312,7 +3354,6 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus, start_coord: ?Coord)
             }
             y += 1;
 
-            //y += inf_win.drawTextAt(0, y, "Press $b<$./$b>$. to switch tabs.\n\n", .{});
             y += inf_win.drawTextAt(0, y, "Switch tabs with $b<$./$b>$..\n\n", .{});
 
             const linewidth: usize = @intCast(inf_d.endx - inf_d.startx);
@@ -3338,6 +3379,8 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus, start_coord: ?Coord)
                 }
             } else if (tile_focus == .Item and has_item) {
                 y += _getItemDescription(&inf_win, y, state.dungeon.itemsAt(coord).last().?, linewidth);
+            } else if (tile_focus == .Gas and has_gas) {
+                y += _getGasDescription(&inf_win, y, state.dungeon.atGas(coord), linewidth);
             }
 
             // Add keybinding descriptions
@@ -3494,7 +3537,8 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus, start_coord: ?Coord)
                     tile_focus = switch (tile_focus) {
                         .Mob => .Surface,
                         .Surface => .Item,
-                        .Item => .Mob,
+                        .Item => .Gas,
+                        .Gas => .Mob,
                     };
                     if (tile_focus == .Mob) mob_tile_focus = .Main;
                     desc_scroll = 0;
@@ -3502,9 +3546,10 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus, start_coord: ?Coord)
                 '<' => {
                     tile_focus_set_manually = true;
                     tile_focus = switch (tile_focus) {
-                        .Mob => .Item,
+                        .Mob => .Gas,
                         .Surface => .Mob,
                         .Item => .Surface,
+                        .Gas => .Item,
                     };
                     if (tile_focus == .Mob) mob_tile_focus = .Main;
                     desc_scroll = 0;

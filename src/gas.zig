@@ -24,10 +24,34 @@ pub const GasCreationOpts = struct {
     chance: usize, // One in X, so higher is less often. Lava emitting smoke is one in 300
 };
 
+pub const GasDissipationRate = enum(u8) {
+    s1 = 1,
+    s2 = 2,
+    s3 = 3,
+    s4 = 4,
+    s5 = 5,
+    s6 = 6,
+    s7 = 7,
+    s8 = 8,
+
+    pub fn to_string(self: @This()) []const u8 {
+        return switch (self) {
+            .s1 => "fastest",
+            .s2 => "very fast",
+            .s3 => "fast",
+            .s4 => "average",
+            .s5 => "average",
+            .s6 => "slow",
+            .s7 => "very slow",
+            .s8 => "slowest",
+        };
+    }
+};
+
 pub const Gas = struct {
     name: []const u8,
     color: u32,
-    dissipation_rate: usize,
+    dissipation_rate: GasDissipationRate,
     opacity: f64 = 0.0,
     trigger: *const fn (*Mob, usize) void,
     not_breathed: bool = false, // if true, will affect nonbreathing mobs
@@ -39,7 +63,7 @@ pub const Gas = struct {
 pub const Paralysis = Gas{
     .name = "paralysing gas",
     .color = 0xaaaaff,
-    .dissipation_rate = 5,
+    .dissipation_rate = .s5,
     .trigger = triggerParalysis,
     .id = 0,
 };
@@ -47,7 +71,7 @@ pub const Paralysis = Gas{
 pub const SmokeGas = Gas{
     .name = "smoke",
     .color = 0xffffff,
-    .dissipation_rate = 2,
+    .dissipation_rate = .s2,
     // Lava emits smoke. If opacity >= 1.0, this causes massive lighting
     // fluctuations, which is not desirable.
     .opacity = 0.9,
@@ -58,7 +82,7 @@ pub const SmokeGas = Gas{
 pub const Disorient = Gas{
     .name = "disorienting fumes",
     .color = 0x33cbca,
-    .dissipation_rate = 5,
+    .dissipation_rate = .s5,
     .trigger = triggerDisorient,
     .id = 2,
 };
@@ -66,7 +90,7 @@ pub const Disorient = Gas{
 pub const Slow = Gas{
     .name = "slowing gas",
     .color = 0x8e77dd,
-    .dissipation_rate = 2,
+    .dissipation_rate = .s2,
     .trigger = triggerSlow,
     .id = 3,
 };
@@ -74,7 +98,7 @@ pub const Slow = Gas{
 pub const Healing = Gas{
     .name = "healing gas",
     .color = 0xdd6565,
-    .dissipation_rate = 4,
+    .dissipation_rate = .s4,
     .trigger = triggerHealing,
     .id = 4,
 };
@@ -82,7 +106,7 @@ pub const Healing = Gas{
 pub const Dust = Gas{
     .name = "dust",
     .color = 0xd2b48c,
-    .dissipation_rate = 7,
+    .dissipation_rate = .s7,
     .opacity = 0.4,
     .trigger = triggerNone,
     .residue = .Dust,
@@ -92,7 +116,7 @@ pub const Dust = Gas{
 pub const Steam = Gas{
     .name = "steam",
     .color = 0x5f5f5f,
-    .dissipation_rate = 5,
+    .dissipation_rate = .s5,
     .opacity = 0.00,
     .trigger = struct {
         pub fn f(mob: *Mob, _: usize) void {
@@ -111,7 +135,7 @@ pub const Steam = Gas{
 pub const Miasma = Gas{
     .name = "miasma",
     .color = 0xd77fd7,
-    .dissipation_rate = 8,
+    .dissipation_rate = .s8,
     .opacity = 0.1,
     .trigger = triggerMiasma,
     .id = 7,
@@ -120,7 +144,7 @@ pub const Miasma = Gas{
 pub const Seizure = Gas{
     .name = "seizure gas",
     .color = 0xd7d77f,
-    .dissipation_rate = 3,
+    .dissipation_rate = .s3,
     .opacity = 0.3,
     .trigger = struct {
         pub fn f(mob: *Mob, _: usize) void {
@@ -133,7 +157,7 @@ pub const Seizure = Gas{
 pub const Blinding = Gas{
     .name = "tear gas",
     .color = 0x7fe7f7,
-    .dissipation_rate = 8,
+    .dissipation_rate = .s8,
     .opacity = 0.5,
     .trigger = struct {
         pub fn f(mob: *Mob, _: usize) void {
@@ -146,7 +170,7 @@ pub const Blinding = Gas{
 pub const Darkness = Gas{
     .name = "suffocating darkness",
     .color = 0x1f00ff,
-    .dissipation_rate = 1,
+    .dissipation_rate = .s1,
     .opacity = 1.0,
     .trigger = struct {
         pub fn f(mob: *Mob, _: usize) void {
@@ -159,7 +183,7 @@ pub const Darkness = Gas{
 pub const Corrosive = Gas{
     .name = "acid cloud",
     .color = 0xa7e234,
-    .dissipation_rate = 6,
+    .dissipation_rate = .s6,
     .opacity = 0.1,
     .trigger = struct {
         pub fn f(mob: *Mob, _: usize) void {
@@ -185,7 +209,7 @@ pub const Corrosive = Gas{
 pub const Fire = Gas{
     .name = "flammable gas",
     .color = 0xfdc585,
-    .dissipation_rate = 4,
+    .dissipation_rate = .s4,
     // If opacity >= 1.0, this causes massive lighting fluctuations in caverns,
     // which is not desirable.
     .opacity = 0.9,
@@ -277,7 +301,7 @@ pub fn spreadGas(matrix: anytype, z: usize, cur_gas: usize, deterministic: bool)
     if (!is_conglomerate and @TypeOf(matrix) != *[HEIGHT][WIDTH]usize)
         @compileError("Invalid argument to spreadGas");
 
-    const dis = Gases[cur_gas].dissipation_rate;
+    const dis = @intFromEnum(Gases[cur_gas].dissipation_rate);
 
     var new: [HEIGHT][WIDTH]usize = std.mem.zeroes([HEIGHT][WIDTH]usize);
     var y: usize = 0;

@@ -6234,6 +6234,15 @@ pub const Dungeon = struct {
         return &self.gas[c.z][c.y][c.x];
     }
 
+    pub fn anyGasAt(self: *Dungeon, c: Coord) bool {
+        const g = self.atGas(c);
+        return for (g) |gas_amount| {
+            if (gas_amount > 0) {
+                break true;
+            }
+        } else false;
+    }
+
     pub inline fn soundAt(self: *Dungeon, c: Coord) *Sound {
         return &self.sound[c.z][c.y][c.x];
     }
