@@ -426,6 +426,25 @@ x Dispel Undead
 
 Rings
 -----
+- ring of revelation
+  - Must stand next to unaware living/undead (not constructed) monster
+  - Monster's mind is read
+  - All squares (and adjacent squares) that a monster was in in the past 25
+    (100?) turns is revealed
+    - So if monster was patrolling, their patrol area is read
+    - May be patchy? So each square has only 80% to be revealed, adjacent
+      squares have 50% chance, squares adjacent to those have 5%, etc
+  - Monster is left with a .Confused job, where they stand still and look
+    around, as if they forgot what they were doing
+    - No other impairments
+  - Version for constructs?
+    - Evocable: copper wand
+    - Same mechanic, stand next to monster and read its memory
+      - But it's not patchy, 100% chance to be revealed
+    - Noisy, so it'll investigate you
+      - Alternatively, it might require physical contact, so the construct is
+       always aware of you
+
 x ring of concentration: [holy] Increase willpower by a factor of 2, at the
   cost of melee%, evade%, and slowness.
 
@@ -1585,15 +1604,35 @@ x Hunter mechanics
   x Stalkers: acid damage, and possible rename ("acid sprites" ?)
     x Simplification: instead of having attack AI for stalker, have them actually
       transform into sparklings/acid-sprites when hunter captain dies
-- Fire: don't destroy corpses entirely, only char them
+x Remove traps for now until purpose is clear
+- Fire tweaks
+  - Don't destroy corpses entirely, only char them
+  - Monsters should scream when on fire, and do fireWork() (i.e. run around and panic)
+  - Smoke when burning things
 - More rings
+  x Ring of exclusion
+  x Ring of protection
+  x Ring of retaliation
+- Tutorial!
+  - Explain tactics & tips
+    - Where cleaners and coroner comes from is the direction of stairs
+      - Watch carefully for which doors they come from
+- UI
+  - If two monsters on screen, how to tell what squares a specific monster can
+    see and another can't?
+    - E.g. aware spire on screen and unaware monster on screen
+    - Idea: when examining monster, FoV is highlighted
+  - Show gas (no really)
+- Wood should be creaky?
+*** 3.2.0 release ***
+- Add traps back in, reworking them to be useful
+  - Idea: Vents are always near doors?
+- More rings
+  - Ring of revelation
   - Ring of suggestion
   - Ring of contriction
   - Ring of excavation
   - Ring of execution
-  x Ring of exclusion
-  x Ring of protection
-  x Ring of retaliation
 - Events
   - Lore quick speeches/monologues
   - Workshop/2 and Workshop/3

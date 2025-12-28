@@ -1,3 +1,15 @@
+Artifacts
+- Seal of the Ambassador
+  - Found in the Crypt or something?
+  - Or maybe it's not an object, it's a shield attached to a wall
+    - "Death to all who hear the will of the Necromancer, and do not fulfill it
+      in haste."
+  - If it's on the Ambassador, then:
+    - "Lord Will" -- the title of the Ambassador
+    - "The voice of this man is the Voice of the Necromancer. The Will of the
+      Necromancer is the Will of God."
+    - "You will render all such aid as he requires, and follow all that he
+      dictates, under pain of death."
 Lore speeches
 - Curse you, @! Traitor! Mendicant!
   - You were sent here to help us destroy these cave goblins! Not to join them!
@@ -15,7 +27,7 @@ Lore speeches
   - Now they watch us all closely, fearing that we also will turn.
 - [hunter to @] Looking for something?
 - [hunter to @] Peekaboo.
-- [hunter to @] How are you so bad at escaping?
+- [hunter to @] How are you so bad at running away?
 - [hunter to @] Did you lose something here?
   - Maybe we can help you find it.
 - [hunter to @] No no, please, don't worry.
@@ -30,6 +42,8 @@ Lore speeches
   - I'M GOING TO PUNCTURE YOU LIKE A COLANDER! [bold/italic text]
   - (Wields a spear, and becomes invigorated + enraged)
   - (Must be higher levels, so maybe armored guard?)
+  - Shouldn't be there if the player hasn't actually killed a guard (need to
+    query scoresheet)
 - [when found with cave-goblins] Treachery doesn't pay off, @.
   - The only reason these filthy cave-goblins like you is because they're more
     of the same.
