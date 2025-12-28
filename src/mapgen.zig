@@ -3615,7 +3615,7 @@ pub fn initLevel(level: usize) void {
 
         placeRoomFeatures(level, state.alloc);
         placeRoomTerrain(level);
-        placeTraps(level);
+        //placeTraps(level);
         placeItems(level);
         placeMobs(level, state.alloc);
         setLevelMaterial(level);
