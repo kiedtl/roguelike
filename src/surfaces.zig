@@ -211,7 +211,7 @@ pub const CopperTerrain = Terrain{
     },
 
     .for_levels = &[_][]const u8{ "PRI", "WRK", "LAB", "HLD" },
-    .placement = .EntireRoom,
+    .placement = .RoomPortion,
     .weight = 8,
 };
 
@@ -220,11 +220,14 @@ pub const WoodTerrain = Terrain{
     .name = "wood",
     .fg = 0xdaa520, // wood
     .tile = '·',
-    .resists = .{ .rFire = -25, .rElec = 25 },
-    .flammability = 40,
+    .resists = .{ .rFire = -25, .rElec = 50 },
+    .effects = &[_]StatusDataInfo{
+        .{ .status = .CopperWeapon, .duration = .{ .Ctx = null } },
+    },
+    .flammability = 30,
 
     .for_levels = &[_][]const u8{"PRI"},
-    .placement = .RoomPortion,
+    .placement = .EntireRoom,
     .weight = 5,
 };
 
