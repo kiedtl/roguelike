@@ -41,6 +41,8 @@ pub const Driver = enum {
     SDL2,
 };
 
+pub const NO_OUTLINE: u32 = ~@as(u32, 0);
+
 pub const Cell = struct {
     fg: u32 = 0,
     bg: u32 = colors.BG,
@@ -49,6 +51,8 @@ pub const Cell = struct {
     sch: ?font.Sprite = null,
     sfg: u32 = 0,
     sbg: u32 = 0,
+
+    outline: u32 = NO_OUTLINE,
 
     // Used only for Console.render*() funcs. No effect in present().
     //
@@ -430,38 +434,64 @@ pub fn present() void {
                     const f_data = if (cell.fl.wide) font.font_w_data else font.font_data;
                     const f_width: usize = if (cell.fl.wide) font.FONT_W_WIDTH else font.FONT_WIDTH;
 
-                    if (ch < 32) { // Unprintable
-                        px += font.FONT_WIDTH;
-                        continue;
+                    if (ch >= 32) {
+                        const font_ch_y = ((ch - 32) >> 4) * font.FONT_HEIGHT;
+                        const font_ch_x = ((ch - 32) & 15) * f_width;
+
+                        for (0..font.FONT_HEIGHT) |fy| {
+                            for (0..f_width >> 3) |fx| {
+                                const ptr = pixels[((py + fy) * (w_width * font.FONT_WIDTH) + (px + fx * 8))..];
+                                const ind = (font_ch_y + fy) * (16 * f_width) + font_ch_x + fx * 8;
+                                const res = blendSIMD(fg, bg, f_data[ind .. ind + 8]);
+                                ptr[0], ptr[1], ptr[2], ptr[3], ptr[4], ptr[5], ptr[6], ptr[7] = res;
+                            }
+
+                            //for (0..f_width) |fx| {
+                            //    const pixel = f_data[(font_ch_y + fy) * (16 * f_width) + font_ch_x + fx];
+
+                            //    const color = switch (pixel) {
+                            //        0 => bg,
+                            //        0xff => fg,
+                            //        else => b: {
+                            //            //colors.percentageOf(fg, @as(usize, pixel) * 100 / 255),
+
+                            //            const rb = ((fg & 0xFF00FF) * pixel) & 0xFF00FF00;
+                            //            const g = ((fg & 0x00FF00) * pixel) & 0x00FF0000;
+                            //            break :b @as(u32, @bitCast((rb | g) >> 8));
+                            //        },
+                            //    } << 8 | 0xFF;
+                            //    pixels[((py + fy) * (w_width * font.FONT_WIDTH) + (px + fx))] = color;
+                            //}
+                        }
                     }
 
-                    const font_ch_y = ((ch - 32) >> 4) * font.FONT_HEIGHT;
-                    const font_ch_x = ((ch - 32) & 15) * f_width;
+                    if (cell.outline != NO_OUTLINE) {
+                        const color1 = @as(u32, cell.outline) << 8;
+                        const color2 = colors.percentageOf(cell.outline, 50) << 8;
 
-                    for (0..font.FONT_HEIGHT) |fy| {
-                        for (0..f_width >> 3) |fx| {
-                            const ptr = pixels[((py + fy) * (w_width * font.FONT_WIDTH) + (px + fx * 8))..];
-                            const ind = (font_ch_y + fy) * (16 * f_width) + font_ch_x + fx * 8;
-                            const res = blendSIMD(fg, bg, f_data[ind .. ind + 8]);
-                            ptr[0], ptr[1], ptr[2], ptr[3], ptr[4], ptr[5], ptr[6], ptr[7] = res;
+                        // Inner top/bottom
+                        for (0..f_width) |fx| {
+                            pixels[((py + 1) * (w_width * font.FONT_WIDTH) + (px + fx))] = color1;
+                            pixels[((py + font.FONT_HEIGHT - 2) * (w_width * font.FONT_WIDTH) + (px + fx))] = color1;
                         }
 
-                        //for (0..f_width) |fx| {
-                        //    const pixel = f_data[(font_ch_y + fy) * (16 * f_width) + font_ch_x + fx];
+                        // Outer top/bottom
+                        for (1..f_width - 1) |fx| {
+                            pixels[((py + 0) * (w_width * font.FONT_WIDTH) + (px + fx))] = color2;
+                            pixels[((py + font.FONT_HEIGHT - 1) * (w_width * font.FONT_WIDTH) + (px + fx))] = color2;
+                        }
 
-                        //    const color = switch (pixel) {
-                        //        0 => bg,
-                        //        0xff => fg,
-                        //        else => b: {
-                        //            //colors.percentageOf(fg, @as(usize, pixel) * 100 / 255),
+                        // Inner right/left
+                        for (1..font.FONT_HEIGHT - 1) |fy| {
+                            pixels[((py + fy) * (w_width * font.FONT_WIDTH) + (px + 1))] = color1;
+                            pixels[((py + fy) * (w_width * font.FONT_WIDTH) + (px + f_width - 2))] = color1;
+                        }
 
-                        //            const rb = ((fg & 0xFF00FF) * pixel) & 0xFF00FF00;
-                        //            const g = ((fg & 0x00FF00) * pixel) & 0x00FF0000;
-                        //            break :b @as(u32, @bitCast((rb | g) >> 8));
-                        //        },
-                        //    } << 8 | 0xFF;
-                        //    pixels[((py + fy) * (w_width * font.FONT_WIDTH) + (px + fx))] = color;
-                        //}
+                        // Outer right/left
+                        for (0..font.FONT_HEIGHT) |fy| {
+                            pixels[((py + fy) * (w_width * font.FONT_WIDTH) + (px + 0))] = color2;
+                            pixels[((py + fy) * (w_width * font.FONT_WIDTH) + (px + f_width - 1))] = color2;
+                        }
                     }
 
                     px += font.FONT_WIDTH;

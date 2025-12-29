@@ -2068,7 +2068,8 @@ fn modifyTile(moblist: []const *Mob, coord: Coord, p_tile: display.Cell) display
                 //tile.fg = 0xffffff;
                 // tile.fg = 0xff6666;
                 if (state.is_walkable(coord, .{ .mob = state.player })) {
-                    tile.bg = colors.percentageOf(colors.DOBALENE_BLUE, 15);
+                    tile.bg = colors.percentageOf(colors.DOBALENE_BLUE, 10);
+                    tile.outline = colors.percentageOf(colors.DOBALENE_BLUE, 25);
                 }
                 // }
             }
@@ -3305,8 +3306,8 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus, start_coord: ?Coord)
 
     var kbd_s = false;
 
-    const moblist = state.createMobList(false, true, state.player.coord.z, state.alloc);
-    defer moblist.deinit();
+    const full_moblist = state.createMobList(false, true, state.player.coord.z, state.alloc);
+    defer full_moblist.deinit();
 
     var prev_coord = coord;
 
@@ -3452,27 +3453,28 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus, start_coord: ?Coord)
 
         mpp_win.clear();
         mp3_win.clear();
-        drawMap(&mpp_win, moblist.items, coord);
 
-        const dcoord = coordToScreenFromRefpoint(coord, coord).?;
-        mp3_win.drawOutlineAround(dcoord, .{ .fg = colors.CONCRETE, .fl = .{ .wide = true } });
+        const moblist =
+            if (has_mons and state.dungeon.at(coord).mob != state.player)
+                &.{state.dungeon.at(coord).mob.?}
+            else
+                full_moblist.items;
+        drawMap(&mpp_win, moblist, coord);
 
         if (highlight) |_highlight| {
             if (coordToScreenFromRefpoint(_highlight, coord)) |hdcoord| {
                 mp3_win.drawOutlineAround(hdcoord, .{ .fg = 0xaaaaaa, .fl = .{ .wide = true } });
-            }
-        }
 
-        // Sometimes if highlight outline and main outline overlap then
-        // center coord will be opaqued.
-        //
-        // Force it to be transparent to prevent this
-        mp3_win.setCell(dcoord.x, dcoord.y, .{ .trans = true });
-        if (highlight) |_highlight| {
-            if (coordToScreenFromRefpoint(_highlight, coord)) |hdcoord| {
+                // Sometimes if highlight outline is the focused tile, and then it'll
+                // be opaque. Force it to be transparent to prevent this.
                 mp3_win.setCell(hdcoord.x, hdcoord.y, .{ .trans = true });
             }
         }
+
+        const dcoord = coordToScreenFromRefpoint(coord, coord).?;
+        var focused_tile = mpp_win.getCell(dcoord.x, dcoord.y);
+        focused_tile.outline = colors.CONCRETE;
+        mp3_win.setCell(dcoord.x, dcoord.y, focused_tile);
 
         container.renderFully(0, 0);
         display.present();
