@@ -39,16 +39,23 @@ supported.
 
 ### Building from source
 
+NOTE: Building *on* Windows is not possible, at least not without heavy
+modifications. Building *for* Windows is supported.
+
 To build from source, you'll need at least the following prerequisites:
 
 - [zig](https://ziglang.org/)
 - [just](https://github.com/casey/just)
 
-At the bare minimum, you'll need to do the following to build the game:
+If building for Windows, you'll also to retrieve the Mingw packages
+with `tools/retrieve-mingw.sh`. A brain may be required for this step.
 
-- Clone this repository
+Then:
+
 - Pull in third party submodules using `git submodule update --init --recursive`
-- Execute `just` in the project root to build the game binary, which will be located in `zig-out/bin/rl`
+- Execute `just` in the project root.
+
+The result will be in `zig-out/bin/rl`.
 
 ## Contributing
 
@@ -56,7 +63,7 @@ Please discuss with me before submitting a PR.
 
 ## License
 
-The game itself is licensed under the GPL v3 license. I may be willing to
+The game itself is licensed under the GPLv3 license. I may be willing to
 relicense certain portions if you wish to use it; contact me for details.
 
 The game's font is derived from [Spleen](https://github.com/fcambus/spleen) by

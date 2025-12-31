@@ -24,6 +24,12 @@ const std = @import("std");
 const sort = std.sort;
 const builtin = @import("builtin");
 
+// Not supported for cross-compiling.
+comptime {
+    if (builtin.os.tag == .windows)
+        @compileError("Windows not supported.");
+}
+
 const curl = @import("curl");
 const Easy = curl.Easy;
 
@@ -234,7 +240,7 @@ pub fn createEvent(
         try tagset.inner.append(.{ .name = "build", .value = @tagName(builtin.mode) });
         try tagset.inner.append(.{ .name = "os", .value = @tagName(builtin.os.tag) });
         if (builtin.os.tag == .windows) {
-            const v = try std.fmt.allocPrint(alloc, "{s}", .{builtin.os.version_range.windows});
+            const v = try std.fmt.allocPrint(alloc, "{}", .{builtin.os.version_range.windows});
             try tagset.inner.append(.{ .name = "windows_version", .value = v });
         }
         {

@@ -33,7 +33,6 @@ const player = @import("player.zig");
 const Rect = types.Rect;
 const rng = @import("rng.zig");
 const scores = @import("scores.zig");
-const sentry = @import("sentry.zig");
 const serializer = @import("serializer.zig");
 const spells = @import("spells.zig");
 const state = @import("state.zig");
@@ -84,42 +83,47 @@ pub fn log(
 // seed before calling sentry and then the default panic handler.
 var __panic_stage: usize = 0;
 pub fn panic(msg: []const u8, trace: ?*std.builtin.StackTrace, x: ?usize) noreturn {
-    nosuspend switch (__panic_stage) {
-        0 => {
-            __panic_stage = 1;
-            ui.deinit() catch {};
-            std.log.err("Fatal error encountered. (Seed: {})", .{state.seed});
+    if (comptime builtin.os.tag != .windows) {
+        const sentry = @import("sentry.zig");
+        nosuspend switch (__panic_stage) {
+            0 => {
+                __panic_stage = 1;
+                ui.deinit() catch {};
+                std.log.err("Fatal error encountered. (Seed: {})", .{state.seed});
 
-            if (!state.sentry_disabled) {
-                const alloc = std.heap.smp_allocator;
+                if (!state.sentry_disabled) {
+                    const alloc = std.heap.smp_allocator;
 
-                sentry.captureError(
-                    build_options.release,
-                    build_options.dist,
-                    "Panic",
-                    msg,
-                    &[_]sentry.SentryEvent.TagSet.Tag{.{
-                        .name = "seed",
-                        .value = std.fmt.allocPrint(alloc, "{}", .{state.seed}) catch unreachable,
-                    }},
-                    trace,
-                    @returnAddress(),
-                    alloc,
-                ) catch |e| {
-                    std.log.err("zig-sentry: Fail: {s}", .{@errorName(e)});
-                };
-            }
+                    sentry.captureError(
+                        build_options.release,
+                        build_options.dist,
+                        "Panic",
+                        msg,
+                        &[_]sentry.SentryEvent.TagSet.Tag{.{
+                            .name = "seed",
+                            .value = std.fmt.allocPrint(alloc, "{}", .{state.seed}) catch unreachable,
+                        }},
+                        trace,
+                        @returnAddress(),
+                        alloc,
+                    ) catch |e| {
+                        std.log.err("zig-sentry: Fail: {s}", .{@errorName(e)});
+                    };
+                }
 
-            std.debug.defaultPanic(msg, x);
-        },
-        1 => {
-            __panic_stage = 2;
-            std.debug.defaultPanic(msg, x);
-        },
-        else => {
-            std.posix.abort();
-        },
-    };
+                std.debug.defaultPanic(msg, x);
+            },
+            1 => {
+                __panic_stage = 2;
+                std.debug.defaultPanic(msg, x);
+            },
+            else => {
+                std.posix.abort();
+            },
+        };
+    } else {
+        std.debug.defaultPanic(msg, x);
+    }
 }
 
 fn initGame(no_display: bool, display_scale: f32) bool {
@@ -1343,8 +1347,7 @@ pub fn actualMain() anyerror!void {
         state.sentry_disabled = true;
         state.alloc.free(v);
     } else |_| {
-        // state.sentry_disabled = false;
-        state.sentry_disabled = true;
+        state.sentry_disabled = false;
     }
 
     var scale: f32 = 1;
@@ -1394,25 +1397,28 @@ pub fn actualMain() anyerror!void {
 
 pub fn main() void {
     actualMain() catch |e| {
-        if (!state.sentry_disabled) {
-            if (@errorReturnTrace()) |error_trace| {
-                const alloc = std.heap.smp_allocator;
+        if (comptime builtin.os.tag != .windows) {
+            const sentry = @import("sentry.zig");
+            if (!state.sentry_disabled) {
+                if (@errorReturnTrace()) |error_trace| {
+                    const alloc = std.heap.smp_allocator;
 
-                sentry.captureError(
-                    build_options.release,
-                    build_options.dist,
-                    @errorName(e),
-                    "propagated error trace",
-                    &[_]sentry.SentryEvent.TagSet.Tag{.{
-                        .name = "seed",
-                        .value = std.fmt.allocPrint(alloc, "{}", .{state.seed}) catch unreachable,
-                    }},
-                    error_trace,
-                    null,
-                    alloc,
-                ) catch |zs_err| {
-                    std.log.err("zig-sentry: Fail: {s}", .{@errorName(zs_err)});
-                };
+                    sentry.captureError(
+                        build_options.release,
+                        build_options.dist,
+                        @errorName(e),
+                        "propagated error trace",
+                        &[_]sentry.SentryEvent.TagSet.Tag{.{
+                            .name = "seed",
+                            .value = std.fmt.allocPrint(alloc, "{}", .{state.seed}) catch unreachable,
+                        }},
+                        error_trace,
+                        null,
+                        alloc,
+                    ) catch |zs_err| {
+                        std.log.err("zig-sentry: Fail: {s}", .{@errorName(zs_err)});
+                    };
+                }
             }
         }
     };
