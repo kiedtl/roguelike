@@ -469,6 +469,9 @@ fn setSection(
         last_group = sect.group;
     }
 
+    _ = side_con.drawTextAt(0, side_con.height - 4, "Use movement keys to navigate.", .{});
+    _ = side_con.drawTextAt(0, side_con.height - 1, "Press $bEsc$. to quit.", .{});
+
     for (SECTIONS[chosen].portions, text_cons[0..SECTIONS[chosen].portions.len]) |portion, text_con| {
         var ty: usize = 1;
         ty += text_con.drawTextAt(0, ty, portion.text, .{});
@@ -604,6 +607,14 @@ pub fn guideMain() void {
                 },
                 .Char => |c| {
                     switch (c) {
+                        'w', 'a', 'k', 'h' => if (section > 0) {
+                            section -= 1;
+                            setSection(section, side_con, &map_cons, &text_cons, &ticks);
+                        },
+                        'x', 'd', 'j', 'l' => if (section < SECTIONS.len - 1) {
+                            section += 1;
+                            setSection(section, side_con, &map_cons, &text_cons, &ticks);
+                        },
                         else => {},
                     }
                 },
