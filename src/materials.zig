@@ -17,6 +17,7 @@ pub const MATERIALS = [_]*const Material{
     &Rust,
     &Dobalene,
     &PlatedDobalene,
+    &Concrete,
 };
 
 pub const PaintedConcrete = Material{

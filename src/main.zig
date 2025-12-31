@@ -14,6 +14,8 @@ const StackBuffer = @import("buffer.zig").StackBuffer;
 
 const ai = @import("ai.zig");
 const alert = @import("alert.zig");
+const Coord = types.Coord;
+const Direction = types.Direction;
 const display = @import("display.zig");
 const err = @import("err.zig");
 const events = @import("events.zig");
@@ -26,7 +28,9 @@ const janet = @import("janet.zig");
 const literature = @import("literature.zig");
 const mapgen = @import("mapgen.zig");
 const mobs = @import("mobs.zig");
+const Mob = types.Mob;
 const player = @import("player.zig");
+const Rect = types.Rect;
 const rng = @import("rng.zig");
 const scores = @import("scores.zig");
 const sentry = @import("sentry.zig");
@@ -36,14 +40,10 @@ const state = @import("state.zig");
 const surfaces = @import("surfaces.zig");
 const tasks = @import("tasks.zig");
 const termbox = @import("termbox.zig");
+const tutorial = @import("tutorial.zig");
 const types = @import("types.zig");
 const ui = @import("ui.zig");
 const utils = @import("utils.zig");
-const Direction = types.Direction;
-const Coord = types.Coord;
-const Rect = types.Rect;
-const Tile = types.Tile;
-const Mob = types.Mob;
 
 const ArmorList = types.ArmorList;
 const ContainerList = types.ContainerList;
@@ -58,6 +58,7 @@ const PropList = types.PropList;
 const RingList = types.RingList;
 const Squad = types.Squad;
 const StockpileArrayList = types.StockpileArrayList;
+const Tile = types.Tile;
 const WeaponList = types.WeaponList;
 const DIRECTIONS = types.DIRECTIONS;
 
@@ -203,14 +204,11 @@ fn initGameState() void {
     }
 }
 
-fn initLevels() bool {
-    var loading_screen = ui.initLoadingScreen();
-    defer loading_screen.deinit();
-
-    ui.drawLoadingScreen(&loading_screen, "", "Generating level...", 0) catch return false;
+fn initLevels(loading_screen: *ui.LoadingScreen) bool {
+    ui.drawLoadingScreenGenerating(loading_screen, "", "Generating level...", 0) catch return false;
     mapgen.initLevel(state.PLAYER_STARTING_LEVEL);
 
-    return ui.drawLoadingScreenFinish(&loading_screen);
+    return ui.drawLoadingScreenFinish(loading_screen);
 }
 
 fn deinitGame() void {
@@ -451,6 +449,7 @@ fn readInput() !bool {
     return action_taken;
 }
 
+pub // pub for tutorial.guideMain
 fn tickGame(p_cur_level: ?usize) !void {
     if (state.state != .Viewer and state.player.is_dead) {
         state.state = .Lose;
@@ -1067,7 +1066,7 @@ fn testerMain() void {
                 initGameState();
             defer deinitGameState();
 
-            mapgen.initLevelTest(testg.prefab, testg.entry) catch |e| switch (e) {
+            mapgen.initLevelTest(testg.prefab, Coord.new2(0, 0, 0), testg.entry) catch |e| switch (e) {
                 error.NoSuchPrefab => {
                     ctx.failed += 1;
                     ctx.record("No such prefab '{s}'", .{testg.prefab});
@@ -1141,7 +1140,7 @@ fn profilerMain() void {
     assert(initGame(true, 0));
     defer deinitGame();
 
-    mapgen.initLevelTest("PRF1_combat", true) catch err.wat();
+    mapgen.initLevelTest("PRF1_combat", Coord.new2(0, 0, 0), true) catch err.wat();
 
     var i: usize = 200;
     while (i > 0) : (i -= 1) {
@@ -1252,6 +1251,48 @@ fn analyzerMain() void {
     initGameState();
 }
 
+pub fn gameMain() void {
+    ui.draw();
+
+    state.message(.Info, "You've just escaped from prison.", .{});
+    state.message(.Info, "Hurry to the stairs before the guards find you!", .{});
+
+    while (state.state != .Quit) switch (state.state) {
+        .Game => tickGame(null) catch {},
+        .Win => {
+            _ = ui.drawContinuePrompt("You escaped!", .{});
+            break;
+        },
+        .Lose => {
+            const msg = switch (rng.range(usize, 0, 99)) {
+                0...90 => "You die...",
+                95...99 => "You failed to escape.",
+                else => if (rng.tenin(15)) b: {
+                    break :b "You received the penalty for treason: death.";
+                } else b: {
+                    break :b switch (rng.range(usize, 0, 13)) {
+                        0...1 => "Uh, you just died.",
+                        2...3 => "You died. Unsurprising, given your playstyle.",
+                        4...5 => "You died. (Skill issue.)",
+                        6...7 => "Congrats! You died!",
+                        8...9 => "You acquire Negative Health Syndrome!",
+                        10...11 => "You acquire Negative Health Syndrome!",
+                        else => "You did the thing!! You died!!! Congrats!!!!",
+                    };
+                },
+            };
+            _ = ui.drawContinuePrompt("{s}", .{msg});
+            break;
+        },
+        .Quit => break,
+        .Viewer => err.wat(),
+    };
+
+    const info = scores.createMorgue();
+    if (state.state != .Quit)
+        ui.drawGameOverScreen(info);
+}
+
 pub fn actualMain() anyerror!void {
     var use_viewer = false;
     var use_tester = false;
@@ -1323,56 +1364,33 @@ pub fn actualMain() anyerror!void {
         std.log.err("Unknown error occurred while initializing game.", .{});
         return;
     }
-    if (!initLevels()) {
+
+    var loading_screen = ui.initLoadingScreen();
+
+    const chosen_mode = ui.drawLoadingScreen(&loading_screen) catch {
+        loading_screen.deinit();
         deinitGame();
         std.log.err("Canceled.", .{});
         return;
-    }
+    };
 
-    ui.draw();
-
-    state.message(.Info, "You've just escaped from prison.", .{});
-    state.message(.Info, "Hurry to the stairs before the guards find you!", .{});
-
-    if (use_viewer) {
-        viewerMain();
+    if (chosen_mode == .Tutorial) {
+        tutorial.guideMain();
     } else {
-        while (state.state != .Quit) switch (state.state) {
-            .Game => tickGame(null) catch {},
-            .Win => {
-                _ = ui.drawContinuePrompt("You escaped!", .{});
-                break;
-            },
-            .Lose => {
-                const msg = switch (rng.range(usize, 0, 99)) {
-                    0...90 => "You die...",
-                    95...99 => "You failed to escape.",
-                    else => if (rng.tenin(15)) b: {
-                        break :b "You received the penalty for treason: death.";
-                    } else b: {
-                        break :b switch (rng.range(usize, 0, 13)) {
-                            0...1 => "Uh, you just died.",
-                            2...3 => "You died. Unsurprising, given your playstyle.",
-                            4...5 => "You died. (Skill issue.)",
-                            6...7 => "Congrats! You died!",
-                            8...9 => "You acquire Negative Health Syndrome!",
-                            10...11 => "You acquire Negative Health Syndrome!",
-                            else => "You did the thing!! You died!!! Congrats!!!!",
-                        };
-                    },
-                };
-                _ = ui.drawContinuePrompt("{s}", .{msg});
-                break;
-            },
-            .Quit => break,
-            .Viewer => err.wat(),
-        };
-    }
+        if (!initLevels(&loading_screen)) {
+            loading_screen.deinit();
+            deinitGame();
+            std.log.err("Canceled.", .{});
+            return;
+        }
 
-    if (!use_viewer) {
-        const info = scores.createMorgue();
-        if (state.state != .Quit)
-            ui.drawGameOverScreen(info);
+        loading_screen.deinit();
+
+        if (use_viewer) {
+            viewerMain();
+        } else {
+            gameMain();
+        }
     }
 
     deinitGame();

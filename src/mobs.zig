@@ -2874,6 +2874,8 @@ pub fn placeMob(
     }
 
     if (opts.kill) {
+        if (template.mob.blood) |s|
+            state.dungeon.spatter(coord, s);
         mob_ptr.deinit();
     }
 

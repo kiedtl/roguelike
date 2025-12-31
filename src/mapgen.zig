@@ -1113,9 +1113,9 @@ pub fn resetLevel(level: usize) void {
     while (mobiter.next()) |mob| {
         if (mob == state.player)
             state.player_inited = false;
-        if (mob.coord.z == level and !mob.is_dead) {
-            mob.deinitNoCorpse();
-            state.mobs.remove(mob);
+        if (mob.coord.z == level) {
+            if (!mob.is_dead)
+                mob.deinitNoCorpse();
         }
     }
 
@@ -3541,12 +3541,14 @@ fn levelFeatureOres(_: usize, coord: Coord, _: *const Room, _: *const Prefab, _:
     }
 }
 
-pub fn initLevelTest(prefab: []const u8, entry: bool) !void {
+pub fn initLevelTest(prefab: []const u8, start: Coord, entry: bool) !void {
+    assert(start.z == 0);
+
     resetLevel(0);
 
     const fab = Prefab.findPrefabByName(prefab, &n_fabs) orelse return error.NoSuchPrefab;
     var room = Room{
-        .rect = Rect{ .start = Coord.new2(0, 0, 0), .width = fab.width, .height = fab.height },
+        .rect = Rect{ .start = start, .width = fab.width, .height = fab.height },
         .prefab = fab,
     };
     excavatePrefab(&room, fab, state.alloc, 0, 0);
@@ -4662,7 +4664,12 @@ pub fn readPrefabs(alloc: mem.Allocator) void {
     s_fabs = PrefabArrayList.init(alloc);
     state.fab_records = @TypeOf(state.fab_records).init(alloc);
 
-    for (&[_][]const u8{ "data/prefabs", "data/prefabs/tests", "data/prefabs/profiler" }) |dir| {
+    for (&[_][]const u8{
+        "data/prefabs",
+        "data/prefabs/tests",
+        "data/prefabs/profiler",
+        "data/prefabs/tutorial",
+    }) |dir| {
         const fabs_dir = std.fs.cwd().openDir(dir, .{ .iterate = true }) catch err.wat();
 
         var fabs_dir_iterator = fabs_dir.iterate();

@@ -1,0 +1,109 @@
+:g_material concrete
+
+:noguards
+:noitems
+:nolights
+
+@a Cmons ancient_mage ([no_squads]yea [prm_status1]Paralysis)
+@d Cmons death_mage   ([no_squads]yea [prm_status1]Paralysis)
+@s Cmons spark_mage   ([no_squads]yea [prm_status1]Paralysis)
+@b Cmons bone_mage    ([no_squads]yea [prm_status1]Paralysis)
+@e Cmons ember_mage   ([no_squads]yea [prm_status1]Paralysis)
+@c Cmons convult      ([no_squads]yea [prm_status1]Paralysis)
+
+##########
+•........•
+#........#
+#...ad...#
+#........#
+#...sb...#
+#...ec...#
+#........#
+•........•
+##########
+
+% ------
+:begin_prefab TUT_spellcasting2
+
+:g_material gold
+
+:noguards
+:noitems
+:nolights
+
+@p Cmons player ()
+
+•........•
+..###.....
+..#=#.....
+.......##.
+...p...=#.
+.......##.
+..........
+..#=#.....
+..###.....
+•........•
+
+
+% ------
+:begin_prefab TUT_spellcasting3
+
+:g_material concrete
+
+:noguards
+:noitems
+:nolights
+
+@0 m shrine
+@a p gold_c_wall_upper
+@b p gold_c_wall_lower
+@c p gold_c_wall_left
+@d p gold_c_wall_right
+@e p gold_c_slant_left
+@f p gold_c_slant_right
+@g p gold_c_wall_pltfrm
+
+•........•
+..ebf.....
+..c0d.....
+..fge.....
+..........
+..........
+.....egf..
+.....c0d..
+.....fae..
+•........•
+
+% ------
+:begin_prefab TUT_spellcasting4
+
+:g_material concrete
+
+:noguards
+:noitems
+:nolights
+
+@a Cmons ancient_mage ([no_squads]yea [prm_status1]Sleeping)
+@d Cmons guard        ([no_squads]yea [prm_status1]Sleeping)
+@s Cmons spark_mage   ([no_squads]yea [prm_status1]Sleeping)
+@b Cmons bone_mage    ([no_squads]yea [prm_status1]Sleeping)
+@e Cmons watcher      ([no_squads]yea [prm_status1]Sleeping)
+@c Cmons convult      ([no_squads]yea [prm_status1]Sleeping)
+
+@1 Cmons ancient_mage ([kill]yea [no_squads]yea)
+@2 Cmons guard        ([kill]yea [no_squads]yea)
+@3 Cmons spark_mage   ([kill]yea [no_squads]yea)
+@4 Cmons bone_mage    ([kill]yea [no_squads]yea)
+@5 Cmons watcher      ([kill]yea [no_squads]yea)
+@6 Cmons convult      ([kill]yea [no_squads]yea)
+
+..........
+..........
+....a1....
+....d2....
+....s3....
+....b4....
+....e5....
+....c6....
+..........
+..........

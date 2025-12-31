@@ -2033,7 +2033,7 @@ pub fn coordToScreen(coord: Coord) ?Coord {
     return coordToScreenFromRefpoint(coord, state.player.coord);
 }
 
-fn modifyTile(moblist: []const *Mob, coord: Coord, p_tile: display.Cell) display.Cell {
+pub fn modifyTile(moblist: []const *Mob, coord: Coord, p_tile: display.Cell) display.Cell {
     var tile = p_tile;
 
     // Draw noise and indicate if that tile is visible by another mob
@@ -2043,8 +2043,8 @@ fn modifyTile(moblist: []const *Mob, coord: Coord, p_tile: display.Cell) display
             //     state.dungeon.at(coord).mob != null or
             //     state.dungeon.itemsAt(coord).len > 0;
 
-            const light = state.dungeon.lightAt(state.player.coord).*;
             if (state.player.coord.eq(coord)) {
+                const light = state.dungeon.lightAt(state.player.coord).*;
                 tile.fg = if (light) colors.LIGHT_CONCRETE else colors.STEEL_BLUE;
             }
 
@@ -2549,7 +2549,90 @@ pub fn initLoadingScreen() LoadingScreen {
     return win_c;
 }
 
-pub fn drawLoadingScreen(loading_win: *LoadingScreen, text_context: []const u8, text: []const u8, percent_done: usize) !void {
+pub const LoadingScreenOption = enum(usize) {
+    Game = 0,
+    Tutorial = 1,
+};
+
+pub fn drawLoadingScreen(loading_win: *LoadingScreen) !LoadingScreenOption {
+    var chosen: usize = 0;
+    var options: [2][]const u8 = undefined;
+    options[@intFromEnum(LoadingScreenOption.Game)] = "    .: New  game :.   ";
+    options[@intFromEnum(LoadingScreenOption.Tutorial)] = "      .: Guide :.     ";
+
+    const win = dimensions(.Whole);
+
+    main: while (true) {
+        var y: usize = 0;
+        loading_win.text_con.clear();
+
+        for (options, 0..) |option, i| {
+            const ind = if (chosen == i) ">" else "-";
+            const color = if (chosen == i) colors.LIGHT_STEEL_BLUE else colors.GREY;
+            y += loading_win.text_con.drawTextAtf(0, y, "{s} {s} {s}", .{ ind, option, ind }, .{ .fg = color });
+            loading_win.text_con.addClickableText(.Hover, .{ .Signal = i });
+            loading_win.text_con.addClickableText(.Click, .{ .Signal = i });
+        }
+
+        loading_win.main_con.renderFully(@as(usize, @intCast(win.startx)), @as(usize, @intCast(win.starty)));
+        display.present();
+        clearScreen();
+
+        var evgen = display.getEvents(FRAMERATE * 2);
+        while (evgen.next()) |ev| switch (ev) {
+            .Quit => {
+                state.state = .Quit;
+                return error.Canceled;
+            },
+            .Hover => |c| switch (loading_win.main_con.handleMouseEvent(c, .Hover)) {
+                .Signal => |sig| chosen = sig,
+                .Coord, .Void => err.wat(),
+                .Outside, .Unhandled => {},
+            },
+            .Click => |c| switch (loading_win.main_con.handleMouseEvent(c, .Click)) {
+                .Signal => |sig| {
+                    chosen = sig;
+                    break :main;
+                },
+                .Coord, .Void => err.wat(),
+                .Unhandled => {},
+                .Outside => break :main,
+            },
+            .Key => |k| switch (k) {
+                //.CtrlC, .Esc => return error.Canceled,
+                .Enter => break :main,
+                .ArrowRight, .ArrowDown => if (chosen < options.len - 1) {
+                    chosen += 1;
+                },
+                .ArrowLeft, .ArrowUp => if (chosen > 0) {
+                    chosen -= 1;
+                },
+                else => {},
+            },
+            .Char => |c| switch (c) {
+                'x', 'j', 'h' => if (chosen < options.len - 1) {
+                    chosen += 1;
+                },
+                'w', 'k', 'l' => if (chosen > 0) {
+                    chosen -= 1;
+                },
+                ' ' => break :main,
+                '0'...'9' => {
+                    const num: usize = c - '0';
+                    if (num < options.len) {
+                        chosen = num;
+                    }
+                },
+                else => {},
+            },
+            else => {},
+        };
+    }
+
+    return @enumFromInt(chosen);
+}
+
+pub fn drawLoadingScreenGenerating(loading_win: *LoadingScreen, text_context: []const u8, text: []const u8, percent_done: usize) !void {
     const win = dimensions(.Whole);
 
     loading_win.text_con.clear();
@@ -2573,7 +2656,7 @@ pub fn drawLoadingScreen(loading_win: *LoadingScreen, text_context: []const u8, 
     display.present();
     clearScreen();
 
-    var evgen = display.getEvents(20);
+    var evgen = display.getEvents(FRAMERATE * 2);
     while (evgen.next()) |ev| switch (ev) {
         .Quit => {
             state.state = .Quit;
@@ -4207,10 +4290,10 @@ pub fn drawChoicePrompt(comptime fmt: []const u8, args: anytype, options: []cons
                     break :main;
                 },
                 .Enter => break :main,
-                .ArrowDown => if (chosen < options.len - 1) {
+                .ArrowRight, .ArrowDown => if (chosen < options.len - 1) {
                     chosen += 1;
                 },
-                .ArrowUp => if (chosen > 0) {
+                .ArrowLeft, .ArrowUp => if (chosen > 0) {
                     chosen -= 1;
                 },
                 else => {},

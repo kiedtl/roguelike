@@ -1,0 +1,31 @@
+:g_material gold
+
+:noguards
+:noitems
+:nolights
+
+@1 m light_lamp
+
+@a i aux_gold_pendant
+@b i cloak_gold
+@c i cloak_gold_pure
+@d i cons_gold_cake
+@e i cons_gold_orb
+@f i dagger_gold
+@g i gold_armor
+@h i head_headband_gold
+@i i head_tiara_gold
+@j i ornate_gold_armor
+@k i shoe_gold
+@l i shoe_gold_ornate
+
+##########
+1........1
+#........#
+#........#
+#..abcd..#
+#..efgh..#
+#..ijkl..#
+#........#
+1........1
+##########

@@ -1,0 +1,45 @@
+:g_material concrete
+
+:nolights
+:noitems
+:noguards
+
+@p Cmons player     ()
+@b Cmons bone_rat   ([facing]North)
+@d m door_normal
+
+##########
+#........#
+•....b...•
+#........#
+#....p...#
+#..b.....#
+#....b...#
+•........•
+#........#
+##########
+
+% -----------------
+:begin_prefab TUT_messing_around2
+
+:g_material concrete
+
+:nolights
+:noitems
+:noguards
+
+@p Cmons player     ()
+@g Cmons guard      ([prm_status1]Sleeping [facing]North)
+@c Cmons watcher    ([facing]North)
+@d m door_normal
+
+##########
+#.cp.....#
+•........•
+#........#
+#........#
+#........#
+#........#
+#.########
+•.d....gg•
+##########

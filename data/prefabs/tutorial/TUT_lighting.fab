@@ -1,0 +1,41 @@
+:g_material concrete
+
+:noguards
+:noitems
+:nolights
+
+@p Cmons player ()
+@g Cmons guard  ([facing]West)
+
+##########
+#........#
+#p......g#
+#........#
+##########
+##•####•##
+#........#
+#p......g#
+#........#
+##########
+
+% -----------------
+:begin_prefab TUT_lighting2
+
+:g_material concrete
+
+:noguards
+:noitems
+:nolights
+
+@g Cmons guard  ([facing]West)
+
+##########
+#g......g#
+#........#
+#........#
+#...g....#
+#........#
+#........#
+#........#
+#g......g#
+##########

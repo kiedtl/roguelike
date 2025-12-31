@@ -1,0 +1,51 @@
+:g_material dobalene
+
+:noguards
+:noitems
+:nolights
+
+@g Cmons guard   ([facing]South)
+@l Cmons cleaner ([prm_status1]Sleeping)
+@n Cmons coroner ([prm_status1]Sleeping)
+@c Cmons guard   ([kill]yea)
+
+##########
+•....g...•
+#........#
+#........#
+#...cc...#
+#...cc...#
+#........#
+#........#
+#........#
+#........#
+#........#
+•...nl...•
+#........#
+##########
+
+% -------------------
+:begin_prefab TUT_noncombats2
+
+:g_material dobalene
+
+:noguards
+:noitems
+:nolights
+
+@p Cmons goblin      ([facing]East)
+@g Cmons guard       ([facing]East)
+@x Cmons executioner ([facing]East)
+@c Cmons guard       ([kill]yea)
+@s Cstair ([stairtype](Down))
+
+##########
+#........#
+•....c...•
+#......pc#
+#g.....c.#
+#........#
+#x.......#
+•........•
+#........#
+####s#####

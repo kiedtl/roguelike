@@ -1,0 +1,44 @@
+:g_material plated_dobalene
+
+:noguards
+:noitems
+:nolights
+
+@p Cmons player ()
+@h Cmons hunter ([facing]North)
+@d m door_lab
+@l m light_lamp
+@s Cstair ([stairtype](Up "4/Prison"))
+
+##########
+l...d..p.l
+#...#....#
+#...#....#
+###d##≡≡≡#
+..........
+##d###≡≡≡#
+#....#...#
+l....d.h.l
+#######s##
+
+% ----------------
+:begin_prefab TUT_finding_out2
+
+:g_material plated_dobalene
+
+@d m door_lab
+@l m light_lamp
+@p Cmons player ()
+% Just choose a random place
+@s Cstair ([stairtype](Up "4/Prison"))
+
+..........
+........p.
+..........
+#.........
+s.........
+#.........
+#.........
+..........
+..........
+..........

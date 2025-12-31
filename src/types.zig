@@ -5780,8 +5780,8 @@ pub const Tile = struct {
 
             cell.fg = switch (mob.ai.phase) {
                 .Work, .Flee => 0xffffff,
-                .Investigate => 0xffd700,
-                .Hunt => 0xff9999,
+                .Investigate => 0xffca00,
+                .Hunt => 0xff6f4f,
             };
             if (mob == state.player or
                 mob.isUnderStatus(.Paralysis) != null or

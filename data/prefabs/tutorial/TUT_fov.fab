@@ -1,0 +1,44 @@
+:g_material concrete
+:noguards
+:noitems
+:nolights
+
+@p Cmons player        ()
+@s Cmons sentry_spire  ([facing]East)
+@r Cmons bone_rat      ([prm_status1]Sleeping [no_squads]yea)
+
+##########
+•....p...•
+#........#
+#........#
+#........#
+#........#
+#........#
+#........#
+#...s....#
+#........#
+#........#
+#..≡≡≡...#
+•..≡r≡...•
+
+% -----------
+:begin_prefab TUT_fov2
+
+:g_material dobalene
+:noguards
+:noitems
+:nolights
+
+@p Cmons player        ()
+@r Cmons bone_rat      ([facing]South [no_squads]yea)
+
+##########
+#........#
+#...p....#
+#........#
+•........•
+#........#
+#.rrrrr..#
+#........#
+#........#
+##########
