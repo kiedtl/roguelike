@@ -464,6 +464,8 @@ fn setSection(
         const ind: u21 = if (sect_i == chosen) '>' else ' ';
         const col: u21 = if (sect_i == chosen) 'c' else '.';
         y += side_con.drawTextAtf(3, y, " $g{u} ${u}{s}", .{ ind, col, sect.title }, .{});
+        side_con.addClickableText(.Click, .{ .Signal = sect_i });
+
         last_group = sect.group;
     }
 
@@ -525,7 +527,7 @@ pub fn guideMain() void {
 
     setSection(section, side_con, &map_cons, &text_cons, &ticks);
 
-    while (state.state != .Quit) {
+    main: while (true) {
         if (section != last_section_drawn or tick_timer.read() >= SECTIONS[section].rate * 1_000_000) {
             ticks += 1;
             if (ticks > SECTIONS[section].reset_at) {
@@ -569,14 +571,26 @@ pub fn guideMain() void {
             switch (ev) {
                 .Quit => {
                     state.state = .Quit;
-                    break;
+                    break :main;
                 },
                 .Resize => {},
-                .Wheel, .Hover, .Click => {},
+                .Wheel, .Hover => {},
+                .Click => |c| switch (console.handleMouseEvent(c, .Click)) {
+                    .Signal => |sig| {
+                        if (sig < SECTIONS.len)
+                            section = sig;
+                    },
+                    .Outside, .Coord, .Void => err.wat(),
+                    .Unhandled => {},
+                },
                 .Key => |k| {
                     switch (k) {
                         .F1 => debug = !debug,
                         .F2 => main.tickGame(null) catch {},
+                        .Esc => {
+                            if (ui.drawYesNoPrompt("Exit guide?", .{}))
+                                break :main;
+                        },
                         .ArrowUp, .ArrowLeft => if (section > 0) {
                             section -= 1;
                             setSection(section, side_con, &map_cons, &text_cons, &ticks);
@@ -598,4 +612,7 @@ pub fn guideMain() void {
             break;
         }
     }
+
+    if (state.state != .Quit)
+        state.state = .Game;
 }

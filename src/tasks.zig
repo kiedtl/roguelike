@@ -241,7 +241,6 @@ pub fn tickTasks(level: usize) void {
         if (task.assigned_to != null and !task.completed)
             worker_count.set(task.type, worker_count.get(task.type) + 1);
 
-    std.log.info("tick. {} tasks", .{state.tasks.items.len});
     // Now go through orders again and dispatch workers if necessary.
     for (state.tasks.items, 0..) |*task, id|
         if (task.assigned_to == null and !task.completed and
@@ -257,8 +256,7 @@ pub fn tickTasks(level: usize) void {
             if (mobs.placeMobNearStairs(mob_template, level, .{})) |worker| {
                 worker.ai.task_id = id;
                 task.assigned_to = worker;
-            } else |e| {
-                std.log.info("Tried to spawn worker, but {}", .{e});
+            } else |_| {
                 // No space near stairs. Do nothing, wait until next time, hopefully
                 // the traffic dissipates.
             }

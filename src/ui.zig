@@ -2544,7 +2544,7 @@ pub fn initLoadingScreen() LoadingScreen {
     win_c.logo_con.drawXP(&map, 0, 0, null, false);
     win_c.main_con.addSubconsole(win_c.logo_con, win_c.main_con.centerX(map.width), starty);
 
-    win_c.main_con.addSubconsole(win_c.text_con, win_c.main_con.centerX(LoadingScreen.TEXT_CON_WIDTH), starty + win_c.logo_con.height);
+    win_c.main_con.addSubconsole(win_c.text_con, win_c.main_con.centerX(LoadingScreen.TEXT_CON_WIDTH), starty + win_c.logo_con.height + 2);
 
     return win_c;
 }
@@ -2582,7 +2582,7 @@ pub fn drawLoadingScreen(loading_win: *LoadingScreen) !LoadingScreenOption {
         while (evgen.next()) |ev| switch (ev) {
             .Quit => {
                 state.state = .Quit;
-                return error.Canceled;
+                return error.Quit;
             },
             .Hover => |c| switch (loading_win.main_con.handleMouseEvent(c, .Hover)) {
                 .Signal => |sig| chosen = sig,

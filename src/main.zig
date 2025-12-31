@@ -1365,32 +1365,30 @@ pub fn actualMain() anyerror!void {
 
     var loading_screen = ui.initLoadingScreen();
 
-    const chosen_mode = ui.drawLoadingScreen(&loading_screen) catch {
-        loading_screen.deinit();
-        deinitGame();
-        std.log.err("Canceled.", .{});
-        return;
-    };
+    while (state.state != .Quit) {
+        const chosen_mode = ui.drawLoadingScreen(&loading_screen) catch break;
 
-    if (chosen_mode == .Tutorial) {
-        tutorial.guideMain();
-    } else {
-        if (!initLevels(&loading_screen)) {
-            loading_screen.deinit();
-            deinitGame();
-            std.log.err("Canceled.", .{});
-            return;
-        }
-
-        loading_screen.deinit();
-
-        if (use_viewer) {
-            viewerMain();
+        if (chosen_mode == .Tutorial) {
+            tutorial.guideMain();
         } else {
-            gameMain();
+            if (!initLevels(&loading_screen)) {
+                loading_screen.deinit();
+                deinitGame();
+                std.log.err("Canceled.", .{});
+                break;
+            }
+
+            if (use_viewer) {
+                viewerMain();
+            } else {
+                gameMain();
+            }
+
+            break;
         }
     }
 
+    loading_screen.deinit();
     deinitGame();
 }
 
