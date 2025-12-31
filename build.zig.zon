@@ -1,0 +1,19 @@
+.{
+    .name = .oathbreaker,
+    .fingerprint = 0x5247a7e5fbadfdcb,
+    .version = "0.0.0",
+    .dependencies = .{
+        .curl = .{
+            .url = "https://github.com/jiacai2050/zig-curl/archive/refs/tags/v0.3.0.zip",
+            .hash = "curl-0.3.0-P4tT4ZzSAADueeRzPHnzLFj9lRTJyA3rnOYycH0yu-N4",
+        },
+    },
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+        "COPYING",
+        "README.md",
+        "data",
+    },
+}

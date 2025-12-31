@@ -115,6 +115,9 @@ pub fn build(b: *Build) void {
         .root_source_file = b.path("third_party/zig-strig/src/root.zig"),
     });
     exe.root_module.addImport("strig", strig);
+    const curl = b.dependency("curl", .{});
+    exe.root_module.addImport("curl", curl.module("curl"));
+    exe.linkLibC();
 
     exe.addIncludePath(b.path("third_party/janet/")); // janet.h
     exe.addIncludePath(b.path("third_party/microtar/src/"));

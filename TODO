@@ -1605,26 +1605,21 @@ x Hunter mechanics
     x Simplification: instead of having attack AI for stalker, have them actually
       transform into sparklings/acid-sprites when hunter captain dies
 x Remove traps for now until purpose is clear
+x More rings
+  x Ring of exclusion
+  x Ring of protection
+  x Ring of retaliation
+x Tutorial!
+- Fix sentry
+x UI
+  x Idea: when examining monster, FoV is highlighted
+  x Show gas in examine mode
+x Wood should be creaky?
+*** 3.2.0 release ***
 - Fire tweaks
   - Don't destroy corpses entirely, only char them
   - Monsters should scream when on fire, and do fireWork() (i.e. run around and panic)
   - Smoke when burning things
-- More rings
-  x Ring of exclusion
-  x Ring of protection
-  x Ring of retaliation
-- Tutorial!
-  - Explain tactics & tips
-    - Where cleaners and coroner comes from is the direction of stairs
-      - Watch carefully for which doors they come from
-- UI
-  - If two monsters on screen, how to tell what squares a specific monster can
-    see and another can't?
-    - E.g. aware spire on screen and unaware monster on screen
-    - Idea: when examining monster, FoV is highlighted
-  - Show gas (no really)
-- Wood should be creaky?
-*** 3.2.0 release ***
 - Add traps back in, reworking them to be useful
   - Idea: Vents are always near doors?
 - More rings
@@ -1789,7 +1784,7 @@ x Fix prisoner hostility issues (with Revgen)
   - Examine mode
     - Ability to view info on gas/terrain/wall/floor
     - Effect lists
-      - Gas: clicking on gas to see popup window with stats
+      x Gas: clicking on gas to see popup window with stats
       - Status: clicking on status (e.g. potion screen doesn't have this)
     - Click on tile to move/attack/interact
   - Warn when next to spreading gas and resting

@@ -91,7 +91,7 @@ pub fn panic(msg: []const u8, trace: ?*std.builtin.StackTrace, x: ?usize) noretu
             std.log.err("Fatal error encountered. (Seed: {})", .{state.seed});
 
             if (!state.sentry_disabled) {
-                var membuf: [65535]u8 = undefined;
+                var membuf: [65535 * 2]u8 = undefined;
                 var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
                 const alloc = fba.allocator();
 
@@ -1400,7 +1400,7 @@ pub fn main() void {
     actualMain() catch |e| {
         if (!state.sentry_disabled) {
             if (@errorReturnTrace()) |error_trace| {
-                var membuf: [65535]u8 = undefined;
+                var membuf: [65535 * 2]u8 = undefined;
                 var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
                 const alloc = fba.allocator();
 

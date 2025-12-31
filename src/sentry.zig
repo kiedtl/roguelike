@@ -24,6 +24,9 @@ const std = @import("std");
 const sort = std.sort;
 const builtin = @import("builtin");
 
+const curl = @import("curl");
+const Easy = curl.Easy;
+
 // TODO: *don't* encode this in here
 const DSN = "http://029cc3a31c3740d4a60e3747e48c4aa2@o110999.ingest.sentry.io/6550409";
 const DSN_HASH = "029cc3a31c3740d4a60e3747e48c4aa2";
@@ -53,7 +56,7 @@ pub const SentryEvent = struct {
             value: []const u8,
         };
 
-        pub fn jsonStringify(val: TagSet, stream: anytype) !void {
+        pub fn jsonStringify(val: TagSet, jw: anytype) !void {
             // try stream.write('{');
             // for (val.inner.items, 0..) |tag, i| {
             //     try stream.write('"');
@@ -67,12 +70,12 @@ pub const SentryEvent = struct {
             //         try stream.write(',');
             // }
             // try stream.write('}');
-            try stream.beginObject();
+            try jw.beginObject();
             for (val.inner.items) |tag| {
-                try stream.objectField(tag.name);
-                try stream.write(tag.value);
+                try jw.objectField(tag.name);
+                try jw.write(tag.value);
             }
-            try stream.endObject();
+            try jw.endObject();
         }
     };
 
@@ -101,17 +104,15 @@ pub const SentryEvent = struct {
         Info,
         Debug,
 
-        pub fn jsonStringify(val: Level, stream: anytype) !void {
-            const s = switch (val) {
+        pub fn jsonStringify(val: Level, jws: anytype) !void {
+            const s: []const u8 = switch (val) {
                 .Fatal => "fatal",
                 .Error => "error",
                 .Warning => "warning",
                 .Info => "info",
                 .Debug => "debug",
             };
-            try stream.write('"');
-            try stream.write(s);
-            try stream.write('"');
+            try jws.write(s);
         }
     };
 };
@@ -124,55 +125,75 @@ pub fn captureError(
     user_tags: []const SentryEvent.TagSet.Tag,
     trace: ?*std.builtin.StackTrace,
     addr: ?usize,
-    alloc: std.mem.Allocator,
+    _: std.mem.Allocator,
 ) !void {
     var rng = std.Random.DefaultPrng.init(@intCast(std.time.timestamp()));
     const uuid = rng.random().int(u128);
 
-    std.log.info("*** zig-sentry: uploading crash report", .{});
+    var gpa = std.heap.DebugAllocator(.{
+        // Probably should enable this later on to track memory usage, if
+        // allocations become too much
+        .enable_memory_limit = false,
+
+        .safety = true,
+
+        // Probably would enable this later?
+        .thread_safe = false,
+
+        .never_unmap = false,
+
+        .stack_trace_frames = 10,
+    }){};
+    const alloc = gpa.allocator();
+
     const m = try createEvent(uuid, release, dist, .Error, ename, msg, user_tags, trace, addr, alloc);
     try uploadError(&m, alloc);
-    std.log.info("*** zig-sentry: done", .{});
 }
 
 fn uploadError(ev: *const SentryEvent, alloc: std.mem.Allocator) !void {
     const HOST = "sentry.io";
-    const PORT = 80;
+    const PORT = 443;
     const UA_STR = "zig-sentry";
     const UA_VER = "0.1.0";
 
-    std.log.debug("zig-sentry: connecting...", .{});
-    const stream = std.net.tcpConnectToHost(alloc, HOST, PORT) catch |e| return e;
-    defer stream.close();
+    var client = std.http.Client{ .allocator = alloc };
+    defer client.deinit();
 
-    var buf: [65535]u8 = undefined;
-    var fbs = std.io.fixedBufferStream(&buf);
-    try std.json.stringify(ev.sentry_event, .{}, fbs.writer());
+    std.log.info("*** zig-sentry: connecting to {s}:{}", .{ HOST, PORT });
 
-    std.log.debug("zig-sentry: sending content...", .{});
-    try stream.writer().print("POST /api/{}/store/ HTTP/1.1\r\n", .{DSN_ID});
-    try stream.writer().print("Host: {s}\r\n", .{HOST});
-    try stream.writer().print("User-Agent: {s}/{s}\r\n", .{ UA_STR, UA_VER });
-    try stream.writer().print("Accept: */*\r\n", .{}); // TODO: is this necessary
-    try stream.writer().print("Content-Type: application/json\r\n", .{});
-    try stream.writer().print("X-Sentry-Auth: Sentry sentry_key={s}\r\n", .{DSN_HASH});
-    try stream.writer().print("Authorization: DSN {s}\r\n", .{DSN});
-    try stream.writer().print("Content-Length: {}\r\n", .{fbs.getWritten().len});
-    try stream.writer().print("\r\n", .{});
-    try stream.writer().print("{s}", .{fbs.getWritten()});
-    try stream.writer().print("\r\n", .{});
+    const ca_bundle = try curl.allocCABundle(alloc);
+    defer ca_bundle.deinit();
+    const easy = try Easy.init(.{ .ca_bundle = ca_bundle });
+    defer easy.deinit();
 
-    // ---
-    std.log.debug("zig-sentry: waiting for response...", .{});
-    var response: [2048]u8 = undefined;
-    if (stream.read(&response)) |ret| {
-        var lines = std.mem.tokenizeScalar(u8, response[0..ret], '\n');
-        while (lines.next()) |line|
-            std.log.debug("zig-sentry: response: > {s}", .{line});
-    } else |err| {
-        std.log.debug("zig-sentry: error when reading response: {s}", .{@errorName(err)});
-    }
-    // ---
+    const body = try std.json.stringifyAlloc(alloc, ev.sentry_event, .{});
+    defer alloc.free(body);
+
+    const headers = blk: {
+        var h: Easy.Headers = .{};
+        errdefer h.deinit();
+        try h.add("Accept: */*");
+        try h.add("Content-Type: application/json");
+        try h.add(std.fmt.comptimePrint("User-Agent: {s}/{s}", .{ UA_STR, UA_VER }));
+        try h.add(std.fmt.comptimePrint("X-Sentry-Auth: Sentry sentry_key={s}", .{DSN_HASH}));
+        try h.add(std.fmt.comptimePrint("Authorization: DSN {s}", .{DSN}));
+        break :blk h;
+    };
+    defer headers.deinit();
+
+    try easy.setUrl(std.fmt.comptimePrint("https://sentry.io/api/{}/store/", .{DSN_ID}));
+    try easy.setHeaders(headers);
+    try easy.setMethod(.POST);
+    try easy.setVerbose(true);
+    try easy.setPostFields(body);
+
+    var writer = curl.ResizableResponseWriter.init(alloc);
+    defer writer.deinit();
+    try easy.setAnyWriter(&writer.asAny());
+
+    const resp = try easy.perform();
+    std.log.info("*** zig-sentry: Status code: {d}", .{resp.status_code});
+    std.log.info("*** zig-sentry: Response body: {s}", .{writer.asSlice()});
 }
 
 pub fn createEvent(
@@ -213,7 +234,7 @@ pub fn createEvent(
     const debug_info = std.debug.getSelfDebugInfo() catch null;
     if (!builtin.strip_debug_info and debug_info != null and builtin.os.tag != .windows) {
         if (error_trace) |trace| {
-            try values.append(try recordError(&frames, debug_info.?, error_name, msg, trace));
+            try values.append(try recordError(&frames, debug_info.?, error_name, msg, trace, alloc));
         }
 
         if (first_trace_addr) |addr| {
@@ -221,7 +242,7 @@ pub fn createEvent(
             var addresses: [STACK_SIZE]usize = [1]usize{0} ** STACK_SIZE;
             var stack_trace = std.builtin.StackTrace{ .instruction_addresses = &addresses, .index = 0 };
             std.debug.captureStackTrace(addr, &stack_trace);
-            try values.append(try recordError(&frames, debug_info.?, error_name, msg, &stack_trace));
+            try values.append(try recordError(&frames, debug_info.?, error_name, msg, &stack_trace, alloc));
         }
     }
 
@@ -266,12 +287,10 @@ pub fn recordError(
     ename: []const u8,
     emsg: []const u8,
     trace: *std.builtin.StackTrace,
+    alloc: std.mem.Allocator,
 ) !SentryEvent.Value {
     std.debug.assert(builtin.os.tag != .windows);
     std.debug.assert(!builtin.strip_debug_info);
-
-    var membuf: [8192]u8 = undefined;
-    var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
 
     var frame_index: usize = 0;
     const frame_buf_start_index = frames.items.len;
@@ -287,7 +306,7 @@ pub fn recordError(
         var frame: SentryEvent.Frame = .{};
 
         if (debug_info.getModuleForAddress(address)) |module| {
-            const symb_info = try module.getSymbolAtAddress(fba.allocator(), address);
+            const symb_info = try module.getSymbolAtAddress(alloc, address);
             // MIGRATION defer symb_info.deinit(fba.allocator());
             frame.function = symb_info.name;
             std.log.info("function: {s}", .{frame.function});
