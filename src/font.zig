@@ -1,10 +1,7 @@
 const std = @import("std");
 const builtin = @import("builtin");
 
-const c_imp = @cImport({
-    @cInclude("png.h");
-    @cInclude("stdio.h"); // for fdopen()
-});
+const c_imp = @cImport(@cInclude("png.h"));
 
 const err = @import("err.zig");
 const colors = @import("colors.zig");
@@ -16,11 +13,11 @@ pub const FONT_FALLBACK_GLYPH = 0x7F;
 
 pub const FONT_HEIGHT = 16;
 pub const FONT_WIDTH = 8;
-pub const FONT_PATH = "./data/font/spleen.png";
+pub const FONT_PATH = if (builtin.os.tag == .windows) ".\\data\\font\\spleen.png" else "./data/font/spleen.png";
 pub var font_data: []u8 = undefined;
 
 pub const FONT_W_WIDTH = 16;
-pub const FONT_W_PATH = "./data/font/spleen-wide.png";
+pub const FONT_W_PATH = if (builtin.os.tag == .windows) ".\\data\\font\\spleen-wide.png" else "./data/font/spleen-wide.png";
 pub var font_w_data: []u8 = undefined;
 
 fn _png_err(_: ?*c_imp.png_struct, msg: [*c]const u8) callconv(.C) void {
@@ -32,7 +29,41 @@ pub fn loadFontsData() void {
     loadFontData(FONT_W_PATH, &font_w_data);
 }
 
-fn loadFontData(path: [*c]const u8, databuf: *[]u8) void {
+const PngReadCtx = struct {
+    data: []const u8,
+    offset: usize = 0,
+};
+
+fn pngReadFromMemory(
+    png_ptr: ?*c_imp.png_struct,
+    out_bytes: [*c]u8,
+    byte_count: usize,
+) callconv(.C) void {
+    const ctx: *PngReadCtx =
+        @ptrCast(@alignCast(c_imp.png_get_io_ptr(png_ptr)));
+
+    if (ctx.offset + byte_count > ctx.data.len) {
+        c_imp.png_error(png_ptr, "Read error (overflow)");
+        return;
+    }
+
+    @memcpy(
+        out_bytes[0..byte_count],
+        ctx.data[ctx.offset .. ctx.offset + byte_count],
+    );
+    ctx.offset += byte_count;
+}
+
+fn loadFontData(path: []const u8, databuf: *[]u8) void {
+    var font_f = std.fs.cwd().openFile(path, .{}) catch |e|
+        err.fatal("Failed to read font data: {s}", .{@errorName(e)});
+    defer font_f.close();
+
+    const png_bytes = font_f.readToEndAlloc(state.alloc, 16 * 1024 * 1024) catch err.oom();
+    defer state.alloc.free(png_bytes);
+
+    var read_ctx = PngReadCtx{ .data = png_bytes };
+
     var png_ctx = c_imp.png_create_read_struct(c_imp.PNG_LIBPNG_VER_STRING, null, _png_err, null);
     var png_info = c_imp.png_create_info_struct(png_ctx);
     defer c_imp.png_destroy_read_struct(&png_ctx, &png_info, null);
@@ -41,21 +72,8 @@ fn loadFontData(path: [*c]const u8, databuf: *[]u8) void {
         err.fatal("{s}: Failed to read font data: libPNG error", .{path});
     }
 
-    // var font_f = std.fs.cwd().openFile(FONT_PATH, .{  }) catch |e|
-    //     err.fatal("Failed to read font data: {s}", .{@errorName(e)});
-    // defer font_f.close();
+    c_imp.png_set_read_fn(png_ctx, &read_ctx, pngReadFromMemory);
 
-    // png_init_io call doesn't compile on Windows if we use std.fs, due to
-    // File.Handle being *anyopaque instead of whatever png_FILE_p is.
-    //
-    // So, we directly call the C apis instead.
-
-    const font_f = c_imp.fopen(path, "rb");
-    if (font_f == null) {
-        err.fatal("{s}: Failed to read font data (unknown error)", .{path});
-    }
-
-    c_imp.png_init_io(png_ctx, font_f);
     c_imp.png_set_strip_alpha(png_ctx);
     c_imp.png_set_scale_16(png_ctx);
     c_imp.png_set_expand(png_ctx);

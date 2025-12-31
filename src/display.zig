@@ -23,7 +23,7 @@ pub const font = @import("font.zig");
 
 // tb_shutdown() calls abort() if tb_init() wasn't called, or if tb_shutdown()
 // was called twice. Keep track of termbox's state to prevent this.
-var is_tb_inited = false;
+var is_inited = false;
 
 // SDL2 state
 var window: ?*driver_m.SDL_Window = null;
@@ -255,13 +255,13 @@ const InitErr = error{
 } || mem.Allocator.Error;
 
 pub fn init(preferred_width: usize, preferred_height: usize, scale: f32) InitErr!void {
+    if (is_inited)
+        return error.AlreadyInitialized;
+
     switch (driver) {
         .Termbox => {
-            if (is_tb_inited)
-                return error.AlreadyInitialized;
-
             switch (driver_m.tb_init()) {
-                0 => is_tb_inited = true,
+                0 => {},
                 driver_m.TB_EFAILED_TO_OPEN_TTY => return error.TTYOpenFailed,
                 driver_m.TB_EUNSUPPORTED_TERMINAL => return error.UnsupportedTerminal,
                 driver_m.TB_EPIPE_TRAP_ERROR => return error.PipeTrapFailed,
@@ -331,15 +331,17 @@ pub fn init(preferred_width: usize, preferred_height: usize, scale: f32) InitErr
             w_height = preferred_height;
         },
     }
+
+    is_inited = true;
 }
 
 pub fn deinit() !void {
+    if (!is_inited)
+        return error.AlreadyDeinitialized;
+
     switch (driver) {
         .Termbox => {
-            if (!is_tb_inited)
-                return error.AlreadyDeinitialized;
             driver_m.tb_shutdown();
-            is_tb_inited = false;
         },
         .SDL2 => {
             driver_m.SDL_StopTextInput();
@@ -352,6 +354,8 @@ pub fn deinit() !void {
             state.alloc.free(dirty);
         },
     }
+
+    is_inited = false;
 }
 
 // FIXME: handle negative value from tb_width() if called before/after tb_init/tb_shutdown

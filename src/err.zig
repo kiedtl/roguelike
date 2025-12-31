@@ -53,8 +53,8 @@ pub fn bug(comptime fmt: []const u8, args: anytype) noreturn {
 pub fn fatal(comptime fmt: []const u8, args: anytype) noreturn {
     @branchHint(.cold);
 
-    ui.deinit() catch {};
     std.log.err(fmt, args);
+    ui.deinit() catch {};
 
     std.posix.abort();
     unreachable;
