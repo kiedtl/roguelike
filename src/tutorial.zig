@@ -57,6 +57,41 @@ const Portion = struct {
 
 const SECTIONS = &[_]Section{
     Section{
+        .title = "Controls",
+        .group = "BASICS",
+        .reset_at = 25,
+        .portions = &[_]Portion{
+            Portion{
+                .fab = null,
+                .text =
+                \\
+                \\ Oathbreaker has diagonal movement, so you'll need to use $bqweasdzxc$. to move.
+                \\ $g(Number-pad movement isn't currently supported, sorry.)$.
+                \\
+                \\ Vim movement ($bhjklyubn$.) always exists, for neckbeards.
+                ,
+            },
+            Portion{
+                .fab = "TUT_controls",
+                .text =
+                \\
+                \\ You'll often find special dungeon features that you can interact with.
+                \\ Simply bump into the tile to do so.
+                \\
+                \\ $g(Pictured: stairs, three kinds of doors, a shrine, a first aid station.)$.
+                ,
+            },
+            Portion{
+                .fab = null,
+                .text =
+                \\
+                \\ Also: $bi$. to see inventory, and $bSPACE$. to see spells.
+                \\ Other keybindings can be seen from the $bEsc$. menu.
+                ,
+            },
+        },
+    },
+    Section{
         .title = "Field of View",
         .group = "BASICS",
         .reset_at = 25,
@@ -80,8 +115,6 @@ const SECTIONS = &[_]Section{
                 .view = Rect.new(Coord.new2(TUTORIAL_LEVEL, 0, 14), 10, 10),
                 .text =
                 \\
-                \\
-                \\
                 \\ At it's core, Oathbreaker is about avoiding detection as much as possible.
                 \\
                 \\ Individual fights are often winnable, but trying to clear a floor is a great
@@ -100,8 +133,6 @@ const SECTIONS = &[_]Section{
                 .view = Rect.new(Coord.new2(TUTORIAL_LEVEL, 0, 0), 10, 10),
                 .text =
                 \\
-                \\
-                \\
                 \\ Lights, like the lamp or electric brazier, create light areas in which you
                 \\ can be seen.
                 \\
@@ -113,9 +144,6 @@ const SECTIONS = &[_]Section{
                 .fab = "TUT_lighting2",
                 .view = Rect.new(Coord.new2(TUTORIAL_LEVEL, 0, 11), 10, 10),
                 .text =
-                \\
-                \\
-                \\
                 \\
                 \\ Keep in mind that a creature can $ralways$. see at least one tile in front of
                 \\ them, even if they're in a dark area with no night vision.
@@ -136,9 +164,6 @@ const SECTIONS = &[_]Section{
                 .view = Rect.new(Coord.new2(TUTORIAL_LEVEL, 0, 0), 10, 10),
                 .text =
                 \\
-                \\
-                \\
-                \\
                 \\ When an enemy sees you, they will switch to combat.
                 \\
                 \\ For some enemies, this means pursuit...
@@ -148,9 +173,6 @@ const SECTIONS = &[_]Section{
                 .fab = "TUT_messing_around2",
                 .view = Rect.new(Coord.new2(TUTORIAL_LEVEL, 0, 11), 10, 10),
                 .text =
-                \\
-                \\
-                \\
                 \\
                 \\ ...for others enemies, it means fleeing and warning their comrades.
                 \\
@@ -181,10 +203,6 @@ const SECTIONS = &[_]Section{
                 .fab = "TUT_finding_out",
                 .text =
                 \\
-                \\
-                \\
-                \\
-                \\
                 \\ There are always unpleasant side-effects to creating a disturbance on a floor.
                 ,
             },
@@ -192,9 +210,6 @@ const SECTIONS = &[_]Section{
                 .fab = "TUT_finding_out2",
                 .view = Rect.new(Coord.new2(TUTORIAL_LEVEL, 0, 11), 10, 10),
                 .text =
-                \\
-                \\
-                \\
                 \\
                 \\ It's almost always better to flee to the stairs, rather than lingering and
                 \\ drawing attention.
@@ -212,8 +227,6 @@ const SECTIONS = &[_]Section{
                 .fab = "TUT_noncombats",
                 .text =
                 \\
-                \\
-                \\
                 \\ Cleaners ($aë$.) and coroners ($aö$.) are summoned when bloodstains or corpses ($p%$.) are found.
                 \\ They are $agreen$. and will not fight you, but are $rstill hostile$.!
                 \\
@@ -224,8 +237,6 @@ const SECTIONS = &[_]Section{
                 .fab = "TUT_noncombats2",
                 .view = Rect.new(Coord.new2(TUTORIAL_LEVEL, 0, 15), 10, 10),
                 .text =
-                \\
-                \\
                 \\
                 \\ $gScene:$.
                 \\ · A prisoner (p), having killed several guards, is attacked.
@@ -307,8 +318,6 @@ const SECTIONS = &[_]Section{
                 .fab = "TUT_spellcasting3",
                 .text =
                 \\
-                \\
-                \\
                 \\ Shrines, however, give much larger amounts of mana.
                 \\
                 \\ Drawback: they're harder to find and usually shut down if a disturbance is
@@ -319,8 +328,6 @@ const SECTIONS = &[_]Section{
                 .fab = "TUT_spellcasting4",
                 .view = Rect.new(Coord.new2(TUTORIAL_LEVEL, 0, 11), 10, 10),
                 .text =
-                \\
-                \\
                 \\
                 \\ Stepping on a $oWielder$.'s corpse will drain it of mana. Many of
                 \\ the spellcasting enemies you find will be $oWielder$.s.
@@ -355,8 +362,6 @@ const SECTIONS = &[_]Section{
                 .fab = "TUT_potential",
                 .text =
                 \\
-                \\
-                \\
                 \\ You can increase it with golden items, which have other tradeoffs.
                 \\
                 \\ $g(For example, a gold crown grants a huge $oPotential$g bonus but reduces
@@ -377,6 +382,8 @@ const SECTIONS = &[_]Section{
             },
         },
     },
+
+    // Extra
 };
 
 fn drawMap(con: *ui.Console, area: Rect, moblist: []const *Mob) void {
