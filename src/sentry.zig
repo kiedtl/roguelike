@@ -125,26 +125,10 @@ pub fn captureError(
     user_tags: []const SentryEvent.TagSet.Tag,
     trace: ?*std.builtin.StackTrace,
     addr: ?usize,
-    _: std.mem.Allocator,
+    alloc: std.mem.Allocator,
 ) !void {
     var rng = std.Random.DefaultPrng.init(@intCast(std.time.timestamp()));
     const uuid = rng.random().int(u128);
-
-    var gpa = std.heap.DebugAllocator(.{
-        // Probably should enable this later on to track memory usage, if
-        // allocations become too much
-        .enable_memory_limit = false,
-
-        .safety = true,
-
-        // Probably would enable this later?
-        .thread_safe = false,
-
-        .never_unmap = false,
-
-        .stack_trace_frames = 10,
-    }){};
-    const alloc = gpa.allocator();
 
     const m = try createEvent(uuid, release, dist, .Error, ename, msg, user_tags, trace, addr, alloc);
     try uploadError(&m, alloc);
@@ -184,7 +168,6 @@ fn uploadError(ev: *const SentryEvent, alloc: std.mem.Allocator) !void {
     try easy.setUrl(std.fmt.comptimePrint("https://sentry.io/api/{}/store/", .{DSN_ID}));
     try easy.setHeaders(headers);
     try easy.setMethod(.POST);
-    try easy.setVerbose(true);
     try easy.setPostFields(body);
 
     var writer = curl.ResizableResponseWriter.init(alloc);
