@@ -19,7 +19,7 @@ writeup back when I started the project in May 2021.
 ![inspecting monsters](https://tilde.team/~kiedtl/images/rl/showcase/lead-turtle.png)
 
 *Speedrunning a death in one of the early levels, for demonstration
-purposes.
+purposes.*
 
 ![GIF](https://tilde.team/~kiedtl/images/rl/showcase/demonstration.gif)
 
@@ -34,6 +34,8 @@ answered at:
 
 ## Installation
 
+![](https://tilde.team/~kiedtl/images/badges/zig/move-justice.gif)
+
 Head over to the Releases and grab a binary. Please note that macOS is not
 supported.
 
@@ -44,8 +46,9 @@ modifications. Building *for* Windows is supported.
 
 To build from source, you'll need at least the following prerequisites:
 
-- [zig](https://ziglang.org/)
-- [just](https://github.com/casey/just)
+- [Zig v0.14.0](https://ziglang.org/)
+- [Just](https://github.com/casey/just)
+- libPNG, zlib, libcurl, and SDL2.
 
 If building for Windows, you'll also to retrieve the Mingw packages
 with `tools/retrieve-mingw.sh`. A brain may be required for this step.
