@@ -1,3 +1,5 @@
+const builtin = @import("builtin");
+
 const std = @import("std");
 const sort = std.sort;
 const assert = std.debug.assert;
@@ -705,6 +707,64 @@ pub const FoldedTextIterator = struct {
         return line_buf.constSlice();
     }
 };
+
+pub const Benchmarker = struct {
+    records: std.StringHashMap(Record),
+
+    pub const Record = struct {
+        count: u64,
+        average: u64,
+        min: u64,
+        max: u64,
+
+        pub fn default() Record {
+            return Record { .count = 0, .average = 0, .min = std.math.maxInt(u64), .max = 0 };
+        }
+    };
+
+    pub const Timer = struct {
+        benchmarker: *Benchmarker,
+        id: []const u8,
+        timer: std.time.Timer,
+
+        pub fn end(self: *Timer) void {
+            const entry = self.benchmarker.records.getOrPutValue(self.id, Record.default())
+                catch unreachable; 
+            const v = entry.value_ptr;
+            const time = self.timer.read();
+
+            v.count += 1;
+            v.min = @min(v.min, time);
+            v.max = @max(v.max, time);
+
+            const avg: i64 = @intCast(v.average);
+            const ia = avg + @divFloor(@as(i64, @intCast(time)) - avg, @as(i64, @intCast(v.count)));
+            v.average = @intCast(ia);
+        }
+    };
+
+    pub fn init(self: *Benchmarker) void {
+        self.records = std.StringHashMap(Record).init(state.alloc);
+    }
+
+    pub fn deinit(self: *Benchmarker) void {
+        self.records.clearAndFree();
+    }
+
+    pub fn timer(self: *Benchmarker, id: []const u8) Timer {
+        return Timer {
+            .benchmarker = self,
+            .id = id,
+            .timer = std.time.Timer.start() catch unreachable,
+        };
+    }
+};
+
+pub const OBSDTimer =
+    if (builtin.os.tag == .openbsd)
+        @import("utils/obsd_timer.zig").OBSDTimer
+    else
+        @compileError("OBSDTimer on non-OpenBSD platform");
 
 // tests {{{
 test "copy" {

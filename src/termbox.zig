@@ -121,6 +121,10 @@ pub const TB_EVENT_KEY: isize = 1;
 pub const TB_EVENT_RESIZE: isize = 2;
 pub const TB_EVENT_MOUSE: isize = 3;
 
+// Custom constants added for convenience, not part of original termbox.
+pub const TB_EVENT_NONE: isize = 0; // No events available (tb_peek_event)
+pub const TB_EVENT_POLL_ERROR: isize = -1; // Termbox error whilst polling
+
 // An event, single interaction from the user. The 'mod' and 'ch' fields are
 // valid if 'type' is TB_EVENT_KEY. The 'w' and 'h' fields are valid if 'type'
 // is TB_EVENT_RESIZE. The 'x' and 'y' fields are valid if 'type' is

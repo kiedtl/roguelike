@@ -2213,7 +2213,7 @@ pub const Squad = struct {
     pub fn allocNew() *Squad {
         const squad = Squad{
             //.members = MobArrayList.init(state.alloc),
-            .enemies = EnemyRecord.AList.init(state.alloc),
+            .enemies = EnemyRecord.AList.initCapacity(state.alloc, 5) catch err.oom(),
         };
         state.squads.append(squad) catch err.wat();
         return state.squads.last().?;
@@ -2613,6 +2613,9 @@ pub const Mob = struct { // {{{
     }
 
     pub fn tickFOV(self: *Mob) void {
+        var timer = state.benchmarker.timer("Mob.tickFOV");
+        defer timer.end();
+
         for (&self.fov) |*row| for (row) |*cell| {
             cell.* = 0;
         };
@@ -4042,8 +4045,8 @@ pub const Mob = struct { // {{{
         self.HP = self.max_HP;
         if (!mem.eql(u8, self.id, "player"))
             self.MP = self.max_MP;
-        self.enemies = EnemyRecord.AList.init(alloc);
-        self.allies = MobArrayList.init(alloc);
+        self.enemies = EnemyRecord.AList.initCapacity(alloc, 5) catch err.oom();
+        self.allies = MobArrayList.initCapacity(alloc, 5) catch err.oom();
         self.sustiles = std.ArrayList(SuspiciousTileRecord).init(alloc);
         self.jobs = @TypeOf(self.jobs).init(null);
         self.activities.init();
@@ -4354,6 +4357,9 @@ pub const Mob = struct { // {{{
     }
 
     pub fn nextDirectionTo(self: *Mob, to: Coord) ?Direction {
+        var timer = state.benchmarker.timer("Mob.nextDirectionTo");
+        defer timer.end();
+
         if (self.immobile) return null;
 
         // FIXME: make this an assertion; no mob should ever be trying to path to

@@ -69,6 +69,7 @@ pub fn build(b: *Build) void {
     options.addOption(bool, "build_fabedit", opt_build_fabedit);
 
     const is_windows = target.result.os.tag == .windows;
+    const is_obsd = target.result.os.tag == .openbsd;
 
     if (opt_build_fabedit) {
         const fabedit = b.addExecutable(.{
@@ -169,6 +170,26 @@ pub fn build(b: *Build) void {
         } else {
             exe.addIncludePath(Build.LazyPath{ .cwd_relative = "/usr/include/SDL2/" });
             exe.linkSystemLibrary("SDL2");
+        }
+
+        // Transitive dependencies aren't automatically linked on OpenBSD for
+        // some reason.
+        if (is_obsd) {
+            exe.linkSystemLibrary("X11");
+            exe.linkSystemLibrary("XFixes");
+            exe.linkSystemLibrary("Xau");
+            exe.linkSystemLibrary("Xcursor");
+            exe.linkSystemLibrary("Xdmcp");
+            exe.linkSystemLibrary("Xext");
+            exe.linkSystemLibrary("Xi");
+            exe.linkSystemLibrary("Xrandr");
+            exe.linkSystemLibrary("Xrender");
+            exe.linkSystemLibrary("Xss");
+            exe.linkSystemLibrary("iconv");
+            exe.linkSystemLibrary("samplerate");
+            exe.linkSystemLibrary("sndio");
+            exe.linkSystemLibrary("usbhid");
+            exe.linkSystemLibrary("xcb");
         }
     }
 

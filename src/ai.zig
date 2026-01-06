@@ -458,6 +458,9 @@ pub fn updateEnemyRecord(mob: *Mob, new: EnemyRecord) void {
 }
 
 pub fn checkForCorpses(mob: *Mob) void {
+    var timer = state.benchmarker.timer("ai.checkForCorpses");
+    defer timer.end();
+
     if (mob.hasStatus(.Insane) or !mob.ai.flag(.ScansForCorpses) or
         // Don't queue scan corpse jobs if we're heading for the stairs,
         // because then we're in Big Panic and don't have time to mourn our
@@ -490,6 +493,9 @@ pub fn checkForCorpses(mob: *Mob) void {
 // https://old.reddit.com/r/roguelikedev/comments/57dnqk/faq_friday_49_awareness_systems/d8r1ztp/
 //
 pub fn checkForHostiles(mob: *Mob) void {
+    var timer = state.benchmarker.timer("ai.checkForHostiles");
+    defer timer.end();
+
     assert(!mob.is_dead);
 
     if (mob.hasStatus(.Amnesia) and mob.ai.phase != .Flee) {
@@ -505,19 +511,20 @@ pub fn checkForHostiles(mob: *Mob) void {
         if (cell == 0) continue;
         const fitem = Coord.new2(mob.coord.z, x, y);
 
-        if (state.dungeon.at(fitem).mob) |othermob| if (mob != othermob and mob.canSeeMob(othermob)) {
-            if (othermob.is_dead) {
-                err.bug("Mob {s} is dead but walking around!", .{othermob.displayName()});
-            }
+        if (state.dungeon.at(fitem).mob) |othermob|
+            if (mob != othermob and mob.canSeeMob(othermob)) {
+                if (othermob.is_dead) {
+                    err.bug("Mob {s} is dead but walking around!", .{othermob.displayName()});
+                }
 
-            if (!othermob.ai.flag(.IgnoredByEnemies) and
-                mob.isHostileTo(othermob) and
-                (!mob.ai.flag(.IgnoresEnemiesUnknownToLeader) or mob.squad.?.leader.?.cansee(othermob.coord)) and
-                !(othermob.hasStatus(.RingDeception) and !has_nonundead_ally))
-            {
-                updateEnemyKnowledge(mob, othermob, othermob.coord);
-            }
-        };
+                if (!othermob.ai.flag(.IgnoredByEnemies) and
+                    mob.isHostileTo(othermob) and
+                    (!mob.ai.flag(.IgnoresEnemiesUnknownToLeader) or mob.squad.?.leader.?.cansee(othermob.coord)) and
+                    !(othermob.hasStatus(.RingDeception) and !has_nonundead_ally))
+                {
+                    updateEnemyKnowledge(mob, othermob, othermob.coord);
+                }
+            };
     };
 
     // Decrement enemy counters. (If we're part of a squad, just let the squad
@@ -586,6 +593,9 @@ pub fn checkForLeadership(mob: *Mob) void {
 
 // Get a list of all nearby allies, visible or not.
 pub fn checkForAllies(mob: *Mob) void {
+    var timer = state.benchmarker.timer("ai.checkForAllies");
+    defer timer.end();
+
     const vision = mob.stat(.Vision);
 
     // Reset the ally list.
@@ -614,6 +624,9 @@ pub fn checkForAllies(mob: *Mob) void {
 }
 
 pub fn checkForNoises(mob: *Mob) void {
+    var timer = state.benchmarker.timer("ai.checkForNoises");
+    defer timer.end();
+
     if (mob.deaf) {
         return;
     }
@@ -720,7 +733,7 @@ pub fn isMobFacingStupid(mob: *Mob) bool {
 
 pub fn guardGlanceRight(mob: *Mob) void {
     var tries: usize = 0;
-    while ((tries == 0 or isMobFacingStupid(mob)) and tries < 10) : (tries += 1)
+    while ((tries == 0 or isMobFacingStupid(mob)) and tries < 5) : (tries += 1)
         mob.facing = switch (mob.facing) {
             .North => .NorthEast,
             .NorthEast => .East,
@@ -735,7 +748,7 @@ pub fn guardGlanceRight(mob: *Mob) void {
 
 pub fn guardGlanceLeft(mob: *Mob) void {
     var tries: usize = 0;
-    while ((tries == 0 or isMobFacingStupid(mob)) and tries < 10) : (tries += 1)
+    while ((tries == 0 or isMobFacingStupid(mob)) and tries < 5) : (tries += 1)
         mob.facing = switch (mob.facing) {
             .North => .NorthWest,
             .NorthWest => .West,
@@ -779,7 +792,7 @@ fn guardGlanceLeftRight(mob: *Mob, _: Direction) void {
 }
 
 fn tryChooseRandomPatrolDest(mob: *Mob) ?Coord {
-    var tries: usize = 5;
+    var tries: usize = 3;
     while (tries > 0) : (tries -= 1) {
         const room = rng.chooseUnweighted(mapgen.Room, state.rooms[mob.coord.z].items);
         const point = room.rect.randomCoord();
@@ -800,6 +813,9 @@ pub fn sunMothWork(mob: *Mob) void {
 }
 
 pub fn patrolWork(mob: *Mob) void {
+    var timer = state.benchmarker.timer("ai.patrolWork");
+    defer timer.end();
+
     assert(state.dungeon.at(mob.coord).mob != null);
     assert(mob.ai.phase == .Work);
 
@@ -840,6 +856,9 @@ pub fn patrolWork(mob: *Mob) void {
 }
 
 pub fn guardWork(mob: *Mob) void {
+    var timer = state.benchmarker.timer("ai.guardWork");
+    defer timer.end();
+
     const post = mob.ai.work_area.items[0];
 
     // Choose a nearby room to watch as well, if we haven't already.
@@ -854,18 +873,20 @@ pub fn guardWork(mob: *Mob) void {
             .Room => |r| state.rooms[mob.coord.z].items[r],
         };
 
-        // Chance to not patrol, or only patrol current room
+        // Don't patrol
         if (rng.tenin(25)) {
             tryRest(mob);
             mob.ai.work_area.append(post) catch unreachable;
             return;
-        } else if (rng.tenin(15) or state.rooms[mob.coord.z].items.len == 1) {
-            var tries: usize = 100;
+        }
+        // Patrol current room
+        else if (rng.tenin(15) or state.rooms[mob.coord.z].items.len == 1) {
+            var tries: usize = 30;
             var farthest: Coord = post;
             while (tries > 0) : (tries -= 1) {
                 const rndcoord = cur_room.rect.randomCoord();
-                if (!state.is_walkable(rndcoord, .{ .mob = mob, .right_now = true }) or
-                    state.dungeon.at(rndcoord).prison or
+                if (state.dungeon.at(rndcoord).prison or
+                    !state.is_walkable(rndcoord, .{ .mob = mob, .right_now = true }) or
                     mob.nextDirectionTo(rndcoord) == null)
                 {
                     continue;
@@ -877,7 +898,9 @@ pub fn guardWork(mob: *Mob) void {
             }
 
             mob.ai.work_area.append(farthest) catch unreachable;
-        } else {
+        }
+        // Find another room to patrol
+        else {
             var nearest: ?mapgen.Room = null;
             var nearest_distance: usize = 99999;
             for (state.rooms[mob.coord.z].items) |room| {
@@ -894,11 +917,11 @@ pub fn guardWork(mob: *Mob) void {
 
             assert(nearest != null);
 
-            var tries: usize = 100;
+            var tries: usize = 32;
             const post2 = while (tries > 0) : (tries -= 1) {
                 const rndcoord = nearest.?.rect.randomCoord();
-                if (!state.is_walkable(rndcoord, .{ .mob = mob, .right_now = true }) or
-                    state.dungeon.at(rndcoord).prison)
+                if (state.dungeon.at(rndcoord).prison or
+                    !state.is_walkable(rndcoord, .{ .mob = mob, .right_now = true }))
                 {
                     continue;
                 }
@@ -945,6 +968,9 @@ pub fn dummyWork(m: *Mob) void {
 }
 
 pub fn standStillAndGuardWork(mob: *Mob) void {
+    var timer = state.benchmarker.timer("ai.standStillWork");
+    defer timer.end();
+
     const post = mob.ai.work_area.items[0];
 
     if (mob.coord.eq(post)) {
@@ -1070,6 +1096,9 @@ pub fn haulerWork(mob: *Mob) void {
 }
 
 pub fn stayNearLeaderWork(mob: *Mob) void {
+    var timer = state.benchmarker.timer("ai.standStillWork");
+    defer timer.end();
+
     assert(mob.squad != null);
     assert(mob.squad.?.leader != null);
 
@@ -1098,6 +1127,9 @@ pub fn hulkWork(mob: *Mob) void {
 }
 
 pub fn wanderWork(mob: *Mob) void {
+    var timer = state.benchmarker.timer("ai.wanderWork");
+    defer timer.end();
+
     assert(state.dungeon.at(mob.coord).mob != null);
     assert(mob.ai.phase == .Work);
 
@@ -1232,6 +1264,9 @@ pub fn ballLightningWorkOrFight(mob: *Mob) void {
 }
 
 pub fn nightCreatureWork(mob: *Mob) void {
+    var timer = state.benchmarker.timer("ai.nightCreatureWork");
+    defer timer.end();
+
     switch (mob.ai.work_phase) {
         .NC_Guard => {
             // If this is a slinking terror and it's not close to walls, immediately
@@ -2382,6 +2417,9 @@ pub fn work(mob: *Mob) void {
 }
 
 pub fn main(mob: *Mob) void {
+    var timer = state.benchmarker.timer("ai.main");
+    defer timer.end();
+
     checkForLeadership(mob);
 
     checkForAllies(mob);

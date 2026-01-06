@@ -3,6 +3,7 @@
 // Yes I'm embarrassed. No I won't rewrite it myself.
 
 const build_options = @import("build_options");
+const builtin = @import("builtin");
 
 const std = @import("std");
 const mem = std.mem;
@@ -12,6 +13,7 @@ const sort = std.sort;
 const err = @import("err.zig"); // For the allocator
 const state = @import("state.zig"); // For the allocator
 const colors = @import("colors.zig");
+const utils = @import("utils.zig");
 
 // const Generator = @import("generators.zig").Generator;
 // const GeneratorCtx = @import("generators.zig").GeneratorCtx;
@@ -90,6 +92,13 @@ pub const Event = union(enum) {
     Hover: Coord,
     Wheel: struct { y: isize, c: Coord },
     Quit,
+
+    pub fn is_mouse_ev(self: Event) bool {
+        return switch (self) {
+            .Quit, .Resize, .Key, .Char => false,
+            .Hover, .Click, .Wheel => true,
+        };
+    }
 };
 
 // Enum values are in sync with termbox TB_KEY_* constants
@@ -279,7 +288,7 @@ pub fn init(preferred_width: usize, preferred_height: usize, scale: f32) InitErr
             //
             // Convince Windows it doesn't need to babysit us, we can set our
             // own pixels just fine.
-            if (@import("builtin").os.tag == .windows) {
+            if (builtin.os.tag == .windows) {
                 const win32 = @cImport({
                     @cInclude("windows.h");
                     @cInclude("winuser.h");
@@ -552,122 +561,182 @@ inline fn norm(c: Coord) Coord {
     }
 }
 
+// Polls for events without waiting.
+//
+// For SDL, if an event of unknown/unhandled type is encountered, events are
+// polled again immediately.
+fn poll_event(timeout_ns: u64) !?Event {
+    const timeout_ms: c_int = @intCast(timeout_ns / 1_000_000);
+
+    switch (driver) {
+        .Termbox => {
+            var ev: driver_m.tb_event = undefined;
+            const t = driver_m.tb_peek_event(&ev, timeout_ms);
+
+            switch (t) {
+                driver_m.TB_EVENT_POLL_ERROR => return error.TermboxError,
+                driver_m.TB_EVENT_NONE => return null, // No event
+                driver_m.TB_EVENT_KEY => {
+                    if (ev.ch != 0) {
+                        return Event{ .Char = @intCast(ev.ch) };
+                    } else if (ev.key != 0) {
+                        return switch (ev.key) {
+                            driver_m.TB_KEY_SPACE => Event{ .Char = ' ' },
+                            else => Event{ .Key = Key.fromTermbox(ev.key) },
+                        };
+                    } else unreachable;
+                },
+                driver_m.TB_EVENT_RESIZE => {
+                    return Event{ .Resize = .{
+                        .new_width = @intCast(ev.w),
+                        .new_height = @intCast(ev.h),
+                    } };
+                },
+                driver_m.TB_EVENT_MOUSE => @panic("TODO"),
+                else => unreachable,
+            }
+        },
+        .SDL2 => {
+            var ev: driver_m.SDL_Event = undefined;
+
+            const r = driver_m.SDL_WaitEventTimeout(&ev, timeout_ms);
+            if (r == 0) return null;
+
+            switch (ev.type) {
+                driver_m.SDL_QUIT => {
+                    return .Quit;
+                },
+                driver_m.SDL_TEXTINPUT => {
+                    const len = std.unicode.utf8ByteSequenceLength(ev.text.text[0]) catch err.wat();
+                    const text = ev.text.text[0..len];
+                    return Event{ .Char = std.unicode.utf8Decode(text) catch err.wat() };
+                },
+                driver_m.SDL_KEYDOWN => {
+                    const kcode = ev.key.keysym.sym;
+                    if (Key.fromSDL(kcode, ev.key.keysym.mod)) |key| {
+                        return Event{ .Key = key };
+                    } else if (kcode == driver_m.SDLK_SPACE) {
+                        return Event{ .Char = ' ' };
+                    } else return poll_event(timeout_ns);
+                },
+                driver_m.SDL_MOUSEBUTTONUP => {
+                    // ev is driver_m.SDL_MouseButtonEvent
+                    const xpix: usize = @intCast(ev.button.x);
+                    const ypix: usize = @intCast(ev.button.y);
+                    const xrel = xpix / font.FONT_WIDTH;
+                    const yrel = ypix / font.FONT_HEIGHT;
+                    if (xrel < width() and yrel < height()) {
+                        return Event{ .Click = norm(Coord.new(xrel, yrel)) };
+                    }
+                },
+                driver_m.SDL_MOUSEMOTION => {
+                    // ev is driver_m.SDL_MouseMotionEvent
+                    const xpix: usize = @intCast(ev.motion.x);
+                    const ypix: usize = @intCast(ev.motion.y);
+                    const xrel = xpix / font.FONT_WIDTH;
+                    const yrel = ypix / font.FONT_HEIGHT;
+                    if ((xrel != last_hover_x or yrel != last_hover_y) and
+                        xrel < width() and yrel < height() and
+                        ev.button.state == 0)
+                    {
+                        last_hover_y = yrel;
+                        last_hover_x = xrel;
+                        return Event{ .Hover = norm(Coord.new(xrel, yrel)) };
+                    }
+                },
+                driver_m.SDL_MOUSEWHEEL => {
+                    // ev is driver_m.SDL_MouseWheelEvent
+                    const xpix: usize = @intCast(ev.wheel.mouseX);
+                    const ypix: usize = @intCast(ev.wheel.mouseY);
+                    const xrel = xpix / font.FONT_WIDTH;
+                    const yrel = ypix / font.FONT_HEIGHT;
+                    if (xrel < width() and yrel < height()) {
+                        return Event{ .Wheel = .{
+                            .y = ev.wheel.y,
+                            .c = norm(Coord.new(xrel, yrel)),
+                        } };
+                    }
+                },
+                else => return poll_event(timeout_ns),
+            }
+        },
+    }
+
+    // We get here for mouse events that weren't within bounds
+    return null;
+}
+
 pub const GetEventsIter = struct {
     timeout: ?usize,
     timer: std.time.Timer,
-    nonmouse_event_received: bool,
+    got_non_mouse_ev: bool,
+    polled_once: bool = false,
+    is_error: bool = false,
+
+    obsd_timer: if (builtin.os.tag == .openbsd) utils.OBSDTimer else void,
+
+    pub fn is_finished(self: *@This()) bool {
+        if (self.is_error)
+            return true;
+
+        if (self.timeout) |timeout| {
+            return self.timer.read() / 1_000_000 >= timeout;
+        } else {
+            return self.got_non_mouse_ev;
+        }
+    }
+
+    fn poll(self: *@This()) ?Event {
+        if (poll_event(0)) |maybe_ev| {
+            self.polled_once = true;
+            if (maybe_ev) |ev| {
+                self.got_non_mouse_ev = self.got_non_mouse_ev or !ev.is_mouse_ev();
+                return ev;
+            } else {
+                return null;
+            }
+        } else |_| {
+            self.is_error = true;
+            return null;
+        }
+    }
 
     pub fn next(self: *@This()) ?Event {
-        while (true) {
-            const max_timeout_ns = 15_000_000; // 15 ms
+        if (self.is_finished())
+            return null;
+
+        // Always poll events at least once.
+        if (!self.polled_once)
+            if (self.poll()) |ev|
+                return ev;
+
+        while (!self.is_finished()) {
+            const max_timeout_ns = 18_000_000;
             const remaining = ((self.timeout orelse std.math.maxInt(u64)) *| 1_000_000) -| self.timer.read();
-            std.Thread.sleep(@min(max_timeout_ns, remaining));
+            const timeout_ns = @min(max_timeout_ns, remaining);
+            const before = self.timer.read();
 
-            if (self.timeout != null and self.timer.read() / 1_000_000 > self.timeout.?) {
-                return null;
-            } else if (self.timeout == null and self.nonmouse_event_received) {
-                return null;
+            // Treat OpenBSD specially due to scheduling/sleep granularity shenanigans.
+            if (builtin.os.tag == .openbsd) {
+                const sleep_chunk_ns = timeout_ns - (timeout_ns % 10_000_000);
+                if (sleep_chunk_ns >= 10_000_000) {
+                    self.obsd_timer.set(sleep_chunk_ns) catch {
+                        self.is_error = true;
+                        return null;
+                    };
+                    self.obsd_timer.wait();
+                }
+
+                while (self.timer.read() - before <= timeout_ns) {}
+            } else {
+                std.Thread.sleep(timeout_ns);
             }
 
-            switch (driver) {
-                .Termbox => {
-                    var ev: driver_m.tb_event = undefined;
-                    const t = driver_m.tb_peek_event(&ev, 0);
-
-                    switch (t) {
-                        0 => return self.next(), // This might be stupid, but I can't tell right now
-                        -1 => err.bug("Termbox error", .{}),
-                        driver_m.TB_EVENT_KEY => {
-                            self.nonmouse_event_received = true;
-                            if (ev.ch != 0) {
-                                return Event{ .Char = @intCast(ev.ch) };
-                            } else if (ev.key != 0) {
-                                return switch (ev.key) {
-                                    driver_m.TB_KEY_SPACE => Event{ .Char = ' ' },
-                                    else => Event{ .Key = Key.fromTermbox(ev.key) },
-                                };
-                            } else unreachable;
-                        },
-                        driver_m.TB_EVENT_RESIZE => {
-                            return Event{ .Resize = .{
-                                .new_width = @intCast(ev.w),
-                                .new_height = @intCast(ev.h),
-                            } };
-                        },
-                        driver_m.TB_EVENT_MOUSE => @panic("TODO"),
-                        else => unreachable,
-                    }
-                },
-                .SDL2 => {
-                    var ev: driver_m.SDL_Event = undefined;
-
-                    const r = driver_m.SDL_PollEvent(&ev);
-                    if (r != 1) continue;
-
-                    switch (ev.type) {
-                        driver_m.SDL_QUIT => {
-                            self.nonmouse_event_received = true;
-                            return .Quit;
-                        },
-                        driver_m.SDL_TEXTINPUT => {
-                            self.nonmouse_event_received = true;
-                            const len = std.unicode.utf8ByteSequenceLength(ev.text.text[0]) catch err.wat();
-                            const text = ev.text.text[0..len];
-                            return Event{ .Char = std.unicode.utf8Decode(text) catch err.wat() };
-                        },
-                        driver_m.SDL_KEYDOWN => {
-                            const kcode = ev.key.keysym.sym;
-                            if (Key.fromSDL(kcode, ev.key.keysym.mod)) |key| {
-                                self.nonmouse_event_received = true;
-                                return Event{ .Key = key };
-                            } else if (kcode == driver_m.SDLK_SPACE) {
-                                self.nonmouse_event_received = true;
-                                return Event{ .Char = ' ' };
-                            } else return self.next();
-                        },
-                        driver_m.SDL_MOUSEBUTTONUP => {
-                            // ev is driver_m.SDL_MouseButtonEvent
-                            const xpix: usize = @intCast(ev.button.x);
-                            const ypix: usize = @intCast(ev.button.y);
-                            const xrel = xpix / font.FONT_WIDTH;
-                            const yrel = ypix / font.FONT_HEIGHT;
-                            if (xrel < width() and yrel < height()) {
-                                return Event{ .Click = norm(Coord.new(xrel, yrel)) };
-                            }
-                        },
-                        driver_m.SDL_MOUSEMOTION => {
-                            // ev is driver_m.SDL_MouseMotionEvent
-                            const xpix: usize = @intCast(ev.motion.x);
-                            const ypix: usize = @intCast(ev.motion.y);
-                            const xrel = xpix / font.FONT_WIDTH;
-                            const yrel = ypix / font.FONT_HEIGHT;
-                            if ((xrel != last_hover_x or yrel != last_hover_y) and
-                                xrel < width() and yrel < height() and
-                                ev.button.state == 0)
-                            {
-                                last_hover_y = yrel;
-                                last_hover_x = xrel;
-                                return Event{ .Hover = norm(Coord.new(xrel, yrel)) };
-                            }
-                        },
-                        driver_m.SDL_MOUSEWHEEL => {
-                            // ev is driver_m.SDL_MouseWheelEvent
-                            const xpix: usize = @intCast(ev.wheel.mouseX);
-                            const ypix: usize = @intCast(ev.wheel.mouseY);
-                            const xrel = xpix / font.FONT_WIDTH;
-                            const yrel = ypix / font.FONT_HEIGHT;
-                            if (xrel < width() and yrel < height()) {
-                                return Event{ .Wheel = .{
-                                    .y = ev.wheel.y,
-                                    .c = norm(Coord.new(xrel, yrel)),
-                                } };
-                            }
-                        },
-                        else => return self.next(),
-                    }
-                },
-            }
+            if (self.poll()) |ev|
+                return ev;
         }
+
+        return null;
     }
 };
 
@@ -680,6 +749,11 @@ pub fn getEvents(timeout: ?usize) GetEventsIter {
     return .{
         .timeout = timeout,
         .timer = std.time.Timer.start() catch err.wat(),
-        .nonmouse_event_received = false,
+        .got_non_mouse_ev = false,
+        .obsd_timer =
+            if (builtin.os.tag == .openbsd)
+                utils.OBSDTimer.new()
+                    catch err.fatal("kqueue error", .{})
+            else {},
     };
 }
