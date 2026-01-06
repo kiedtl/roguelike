@@ -50,6 +50,8 @@ const WIDTH = state.WIDTH;
 // ----------------------------------------------------------------------------
 
 pub const caverns = @import("ai/caverns.zig");
+// Re-exports for serializer (because it'll look in ai.zig for functions, not caverns.zig)
+pub const vapourMageWork = caverns.vapourMageWork;
 
 // ----------------------------------------------------------------------------
 
@@ -507,7 +509,7 @@ pub fn checkForHostiles(mob: *Mob) void {
         if (ally.life_type != .Undead) break true;
     } else false;
 
-    for (mob.fov, 0..) |row, y| for (row, 0..) |cell, x| {
+    for (mob.fov.m, 0..) |row, y| for (row, 0..) |cell, x| {
         if (cell == 0) continue;
         const fitem = Coord.new2(mob.coord.z, x, y);
 
@@ -602,7 +604,7 @@ pub fn checkForAllies(mob: *Mob) void {
     mob.allies.shrinkRetainingCapacity(0);
 
     // We're iterating over FOV because it's the lazy thing to do.
-    for (mob.fov, 0..) |row, y| for (row, 0..) |_, x| {
+    for (mob.fov.m, 0..) |row, y| for (row, 0..) |_, x| {
         const fitem = Coord.new2(mob.coord.z, x, y);
         if (fitem.distance(mob.coord) > vision) continue;
 
@@ -1192,7 +1194,7 @@ pub fn tortureWork(mob: *Mob) void {
 
     var prisoners = StackBuffer(*Mob, 32).init(null);
 
-    for (mob.fov, 0..) |row, y| for (row, 0..) |cell, x| {
+    for (mob.fov.m, 0..) |row, y| for (row, 0..) |cell, x| {
         if (cell == 0) continue;
         const fitem = Coord.new2(mob.coord.z, x, y);
 
@@ -1324,7 +1326,7 @@ pub fn nightCreatureWork(mob: *Mob) void {
         },
         .NC_MoveTo, .NC_PatrolTo => {
             // First check for enemies that have seen us, and disable them.
-            for (mob.fov, 0..) |row, y| for (row, 0..) |cell, x| if (cell != 0) {
+            for (mob.fov.m, 0..) |row, y| for (row, 0..) |cell, x| if (cell != 0) {
                 const fitem = Coord.new2(mob.coord.z, x, y);
 
                 if (state.dungeon.at(fitem).mob) |othermob| {
@@ -2192,7 +2194,7 @@ pub fn _Job_GRD_SweepRoom(mob: *Mob, job: *AIJob) AIJob.JStatus {
     const room_map = job.ctx.getPtr(CoordArrayList, CTX_ROOM_MAP, CoordArrayList.init(state.alloc));
     const room_dst = job.ctx.get(Coord, CTX_ROOM_SWEEP_DEST, room.rect.middle());
 
-    for (mob.fov, 0..) |row, y| for (row, 0..) |cell, x| {
+    for (mob.fov.m, 0..) |row, y| for (row, 0..) |cell, x| {
         if (cell == 0) continue;
         const fitem = Coord.new2(mob.coord.z, x, y);
         room_map.append(fitem) catch err.wat();

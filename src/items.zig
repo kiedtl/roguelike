@@ -765,7 +765,7 @@ fn _triggerEldritchLantern(mob: *Mob, _: *Evocable) Evocable.EvokeError!void {
     assert(mob == state.player);
     state.message(.Info, "The eldritch lantern flashes brilliantly!", .{});
 
-    for (mob.fov, 0..) |row, y| for (row, 0..) |cell, x| {
+    for (mob.fov.m, 0..) |row, y| for (row, 0..) |cell, x| {
         if (cell == 0) continue;
 
         const coord = Coord.new2(mob.coord.z, x, y);
@@ -1130,7 +1130,7 @@ pub const TransformationRing = Ring{ // {{{
 
             var coords = StackBuffer(Coord, HEIGHT * WIDTH).init(null);
 
-            for (state.player.fov, 0..) |row, y| for (row, 0..) |cell, x| {
+            for (state.player.fov.m, 0..) |row, y| for (row, 0..) |cell, x| {
                 if (cell == 0) continue;
                 const coord = Coord.new2(state.player.coord.z, x, y);
 

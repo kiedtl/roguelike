@@ -222,7 +222,18 @@ pub fn build(b: *Build) void {
     build_tests.root_module.addOptions("build_options", options);
     build_tests.root_module.addImport("strig", strig);
     build_tests.addIncludePath(b.path("third_party/janet/"));
-    build_tests.addCSourceFiles(.{ .files = &[_][]const u8{"third_party/janet/janet.c"} });
+    const curl = b.dependency("curl", .{});
+    build_tests.root_module.addImport("curl", curl.module("curl"));
+    build_tests.addIncludePath(b.path("third_party/janet/")); // janet.h
+    build_tests.addIncludePath(b.path("third_party/microtar/src/"));
+    build_tests.addIncludePath(Build.LazyPath{ .cwd_relative = "/usr/include/SDL2/" });
+    build_tests.addCSourceFiles(.{
+        .files = &[_][]const u8{
+            "third_party/microtar/src/microtar.c", // FIXME: why is this needed
+            "third_party/janet/janet.c",
+        },
+        .flags = &[_][]const u8{ "-O3", "-fomit-frame-pointer", "-march=native" },
+    });
     _addTermbox(b, build_tests);
     // b.installArtifact(build_tests);
     const run_tests = b.addRunArtifact(build_tests);

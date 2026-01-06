@@ -1551,20 +1551,20 @@ pub const Status = enum {
 
                 if (state.dungeon.at(coord).mob) |othermob| {
                     if (othermob.ai.flag(.DetectWithHeat)) {
-                        mob.fov[y][x] = 100;
+                        mob.fov.m[y][x] = 100;
                     }
 
                     if (othermob.hasStatus(.Fire)) {
-                        mob.fov[y][x] = 100;
+                        mob.fov.m[y][x] = 100;
                     }
                 }
 
                 if (state.dungeon.machineAt(coord)) |machine| {
                     if (machine.detect_with_heat) {
                         for (&DIRECTIONS) |d| if (coord.move(d, state.mapgeometry)) |n| {
-                            mob.fov[n.y][n.x] = 100;
+                            mob.fov.m[n.y][n.x] = 100;
                         };
-                        mob.fov[y][x] = 100;
+                        mob.fov.m[y][x] = 100;
                     }
                 }
 
@@ -1572,9 +1572,9 @@ pub const Status = enum {
                     state.dungeon.at(coord).type == .Lava)
                 {
                     for (&DIRECTIONS) |d| if (coord.move(d, state.mapgeometry)) |n| {
-                        mob.fov[n.y][n.x] = 100;
+                        mob.fov.m[n.y][n.x] = 100;
                     };
-                    mob.fov[y][x] = 100;
+                    mob.fov.m[y][x] = 100;
                 }
             }
         }
@@ -1592,20 +1592,20 @@ pub const Status = enum {
 
                 if (state.dungeon.at(coord).mob) |othermob| {
                     if (othermob.ai.flag(.DetectWithElec)) {
-                        mob.fov[y][x] = 100;
+                        mob.fov.m[y][x] = 100;
                     }
 
                     if (othermob.hasStatus(.ExplosiveElec)) {
-                        mob.fov[y][x] = 100;
+                        mob.fov.m[y][x] = 100;
                     }
                 }
 
                 if (state.dungeon.machineAt(coord)) |machine| {
                     if (machine.detect_with_elec) {
                         for (&DIRECTIONS) |d| if (coord.move(d, state.mapgeometry)) |n| {
-                            mob.fov[n.y][n.x] = 100;
+                            mob.fov.m[n.y][n.x] = 100;
                         };
-                        mob.fov[y][x] = 100;
+                        mob.fov.m[y][x] = 100;
                     }
                 }
             }
@@ -1830,9 +1830,9 @@ pub const Status = enum {
                 if (state.dungeon.at(coord).mob) |othermob| {
                     if (othermob.life_type == .Undead) {
                         for (&DIRECTIONS) |d| if (coord.move(d, state.mapgeometry)) |n| {
-                            mob.fov[n.y][n.x] = 100;
+                            mob.fov.m[n.y][n.x] = 100;
                         };
-                        mob.fov[y][x] = 100;
+                        mob.fov.m[y][x] = 100;
                     }
                 }
             }
@@ -2304,6 +2304,60 @@ pub const Stat = enum {
     }
 };
 
+pub const MobFov = struct { // {{{
+    m: [HEIGHT][WIDTH]usize = [1][WIDTH]usize{[1]usize{0} ** WIDTH} ** HEIGHT,
+
+    pub fn serialize(val: @This(), out: anytype) !void {
+        var ctr: u16 = 0;
+        for (0..HEIGHT) |y|
+            for (0..WIDTH) |x|
+                if (val.m[y][x] > 0) {
+                    ctr += 1;
+                };
+
+        try serializer.serialize(u16, ctr, out);
+
+        for (0..HEIGHT) |y|
+            for (0..WIDTH) |x|
+                if (val.m[y][x] > 0) {
+                    try serializer.serialize(u8, @intCast(y), out);
+                    try serializer.serialize(u8, @intCast(x), out);
+                };
+    }
+
+    pub fn deserialize(out: *@This(), in: anytype, alloc: mem.Allocator) !void {
+        out.* = MobFov{};
+
+        var i = try serializer.deserializeQ(u16, in, alloc);
+        while (i > 0) : (i -= 1) {
+            const y = try serializer.deserializeQ(u8, in, alloc);
+            const x = try serializer.deserializeQ(u8, in, alloc);
+            out.m[y][x] = 100;
+        }
+    }
+}; // }}}
+
+test "MobFov serialization" {
+    var mfov = MobFov{};
+    for (0..HEIGHT) |y|
+        for (0..WIDTH) |x|
+            if (y % 3 == 0 or x * 3 % 7 > 3) {
+                mfov.m[y][x] = 100;
+            };
+
+    var buf: [HEIGHT * WIDTH * 2]u8 = undefined;
+    var fbs = std.io.fixedBufferStream(&buf);
+    try serializer.serializeWE(MobFov, mfov, fbs.writer());
+
+    fbs.reset();
+    var mfov_deser: MobFov = undefined;
+    try serializer.deserializeWE(MobFov, &mfov_deser, fbs.reader(), testing.allocator);
+
+    for (0..HEIGHT) |y|
+        for (0..WIDTH) |x|
+            try testing.expectEqual(mfov.m[y][x], mfov_deser.m[y][x]);
+}
+
 pub const Mob = struct { // {{{
     // linked list stuff
     __next: ?*Mob = null,
@@ -2323,7 +2377,7 @@ pub const Mob = struct { // {{{
     linked_fovs: StackBuffer(*Mob, 16) = StackBuffer(*Mob, 16).init(null),
     tag: ?u8 = null, // Used by test harness
 
-    fov: [HEIGHT][WIDTH]usize = [1][WIDTH]usize{[1]usize{0} ** WIDTH} ** HEIGHT,
+    fov: MobFov = .{},
     path_cache: std.AutoHashMap(Path, Coord) = undefined,
     enemies: EnemyRecord.AList = undefined,
     allies: MobArrayList = undefined,
@@ -2616,7 +2670,7 @@ pub const Mob = struct { // {{{
         var timer = state.benchmarker.timer("Mob.tickFOV");
         defer timer.end();
 
-        for (&self.fov) |*row| for (row) |*cell| {
+        for (&self.fov.m) |*row| for (row) |*cell| {
             cell.* = 0;
         };
 
@@ -2655,13 +2709,13 @@ pub const Mob = struct { // {{{
                         return if (o < 100) 0 else 100;
                     }
                 };
-                fov.rayCast(eye_coord, vision, energy, S.tileOpacity, &self.fov, direction, self == state.player);
+                fov.rayCast(eye_coord, vision, energy, S.tileOpacity, &self.fov.m, direction, self == state.player);
             } else {
-                fov.rayCast(eye_coord, vision, energy, Dungeon.tileOpacity, &self.fov, direction, self == state.player);
+                fov.rayCast(eye_coord, vision, energy, Dungeon.tileOpacity, &self.fov.m, direction, self == state.player);
             };
 
-        for (self.fov, 0..) |row, y| for (row, 0..) |_, x| {
-            if (self.fov[y][x] > 0) {
+        for (self.fov.m, 0..) |row, y| for (row, 0..) |_, x| {
+            if (self.fov.m[y][x] > 0) {
                 const fc = Coord.new2(self.coord.z, x, y);
                 const light = state.dungeon.lightAt(fc).*;
 
@@ -2670,12 +2724,12 @@ pub const Mob = struct { // {{{
                 if (fc.distance(self.coordMT(fc)) > 1 and
                     (!light_needs[@intFromBool(light)] or is_blinded))
                 {
-                    self.fov[y][x] = 0;
+                    self.fov.m[y][x] = 0;
                     continue;
                 }
             }
         };
-        self.fov[self.coord.y][self.coord.x] = 100;
+        self.fov.m[self.coord.y][self.coord.x] = 100;
 
         // Special-case: Player has sceptre and Dijkstra vision
         if (self.hasStatus(.Sceptre)) {
@@ -2687,7 +2741,7 @@ pub const Mob = struct { // {{{
             while (dijk.next()) |child| {
                 if (Dungeon.isTileOpaque(child))
                     dijk.skip();
-                self.fov[child.y][child.x] = 100;
+                self.fov.m[child.y][child.x] = 100;
             }
         }
 
@@ -2701,9 +2755,9 @@ pub const Mob = struct { // {{{
         }
 
         for (self.linked_fovs.constSlice()) |linked_fov_mob| {
-            for (linked_fov_mob.fov, 0..) |row, y| for (row, 0..) |_, x| {
-                if (linked_fov_mob.fov[y][x] > 0) {
-                    self.fov[y][x] = 100;
+            for (linked_fov_mob.fov.m, 0..) |row, y| for (row, 0..) |_, x| {
+                if (linked_fov_mob.fov.m[y][x] > 0) {
+                    self.fov.m[y][x] = 100;
                 }
             };
         }
@@ -4279,6 +4333,7 @@ pub const Mob = struct { // {{{
 
         for (self.jobs.slice()) |*job|
             job.deinit();
+        self.jobs.clear();
 
         self.is_dead = true;
 
@@ -4699,7 +4754,7 @@ pub const Mob = struct { // {{{
         //if (self.coord.distance(coord) > self.stat(.Vision))
         //    return false;
 
-        if (self.fov[coord.y][coord.x] > 0 or self.coord.eq(coord))
+        if (self.fov.m[coord.y][coord.x] > 0 or self.coord.eq(coord))
             return true;
 
         return false;

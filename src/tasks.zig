@@ -268,7 +268,7 @@ pub fn tickTasks(level: usize) void {
 pub fn scanForCorpses(mob: *Mob) void {
     if (mob.faction != .Necromancer) return;
 
-    for (mob.fov, 0..) |row, y| for (row, 0..) |cell, x| {
+    for (mob.fov.m, 0..) |row, y| for (row, 0..) |cell, x| {
         if (cell == 0) continue;
         const coord = Coord.new2(mob.coord.z, x, y);
 
@@ -293,7 +293,7 @@ pub fn scanForCorpses(mob: *Mob) void {
 }
 
 pub fn scanForCleaningJobs(mob: *Mob) void {
-    for (mob.fov, 0..) |row, y| for (row, 0..) |cell, x| {
+    for (mob.fov.m, 0..) |row, y| for (row, 0..) |cell, x| {
         if (cell == 0) continue;
         const coord = Coord.new2(mob.coord.z, x, y);
 

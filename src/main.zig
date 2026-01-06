@@ -714,10 +714,10 @@ fn viewerMain() void {
                 if (ev.key != 0) {
                     switch (ev.key) {
                         termbox.TB_KEY_CTRL_C => break,
-                        // termbox.TB_KEY_F7 => {
-                        //     serializer.serializeWorld() catch err.wat();
-                        //     serializer.deserializeWorld() catch err.wat();
-                        // },
+                        termbox.TB_KEY_F7 => {
+                            serializer.serializeWorld() catch err.wat();
+                            //serializer.deserializeWorld() catch err.wat();
+                        },
                         else => {},
                     }
                 } else if (ev.ch != 0) {
@@ -1296,20 +1296,7 @@ pub fn gameMain() void {
     };
 
     std.log.info("Benchmarks: ", .{});
-    {
-        var stdout = std.io.getStdOut().writer();
-        var bench_records = state.benchmarker.records.iterator();
-        while (bench_records.next()) |rec_entry| {
-            const v = rec_entry.value_ptr;
-            stdout.print("[{s:>24}] {:>7} evs: {d:.3}..{d:<8.3}\t{d:>7.3} avg\n", .{
-                rec_entry.key_ptr.*,
-                v.count,
-                @as(f32, @floatFromInt(v.min)) * 1e-6,
-                @as(f32, @floatFromInt(v.max)) * 1e-6,
-                @as(f32, @floatFromInt(v.average)) * 1e-6
-            }) catch err.wat();
-        }
-    }
+    state.benchmarker.printTimes();
 
     const info = scores.createMorgue();
     if (state.state != .Quit)

@@ -4,14 +4,16 @@ const mem = std.mem;
 const assert = std.debug.assert;
 
 const err = @import("err.zig");
-const items = @import("items.zig");
 const itemlists = items.itemlists;
+const items = @import("items.zig");
 const literature = @import("literature.zig");
 const mapgen = @import("mapgen.zig");
 const microtar = @import("microtar.zig");
+const mobs = @import("mobs.zig");
 const state = @import("state.zig");
 const surfaces = @import("surfaces.zig");
 const types = @import("types.zig");
+const utils = @import("utils.zig");
 
 const StackBuffer = @import("buffer.zig").StackBuffer;
 // const Generator = @import("generators.zig").Generator;
@@ -25,18 +27,18 @@ const FIELDS_ALWAYS_KEEP_LIST = [_][]const u8{ "__next", "__prev" };
 const STATIC_CONTAINERS = [_]struct {
     m: []const u8,
     t: type,
-    s: *opaque {},
+    s: *const opaque {},
 }
     // zig fmt: off
 {
-.{ .m = "s.props",       .t = types.Prop,              .s = @ptrCast(&surfaces.props.items)  },
-.{ .m = "s.TERRAIN",     .t = *const surfaces.Terrain, .s = @ptrCast(&@as([]const *const surfaces.Terrain, &surfaces.TERRAIN)) },
-.{ .m = "i.ARMORS",      .t = *const types.Armor,      .s = @ptrCast(&itemlists.ARMORS)      },
-.{ .m = "i.WEAPONS",     .t = *const types.Weapon,     .s = @ptrCast(&itemlists.WEAPONS)     },
-.{ .m = "i.CLOAKS",      .t = *const items.Cloak,      .s = @ptrCast(&itemlists.CLOAKS)      },
-.{ .m = "i.HEADGEAR",    .t = *const items.Headgear,   .s = @ptrCast(&itemlists.HEADGEAR)    },
-.{ .m = "i.AUXES",       .t = *const items.Aux,        .s = @ptrCast(&itemlists.AUXES)       },
-.{ .m = "i.CONSUMABLES", .t = *const items.Consumable, .s = @ptrCast(&itemlists.CONSUMABLES) },
+.{ .m = "s.props", .t = types.Prop,              .s = @ptrCast(&surfaces.props.items)  },
+.{ .m = "s.TER",   .t = *const surfaces.Terrain, .s = @ptrCast(&@as([]const *const surfaces.Terrain, &surfaces.TERRAIN)) },
+.{ .m = "i.ARM",   .t = *const types.Armor,      .s = @ptrCast(&itemlists.ARMORS)      },
+.{ .m = "i.WEP",   .t = *const types.Weapon,     .s = @ptrCast(&itemlists.WEAPONS)     },
+.{ .m = "i.CLK",   .t = *const items.Cloak,      .s = @ptrCast(&itemlists.CLOAKS)      },
+.{ .m = "i.HDG",   .t = *const items.Headgear,   .s = @ptrCast(&itemlists.HEADGEAR)    },
+.{ .m = "i.AUX",   .t = *const items.Aux,        .s = @ptrCast(&itemlists.AUXES)       },
+.{ .m = "i.CON",   .t = *const items.Consumable, .s = @ptrCast(&itemlists.CONSUMABLES) },
 };
 // zig fmt: on
 
@@ -45,6 +47,9 @@ pub const PointerData = struct { container: []const u8, ptrtype: []const u8, ind
 pub const PointerData2 = struct { ptr: usize, ptrtype: []const u8, ind: usize };
 var ptrtable: std.AutoHashMap(u64, PointerData) = undefined;
 var ptrinits: StackBuffer(ContainerInit, 32) = undefined;
+
+var benchmarker: utils.Benchmarker = undefined;
+var is_benchmarking = false;
 
 // Cache type ids so we can look up a type by its id
 var typelist = StackBuffer(_KV, 256).init(null);
@@ -79,6 +84,7 @@ fn _fieldType(comptime T: type, fieldname: []const u8) type {
 fn _normIntT(comptime Int: type) type {
     const s = @typeInfo(Int).int.signedness == .signed;
     return switch (@typeInfo(Int).int.bits) {
+        0 => u0,
         1...8 => if (s) i8 else u8,
         9...16 => if (s) i16 else u16,
         17...32 => if (s) i32 else u32,
@@ -103,10 +109,9 @@ pub fn SerializeFunctionFromModule(comptime T: type, field: []const u8, comptime
     return struct {
         pub fn f(_: *const T, field_value: *const _fieldType(T, field), out: anytype) Error!void {
             inline for (@typeInfo(container).@"struct".decls) |decl|
-                //inline for (meta.declarations(container)) |decl|
-                if (_fieldType(T, field) == @TypeOf(@field(container, decl.name))) {
+                if (_fieldType(T, field) == *const @TypeOf(@field(container, decl.name))) {
                     // std.log.debug("comparing 0x{x:0>8} to 0x{x:0>8} ({s})", .{
-                    //     @intFromPtr(field_value), @intFromPtr(@field(container, decl.name)), decl.name,
+                    //     @intFromPtr(field_value), @intFromPtr(&@field(container, decl.name)), decl.name,
                     // });
                     if (field_value.* == @field(container, decl.name)) {
                         try serialize([]const u8, decl.name, out);
@@ -138,8 +143,12 @@ pub fn serializeWE(comptime T: type, obj: T, out: anytype) Error!void {
     try serialize(T, obj, out);
 }
 
-pub fn serialize(comptime T: type, obj: T, out: anytype) Error!void {
-    if (comptime mem.startsWith(u8, @typeName(T), "std.hash_map.HashMap")) {
+pub fn serialize(comptime T: type, obj: T, p_out: anytype) Error!void {
+    var counting_writer = std.io.countingWriter(p_out);
+    defer if (is_benchmarking) benchmarker.record(@typeName(T), counting_writer.bytes_written);
+    const out = counting_writer.writer();
+
+    if (comptime mem.startsWith(u8, @typeName(T), "hash_map.HashMap")) {
         try serialize(usize, obj.count(), out);
         var iter = obj.iterator();
         while (iter.next()) |entry| {
@@ -147,7 +156,7 @@ pub fn serialize(comptime T: type, obj: T, out: anytype) Error!void {
             try serialize(@TypeOf(entry.value_ptr.*), entry.value_ptr.*, out);
         }
         return;
-    } else if (comptime mem.startsWith(u8, @typeName(T), "std.array_list.ArrayList")) {
+    } else if (comptime mem.startsWith(u8, @typeName(T), "array_list.ArrayList")) {
         try serialize(@TypeOf(obj.items), obj.items, out);
         return;
     }
@@ -162,7 +171,7 @@ pub fn serialize(comptime T: type, obj: T, out: anytype) Error!void {
         .pointer => |p| switch (p.size) {
             .one => {
                 if (!ptrtable.contains(@intFromPtr(obj)))
-                    std.log.warn("serialize: found {} pointer not in table", .{p.child});
+                    std.log.warn("serialize: found {} pointer not in table (child of {})", .{ p.child, T });
                 try serialize(usize, @intFromPtr(obj), out);
             },
             .slice => {
@@ -186,6 +195,7 @@ pub fn serialize(comptime T: type, obj: T, out: anytype) Error!void {
 
                 const noser = if (@hasDecl(T, "__SER_SKIP")) T.__SER_SKIP else [_][]const u8{};
                 inline for (info.fields) |field| {
+                    //std.log.info("{} -> {} ('{s}')", .{ T, field.type, field.name });
                     const noser_field = comptime for (noser) |item| {
                         @setEvalBranchQuota(9999);
                         if (mem.eql(u8, item, field.name)) break true;
@@ -231,7 +241,7 @@ pub fn deserializeQ(comptime T: type, in: anytype, alloc: mem.Allocator) Error!T
 }
 
 pub fn deserialize(comptime T: type, out: *T, in: anytype, alloc: mem.Allocator) Error!void {
-    if (comptime mem.startsWith(u8, @typeName(T), "std.hash_map.HashMap(")) {
+    if (comptime mem.startsWith(u8, @typeName(T), "hash_map.HashMap(")) {
         const K = _fieldType(@field(T, "KV"), "key");
         const V = _fieldType(@field(T, "KV"), "value");
         var obj = T.init(state.alloc);
@@ -243,7 +253,7 @@ pub fn deserialize(comptime T: type, out: *T, in: anytype, alloc: mem.Allocator)
         }
         out.* = obj;
         return;
-    } else if (comptime mem.startsWith(u8, @typeName(T), "std.array_list.ArrayList")) {
+    } else if (comptime mem.startsWith(u8, @typeName(T), "array_list.ArrayList")) {
         out.* = std.ArrayList(meta.Elem(_fieldType(T, "items"))).init(alloc);
         var i = try deserializeQ(usize, in, alloc);
         while (i > 0) : (i -= 1)
@@ -254,7 +264,7 @@ pub fn deserialize(comptime T: type, out: *T, in: anytype, alloc: mem.Allocator)
     switch (@typeInfo(T)) {
         .bool => out.* = (try read(u8, in)) == 1,
         .int => out.* = try read(T, in),
-        .float => out.* = try read(if (T == f32) u32 else u64, in),
+        .float => out.* = @bitCast(try read(if (T == f32) u32 else u64, in)),
         .pointer => |p| switch (p.size) {
             .one => {
                 const ptr = try deserializeQ(usize, in, alloc);
@@ -267,11 +277,12 @@ pub fn deserialize(comptime T: type, out: *T, in: anytype, alloc: mem.Allocator)
                     inline for (&STATIC_CONTAINERS) |container|
                         if (container.t == T)
                             if (mem.eql(u8, container.m, ptrdata.container)) {
-                                out.* = @as(*const []const T, container.s).*[ptrdata.index];
+                                const casted_ptr = @as(*const []const T, @alignCast(@ptrCast(container.s))).*;
+                                out.* = casted_ptr[ptrdata.index];
                                 return;
                             };
 
-                    inline for (meta.declarations(state)) |declinfo|
+                    inline for (@typeInfo(state).@"struct".decls) |declinfo|
                         if (@typeInfo(@TypeOf(@field(state, declinfo.name))) == .@"struct" and
                             @hasDecl(@TypeOf(@field(state, declinfo.name)), "nth") and
                             *@TypeOf(@field(state, declinfo.name)).ChildType == T)
@@ -287,7 +298,7 @@ pub fn deserialize(comptime T: type, out: *T, in: anytype, alloc: mem.Allocator)
                                         ptrdata.index,
                                         @field(state, declinfo.name).len(),
                                     });
-                                    return error.pointerNotFound;
+                                    return error.PointerNotFound;
                                 }
                             }
                         };
@@ -295,7 +306,7 @@ pub fn deserialize(comptime T: type, out: *T, in: anytype, alloc: mem.Allocator)
                     std.log.err("Could not find pointer {s},{s},{}", .{
                         ptrdata.container, ptrdata.ptrtype, ptrdata.index,
                     });
-                    return error.pointerNotFound;
+                    return error.PointerNotFound;
                 } else {
                     std.log.warn("deserialize: found {} pointer not in table", .{p.child});
                     out.* = undefined;
@@ -488,17 +499,20 @@ pub fn initPointerContainers() void {
 }
 
 pub fn serializeWorld() !void {
-    if (true)
-        @compileError(
-            \\ Stop, you forgot about Angels.
-            \\
-            \\ Mob serialization assumes that spell list will be immutable,
-            \\ but angels violate this principle. (Probably other fields that
-            \\ I'm forgetting now as well.)
-            \\
-            \\ In theory we can regenerate angels on deserialization just fine given the
-            \\ seed. But this will have to be tested.
-        );
+    is_benchmarking = true;
+    benchmarker.init();
+
+    // if (true)
+    //     @compileError(
+    //         \\ Stop, you forgot about Angels.
+    //         \\
+    //         \\ Mob serialization assumes that spell list will be immutable,
+    //         \\ but angels violate this principle. (Probably other fields that
+    //         \\ I'm forgetting now as well.)
+    //         \\
+    //         \\ In theory we can regenerate angels on deserialization just fine given the
+    //         \\ seed. But this will have to be tested.
+    //     );
 
     // var tar = try microtar.MTar.init("dump.tar", "w");
     // defer tar.deinit();
@@ -533,6 +547,16 @@ pub fn serializeWorld() !void {
             try serializeWE(@TypeOf(decl), decl, f.writer());
         }
     }
+
+    for (mobs.ANGELS) |angel_template|
+        try serializeWE(mobs.MobTemplate, angel_template.*, f.writer());
+
+    for (mobs.MOTHS) |moth_template|
+        try serializeWE(mobs.MobTemplate, moth_template.*, f.writer());
+
+    benchmarker.print();
+    benchmarker.deinit();
+    is_benchmarking = false;
 }
 
 pub fn deserializeWorld() !void {

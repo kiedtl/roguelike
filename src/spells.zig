@@ -879,7 +879,7 @@ fn _effectSummonEnemy(caster: Coord, _: SpellOptions, coord: Coord) void {
     // Find a spot in caster's LOS
     var new: ?Coord = null;
     var farthest_dist: usize = 0;
-    for (caster_mob.fov, 0..) |row, y| {
+    for (caster_mob.fov.m, 0..) |row, y| {
         for (row, 0..) |cell, x| {
             const fitem = Coord.new2(caster_mob.coord.z, x, y);
             const dist = fitem.distance(caster);
@@ -920,7 +920,7 @@ fn _effectAuraDispersal(caster_coord: Coord, _: SpellOptions, target_coord: Coor
         // Find a new home
         var new: ?Coord = null;
         var farthest_dist: usize = 0;
-        for (caster.fov, 0..) |row, y| {
+        for (caster.fov.m, 0..) |row, y| {
             for (row, 0..) |cell, x| {
                 const fitem = Coord.new2(caster.coord.z, x, y);
                 const dist = fitem.distance(caster_coord);

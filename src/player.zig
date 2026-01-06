@@ -531,8 +531,8 @@ pub fn checkForGarbage() void {
 // - If they haven't existed in memory before as an .Immediate tile, check for
 //   things of interest (items, machines, etc) and announce their presence.
 pub fn bookkeepingFOV() void {
-    for (state.player.fov, 0..) |row, y| for (row, 0..) |_, x| {
-        if (state.player.fov[y][x] > 0) {
+    for (state.player.fov.m, 0..) |row, y| for (row, 0..) |_, x| {
+        if (state.player.fov.m[y][x] > 0) {
             const fc = Coord.new2(state.player.coord.z, x, y);
 
             var was_already_seen: bool = false;

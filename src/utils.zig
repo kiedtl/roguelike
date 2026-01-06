@@ -459,7 +459,7 @@ pub fn getFieldByEnum(comptime E: type, s: anytype, v: E) @typeInfo(@TypeOf(s)).
 pub fn getNearestCorpse(me: *Mob) ?Coord {
     var buf = StackBuffer(Coord, 32).init(null);
 
-    search: for (me.fov, 0..) |row, y| for (row, 0..) |cell, x| {
+    search: for (me.fov.m, 0..) |row, y| for (row, 0..) |cell, x| {
         if (buf.isFull()) break :search;
 
         if (cell == 0) continue;
@@ -708,6 +708,9 @@ pub const FoldedTextIterator = struct {
     }
 };
 
+// A generic holder for benchmarker data, keeping track of min, max, and
+// rolling averages. Used for performance data and serialization space usage
+// data.
 pub const Benchmarker = struct {
     records: std.StringHashMap(Record),
 
@@ -716,9 +719,10 @@ pub const Benchmarker = struct {
         average: u64,
         min: u64,
         max: u64,
+        total: u64,
 
         pub fn default() Record {
-            return Record { .count = 0, .average = 0, .min = std.math.maxInt(u64), .max = 0 };
+            return Record{ .count = 0, .average = 0, .min = std.math.maxInt(u64), .max = 0, .total = 0 };
         }
     };
 
@@ -728,18 +732,8 @@ pub const Benchmarker = struct {
         timer: std.time.Timer,
 
         pub fn end(self: *Timer) void {
-            const entry = self.benchmarker.records.getOrPutValue(self.id, Record.default())
-                catch unreachable; 
-            const v = entry.value_ptr;
             const time = self.timer.read();
-
-            v.count += 1;
-            v.min = @min(v.min, time);
-            v.max = @max(v.max, time);
-
-            const avg: i64 = @intCast(v.average);
-            const ia = avg + @divFloor(@as(i64, @intCast(time)) - avg, @as(i64, @intCast(v.count)));
-            v.average = @intCast(ia);
+            self.benchmarker.record(self.id, time);
         }
     };
 
@@ -751,12 +745,63 @@ pub const Benchmarker = struct {
         self.records.clearAndFree();
     }
 
+    pub fn record(self: *Benchmarker, id: []const u8, datapoint: usize) void {
+        const entry = self.records.getOrPutValue(id, Record.default()) catch unreachable;
+        const v = entry.value_ptr;
+
+        v.count += 1;
+        v.min = @min(v.min, datapoint);
+        v.max = @max(v.max, datapoint);
+        v.total += datapoint;
+
+        const avg: i64 = @intCast(v.average);
+        const ia = avg + @divFloor(@as(i64, @intCast(datapoint)) - avg, @as(i64, @intCast(v.count)));
+        v.average = @intCast(ia);
+    }
+
     pub fn timer(self: *Benchmarker, id: []const u8) Timer {
-        return Timer {
+        return Timer{
             .benchmarker = self,
             .id = id,
             .timer = std.time.Timer.start() catch unreachable,
         };
+    }
+
+    pub fn printTimes(self: *const Benchmarker) void {
+        var stderr = std.io.getStdErr().writer();
+        var bench_records = self.records.iterator();
+        while (bench_records.next()) |rec_entry| {
+            const v = rec_entry.value_ptr;
+            stderr.print("[{s:>24}] {:>7} recs: {d:.3}..{d:<8.3}\t{d:>7.3} avg\n", .{
+                rec_entry.key_ptr.*,
+                v.count,
+                @as(f32, @floatFromInt(v.min)) * 1e-6,
+                @as(f32, @floatFromInt(v.max)) * 1e-6,
+                @as(f32, @floatFromInt(v.average)) * 1e-6,
+            }) catch err.wat();
+        }
+    }
+
+    pub fn print(self: *const Benchmarker) void {
+        var total: u64 = 0;
+        {
+            var bench_records = self.records.iterator();
+            while (bench_records.next()) |rec_entry|
+                total += rec_entry.value_ptr.total;
+        }
+
+        var stderr = std.io.getStdErr().writer();
+        var bench_records = self.records.iterator();
+        while (bench_records.next()) |rec_entry| {
+            const v = rec_entry.value_ptr;
+            const perc = @as(f32, @floatFromInt(v.total)) * 100 / @as(f32, @floatFromInt(total));
+            stderr.print("\x1b[1m{s}\x1b[m:\n{:<9} recs: {d:>8}..{d:<9} ~~ {d:>8} avg, {d:>9} sum ({d:.2}%)\n", .{
+                rec_entry.key_ptr.*, v.count,
+                v.min,               v.max,
+                v.average,           v.total,
+                perc,
+            }) catch err.wat();
+        }
     }
 };
 
