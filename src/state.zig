@@ -109,6 +109,8 @@ pub const MemoryTileMap = std.AutoHashMap(Coord, MemoryTile);
 // Unused now
 pub var default_patterns = [_]types.Ring{};
 
+pub var benchmarker: utils.Benchmarker = undefined;
+
 pub const __SER_BEGIN = {};
 
 // Cached return value of player.isPlayerSpotted()
@@ -433,6 +435,9 @@ pub fn createMobList(include_player: bool, only_if_infov: bool, level: usize, my
 }
 
 pub fn tickFuses(level: usize) void {
+    var timer = benchmarker.timer("tickFuses");
+    defer timer.end();
+
     var iter = fuses.iterator();
     while (iter.next()) |fuse| {
         if (fuse.is_disabled)
@@ -447,6 +452,9 @@ pub fn tickFuses(level: usize) void {
 }
 
 pub fn tickLight(level: usize) void {
+    var timer = benchmarker.timer("tickLight");
+    defer timer.end();
+
     const light_buffer = &dungeon.light[level];
 
     // Clear out previous light levels.
@@ -485,6 +493,9 @@ pub fn tickLight(level: usize) void {
 
 // Make sound "decay" each tick.
 pub fn tickSound(cur_lev: usize) void {
+    var timer = benchmarker.timer("tickSound");
+    defer timer.end();
+
     var y: usize = 0;
     while (y < HEIGHT) : (y += 1) {
         var x: usize = 0;

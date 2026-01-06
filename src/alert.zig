@@ -294,6 +294,9 @@ fn executeResponse(response: ThreatResponse, level: usize) !void {
 }
 
 pub fn tickThreats(level: usize) void {
+    var timer = state.benchmarker.timer("tickThreat");
+    defer timer.end();
+
     // Unsure if modifying container while iterator() is active is safe to do
     var dismiss_threats = StackBuffer(Threat, 64).init(null);
 

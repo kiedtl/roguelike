@@ -1886,6 +1886,9 @@ pub fn freeProps(alloc: mem.Allocator) void {
 }
 
 pub fn tickMachines(level: usize) void {
+    var timer = state.benchmarker.timer("tickMachines");
+    defer timer.end();
+
     var y: usize = 0;
     while (y < HEIGHT) : (y += 1) {
         var x: usize = 0;

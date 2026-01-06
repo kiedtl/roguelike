@@ -109,6 +109,9 @@ pub fn putFireOut(coord: Coord) void {
 }
 
 pub fn tickFire(level: usize) void {
+    var timer = state.benchmarker.timer("tickFire");
+    defer timer.end();
+
     var y: usize = 0;
     while (y < HEIGHT) : (y += 1) {
         var x: usize = 0;

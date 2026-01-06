@@ -262,6 +262,9 @@ fn triggerMiasma(mob: *Mob, _: usize) void {
 
 // Make hot water emit steam, and lava emit smoke.
 pub fn tickGasEmitters(level: usize) void {
+    var timer = state.benchmarker.timer("tickGasEm");
+    defer timer.end();
+
     var y: usize = 0;
     while (y < HEIGHT) : (y += 1) {
         var x: usize = 0;
@@ -371,6 +374,9 @@ pub fn mockGasSpread(gas: usize, amount: usize, coord: Coord, result: *[HEIGHT][
 
 // Spread and dissipate gas.
 pub fn tickGases(cur_lev: usize) void {
+    var timer = state.benchmarker.timer("tickGas");
+    defer timer.end();
+
     var dirty_flags = [1]bool{false} ** GAS_NUM;
     {
         var y: usize = 0;

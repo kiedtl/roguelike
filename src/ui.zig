@@ -58,7 +58,7 @@ pub const ui_utils = @import("ui/utils.zig");
 pub const drawLabels = @import("ui/labels.zig").drawLabels;
 pub const Console = @import("ui/Console.zig");
 
-pub const FRAMERATE = 1000 / 60;
+pub const FRAMERATE = 1000 / 40;
 
 pub const LEFT_INFO_WIDTH: usize = 35;
 //pub const RIGHT_INFO_WIDTH: usize = 24;
