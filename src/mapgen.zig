@@ -631,16 +631,14 @@ fn prefabIsValid(level: usize, prefab: *Prefab, allow_invis: bool, need_lair: bo
         }
     }
 
-    const record = state.fab_records.getOrPut(prefab.name.constSlice()) catch err.wat();
-    if (record.found_existing) {
-        if (record.value_ptr.level[level] >= prefab.restriction or
-            record.value_ptr.global >= prefab.global_restriction or
-            prefab.level_uses[level] >= prefab.individual_restriction)
-        {
-            return false; // Prefab was used too many times.
-        }
-    } else {
-        record.value_ptr.* = .{};
+    const record_entry = state.fab_records.getOrPutValue(prefab.name.constSlice(), .{}) catch err.wat();
+    const record = record_entry.value_ptr;
+
+    if (record.level[level] >= prefab.restriction or
+        record.level_individual[level][prefab.variation] >= prefab.individual_restriction or
+        record.global >= prefab.global_restriction)
+    {
+        return false; // Prefab was used too many times.
     }
 
     return true;
@@ -3833,8 +3831,7 @@ pub const Prefab = struct {
     tunneler_orientation: StackBuffer(Direction, 4) = StackBuffer(Direction, 4).init(null),
 
     name: StackBuffer(u8, MAX_NAME_SIZE) = StackBuffer(u8, MAX_NAME_SIZE).init(null),
-
-    level_uses: [LEVELS]usize = [1]usize{0} ** LEVELS,
+    variation: usize = 0,
 
     material: ?*const Material = null,
     terrain: ?*const surfaces.Terrain = null,
@@ -3857,6 +3854,7 @@ pub const Prefab = struct {
     allow_walls_overwrite_other: bool = false,
 
     pub const MAX_NAME_SIZE = 64;
+    pub const MAX_VARIATIONS = 16;
 
     pub const Transform = struct {
         // File memory isn't freed until after parsing, so we can get away with
@@ -3869,6 +3867,8 @@ pub const Prefab = struct {
 
     pub const PlacementRecord = struct {
         level: [LEVELS]usize = [_]usize{0} ** LEVELS,
+        // Format: [level][self.variation]
+        level_individual: [LEVELS][MAX_VARIATIONS]usize = [_][MAX_VARIATIONS]usize{[_]usize{0} ** MAX_VARIATIONS} ** LEVELS,
         global: usize = 0,
     };
 
@@ -3940,9 +3940,8 @@ pub const Prefab = struct {
         if (state.fab_records.getPtr(self.name.constSlice())) |record| {
             record.global -= record.level[level];
             record.level[level] = 0;
+            record.level_individual[level][self.variation] = 0;
         }
-
-        self.level_uses[level] = 0;
 
         for (self.connections, 0..) |maybe_con, i| {
             if (maybe_con == null) break;
@@ -4135,6 +4134,7 @@ pub const Prefab = struct {
                     f.output = null;
                     f.tunneler_orientation = @TypeOf(f.tunneler_orientation).init(null);
                     f.tunneler_inset = false;
+                    f.variation += 1;
                 },
                 ':' => {
                     var words = mem.tokenizeScalar(u8, line[1..], ' ');
@@ -4612,8 +4612,8 @@ pub const Prefab = struct {
     pub fn incrementRecord(self: *Prefab, level: usize) void {
         const record = (state.fab_records.getOrPutValue(self.name.constSlice(), .{}) catch err.wat()).value_ptr;
         record.level[level] += 1;
+        record.level_individual[level][self.variation] += 1;
         record.global += 1;
-        self.level_uses[level] += 1;
     }
 };
 
