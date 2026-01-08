@@ -145,6 +145,10 @@ pub fn StackBuffer(comptime T: type, comptime capacity: usize) type {
             return self.len == self.capacity;
         }
 
+        pub inline fn get(self: *Self, ind: usize) ?T {
+            return if (ind >= self.len) null else self.data[ind];
+        }
+
         pub inline fn last(self: *Self) ?T {
             return if (self.len > 0) self.data[self.len - 1] else null;
         }
@@ -159,7 +163,7 @@ pub fn StackBuffer(comptime T: type, comptime capacity: usize) type {
         }
 
         pub fn serialize(val: @This(), out: anytype) !void {
-            try serializer.serialize([]const T, val.constSlice(), out);
+            try serializer.serialize([]const T, &val.constSlice(), out);
         }
 
         pub fn deserialize(out: *@This(), in: anytype, alloc: mem.Allocator) !void {

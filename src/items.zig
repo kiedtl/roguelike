@@ -643,9 +643,9 @@ pub const Evocable = struct {
     }
 
     pub fn __SER_GET_PROTO(id: []const u8) @This() {
-        return for (&itemlists.EVOCABLES) |template| {
+        return for (itemlists.EVOCABLES) |template| {
             if (mem.eql(u8, template.id, id))
-                break template;
+                break template.*;
         } else err.bug("Deserialization: No proto for id {s}", .{id});
     }
 
@@ -2248,26 +2248,26 @@ pub const SHOCK2_STRS = [_]DamageStr{
 
 // Mob weapons {{{
 pub const NONE_WEAPON = Weapon{
-    .id = "",
+    .id = "_none",
     .name = "blue plastic train",
     .damage = 0,
     .strs = &[_]DamageStr{_dmgstr(80, "hurl", "hurls", " at kiedtl")},
 };
 
-pub const W_SWORD_1 = Weapon{ .damage = 1, .strs = &SLASHING_STRS, .name = "sword" };
-pub const W_SWORD_2 = Weapon{ .damage = 2, .strs = &SLASHING_STRS, .name = "sword" };
-pub const W_KNOUT_3 = Weapon{ .damage = 3, .strs = &CRUSHING_STRS, .delay = 200, .name = "knout" };
-pub const W_BLUDG_1 = Weapon{ .damage = 1, .strs = &CRUSHING_STRS, .name = "bludgeon" };
-pub const W_BLUDG_2 = Weapon{ .damage = 2, .strs = &CRUSHING_STRS, .name = "bludgeon" };
-pub const W_MACES_2 = Weapon{ .damage = 2, .strs = &CRUSHING_STRS, .name = "mace" };
-pub const W_MACES_3 = Weapon{ .damage = 3, .strs = &CRUSHING_STRS, .name = "mace" };
-pub const W_MSWRD_1 = Weapon{ .damage = 1, .strs = &SLASHING_STRS, .name = "martial sword", .martial = true };
-pub const W_SPROD_1 = Weapon{ .damage = 1, .damage_kind = .Electric, .strs = &SHOCK_STRS, .name = "shock prod" };
+pub const W_SWORD_1 = Weapon{ .id = "_w_sword_1", .damage = 1, .strs = &SLASHING_STRS, .name = "sword" };
+pub const W_SWORD_2 = Weapon{ .id = "_w_sword_2", .damage = 2, .strs = &SLASHING_STRS, .name = "sword" };
+pub const W_KNOUT_3 = Weapon{ .id = "_w_knout_3", .damage = 3, .strs = &CRUSHING_STRS, .delay = 200, .name = "knout" };
+pub const W_BLUDG_1 = Weapon{ .id = "_w_bludg_1", .damage = 1, .strs = &CRUSHING_STRS, .name = "bludgeon" };
+pub const W_BLUDG_2 = Weapon{ .id = "_w_bludg_2", .damage = 2, .strs = &CRUSHING_STRS, .name = "bludgeon" };
+pub const W_MACES_2 = Weapon{ .id = "_w_maces_2", .damage = 2, .strs = &CRUSHING_STRS, .name = "mace" };
+pub const W_MACES_3 = Weapon{ .id = "_w_maces_3", .damage = 3, .strs = &CRUSHING_STRS, .name = "mace" };
+pub const W_MSWRD_1 = Weapon{ .id = "_w_mswrd_1", .damage = 1, .strs = &SLASHING_STRS, .name = "martial sword", .martial = true };
+pub const W_SPROD_1 = Weapon{ .id = "_w_sprod_1", .damage = 1, .damage_kind = .Electric, .strs = &SHOCK_STRS, .name = "shock prod" };
 // }}}
 
 // Body weapons {{{
 pub const FistWeapon = Weapon{
-    .id = "none",
+    .id = "_fist",
     .name = "fist",
     .damage = 1,
     .strs = &FIST_STRS,
@@ -2383,7 +2383,7 @@ pub const AngelSword = Weapon{
 };
 
 pub const AngelLance = Weapon{
-    .id = "sword_angelic",
+    .id = "sword_angelic_lance",
     .name = "blazing lance",
     .damage = 3,
     .martial = true,

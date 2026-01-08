@@ -68,9 +68,9 @@ pub fn RingBuffer(comptime T: type, size: usize) type {
         }
 
         pub fn serialize(val: @This(), out: anytype) !void {
-            try serializer.serialize(usize, val.top, out);
+            try serializer.serializeScalar(usize, val.top, out);
             for (val.buffer) |item|
-                try serializer.serialize(?T, item, out);
+                try serializer.serialize(?T, &item, out);
         }
 
         pub fn deserialize(out: *@This(), in: anytype, alloc: std.mem.Allocator) !void {

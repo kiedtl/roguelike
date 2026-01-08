@@ -716,7 +716,7 @@ fn viewerMain() void {
                         termbox.TB_KEY_CTRL_C => break,
                         termbox.TB_KEY_F7 => {
                             serializer.serializeWorld() catch err.wat();
-                            //serializer.deserializeWorld() catch err.wat();
+                            serializer.deserializeWorld() catch err.wat();
                         },
                         else => {},
                     }

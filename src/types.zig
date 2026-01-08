@@ -2168,7 +2168,7 @@ pub const Ctx = struct {
 
 pub const Prisoner = struct {
     of: Faction,
-    held_by: ?union(enum) { Mob: *const Mob, Prop: *const Prop } = null,
+    held_by: ?union(enum) { Mob: *Mob, Prop: *Prop } = null,
 
     pub fn heldAt(self: *const Prisoner) Coord {
         assert(self.held_by != null);
@@ -2315,13 +2315,13 @@ pub const MobFov = struct { // {{{
                     ctr += 1;
                 };
 
-        try serializer.serialize(u16, ctr, out);
+        try serializer.serializeScalar(u16, ctr, out);
 
         for (0..HEIGHT) |y|
             for (0..WIDTH) |x|
                 if (val.m[y][x] > 0) {
-                    try serializer.serialize(u8, @intCast(y), out);
-                    try serializer.serialize(u8, @intCast(x), out);
+                    try serializer.serializeScalar(u8, @intCast(y), out);
+                    try serializer.serializeScalar(u8, @intCast(x), out);
                 };
     }
 
@@ -2482,26 +2482,25 @@ pub const Mob = struct { // {{{
     }
 
     pub fn __SER_FIELDW_statuses(self: *const Mob, field: *const StatusArray, out: anytype) !void {
-        var item_count: u32 = 0;
-        var i: usize = 0;
-        while (i < StatusArray.Indexer.count) : (i += 1)
+        var item_count: u16 = 0;
+        for (0..StatusArray.Indexer.count) |i|
             if (self.hasStatus(StatusArray.Indexer.keyForIndex(i))) {
                 item_count += 1;
             };
-        try serializer.serialize(u32, item_count, out);
-        i = 0;
-        while (i < StatusArray.Indexer.count) : (i += 1) {
+        try serializer.serializeScalar(u16, item_count, out);
+
+        for (0..StatusArray.Indexer.count) |i| {
             const key = StatusArray.Indexer.keyForIndex(i);
             if (self.hasStatus(key)) {
-                try serializer.serialize(@TypeOf(key), key, out);
-                try serializer.serialize(@TypeOf(field.values[0]), field.values[i], out);
+                try serializer.serializeScalar(@TypeOf(key), key, out);
+                try serializer.serialize(@TypeOf(field.values[0]), &field.values[i], out);
             }
         }
     }
 
     pub fn __SER_FIELDR_statuses(out: *StatusArray, in: anytype, alloc: mem.Allocator) !void {
         out.* = StatusArray.initFill(.{});
-        var i: usize = try serializer.deserializeQ(u32, in, alloc);
+        var i: usize = try serializer.deserializeQ(u16, in, alloc);
         while (i > 0) : (i -= 1) {
             const k = try serializer.deserializeQ(StatusArray.Key, in, alloc);
             const v = try serializer.deserializeQ(StatusArray.Value, in, alloc);
@@ -5129,6 +5128,7 @@ pub const Machine = struct {
         "spells",
         "on_power",
         "on_place",
+        "on_delete",
         "player_interact",
     };
 
@@ -6088,6 +6088,8 @@ pub const Dungeon = struct {
     fire: [LEVELS][HEIGHT][WIDTH]usize = [1][HEIGHT][WIDTH]usize{[1][WIDTH]usize{[1]usize{0} ** WIDTH} ** HEIGHT} ** LEVELS,
     stairs: [LEVELS]StairBuffer = [_]StairBuffer{StairBuffer.init(null)} ** LEVELS,
     entries: [LEVELS]Coord = [_]Coord{ENTRY_NOT_INITED} ** LEVELS,
+
+    pub const __SER_ALWAYS_OWNED = {};
 
     pub const ENTRY_NOT_INITED = Coord.new2(0, 0, 0);
 

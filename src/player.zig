@@ -21,6 +21,7 @@ const literature = @import("literature.zig");
 const mapgen = @import("mapgen.zig");
 const rng = @import("rng.zig");
 const scores = @import("scores.zig");
+const serializer = @import("serializer.zig");
 const spells = @import("spells.zig");
 const state = @import("state.zig");
 const surfaces = @import("surfaces.zig");
@@ -362,6 +363,7 @@ pub const WizardFun = enum {
     Particles,
     Reset,
     Misc,
+    SaveLoad,
 };
 
 pub fn executeWizardFun(w: WizardFun) void {
@@ -499,6 +501,10 @@ pub fn executeWizardFun(w: WizardFun) void {
         .Teleport => {
             const chosen = ui.chooseCell(.{}) orelse return;
             _ = state.player.teleportTo(chosen, null, true, false);
+        },
+        .SaveLoad => {
+            serializer.serializeWorld() catch err.wat();
+            //serializer.deserializeWorld() catch err.wat();
         },
     }
 }

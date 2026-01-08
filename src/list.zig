@@ -156,14 +156,15 @@ pub fn LinkedList(comptime T: type) type {
             var iter = val.iterator();
             var i: usize = 0;
             while (iter.next()) |_| i += 1;
-            try serializer.serialize(usize, i, out);
+            try serializer.serializeScalar(usize, i, out);
             iter = val.iterator();
-            while (iter.next()) |item| try serializer.serialize(T, item.*, out);
+            while (iter.next()) |item| try serializer.serialize(T, item, out);
         }
 
         pub fn deserialize(out: *@This(), in: anytype, alloc: mem.Allocator) !void {
             //out.* = @This().init(alloc);
             const neededlen = try serializer.deserializeQ(usize, in, alloc);
+            std.log.info("len: {}", .{neededlen});
 
             if (neededlen > out.len()) {
                 var i = out.len();
@@ -177,11 +178,18 @@ pub fn LinkedList(comptime T: type) type {
         }
 
         // Deserialization stuff
-        pub const __PointerDataIter = struct {
+        pub const __SER_PointerDataIter = struct {
             i: Iterator,
             c: usize = 0,
 
-            pub fn next(self: *@This()) ?serializer.pointerData2 {
+            pub fn new(of: *const Self) __SER_PointerDataIter {
+                return __SER_PointerDataIter{
+                    .i = Iterator{ .current = of.head },
+                    .c = 0,
+                };
+            }
+
+            pub fn next(self: *@This()) ?serializer.PointerData2 {
                 if (self.i.next()) |item| {
                     self.c += 1;
                     return .{ .ptr = @intFromPtr(item), .ind = self.c - 1, .ptrtype = @typeName(*T) };

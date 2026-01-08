@@ -6,18 +6,24 @@ const Material = types.Material;
 const Coord = types.Coord;
 
 pub const MATERIALS = [_]*const Material{
-    &Iron,
-    &Vangenite,
-    &PaintedConcrete,
-    &Marble,
-    &Gold,
-    &Slade,
     &Basalt,
     &BasaltCrystal,
-    &Rust,
-    &Dobalene,
-    &PlatedDobalene,
     &Concrete,
+    &Dobalene,
+    &Gold,
+    &GreenGold,
+    &Hematite,
+    &Iron,
+    &LabGlass,
+    &Glass,
+    &Limestone,
+    &Marble,
+    &PaintedConcrete,
+    &PlatedDobalene,
+    &PolishedSlade,
+    &Rust,
+    &Slade,
+    &Vangenite,
 };
 
 pub const PaintedConcrete = Material{
