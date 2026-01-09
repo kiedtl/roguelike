@@ -504,7 +504,7 @@ pub fn executeWizardFun(w: WizardFun) void {
         },
         .SaveLoad => {
             serializer.serializeWorld() catch err.wat();
-            //serializer.deserializeWorld() catch err.wat();
+            serializer.deserializeWorld() catch err.wat();
         },
     }
 }

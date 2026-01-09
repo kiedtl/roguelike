@@ -310,11 +310,6 @@ const Corridor = struct {
     // are absolute coordinates, fab_connectors is relative to the start of the
     // prefab's room.
     fab_connectors: [2]?Coord = .{ null, null },
-
-    pub fn markConnectorsAsUsed(self: *const Corridor, parent: *Room, child: *Room) !void {
-        if (parent.prefab) |fab| if (self.fab_connectors[0]) |c| try fab.useConnector(c);
-        if (child.prefab) |fab| if (self.fab_connectors[1]) |c| try fab.useConnector(c);
-    }
 };
 
 const VALID_WINDOW_PLACEMENT_PATTERNS = [_][]const u8{
@@ -424,12 +419,8 @@ pub fn isTileAvailable(coord: Coord) bool {
 fn choosePoster(level: usize) ?*const Poster {
     var tries: usize = 256;
     while (tries > 0) : (tries -= 1) {
-        var l: usize = 0;
-        var iter = literature.posters.iterator();
-        while (iter.next()) |_| l += 1;
-
-        const i = rng.range(usize, 0, l - 1);
-        const p = literature.posters.nth(i).?;
+        const i = rng.range(usize, 0, literature.posters.items.len - 1);
+        const p = literature.posters.items[i];
 
         if (p.placement_counter > 0 or !mem.eql(u8, state.levelinfo[level].id, p.level))
             continue;
@@ -1085,6 +1076,10 @@ pub fn resetLevel(level: usize) void {
     for (n_fabs.items) |*fab| fab.reset(level);
     for (s_fabs.items) |*fab| fab.reset(level);
 
+    var fab_records = state.fab_records.iterator();
+    while (fab_records.next()) |entry|
+        entry.value_ptr.resetForLevel(level);
+
     var y: usize = 0;
     while (y < HEIGHT) : (y += 1) {
         var x: usize = 0;
@@ -1418,7 +1413,6 @@ pub fn placeMoarCorridors(level: usize, alloc: mem.Allocator) void {
                 child.connections.append(.{ .room = parent.rect.start, .door = corridor.child_door }) catch err.wat();
 
                 excavateRect(&corridor.room.rect);
-                corridor.markConnectorsAsUsed(parent, child) catch err.wat();
                 newrooms.append(corridor.room) catch err.wat();
 
                 // When using a prefab, the corridor doesn't include the connectors. Excavate
@@ -1716,7 +1710,6 @@ fn _place_rooms(rooms: *Room.ArrayList, level: usize, allocator: mem.Allocator) 
 
     if (corridor) |cor| {
         excavateRect(&cor.room.rect);
-        cor.markConnectorsAsUsed(parent, &child) catch err.wat();
 
         // XXX: atchung, don't access <parent> var after this, as appending this
         // may have invalidated that pointer.
@@ -3767,7 +3760,7 @@ pub const Room = struct {
 
     type: RoomType = .Room,
 
-    prefab: ?*Prefab = null,
+    prefab: ?*const Prefab = null,
     has_subroom: bool = false,
     has_window: bool = false,
     has_stair: bool = false,
@@ -3870,6 +3863,12 @@ pub const Prefab = struct {
         // Format: [level][self.variation]
         level_individual: [LEVELS][MAX_VARIATIONS]usize = [_][MAX_VARIATIONS]usize{[_]usize{0} ** MAX_VARIATIONS} ** LEVELS,
         global: usize = 0,
+
+        pub fn resetForLevel(self: *PlacementRecord, level: usize) void {
+            self.level[level] = 0;
+            for (&self.level_individual[level]) |*v|
+                v.* = 0;
+        }
     };
 
     pub const SubroomArea = struct {
@@ -3933,7 +3932,7 @@ pub const Prefab = struct {
     pub const Connection = struct {
         c: Coord,
         d: Direction,
-        used: bool = false,
+        //used: bool = false,
     };
 
     pub fn reset(self: *Prefab, level: usize) void {
@@ -3943,28 +3942,17 @@ pub const Prefab = struct {
             record.level_individual[level][self.variation] = 0;
         }
 
-        for (self.connections, 0..) |maybe_con, i| {
-            if (maybe_con == null) break;
-            self.connections[i].?.used = false;
-        }
-    }
-
-    pub fn useConnector(self: *Prefab, c: Coord) !void {
-        for (self.connections, 0..) |maybe_con, i| {
-            const con = maybe_con orelse break;
-            if (con.c.eq(c)) {
-                if (con.used) return error.ConnectorAlreadyUsed;
-                self.connections[i].?.used = true;
-                return;
-            }
-        }
-        return error.NoSuchConnector;
+        // for (self.connections, 0..) |maybe_con, i| {
+        //     if (maybe_con == null) break;
+        //     self.connections[i].?.used = false;
+        // }
     }
 
     pub fn connectorFor(self: *const Prefab, d: Direction) ?Coord {
         for (self.connections) |maybe_con| {
             const con = maybe_con orelse break;
-            if (con.d == d and !con.used) return con.c;
+            if (con.d == d)
+                return con.c;
         }
         return null;
     }
@@ -4473,6 +4461,8 @@ pub const Prefab = struct {
                             } else return error.NoSuchMob;
                         },
                         'P' => {
+                            const _id = id orelse "_none";
+
                             var buf = std.ArrayList(u8).init(state.alloc);
                             while (lines.next()) |poster_line| {
                                 if (mem.eql(u8, poster_line, "END POSTER")) {
@@ -4487,12 +4477,14 @@ pub const Prefab = struct {
                                 }
                                 try buf.appendSlice(" ");
                             }
-                            const poster_ptr = try literature.posters.appendAndReturn(.{
-                                .level = try state.alloc.dupe(u8, "NUL"),
-                                .text = buf.toOwnedSlice() catch err.oom(),
-                                .placement_counter = 0,
-                            });
-                            f.features[identifier] = Feature{ .Poster = poster_ptr };
+                            const poster = try Poster.new(
+                                state.alloc,
+                                try state.alloc.dupe(u8, _id),
+                                try state.alloc.dupe(u8, "_FAB"),
+                                try buf.toOwnedSlice(),
+                            );
+                            try literature.posters.append(poster);
+                            f.features[identifier] = Feature{ .Poster = poster };
                             f.features_global[identifier] = is_global;
                         },
                         'p' => {
@@ -4609,7 +4601,7 @@ pub const Prefab = struct {
         return a.priority > b.priority;
     }
 
-    pub fn incrementRecord(self: *Prefab, level: usize) void {
+    pub fn incrementRecord(self: *const Prefab, level: usize) void {
         const record = (state.fab_records.getOrPutValue(self.name.constSlice(), .{}) catch err.wat()).value_ptr;
         record.level[level] += 1;
         record.level_individual[level][self.variation] += 1;

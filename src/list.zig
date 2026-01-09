@@ -152,18 +152,19 @@ pub fn LinkedList(comptime T: type) type {
             return i;
         }
 
-        pub fn serialize(val: @This(), out: anytype) !void {
-            var iter = val.iterator();
+        pub fn serialize(self: *const @This(), ser: *serializer.Serializer, out: anytype) !void {
+            var iter = self.iterator();
             var i: usize = 0;
             while (iter.next()) |_| i += 1;
-            try serializer.serializeScalar(usize, i, out);
-            iter = val.iterator();
-            while (iter.next()) |item| try serializer.serialize(T, item, out);
+            try ser.serializeScalar(usize, i, out);
+
+            iter = self.iterator();
+            while (iter.next()) |item| try ser.serialize(T, item, out);
         }
 
-        pub fn deserialize(out: *@This(), in: anytype, alloc: mem.Allocator) !void {
+        pub fn deserialize(ser: *serializer.Serializer, out: *@This(), in: anytype, alloc: mem.Allocator) !void {
             //out.* = @This().init(alloc);
-            const neededlen = try serializer.deserializeQ(usize, in, alloc);
+            const neededlen = try ser.deserializeQ(usize, in, alloc);
             std.log.info("len: {}", .{neededlen});
 
             if (neededlen > out.len()) {
@@ -173,7 +174,7 @@ pub fn LinkedList(comptime T: type) type {
 
             var i: usize = 0;
             while (i < neededlen) : (i += 1) {
-                try serializer.deserialize(T, out.nth(i).?, in, alloc);
+                try ser.deserialize(T, out.nth(i).?, in, alloc);
             }
         }
 

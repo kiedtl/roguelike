@@ -2307,31 +2307,31 @@ pub const Stat = enum {
 pub const MobFov = struct { // {{{
     m: [HEIGHT][WIDTH]usize = [1][WIDTH]usize{[1]usize{0} ** WIDTH} ** HEIGHT,
 
-    pub fn serialize(val: @This(), out: anytype) !void {
+    pub fn serialize(self: *const @This(), ser: *serializer.Serializer, out: anytype) !void {
         var ctr: u16 = 0;
         for (0..HEIGHT) |y|
             for (0..WIDTH) |x|
-                if (val.m[y][x] > 0) {
+                if (self.m[y][x] > 0) {
                     ctr += 1;
                 };
 
-        try serializer.serializeScalar(u16, ctr, out);
+        try ser.serializeScalar(u16, ctr, out);
 
         for (0..HEIGHT) |y|
             for (0..WIDTH) |x|
-                if (val.m[y][x] > 0) {
-                    try serializer.serializeScalar(u8, @intCast(y), out);
-                    try serializer.serializeScalar(u8, @intCast(x), out);
+                if (self.m[y][x] > 0) {
+                    try ser.serializeScalar(u8, @intCast(y), out);
+                    try ser.serializeScalar(u8, @intCast(x), out);
                 };
     }
 
-    pub fn deserialize(out: *@This(), in: anytype, alloc: mem.Allocator) !void {
+    pub fn deserialize(ser: *serializer.Serializer, out: *@This(), in: anytype, alloc: mem.Allocator) !void {
         out.* = MobFov{};
 
-        var i = try serializer.deserializeQ(u16, in, alloc);
+        var i = try ser.deserializeQ(u16, in, alloc);
         while (i > 0) : (i -= 1) {
-            const y = try serializer.deserializeQ(u8, in, alloc);
-            const x = try serializer.deserializeQ(u8, in, alloc);
+            const y = try ser.deserializeQ(u8, in, alloc);
+            const x = try ser.deserializeQ(u8, in, alloc);
             out.m[y][x] = 100;
         }
     }
@@ -2481,29 +2481,29 @@ pub const Mob = struct { // {{{
         } else err.bug("Deserialization: No proto for id {s}", .{id});
     }
 
-    pub fn __SER_FIELDW_statuses(self: *const Mob, field: *const StatusArray, out: anytype) !void {
+    pub fn __SER_FIELDW_statuses(self: *const Mob, ser: *serializer.Serializer, field: *const StatusArray, out: anytype) !void {
         var item_count: u16 = 0;
         for (0..StatusArray.Indexer.count) |i|
             if (self.hasStatus(StatusArray.Indexer.keyForIndex(i))) {
                 item_count += 1;
             };
-        try serializer.serializeScalar(u16, item_count, out);
+        try ser.serializeScalar(u16, item_count, out);
 
         for (0..StatusArray.Indexer.count) |i| {
             const key = StatusArray.Indexer.keyForIndex(i);
             if (self.hasStatus(key)) {
-                try serializer.serializeScalar(@TypeOf(key), key, out);
-                try serializer.serialize(@TypeOf(field.values[0]), &field.values[i], out);
+                try ser.serializeScalar(@TypeOf(key), key, out);
+                try ser.serialize(@TypeOf(field.values[0]), &field.values[i], out);
             }
         }
     }
 
-    pub fn __SER_FIELDR_statuses(out: *StatusArray, in: anytype, alloc: mem.Allocator) !void {
+    pub fn __SER_FIELDR_statuses(ser: *serializer.Serializer, out: *StatusArray, in: anytype, alloc: mem.Allocator) !void {
         out.* = StatusArray.initFill(.{});
-        var i: usize = try serializer.deserializeQ(u16, in, alloc);
+        var i: usize = try ser.deserializeQ(u16, in, alloc);
         while (i > 0) : (i -= 1) {
-            const k = try serializer.deserializeQ(StatusArray.Key, in, alloc);
-            const v = try serializer.deserializeQ(StatusArray.Value, in, alloc);
+            const k = try ser.deserializeQ(StatusArray.Key, in, alloc);
+            const v = try ser.deserializeQ(StatusArray.Value, in, alloc);
             out.set(k, v);
         }
     }

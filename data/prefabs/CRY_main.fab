@@ -7,7 +7,7 @@
 :noitems
 :nostairs
 
-@u P
+@u P cry_proclamation
       Death to the Earth Demons.
 \
           Death to traitors.
@@ -43,7 +43,7 @@ Death to the Thol and all who serve him.
      asg kazgasoren Ir-Kornalg.
 END POSTER
 @v p corpse_myalbaren
-@w P
+@w P cry_myalbaren_obituary
           Here lies
 
      $cMYALBAREN DREMULDKOR$.

@@ -38,6 +38,13 @@ pub fn Result(comptime T: type, comptime E: type) type {
             };
         }
 
+        pub fn get(self: Self) ?T {
+            return switch (self) {
+                .Ok => |o| o,
+                .Err => null,
+            };
+        }
+
         pub fn unwrap(self: Self) T {
             return switch (self) {
                 .Ok => |o| o,

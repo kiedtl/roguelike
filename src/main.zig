@@ -224,10 +224,9 @@ fn deinitGame() void {
 
     deinitGameState();
 
-    {
-        var iter = literature.posters.iterator();
-        while (iter.next()) |poster|
-            poster.deinit(state.alloc);
+    for (literature.posters.items) |poster| {
+        poster.deinit(state.alloc);
+        state.alloc.destroy(poster);
     }
     literature.posters.deinit();
 

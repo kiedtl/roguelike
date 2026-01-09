@@ -45,58 +45,68 @@ pub const Name = struct {
 };
 
 pub const Poster = struct {
-    // linked list stuff
-    __next: ?*Poster = null,
-    __prev: ?*Poster = null,
-
-    // What level this poster belongs on. E.g., "PRI" "LAB" "VLT"
-    level: []u8,
-
-    // Contents.
-    text: []u8,
+    level: []const u8, // What level this poster belongs on. E.g., "PRI" "LAB" "VLT"
+    id: []const u8, // Id. Currently not used for anything
+    text: []const u8, // Contents.
 
     // Mapgen state, storing number of times this poster has been placed.
     placement_counter: usize = 0,
 
+    // Not const pointer because we store mapgen data here (FIXME)
+    pub const ArrayList = std.ArrayList(*Poster);
+
+    pub fn new(alloc: mem.Allocator, id: []const u8, level: []const u8, text: []const u8) !*Poster {
+        const p = try alloc.create(Poster);
+        p.* = .{ .id = id, .level = level, .text = text };
+        return p;
+    }
+
     pub fn deinit(self: *const Poster, alloc: mem.Allocator) void {
+        alloc.free(self.id);
         alloc.free(self.level);
         alloc.free(self.text);
     }
 };
 
-pub const PosterList = LinkedList(Poster);
-
 pub var names: Name.ArrayList = undefined;
-pub var posters: PosterList = undefined;
+pub var posters: Poster.ArrayList = undefined;
 
 pub fn readPosters(alloc: mem.Allocator) void {
-    const data_dir = std.fs.cwd().openDir("data", .{}) catch unreachable;
-    const data_file = data_dir.openFile("posters.tsv", .{}) catch unreachable;
+    var data_dir = std.fs.cwd().openDir("data", .{}) catch unreachable;
+    defer data_dir.close();
 
-    var rbuf: [8192]u8 = undefined;
-    const read = data_file.readAll(rbuf[0..]) catch unreachable;
+    const data_file = data_dir.openFile("posters.tsv", .{}) catch unreachable;
+    defer data_file.close();
+
+    const read = data_file.readToEndAlloc(alloc, 0xFFFF * 0xFF) catch err.oom();
+    defer alloc.free(read);
 
     const result = tsv.parse(
-        Poster,
+        struct { id: []u8, level: []u8, text: []u8 },
         &[_]tsv.TSVSchemaItem{
+            .{ .field_name = "id", .parse_to = []u8, .parse_fn = tsv.parseUtf8String },
             .{ .field_name = "level", .parse_to = []u8, .parse_fn = tsv.parseUtf8String },
             .{ .field_name = "text", .parse_to = []u8, .parse_fn = tsv.parseUtf8String },
         },
-        .{ .level = undefined, .text = undefined },
-        rbuf[0..read],
+        undefined,
+        read,
         alloc,
     );
 
-    if (!result.is_ok()) {
+    if (result.get()) |poster_list| {
+        posters = @TypeOf(posters).init(alloc);
+        for (poster_list.items) |poster| {
+            posters.append(
+                Poster.new(alloc, poster.id, poster.level, poster.text) catch err.oom(),
+            ) catch err.oom();
+        }
+        std.log.info("Loaded {} posters.", .{poster_list.items.len});
+        poster_list.deinit();
+    } else {
         std.log.err(
             "Cannot read props: {} (line {}, field {})",
             .{ result.Err.type, result.Err.context.lineno, result.Err.context.field },
         );
-    } else {
-        posters = @TypeOf(posters).init(alloc);
-        for (result.unwrap().items) |poster| posters.append(poster) catch err.wat();
-        std.log.info("Loaded {} posters.", .{result.unwrap().items.len});
-        result.unwrap().deinit();
     }
 }
 

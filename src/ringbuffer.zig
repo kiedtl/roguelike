@@ -67,17 +67,17 @@ pub fn RingBuffer(comptime T: type, size: usize) type {
             try writer.print("]", .{});
         }
 
-        pub fn serialize(val: @This(), out: anytype) !void {
-            try serializer.serializeScalar(usize, val.top, out);
-            for (val.buffer) |item|
-                try serializer.serialize(?T, &item, out);
+        pub fn serialize(self: *const @This(), ser: *serializer.Serializer, out: anytype) !void {
+            try ser.serializeScalar(usize, self.top, out);
+            for (self.buffer) |item|
+                try ser.serialize(?T, &item, out);
         }
 
-        pub fn deserialize(out: *@This(), in: anytype, alloc: std.mem.Allocator) !void {
+        pub fn deserialize(ser: *serializer.Serializer, out: *@This(), in: anytype, alloc: std.mem.Allocator) !void {
             out.init();
-            out.top = try serializer.deserializeQ(usize, in, alloc);
+            out.top = try ser.deserializeQ(usize, in, alloc);
             for (&out.buffer) |*sl|
-                sl.* = try serializer.deserializeQ(?T, in, alloc);
+                sl.* = try ser.deserializeQ(?T, in, alloc);
         }
     };
 }
