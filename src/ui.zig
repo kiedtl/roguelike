@@ -810,7 +810,7 @@ fn _getSurfDescription(self: *Console, starty: usize, surface: SurfaceItem, line
         .Corpse => |c| {
             // Since the mob object was deinit'd, we can't rely on
             // mob.displayName() working
-            const name = c.ai.profession_name orelse c.species.name;
+            const name = if (c.ai.profession_name) |pn| pn.bytes() else c.species.name;
             y += self.drawTextAtf(0, y, "$c{s} remains$.", .{name}, .{});
             y += self.drawTextAt(0, y, "corpse\n", .{});
         },
@@ -1015,7 +1015,7 @@ fn _getMonsSpellsDescription(self: *Console, starty: usize, mob: *Mob, _: usize)
                 .Self => "$bself$.",
                 .SpecificMob, .SpecificAlly => |id| b: {
                     const t = mobs.findMobById(id).?;
-                    break :b t.mob.ai.profession_name orelse t.mob.species.name;
+                    break :b if (t.mob.ai.profession_name) |pn| pn.bytes() else t.mob.species.name;
                 },
                 .UndeadAlly => "undead ally",
                 .ConstructAlly => "construct ally",

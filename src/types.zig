@@ -1907,11 +1907,7 @@ pub const AI = struct {
     pub const __SER_SKIP = [_][]const u8{"flags"}; // Must not include profession_name (angels)
 
     // Name of mob doing the profession.
-    profession_name: ?[]const u8 = null,
-
-    // Description of what the mob is doing. Examples: Guard("patrolling"),
-    // Smith("forging"), Demon("sulking")
-    profession_description: []const u8,
+    profession_name: ?Strig = null,
 
     // The area where the mob should be doing work.
     work_area: CoordArrayList = undefined,
@@ -2587,6 +2583,7 @@ pub const Mob = struct { // {{{
     // Size of `activities` Ringbuffer
     pub const MAX_ACTIVITY_BUFFER_SZ = 10;
 
+    // FIXME: shame shame shame
     pub fn displayName(self: *const Mob) []const u8 {
         const Static = struct {
             var buf: [32]u8 = undefined;
@@ -2597,7 +2594,7 @@ pub const Mob = struct { // {{{
             .Spectral => "spectral ",
             .Former => "former ",
         };
-        const base_name = self.ai.profession_name orelse self.species.name;
+        const base_name = if (self.ai.profession_name) |pn| pn.bytes() else self.species.name;
 
         var fbs = std.io.fixedBufferStream(&Static.buf);
         std.fmt.format(fbs.writer(), "{s}{s}", .{ prefix_str, base_name }) catch err.wat();
@@ -4137,7 +4134,7 @@ pub const Mob = struct { // {{{
         // Can't have "spectral [this is a bug]" enemies being created when a
         // night reaper attacks the player.
         if (self == state.player)
-            new.ai.profession_name = "clone";
+            new.ai.profession_name = Strig.initLit("clone");
 
         new.faction = .Night;
         new.prisoner_status = null;
@@ -4197,8 +4194,10 @@ pub const Mob = struct { // {{{
         self.energy = 0;
 
         self.ai = .{
-            .profession_name = self.ai.profession_name,
-            .profession_description = "watching",
+            .profession_name = if (self.ai.profession_name) |pn|
+                pn.clone(state.alloc) catch err.oom()
+            else
+                null,
             .work_area = self.ai.work_area,
             .work_fn = ai.dummyWork,
             .fight_fn = ai.meleeFight,
@@ -4323,6 +4322,9 @@ pub const Mob = struct { // {{{
 
     pub fn deinitNoCorpse(self: *Mob) void {
         assert(!self.is_dead);
+
+        if (self.ai.profession_name) |pn|
+            pn.deinit(state.alloc);
 
         self.enemies.deinit();
         self.allies.deinit();
@@ -4757,22 +4759,6 @@ pub const Mob = struct { // {{{
             return true;
 
         return false;
-    }
-
-    // What's the monster doing right now?
-    pub fn activity_description(self: *const Mob) []const u8 {
-        var res = switch (self.ai.phase) {
-            .Work => self.ai.profession_description,
-            .Hunt => if (self.ai.is_combative) "hunting" else "alarmed",
-            .Investigate => "investigating",
-            .Flee => "fleeing",
-        };
-
-        if (self.is_dead) {
-            res = "dead";
-        }
-
-        return res;
     }
 
     pub fn hasMoreEnergyThan(a: *const Mob, b: *const Mob) bool {

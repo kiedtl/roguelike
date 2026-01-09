@@ -4,6 +4,8 @@ const mem = std.mem;
 const math = std.math;
 const assert = std.debug.assert;
 
+const Strig = @import("strig").Strig;
+
 const colors = @import("../colors.zig");
 const err = @import("../err.zig");
 const gas = @import("../gas.zig");
@@ -965,7 +967,10 @@ fn generateSingle(
 
     // Now apply to the MobTemplate
 
-    out.mob.ai.profession_name = std.fmt.allocPrint(state.alloc, "{s} {s}", .{ adj.?.str, noun.?.str }) catch err.oom();
+    out.mob.ai.profession_name = Strig.empty;
+    var name_writer = out.mob.ai.profession_name.?.writer(state.alloc);
+    name_writer.print("{s} {s}", .{ adj.?.str, noun.?.str }) catch err.oom();
+
     out.mob.tile = chosen_tile.ch;
     out.mob.max_HP = maxHP;
     out.mob.max_MP = maxMP;
@@ -1018,7 +1023,11 @@ fn generateSingle(
     };
 
     // Generate the moth.
-    out_moth.mob.ai.profession_name = std.fmt.allocPrint(state.alloc, "{s} sun moth", .{adj.?.moth_str}) catch err.oom();
+
+    out_moth.mob.ai.profession_name = Strig.empty;
+    var moth_name_writer = out_moth.mob.ai.profession_name.?.writer(state.alloc);
+    moth_name_writer.print("{s} sun moth", .{adj.?.moth_str}) catch err.oom();
+
     out_moth.mob.spells = b: {
         const spbuf = state.alloc.alloc(SpellOptions, 1) catch err.oom();
         spbuf[0] = .{ .MP_cost = 0, .spell = &spells.CAST_MOTH_TRANSFORM, .power = index };
@@ -1093,14 +1102,14 @@ pub fn init() void {
 pub fn deinit() void {
     for (&mobs.ANGELS) |angel| {
         state.alloc.free(angel.mob.ai.flags);
-        state.alloc.free(angel.mob.ai.profession_name.?);
+        angel.mob.ai.profession_name.?.deinit(state.alloc);
         state.alloc.free(angel.mob.slain_trigger.Disintegrate);
         state.alloc.free(angel.mob.spells);
         state.alloc.free(angel.statuses);
     }
 
     for (&mobs.MOTHS) |moth| {
-        state.alloc.free(moth.mob.ai.profession_name.?);
+        moth.mob.ai.profession_name.?.deinit(state.alloc);
         state.alloc.free(moth.mob.spells);
     }
 

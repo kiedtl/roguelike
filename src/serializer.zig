@@ -3,6 +3,8 @@ const meta = std.meta;
 const mem = std.mem;
 const assert = std.debug.assert;
 
+const strig = @import("strig");
+
 const err = @import("err.zig");
 const itemlists = items.itemlists;
 const items = @import("items.zig");
@@ -252,6 +254,10 @@ pub const Serializer = struct {
         } else if (comptime mem.startsWith(u8, @typeName(T), "array_list.ArrayList")) {
             try self.serialize(@TypeOf(obj.items), &obj.items, out);
             return;
+        } else if (T == strig.Strig) {
+            const b = obj.bytes();
+            try self.serialize(@TypeOf(b), &b, out);
+            return;
         }
 
         switch (@typeInfo(T)) {
@@ -407,6 +413,19 @@ pub const Serializer = struct {
             var i = try self.deserializeQ(usize, in, alloc);
             while (i > 0) : (i -= 1)
                 try out.append(try self.deserializeQ(meta.Elem(_fieldType(T, "items")), in, alloc));
+            return;
+        } else if (T == strig.Strig) {
+            // Deserialize manually (rather than calling deserialize([]const u8, ...) to ensure
+            // no unnecessary allocs
+            out.* = strig.Strig.empty;
+            var i = try self.deserializeQ(usize, in, alloc);
+            while (i > 0) : (i -= 1) {
+                const b = try self.deserializeQ(u8, in, alloc);
+                out.append(b, alloc) catch |e| {
+                    std.log.err("Strig.append error: {}", .{e});
+                    return error.CorruptedData;
+                };
+            }
             return;
         }
 
@@ -592,14 +611,18 @@ pub const Serializer = struct {
             .@"union" => |u| {
                 const tag = try self.deserializeQ(meta.Tag(T), in, alloc);
                 inline for (u.fields) |ufield|
-                    if (mem.eql(u8, ufield.name, @tagName(tag)))
-                        // Can't break here due to Zig comptime control-flow bug
+                    if (mem.eql(u8, ufield.name, @tagName(tag))) {
                         if (ufield.type == void) {
                             out.* = @unionInit(T, ufield.name, {});
                         } else {
+                            self.debugField(ufield.name, @typeName(ufield.type));
+                            defer self.debugFieldPop();
+
                             const value = try self.deserializeQ(ufield.type, in, alloc);
                             out.* = @unionInit(T, ufield.name, value);
-                        };
+                        }
+                        break;
+                    };
             },
             else => @compileError("Cannot deserialize " ++ @typeName(T)),
         }
