@@ -504,6 +504,8 @@ pub fn executeWizardFun(w: WizardFun) void {
         },
         .SaveLoad => {
             serializer.serializeWorld() catch err.wat();
+            @import("main.zig").deinitGameState();
+            @import("main.zig").initGameState();
             serializer.deserializeWorld() catch err.wat();
         },
     }

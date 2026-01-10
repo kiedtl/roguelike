@@ -5,6 +5,8 @@ const sort = std.sort;
 const assert = std.debug.assert;
 const enums = std.enums;
 
+const strig = @import("strig");
+
 const ai = @import("ai.zig");
 const alert = @import("alert.zig");
 const astar = @import("astar.zig");
@@ -69,20 +71,14 @@ pub const WIDTH = 60;
 pub const LEVELS = 23; //21;
 pub const PLAYER_STARTING_LEVEL = 22; // TODO: define in data file
 
-// Should only be used directly by functions in main.zig. For other applications,
-// should be passed as a parameter by caller.
 pub var gpa = std.heap.DebugAllocator(.{
     // Probably should enable this later on to track memory usage, if
     // allocations become too much
     .enable_memory_limit = false,
 
     .safety = true,
-
-    // Probably would enable this later?
-    .thread_safe = false,
-
-    .never_unmap = false,
-
+    .thread_safe = true,
+    .never_unmap = true,
     .stack_trace_frames = 10,
 }){};
 
@@ -140,7 +136,7 @@ pub var containers: ContainerList = undefined;
 pub var evocables: EvocableList = undefined;
 pub var messages: MessageArrayList = undefined;
 
-pub var fab_records: std.StringHashMap(mapgen.Prefab.PlacementRecord) = undefined;
+pub var fab_records: mapgen.FabRecords = undefined;
 pub var seed: u64 = undefined;
 pub var floor_seeds: [LEVELS]u64 = undefined;
 

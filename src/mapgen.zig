@@ -16,6 +16,7 @@ const literature = @import("literature.zig");
 const materials = @import("materials.zig");
 const mobs = @import("mobs.zig");
 const rng = @import("rng.zig");
+const serializer = @import("serializer.zig");
 const state = @import("state.zig");
 const surfaces = @import("surfaces.zig");
 const tsv = @import("tsv.zig");
@@ -30,6 +31,8 @@ const LinkedList = @import("list.zig").LinkedList;
 // const Generator = @import("generators.zig").Generator;
 // const GeneratorCtx = @import("generators.zig").GeneratorCtx;
 const StackBuffer = @import("buffer.zig").StackBuffer;
+const strig = @import("strig");
+const Strig = strig.Strig;
 
 const Coord = types.Coord;
 const Rect = types.Rect;
@@ -611,20 +614,18 @@ fn prefabIsValid(level: usize, prefab: *Prefab, allow_invis: bool, need_lair: bo
     }
 
     if (need_lair) {
-        if (!mem.eql(u8, prefab.name.constSlice()[0..3], "LAI")) {
+        if (!mem.eql(u8, prefab.name.bytes()[0..3], "LAI")) {
             return false; // We need a subroom for the lairs
         }
     } else {
-        if (!mem.eql(u8, prefab.name.constSlice()[0..3], state.levelinfo[level].id) and
-            !mem.eql(u8, prefab.name.constSlice()[0..3], "ANY"))
+        if (!mem.eql(u8, prefab.name.bytes()[0..3], state.levelinfo[level].id) and
+            !mem.eql(u8, prefab.name.bytes()[0..3], "ANY"))
         {
             return false; // Prefab isn't for this level.
         }
     }
 
-    const record_entry = state.fab_records.getOrPutValue(prefab.name.constSlice(), .{}) catch err.wat();
-    const record = record_entry.value_ptr;
-
+    const record = state.fab_records.get(prefab.name);
     if (record.level[level] >= prefab.restriction or
         record.level_individual[level][prefab.variation] >= prefab.individual_restriction or
         record.global >= prefab.global_restriction)
@@ -899,8 +900,8 @@ pub fn excavatePrefab(
                         }
                     } else {
                         std.log.err(
-                            "{s}: Feature '{c}' not present, skipping.",
-                            .{ fab.name.constSlice(), feature_id },
+                            "{}: Feature '{c}' not present, skipping.",
+                            .{ fab.name, feature_id },
                         );
                     }
                 },
@@ -950,7 +951,7 @@ pub fn excavatePrefab(
             mob_f.spawn_at.y + room.rect.start.y + starty,
         );
 
-        err.ensure(state.dungeon.at(coord).type != .Wall, "{s}: Tried to place mob in wall.", .{fab.name.constSlice()}) catch continue;
+        err.ensure(state.dungeon.at(coord).type != .Wall, "{}: Tried to place mob in wall.", .{fab.name}) catch continue;
 
         const work_area = Coord.new2(
             room.rect.start.z,
@@ -1000,7 +1001,7 @@ pub fn excavatePrefab(
         };
         const inferred = stckpl.inferType();
         if (!inferred) {
-            std.log.err("{s}: Couldn't infer type for stockpile! (skipping)", .{fab.name.constSlice()});
+            std.log.err("{}: Couldn't infer type for stockpile! (skipping)", .{fab.name});
         } else {
             state.stockpiles[room.rect.start.z].append(stckpl) catch err.wat();
         }
@@ -1035,7 +1036,7 @@ pub fn excavatePrefab(
         };
         const inferred = input_stckpl.inferType();
         if (!inferred) {
-            std.log.err("{s}: Couldn't infer type for input area! (skipping)", .{fab.name.constSlice()});
+            std.log.err("{}: Couldn't infer type for input area! (skipping)", .{fab.name});
         } else {
             state.inputs[room.rect.start.z].append(input_stckpl) catch err.wat();
         }
@@ -1076,7 +1077,7 @@ pub fn resetLevel(level: usize) void {
     for (n_fabs.items) |*fab| fab.reset(level);
     for (s_fabs.items) |*fab| fab.reset(level);
 
-    var fab_records = state.fab_records.iterator();
+    var fab_records = state.fab_records.inner.iterator();
     while (fab_records.next()) |entry|
         entry.value_ptr.resetForLevel(level);
 
@@ -1194,10 +1195,9 @@ pub fn validateLevel(level: usize, alloc: mem.Allocator) !void {
             Prefab.findPrefabByName(required_fab, &s_fabs) orelse
             err.bug("Required prefab {s} doesn't exist.", .{required_fab});
 
-        const rec = state.fab_records.getPtr(fab.name.constSlice());
-        if (rec == null or rec.?.level[level] == 0) {
+        const rec = state.fab_records.get(fab.name);
+        if (rec.level[level] == 0)
             return error.RequiredPrefabsNotUsed;
-        }
     }
 
     const point = state.dungeon.entries[level];
@@ -1534,7 +1534,7 @@ pub fn placeSubroom(parent: *Room, area: *const Rect, alloc: mem.Allocator, opts
 
     for (s_fabs.items) |*subroom| {
         if (opts.specific_id) |id| {
-            if (!mem.eql(u8, subroom.name.constSlice(), id)) {
+            if (!mem.eql(u8, subroom.name.bytes(), id)) {
                 continue;
             }
         }
@@ -3692,11 +3692,11 @@ pub const LevelAnalysis = struct {
 pub fn analyzeLevel(level: usize, alloc: mem.Allocator) !LevelAnalysis {
     var a = LevelAnalysis.init(alloc, level);
 
-    var riter = state.fab_records.iterator();
+    var riter = state.fab_records.inner.iterator();
     while (riter.next()) |prefab_record| {
         if (prefab_record.value_ptr.level[level] > 0)
             a.prefabs.append(.{
-                .id = try alloc.dupe(u8, prefab_record.key_ptr.*),
+                .id = try alloc.dupe(u8, prefab_record.key_ptr.bytes()),
                 .c = prefab_record.value_ptr.level[level],
             }) catch err.wat();
     }
@@ -3778,7 +3778,7 @@ pub const Room = struct {
     pub const ArrayList = std.ArrayList(Room);
 
     pub fn prefabId(self: *const Room) []const u8 {
-        return if (self.prefab) |prefab| prefab.name.constSlice() else "NONE";
+        return if (self.prefab) |prefab| prefab.name.bytes() else "NONE";
     }
 
     pub fn getByStart(start: Coord) ?*Room {
@@ -3798,6 +3798,44 @@ pub const Room = struct {
             }
         }
         return false;
+    }
+};
+
+pub const FabRecords = struct {
+    inner: std.HashMap(
+        strig.Strig,
+        Prefab.PlacementRecord,
+        strig.HashContext,
+        std.hash_map.default_max_load_percentage,
+    ),
+
+    pub fn init() FabRecords {
+        return .{ .inner = .init(state.alloc) };
+    }
+
+    fn ensureExists(self: *FabRecords, name: Strig) void {
+        if (!self.inner.contains(name)) {
+            const cloned = name.clone(state.alloc) catch err.oom();
+            self.inner.put(cloned, .{}) catch err.oom();
+        }
+    }
+
+    pub fn getMut(self: *FabRecords, name: Strig) *Prefab.PlacementRecord {
+        self.ensureExists(name);
+        return self.inner.getPtr(name).?;
+    }
+
+    pub fn get(self: *FabRecords, name: Strig) Prefab.PlacementRecord {
+        self.ensureExists(name);
+        return self.inner.get(name).?;
+    }
+
+    pub fn deinit(self: *FabRecords) void {
+        var iter = self.inner.iterator();
+        while (iter.next()) |entry|
+            entry.key_ptr.deinit(state.alloc);
+        self.inner.deinit();
+        self.* = undefined;
     }
 };
 
@@ -3823,7 +3861,7 @@ pub const Prefab = struct {
     tunneler_inset: bool = false,
     tunneler_orientation: StackBuffer(Direction, 4) = StackBuffer(Direction, 4).init(null),
 
-    name: StackBuffer(u8, MAX_NAME_SIZE) = StackBuffer(u8, MAX_NAME_SIZE).init(null),
+    name: Strig = .empty,
     variation: usize = 0,
 
     material: ?*const Material = null,
@@ -3936,7 +3974,7 @@ pub const Prefab = struct {
     };
 
     pub fn reset(self: *Prefab, level: usize) void {
-        if (state.fab_records.getPtr(self.name.constSlice())) |record| {
+        if (state.fab_records.inner.getPtr(self.name)) |record| {
             record.global -= record.level[level];
             record.level[level] = 0;
             record.level_individual[level][self.variation] = 0;
@@ -4070,7 +4108,7 @@ pub const Prefab = struct {
         }
 
         const prefab_name = mem.trimRight(u8, name, ".fab");
-        f.name = StackBuffer(u8, Prefab.MAX_NAME_SIZE).init(prefab_name);
+        f.name = Strig.init(prefab_name, state.alloc) catch err.oom();
 
         const to = if (f.subroom) &s_fabs else &n_fabs;
         to.append(f.*) catch err.oom();
@@ -4493,7 +4531,7 @@ pub const Prefab = struct {
                                 f.features[identifier] = Feature{ .Prop = &surfaces.props.items[ind] };
                                 f.features_global[identifier] = is_global;
                             } else {
-                                std.log.err("{s}: Couldn't load prop {s}.", .{ f.name.constSlice(), utils.used(_id) });
+                                std.log.err("{s}: Couldn't load prop {s}.", .{ f.name.bytes(), utils.used(_id) });
                                 return error.InvalidMetadataValue;
                             }
                         },
@@ -4502,7 +4540,7 @@ pub const Prefab = struct {
                             const machine = if (utils.findById(&surfaces.MACHINES, _id)) |ind| b: {
                                 break :b &surfaces.MACHINES[ind];
                             } else {
-                                std.log.err("{s}: Couldn't load machine {s}.", .{ f.name.constSlice(), utils.used(_id) });
+                                std.log.err("{s}: Couldn't load machine {s}.", .{ f.name.bytes(), utils.used(_id) });
                                 return error.InvalidMetadataValue;
                             };
 
@@ -4592,7 +4630,7 @@ pub const Prefab = struct {
     }
 
     pub fn findPrefabByName(name: []const u8, fabs: *const PrefabArrayList) ?*Prefab {
-        for (fabs.items) |*f| if (mem.eql(u8, name, f.name.constSlice())) return f;
+        for (fabs.items) |*f| if (mem.eql(u8, name, f.name.bytes())) return f;
         return null;
     }
 
@@ -4602,7 +4640,7 @@ pub const Prefab = struct {
     }
 
     pub fn incrementRecord(self: *const Prefab, level: usize) void {
-        const record = (state.fab_records.getOrPutValue(self.name.constSlice(), .{}) catch err.wat()).value_ptr;
+        const record = state.fab_records.getMut(self.name);
         record.level[level] += 1;
         record.level_individual[level][self.variation] += 1;
         record.global += 1;
@@ -4649,12 +4687,11 @@ fn _readPrefab(name: []const u8, fab_f: std.fs.File, buf: []u8) void {
 
 // FIXME: error handling
 // FIXME: warn if prefab is zerowidth/zeroheight (prefabs file might not have fit in buffer)
-pub fn readPrefabs(alloc: mem.Allocator) void {
-    var buf: [8192]u8 = undefined;
+pub fn readPrefabs() void {
+    n_fabs = .init(state.alloc);
+    s_fabs = .init(state.alloc);
 
-    n_fabs = PrefabArrayList.init(alloc);
-    s_fabs = PrefabArrayList.init(alloc);
-    state.fab_records = @TypeOf(state.fab_records).init(alloc);
+    var buf: [8192]u8 = undefined;
 
     for (&[_][]const u8{
         "data/prefabs",
@@ -4677,6 +4714,19 @@ pub fn readPrefabs(alloc: mem.Allocator) void {
     std.sort.insertion(Prefab, s_fabs.items, {}, Prefab.lesserThan);
 
     std.log.info("Loaded {} prefabs.", .{n_fabs.items.len + s_fabs.items.len});
+}
+
+pub fn freePrefabs() void {
+    for (s_fabs.items) |fab| {
+        fab.name.deinit(state.alloc);
+    }
+
+    for (n_fabs.items) |fab| {
+        fab.name.deinit(state.alloc);
+    }
+
+    s_fabs.deinit();
+    n_fabs.deinit();
 }
 
 pub const LevelConfig = struct {

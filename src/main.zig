@@ -139,7 +139,7 @@ fn initGame(no_display: bool, display_scale: f32) bool {
     literature.readPosters(state.alloc);
     literature.readNames(state.alloc);
     mobs.spawns.readSpawnTables(state.alloc);
-    mapgen.readPrefabs(state.alloc);
+    mapgen.readPrefabs();
     readDescriptions(state.alloc);
 
     initGameState();
@@ -164,9 +164,12 @@ fn initGame(no_display: bool, display_scale: f32) bool {
     return true;
 }
 
+pub // Marked pub temporarily to test serializing
 fn initGameState() void {
     state.dungeon = state.alloc.create(types.Dungeon) catch err.oom();
     state.dungeon.* = types.Dungeon{};
+
+    state.fab_records = .init();
 
     rng.init();
     for (&state.floor_seeds) |*seed|
@@ -218,10 +221,6 @@ fn initLevels(loading_screen: *ui.LoadingScreen) bool {
 fn deinitGame() void {
     ui.deinit() catch {};
 
-    mapgen.s_fabs.deinit();
-    mapgen.n_fabs.deinit();
-    state.fab_records.deinit();
-
     deinitGameState();
 
     for (literature.posters.items) |poster| {
@@ -235,6 +234,7 @@ fn deinitGame() void {
     state.freeStatusStringInfo();
     state.freeLevelInfo();
     surfaces.freeProps(state.alloc);
+    mapgen.freePrefabs();
     mobs.spawns.freeSpawnTables(state.alloc);
     freeDescriptions(state.alloc);
     literature.freeNames(state.alloc);
@@ -244,7 +244,10 @@ fn deinitGame() void {
     _ = state.gpa.deinit();
 }
 
+pub // Marked pub temporarily
 fn deinitGameState() void {
+    state.fab_records.deinit();
+
     state.memory.clearAndFree();
 
     {
@@ -1246,9 +1249,8 @@ fn analyzerMain() void {
         // this stuff...
         //
         // FIXME
-        mapgen.s_fabs.deinit();
-        mapgen.n_fabs.deinit();
-        mapgen.readPrefabs(state.alloc);
+        mapgen.freePrefabs();
+        mapgen.readPrefabs();
     }
 
     std.json.stringify(results[0..ITERS], .{}, std.io.getStdOut().writer()) catch err.wat();

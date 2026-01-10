@@ -38,7 +38,7 @@ const GimmePrefabIter = struct {
             while (self.i < mapgen.s_fabs.items.len) {
                 const i = self.i;
                 self.i += 1;
-                if (mem.eql(u8, self.name, mapgen.s_fabs.items[i].name.constSlice()))
+                if (mem.eql(u8, self.name, mapgen.s_fabs.items[i].name.bytes()))
                     return &mapgen.s_fabs.items[i];
             }
             self.i = 0;
@@ -48,7 +48,7 @@ const GimmePrefabIter = struct {
             while (self.i < mapgen.n_fabs.items.len) {
                 const i = self.i;
                 self.i += 1;
-                if (mem.eql(u8, self.name, mapgen.n_fabs.items[i].name.constSlice()))
+                if (mem.eql(u8, self.name, mapgen.n_fabs.items[i].name.bytes()))
                     return &mapgen.n_fabs.items[i];
             }
             return null;

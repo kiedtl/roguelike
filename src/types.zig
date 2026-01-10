@@ -2477,6 +2477,22 @@ pub const Mob = struct { // {{{
         } else err.bug("Deserialization: No proto for id {s}", .{id});
     }
 
+    pub fn __SER_FIELDR_name_given(ser: *serializer.Serializer, out: *?[]const u8, in: anytype, alloc: mem.Allocator) !void {
+        const flag = try ser.deserializeQ(u1, in, alloc);
+        switch (flag) {
+            0 => out.* = null,
+            1 => try serializer.deserializeInternedString(literature.Name, ser, out, literature.names.items, in, alloc),
+        }
+    }
+
+    pub fn __SER_FIELDR_name_family(ser: *serializer.Serializer, out: *?[]const u8, in: anytype, alloc: mem.Allocator) !void {
+        const flag = try ser.deserializeQ(u1, in, alloc);
+        switch (flag) {
+            0 => out.* = null,
+            1 => try serializer.deserializeInternedString(literature.Name, ser, out, literature.names.items, in, alloc),
+        }
+    }
+
     pub fn __SER_FIELDW_statuses(self: *const Mob, ser: *serializer.Serializer, field: *const StatusArray, out: anytype) !void {
         var item_count: u16 = 0;
         for (0..StatusArray.Indexer.count) |i|
@@ -4194,10 +4210,7 @@ pub const Mob = struct { // {{{
         self.energy = 0;
 
         self.ai = .{
-            .profession_name = if (self.ai.profession_name) |pn|
-                pn.clone(state.alloc) catch err.oom()
-            else
-                null,
+            .profession_name = self.ai.profession_name,
             .work_area = self.ai.work_area,
             .work_fn = ai.dummyWork,
             .fight_fn = ai.meleeFight,
@@ -5116,6 +5129,7 @@ pub const Machine = struct {
         "on_place",
         "on_delete",
         "player_interact",
+        "evoke_confirm",
     };
 
     pub fn __SER_GET_ID(self: *const @This()) []const u8 {
@@ -5259,16 +5273,30 @@ pub const Prop = struct {
 
     id: []const u8,
     name: []const u8,
-    tile: u21,
-    sprite: ?font.Sprite,
-    fg: ?u32,
     bg: ?u32,
-    walkable: bool,
-    opacity: f64,
-    holder: bool, // Can a prisoner be held to it?
+    fg: ?u32,
     flammability: usize,
-    coord: Coord = Coord.new(0, 0),
     function: ?Function,
+    holder: bool, // Can a prisoner be held to it?
+    opacity: f64,
+    sprite: ?font.Sprite,
+    tile: u21,
+    walkable: bool,
+
+    coord: Coord = Coord.new(0, 0),
+
+    pub const __SER_SKIP = [_][]const u8{ "id", "name" };
+
+    pub fn __SER_GET_ID(self: *const @This()) []const u8 {
+        return self.id;
+    }
+
+    pub fn __SER_GET_PROTO(id: []const u8) @This() {
+        return for (surfaces.props.items) |template| {
+            if (mem.eql(u8, template.id, id))
+                break template;
+        } else err.bug("Deserialization: No proto for id {s}", .{id});
+    }
 
     pub const Function = enum {
         Laboratory,
@@ -5307,10 +5335,24 @@ pub const Container = struct {
     name: []const u8,
     tile: u21,
     capacity: usize,
-    items: ItemBuffer = ItemBuffer.init(null),
     type: ContainerType,
-    coord: Coord = undefined,
     item_repeat: usize = 10, // Chance of the first item appearing again
+
+    coord: Coord = undefined,
+    items: ItemBuffer = ItemBuffer.init(null),
+
+    pub const __SER_SKIP = [_][]const u8{ "id", "name", "tile", "capacity", "type", "item_repeat" };
+
+    pub fn __SER_GET_ID(self: *const Container) []const u8 {
+        return self.id;
+    }
+
+    pub fn __SER_GET_PROTO(id: []const u8) Container {
+        return for (&surfaces.ALL_CONTAINERS) |template| {
+            if (mem.eql(u8, template.id, id))
+                break template.*;
+        } else err.bug("Deserialization: No proto for container id {s}", .{id});
+    }
 
     pub const ItemBuffer = StackBuffer(Item, 21);
     pub const ContainerType = enum {

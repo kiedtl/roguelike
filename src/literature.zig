@@ -42,6 +42,10 @@ pub const Name = struct {
     pub fn deinit(self: *const @This(), alloc: mem.Allocator) void {
         alloc.free(self.name);
     }
+
+    pub fn interned_string(self: *const @This()) []const u8 {
+        return self.name;
+    }
 };
 
 pub const Poster = struct {
