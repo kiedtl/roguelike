@@ -782,19 +782,22 @@ pub const Benchmarker = struct {
         }
     }
 
-    pub fn print(self: *const Benchmarker) void {
-        var total: u64 = 0;
-        {
-            var bench_records = self.records.iterator();
-            while (bench_records.next()) |rec_entry|
-                total += rec_entry.value_ptr.total;
-        }
+    pub fn print(self: *const Benchmarker, total: u64) void {
+        // Calculating total doesn't always work if record totals overlap, as
+        // they do in serialization.
+        //
+        // var total: u64 = 0;
+        // {
+        //     var bench_records = self.records.iterator();
+        //     while (bench_records.next()) |rec_entry|
+        //         total += rec_entry.value_ptr.total;
+        // }
 
         var stderr = std.io.getStdErr().writer();
         var bench_records = self.records.iterator();
         while (bench_records.next()) |rec_entry| {
             const v = rec_entry.value_ptr;
-            const perc = @as(f32, @floatFromInt(v.total)) * 100 / @as(f32, @floatFromInt(total));
+            const perc = (@as(f64, @floatFromInt(v.total)) * 100.0) / @as(f64, @floatFromInt(total));
             stderr.print("\x1b[1m{s}\x1b[m:\n{:<9} recs: {d:>8}..{d:<9} ~~ {d:>8} avg, {d:>9} sum ({d:.2}%)\n", .{
                 rec_entry.key_ptr.*, v.count,
                 v.min,               v.max,
@@ -802,6 +805,7 @@ pub const Benchmarker = struct {
                 perc,
             }) catch err.wat();
         }
+        stderr.print("\x1b[31;1mTotal\x1b[m: {}\n", .{total}) catch err.wat();
     }
 };
 

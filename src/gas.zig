@@ -270,7 +270,6 @@ pub fn tickGasEmitters(level: usize) void {
         var x: usize = 0;
         while (x < WIDTH) : (x += 1) {
             const coord = Coord.new2(level, x, y);
-            const c_gas = state.dungeon.atGas(coord);
             switch (state.dungeon.at(coord).type) {
                 .Water => {
                     var near_lavas: usize = 0;
@@ -279,18 +278,17 @@ pub fn tickGasEmitters(level: usize) void {
                             if (state.dungeon.at(neighbor).type == .Lava)
                                 near_lavas += 1;
                         };
-                    c_gas[Steam.id] = near_lavas * 100;
+                    state.dungeon.gasAt(coord, Steam.id).* = near_lavas * 100;
                 },
                 .Lava => {
-                    if (rng.onein(300)) {
-                        c_gas[SmokeGas.id] += 20;
-                    }
+                    if (rng.onein(300))
+                        state.dungeon.gasAt(coord, SmokeGas.id).* += 20;
                 },
                 else => {},
             }
             if (state.dungeon.terrainAt(coord).gas) |terrain_gas|
                 if (rng.onein(terrain_gas.chance)) {
-                    c_gas[terrain_gas.id] += terrain_gas.amount;
+                    state.dungeon.gasAt(coord, terrain_gas.id).* += terrain_gas.amount;
                 };
         }
     }
@@ -299,18 +297,12 @@ pub fn tickGasEmitters(level: usize) void {
 // Minimum gas needed to spread to adjacent tiles.
 pub const MIN_GAS_SPREAD = 10;
 
-pub fn spreadGas(matrix: anytype, z: usize, cur_gas: usize, deterministic: bool) void {
-    const is_conglomerate = @TypeOf(matrix) == *[HEIGHT][WIDTH][GAS_NUM]usize;
-    if (!is_conglomerate and @TypeOf(matrix) != *[HEIGHT][WIDTH]usize)
-        @compileError("Invalid argument to spreadGas");
-
+pub fn spreadGas(matrix: *[HEIGHT][WIDTH]usize, z: usize, cur_gas: usize, deterministic: bool) void {
     const dis = @intFromEnum(Gases[cur_gas].dissipation_rate);
-
     var new: [HEIGHT][WIDTH]usize = std.mem.zeroes([HEIGHT][WIDTH]usize);
-    var y: usize = 0;
-    while (y < HEIGHT) : (y += 1) {
-        var x: usize = 0;
-        while (x < WIDTH) : (x += 1) {
+
+    for (0..HEIGHT) |y| {
+        for (0..WIDTH) |x| {
             const coord = Coord.new2(z, x, y);
 
             if (state.dungeon.at(coord).type == .Wall)
@@ -320,11 +312,11 @@ pub fn spreadGas(matrix: anytype, z: usize, cur_gas: usize, deterministic: bool)
                 if (!mach.porous)
                     continue;
 
-            var avg = if (is_conglomerate) matrix[y][x][cur_gas] else matrix[y][x];
+            var avg = matrix[y][x];
             var neighbors: usize = 1;
             for (&DIRECTIONS) |d| {
                 if (coord.move(d, state.mapgeometry)) |n| {
-                    const n_gas = if (is_conglomerate) matrix[n.y][n.x][cur_gas] else matrix[n.y][n.x];
+                    const n_gas = matrix[n.y][n.x];
                     if (n_gas < MIN_GAS_SPREAD) continue;
 
                     avg += n_gas;
@@ -339,16 +331,10 @@ pub fn spreadGas(matrix: anytype, z: usize, cur_gas: usize, deterministic: bool)
         }
     }
 
-    {
-        var dy: usize = 0;
-        while (dy < HEIGHT) : (dy += 1) {
-            var dx: usize = 0;
-            while (dx < WIDTH) : (dx += 1) {
-                const ptr = if (is_conglomerate) &matrix[dy][dx][cur_gas] else &matrix[dy][dx];
-                ptr.* = new[dy][dx];
-            }
-        }
-    }
+    for (0..HEIGHT) |dy|
+        for (0..WIDTH) |dx| {
+            matrix[dy][dx] = new[dy][dx];
+        };
 }
 
 pub fn mockGasSpread(gas: usize, amount: usize, coord: Coord, result: *[HEIGHT][WIDTH]usize) usize {
@@ -378,34 +364,26 @@ pub fn tickGases(cur_lev: usize) void {
     defer timer.end();
 
     var dirty_flags = [1]bool{false} ** GAS_NUM;
-    {
-        var y: usize = 0;
-        while (y < HEIGHT) : (y += 1) {
-            var x: usize = 0;
-            while (x < WIDTH) : (x += 1) {
+    gas_search: for (0..GAS_NUM) |gas_i|
+        for (0..HEIGHT) |y|
+            for (0..WIDTH) |x| {
                 const coord = Coord.new2(cur_lev, x, y);
-                const gases = state.dungeon.atGas(coord);
-                for (gases, 0..) |gas, gas_i| if (gas != 0) {
+                if (state.dungeon.gasAt(coord, gas_i).* != 0) {
                     dirty_flags[gas_i] = true;
-                };
-            }
-        }
-    }
+                    continue :gas_search;
+                }
+            };
 
-    var cur_gas: usize = 0;
-    while (cur_gas < GAS_NUM) : (cur_gas += 1) if (dirty_flags[cur_gas]) {
-        spreadGas(&state.dungeon.gas[cur_lev], cur_lev, cur_gas, false);
+    for (0..GAS_NUM) |cur_gas|
+        if (dirty_flags[cur_gas]) {
+            spreadGas(&state.dungeon.gas[cur_lev][cur_gas], cur_lev, cur_gas, false);
 
-        const residue = Gases[cur_gas].residue;
-
-        var y: usize = 0;
-        while (y < HEIGHT) : (y += 1) {
-            var x: usize = 0;
-            while (x < WIDTH) : (x += 1) {
-                const coord = Coord.new2(cur_lev, x, y);
-                if (residue != null and state.dungeon.atGas(coord)[cur_gas] > 30)
-                    state.dungeon.spatter(coord, residue.?);
-            }
-        }
-    };
+            if (Gases[cur_gas].residue) |residue|
+                for (0..HEIGHT) |y|
+                    for (0..WIDTH) |x| {
+                        const coord = Coord.new2(cur_lev, x, y);
+                        if (state.dungeon.gasAt(coord, cur_gas).* > 30)
+                            state.dungeon.spatter(coord, residue);
+                    };
+        };
 }

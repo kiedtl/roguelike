@@ -105,8 +105,8 @@ pub fn fireBurst(ground0: Coord, max_radius: usize, opts: FireBurstOpts) void {
             }
             fire.setTileOnFire(cellc, @max(opts.min_fire, fire.tileFlammability(cellc)));
 
-            if (state.dungeon.atGas(cellc)[gas.Fire.id] > 0) {
-                state.dungeon.atGas(cellc)[gas.Fire.id] = 0;
+            if (state.dungeon.gasAt(cellc, gas.Fire.id).* > 0) {
+                state.dungeon.gasAt(cellc, gas.Fire.id).* = 0;
                 var copts = opts;
                 copts.mob_cache = mob_cache;
                 fireBurst(cellc, 1, copts);

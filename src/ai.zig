@@ -2014,7 +2014,7 @@ pub fn _Job_ATK_Homing(homer: *Mob, job: *AIJob) AIJob.JStatus {
                 const verb = if (mem.eql(u8, me.id, "rolling_boulder")) "stops" else "dissipates";
                 state.message(.CombatUnimportant, "{c} {s}.", .{ me, verb });
             }
-            state.dungeon.atGas(me.coord)[gas.SmokeGas.id] += gas.MIN_GAS_SPREAD - 1;
+            state.dungeon.gasAt(me.coord, gas.SmokeGas.id).* += gas.MIN_GAS_SPREAD - 1;
             me.deinitNoCorpse();
             return .Complete;
         }

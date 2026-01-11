@@ -125,8 +125,8 @@ pub fn tickFire(level: usize) void {
 
             // Create explosions if needed.
             // Return if that's the case, since this will create more fire.
-            if (state.dungeon.atGas(coord)[gas.Fire.id] > 0) {
-                state.dungeon.atGas(coord)[gas.Fire.id] = 0;
+            if (state.dungeon.gasAt(coord, gas.Fire.id).* > 0) {
+                state.dungeon.gasAt(coord, gas.Fire.id).* = 0;
                 explosions.fireBurst(coord, 1, .{ .min_fire = 8 });
                 return;
             }
@@ -151,7 +151,7 @@ pub fn tickFire(level: usize) void {
                         },
                         .Water => {
                             if (rng.onein(3))
-                                state.dungeon.atGas(neighbor)[gas.Steam.id] += 20;
+                                state.dungeon.gasAt(neighbor, gas.Steam.id).* += 20;
                         },
                         else => {},
                     }

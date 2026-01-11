@@ -76,7 +76,19 @@ pub const Stair = struct {
     stairtype: Type,
     locked: bool = false,
 
-    pub const Type = union(enum) { Up: usize, Down, Access };
+    pub const Type = union(enum) {
+        Up: usize,
+        Down,
+        Access,
+
+        pub fn eq(self: Type, other: Type) bool {
+            return switch (self) {
+                .Up => |u| other == .Up and other.Up == u,
+                .Down => other == .Down,
+                .Access => other == .Access,
+            };
+        }
+    };
 
     pub fn newUp(dest: usize) types.SurfaceItem {
         return types.SurfaceItem{ .Stair = @This(){ .stairtype = .{ .Up = dest } } };
@@ -427,7 +439,7 @@ pub const SteamVent = Machine{
     .on_power = struct {
         pub fn f(machine: *Machine) void {
             if (state.ticks % 40 == 0) {
-                state.dungeon.atGas(machine.coord)[gas.Steam.id] += 200;
+                state.dungeon.gasAt(machine.coord, gas.Steam.id).* += 200;
             }
         }
     }.f,
@@ -1232,7 +1244,7 @@ pub const EtherealBarrier = Machine{
                 if (state.player.cansee(machine.coord))
                     state.message(.Info, "The sigil of exclusion vanishes.", .{});
                 machine.disabled = true;
-                state.dungeon.atGas(machine.coord)[gas.SmokeGas.id] += gas.MIN_GAS_SPREAD - 1;
+                state.dungeon.gasAt(machine.coord, gas.SmokeGas.id).* += gas.MIN_GAS_SPREAD - 1;
                 state.dungeon.at(machine.coord).surface = null;
                 return;
             }
@@ -1435,7 +1447,7 @@ pub const FireGasPump = Machine{
 
     .on_power = struct {
         fn f(machine: *Machine) void {
-            state.dungeon.atGas(machine.coord)[gas.Fire.id] = 100;
+            state.dungeon.gasAt(machine.coord, gas.Fire.id).* = 100;
         }
     }.f,
 };
@@ -1560,7 +1572,7 @@ fn powerExtractor(machine: *Machine) void {
         .Boulder => |b| for (&Vial.VIAL_ORES) |vd| if (vd.m) |m|
             if (mem.eql(u8, m.name, b.name)) {
                 state.dungeon.itemsAt(output).append(Item{ .Vial = vd.v }) catch unreachable;
-                state.dungeon.atGas(machine.coord)[gas.Dust.id] = rng.range(usize, 10, 20);
+                state.dungeon.gasAt(machine.coord, gas.Dust.id).* = rng.range(usize, 10, 20);
             },
         else => {},
     };
@@ -1648,7 +1660,7 @@ fn powerTurbinePowerSupply(machine: *Machine) void {
             else => unreachable,
         };
 
-        steam += state.dungeon.atGas(area)[gas.Steam.id];
+        steam += state.dungeon.gasAt(area, gas.Steam.id).*;
     }
 }
 
@@ -1656,7 +1668,7 @@ fn powerHealingGasPump(machine: *Machine) void {
     assert(machine.areas.len > 0);
 
     for (machine.areas.constSlice()) |coord| {
-        state.dungeon.atGas(coord)[gas.Healing.id] = 100;
+        state.dungeon.gasAt(coord, gas.Healing.id).* = 100;
     }
 }
 

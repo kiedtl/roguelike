@@ -1397,10 +1397,12 @@ fn _getItemDescription(self: *Console, starty: usize, item: Item, linewidth: usi
     return y - starty;
 }
 
-fn _getGasDescription(self: *Console, starty: usize, gases: []usize, linewidth: usize) usize {
+fn _getGasDescription(self: *Console, starty: usize, coord: Coord, linewidth: usize) usize {
     var y = starty;
 
-    for (0..gas.GAS_NUM, gases) |gas_id, gas_amount| {
+    for (0..gas.GAS_NUM) |gas_id| {
+        const gas_amount = state.dungeon.gasAt(coord, gas_id).*;
+
         if (gas_amount == 0) {
             continue;
         }
@@ -3399,7 +3401,6 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus, start_coord: ?Coord)
         const has_mons = state.dungeon.at(coord).mob != null;
         const has_surf = state.dungeon.at(coord).surface != null or !mem.eql(u8, state.dungeon.terrainAt(coord).id, "t_default");
         const has_gas = state.dungeon.anyGasAt(coord);
-        std.log.info("has_gas: {}", .{has_gas});
 
         if (!tile_focus_set_manually) {
             const has_something = switch (tile_focus) {
@@ -3464,7 +3465,7 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus, start_coord: ?Coord)
             } else if (tile_focus == .Item and has_item) {
                 y += _getItemDescription(&inf_win, y, state.dungeon.itemsAt(coord).last().?, linewidth);
             } else if (tile_focus == .Gas and has_gas) {
-                y += _getGasDescription(&inf_win, y, state.dungeon.atGas(coord), linewidth);
+                y += _getGasDescription(&inf_win, y, coord, linewidth);
             }
 
             // Add keybinding descriptions

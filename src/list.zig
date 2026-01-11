@@ -165,7 +165,6 @@ pub fn LinkedList(comptime T: type) type {
         pub fn deserialize(ser: *serializer.Serializer, out: *@This(), in: anytype, alloc: mem.Allocator) !void {
             //out.* = @This().init(alloc);
             const neededlen = try ser.deserializeQ(usize, in, alloc);
-            std.log.info("len: {}", .{neededlen});
 
             if (neededlen > out.len()) {
                 var i = out.len();

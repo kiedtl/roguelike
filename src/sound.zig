@@ -5,7 +5,7 @@ const Mob = types.Mob;
 const Machine = types.Machine;
 const Coord = types.Coord;
 
-pub const SoundIntensity = enum {
+pub const SoundIntensity = enum(u8) {
     Silent,
     Quiet,
     Medium,
@@ -36,12 +36,12 @@ pub const SoundIntensity = enum {
     }
 };
 
-pub const SoundType = enum { None, Movement, Combat, Shout, Alarm, Scream, Explosion, Crash };
+pub const SoundType = enum(u8) { None, Movement, Combat, Shout, Alarm, Scream, Explosion, Crash };
 
 // .New: sound has just been made
 // .Old: it was made a few turns ago, but mobs will still show up to investigate
 // .Dead: the sound is dead
-pub const SoundState = enum {
+pub const SoundState = enum(u8) {
     New,
     Old,
     Dead,
@@ -58,6 +58,15 @@ pub const Sound = struct {
     type: SoundType = .None,
     state: SoundState = .Dead,
     when: usize = 0,
+
+    pub fn eq(a: Sound, b: Sound) bool {
+        return a.mob_source == b.mob_source and
+            a.machine_source == b.machine_source and
+            a.intensity == b.intensity and
+            a.type == b.type and
+            a.state == b.state and
+            a.when == b.when;
+    }
 };
 
 pub fn makeNoise(coord: Coord, s_type: SoundType, intensity: SoundIntensity) void {

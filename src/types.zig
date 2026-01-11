@@ -73,7 +73,7 @@ pub const CoordArrayList = std.ArrayList(Coord);
 pub const StockpileArrayList = std.ArrayList(Stockpile);
 pub const MessageArrayList = std.ArrayList(Message);
 pub const StatusArray = enums.EnumArray(Status, StatusDataInfo);
-pub const SpatterArray = enums.EnumArray(Spatter, usize);
+pub const SpatterArray = enums.EnumArray(Spatter, u8);
 pub const MobList = LinkedList(Mob);
 pub const MobArrayList = std.ArrayList(*Mob);
 pub const RingList = LinkedList(Ring);
@@ -2303,34 +2303,23 @@ pub const Stat = enum {
 pub const MobFov = struct { // {{{
     m: [HEIGHT][WIDTH]usize = [1][WIDTH]usize{[1]usize{0} ** WIDTH} ** HEIGHT,
 
-    pub fn serialize(self: *const @This(), ser: *serializer.Serializer, out: anytype) !void {
-        var ctr: u16 = 0;
-        for (0..HEIGHT) |y|
-            for (0..WIDTH) |x|
-                if (self.m[y][x] > 0) {
-                    ctr += 1;
-                };
+    // pub fn serialize(self: *const MobFov, ser: *serializer.Serializer, out: anytype) !void {
+    //     try serializer.helpers_matrix.serializeMatrix(usize, void, struct {
+    //         pub fn f(_: usize, _: usize, v: *const usize) ?void {
+    //             return if (v.* > 0) {} else null;
+    //         }
+    //     }.f, HEIGHT, WIDTH, &self.m, ser, out);
+    // }
 
-        try ser.serializeScalar(u16, ctr, out);
+    // pub fn deserialize(ser: *serializer.Serializer, out: *MobFov, in: anytype, alloc: mem.Allocator) !void {
+    //     out.* = MobFov{};
 
-        for (0..HEIGHT) |y|
-            for (0..WIDTH) |x|
-                if (self.m[y][x] > 0) {
-                    try ser.serializeScalar(u8, @intCast(y), out);
-                    try ser.serializeScalar(u8, @intCast(x), out);
-                };
-    }
-
-    pub fn deserialize(ser: *serializer.Serializer, out: *@This(), in: anytype, alloc: mem.Allocator) !void {
-        out.* = MobFov{};
-
-        var i = try ser.deserializeQ(u16, in, alloc);
-        while (i > 0) : (i -= 1) {
-            const y = try ser.deserializeQ(u8, in, alloc);
-            const x = try ser.deserializeQ(u8, in, alloc);
-            out.m[y][x] = 100;
-        }
-    }
+    //     try serializer.helpers_matrix.deserializeMatrix(usize, void, struct {
+    //         pub fn f(_: usize, _: usize, _: usize, _: void) usize {
+    //             return 100;
+    //         }
+    //     }.f, HEIGHT, WIDTH, ser, &out.m, in, alloc);
+    // }
 }; // }}}
 
 test "MobFov serialization" {
@@ -2341,13 +2330,16 @@ test "MobFov serialization" {
                 mfov.m[y][x] = 100;
             };
 
-    var buf: [HEIGHT * WIDTH * 2]u8 = undefined;
+    var ser = serializer.Serializer.new(testing.allocator, false);
+    defer ser.deinit();
+
+    var buf: [HEIGHT * WIDTH * 10]u8 = undefined;
     var fbs = std.io.fixedBufferStream(&buf);
-    try serializer.serializeWE(MobFov, mfov, fbs.writer());
+    try ser.serializeWE(MobFov, &mfov, fbs.writer());
 
     fbs.reset();
     var mfov_deser: MobFov = undefined;
-    try serializer.deserializeWE(MobFov, &mfov_deser, fbs.reader(), testing.allocator);
+    try ser.deserializeWE(MobFov, &mfov_deser, fbs.reader(), testing.allocator);
 
     for (0..HEIGHT) |y|
         for (0..WIDTH) |x|
@@ -2477,48 +2469,48 @@ pub const Mob = struct { // {{{
         } else err.bug("Deserialization: No proto for id {s}", .{id});
     }
 
-    pub fn __SER_FIELDR_name_given(ser: *serializer.Serializer, out: *?[]const u8, in: anytype, alloc: mem.Allocator) !void {
-        const flag = try ser.deserializeQ(u1, in, alloc);
-        switch (flag) {
-            0 => out.* = null,
-            1 => try serializer.deserializeInternedString(literature.Name, ser, out, literature.names.items, in, alloc),
-        }
-    }
+    // pub fn __SER_FIELDR_name_given(ser: *serializer.Serializer, out: *?[]const u8, in: anytype, alloc: mem.Allocator) !void {
+    //     const flag = try ser.deserializeQ(u1, in, alloc);
+    //     switch (flag) {
+    //         0 => out.* = null,
+    //         1 => try serializer.deserializeInternedString(literature.Name, ser, out, literature.names.items, in, alloc),
+    //     }
+    // }
 
-    pub fn __SER_FIELDR_name_family(ser: *serializer.Serializer, out: *?[]const u8, in: anytype, alloc: mem.Allocator) !void {
-        const flag = try ser.deserializeQ(u1, in, alloc);
-        switch (flag) {
-            0 => out.* = null,
-            1 => try serializer.deserializeInternedString(literature.Name, ser, out, literature.names.items, in, alloc),
-        }
-    }
+    // pub fn __SER_FIELDR_name_family(ser: *serializer.Serializer, out: *?[]const u8, in: anytype, alloc: mem.Allocator) !void {
+    //     const flag = try ser.deserializeQ(u1, in, alloc);
+    //     switch (flag) {
+    //         0 => out.* = null,
+    //         1 => try serializer.deserializeInternedString(literature.Name, ser, out, literature.names.items, in, alloc),
+    //     }
+    // }
 
-    pub fn __SER_FIELDW_statuses(self: *const Mob, ser: *serializer.Serializer, field: *const StatusArray, out: anytype) !void {
-        var item_count: u16 = 0;
-        for (0..StatusArray.Indexer.count) |i|
-            if (self.hasStatus(StatusArray.Indexer.keyForIndex(i))) {
-                item_count += 1;
-            };
-        try ser.serializeScalar(u16, item_count, out);
+    // pub fn __SER_FIELDW_statuses(self: *const Mob, ser: *serializer.Serializer, field: *const StatusArray, out: anytype) !void {
+    //     var item_count: u16 = 0;
+    //     for (0..StatusArray.Indexer.count) |i|
+    //         if (self.hasStatus(StatusArray.Indexer.keyForIndex(i))) {
+    //             item_count += 1;
+    //         };
+    //     try ser.serializeScalar(u16, item_count, out);
 
-        for (0..StatusArray.Indexer.count) |i| {
-            const key = StatusArray.Indexer.keyForIndex(i);
-            if (self.hasStatus(key)) {
-                try ser.serializeScalar(@TypeOf(key), key, out);
-                try ser.serialize(@TypeOf(field.values[0]), &field.values[i], out);
-            }
-        }
-    }
+    //     for (0..StatusArray.Indexer.count) |i| {
+    //         const key = StatusArray.Indexer.keyForIndex(i);
+    //         if (self.hasStatus(key)) {
+    //             try ser.serializeScalar(@TypeOf(key), key, out);
+    //             try ser.serialize(@TypeOf(field.values[0]), &field.values[i], out);
+    //         }
+    //     }
+    // }
 
-    pub fn __SER_FIELDR_statuses(ser: *serializer.Serializer, out: *StatusArray, in: anytype, alloc: mem.Allocator) !void {
-        out.* = StatusArray.initFill(.{});
-        var i: usize = try ser.deserializeQ(u16, in, alloc);
-        while (i > 0) : (i -= 1) {
-            const k = try ser.deserializeQ(StatusArray.Key, in, alloc);
-            const v = try ser.deserializeQ(StatusArray.Value, in, alloc);
-            out.set(k, v);
-        }
-    }
+    // pub fn __SER_FIELDR_statuses(ser: *serializer.Serializer, out: *StatusArray, in: anytype, alloc: mem.Allocator) !void {
+    //     out.* = StatusArray.initFill(.{});
+    //     var i: usize = try ser.deserializeQ(u16, in, alloc);
+    //     while (i > 0) : (i -= 1) {
+    //         const k = try ser.deserializeQ(StatusArray.Key, in, alloc);
+    //         const v = try ser.deserializeQ(StatusArray.Value, in, alloc);
+    //         out.set(k, v);
+    //     }
+    // }
 
     // Don't use EnumFieldStruct here because we want to provide per-field
     // defaults.
@@ -2786,13 +2778,13 @@ pub const Mob = struct { // {{{
             self.MP = math.clamp(self.MP + 1, 0, self.max_MP);
 
         // Gases
-        const gases = state.dungeon.atGas(self.coord);
-        for (gases, 0..) |quantity, gasi| {
+        for (0..gas.GAS_NUM) |gas_id| {
+            const quantity = state.dungeon.gasAt(self.coord, gas_id).*;
             if (quantity > 0 and
                 (rng.range(usize, 0, 100) < (100 - self.resistance(.rFume)) or
-                    gas.Gases[gasi].not_breathed))
+                    gas.Gases[gas_id].not_breathed))
             {
-                gas.Gases[gasi].trigger(self, quantity);
+                gas.Gases[gas_id].trigger(self, quantity);
             }
         }
 
@@ -3063,7 +3055,7 @@ pub const Mob = struct { // {{{
         for (item.effects) |effect| switch (effect) {
             .Status => |s| if (direct) self.addStatus(s, 0, .{ .Tmp = Status.MAX_DURATION }),
             .CureStatus => |s| if (direct) self.cancelStatus(s),
-            .Gas => |s| state.dungeon.atGas(self.coord)[s] = 100,
+            .Gas => |s| state.dungeon.gasAt(self.coord, s).* = 100,
             .Damage => |d| self.takeDamage(.{
                 .lethal = d.lethal,
                 .amount = d.amount,
@@ -3193,7 +3185,7 @@ pub const Mob = struct { // {{{
                     mob.useConsumable(c, false) catch |e|
                         err.bug("Couldn't use thrown consumable: {}", .{e});
                 } else for (c.effects) |effect| switch (effect) {
-                    .Gas => |s| state.dungeon.atGas(coord)[s] = 100,
+                    .Gas => |s| state.dungeon.gasAt(coord, s).* = 100,
                     .Custom => |f| f(null, coord),
                     else => {},
                 };
@@ -3421,13 +3413,13 @@ pub const Mob = struct { // {{{
         }
 
         if (self.hasStatus(.FumesVest) and direction != null) {
-            state.dungeon.atGas(coord)[gas.Darkness.id] += 2;
+            state.dungeon.gasAt(coord, gas.Darkness.id).* += 2;
         }
 
         if (!self.hasStatus(.Fly)) {
             if (state.dungeon.terrainAt(dest).trample_cloud) |gas_opts| {
                 if (rng.onein(gas_opts.chance)) {
-                    state.dungeon.atGas(coord)[gas_opts.id] += gas_opts.amount;
+                    state.dungeon.gasAt(coord, gas_opts.id).* += gas_opts.amount;
                 }
             }
 
@@ -4033,7 +4025,7 @@ pub const Mob = struct { // {{{
                 if (self.blood) |s|
                     state.dungeon.spatter(self.coord, s);
                 if (self.blood_spray) |g|
-                    state.dungeon.atGas(self.coord)[g] += 20;
+                    state.dungeon.gasAt(self.coord, g).* += 20;
             }
         }
 
@@ -5245,10 +5237,10 @@ pub const Machine = struct {
                         if (mob.faction == .Necromancer) return;
 
                         if (machine.props.len == 0) {
-                            state.dungeon.atGas(machine.coord)[g.id] = 100;
+                            state.dungeon.gasAt(machine.coord, g.id).* = 100;
                         } else {
                             for (machine.props) |maybe_prop| if (maybe_prop) |vent| {
-                                state.dungeon.atGas(vent.coord)[g.id] = 100;
+                                state.dungeon.gasAt(vent.coord, g.id).* = 100;
                             };
                         }
 
@@ -5405,6 +5397,19 @@ pub const SurfaceItem = union(SurfaceItemTag) {
             .Container => "AMBIG_container",
             .Poster => "AMBIG_poster",
             .Stair => "AMBIG_stair",
+        };
+    }
+
+    pub fn eq(self: SurfaceItem, other: SurfaceItem) bool {
+        if (@as(SurfaceItemTag, self) != other)
+            return false;
+        return switch (self) {
+            .Corpse => |c| c == other.Corpse,
+            .Machine => |c| c == other.Machine,
+            .Prop => |c| c == other.Prop,
+            .Poster => |c| c == other.Poster,
+            .Container => |c| c == other.Container,
+            .Stair => |s| s.stairtype.eq(other.Stair.stairtype) and s.locked == other.Stair.locked,
         };
     }
 
@@ -5796,9 +5801,10 @@ pub const Item = union(ItemType) {
     }
 };
 
-pub const TileType = enum {
+pub const TileType = enum(u8) {
     Wall,
     Floor,
+    // TODO: remove Water/Lava
     Water,
     Lava,
 };
@@ -5806,17 +5812,76 @@ pub const TileType = enum {
 pub const Tile = struct {
     marked: bool = false,
     prison: bool = false,
+
     type: TileType = .Wall,
     material: *const Material = &materials.Basalt,
+    terrain: *const surfaces.Terrain = &surfaces.DefaultTerrain,
+
     mob: ?*Mob = null,
     surface: ?SurfaceItem = null,
-    terrain: *const surfaces.Terrain = &surfaces.DefaultTerrain,
     spatter: SpatterArray = SpatterArray.initFill(0),
 
-    // A random value that's set at the beginning of the game.
-    // To be used when a random value that's specific to a coordinate, but that
-    // won't change over time, is needed.
-    rand: usize = 0,
+    pub fn eq(self: *const Tile, other: *const Tile) bool {
+        return self.marked == other.marked and
+            self.prison == other.prison and
+            self.type == other.type and
+            self.material == other.material and
+            self.terrain == other.terrain and
+            self.mob == other.mob and
+            ((self.surface == null and other.surface == null) or
+                (self.surface != null and other.surface != null and self.surface.?.eq(other.surface.?))) and
+            mem.eql(u8, &self.spatter.values, &other.spatter.values);
+    }
+
+    // pub fn serialize(self: *const Tile, ser: *serializer.Serializer, out: anytype) !void {
+    //     var flags: u8 = 0;
+    //     if (self.marked) flags |= 1 << 1;
+    //     if (self.prison) flags |= 1 << 2;
+
+    //     const material: u8 = for (&materials.MATERIALS, 0..) |m, i| {
+    //         if (m == self.material) break @intCast(i);
+    //     } else unreachable;
+    //     const terrain: u8 = for (&surfaces.TERRAIN, 0..) |m, i| {
+    //         if (m == self.terrain) break @intCast(i);
+    //     } else unreachable;
+
+    //     const any_spatter = for (self.spatter.values) |value| {
+    //         if (value > 0) break true;
+    //     } else false;
+    //     const spatter = if (any_spatter) self.spatter else null;
+
+    //     try ser.serializeScalar(u8, flags, out);
+    //     try ser.serialize(TileType, &self.type, out);
+    //     try ser.serializeScalar(u8, material, out);
+    //     try ser.serializeScalar(u8, terrain, out);
+    //     try ser.serialize(?*Mob, &self.mob, out);
+    //     try ser.serialize(?SurfaceItem, &self.surface, out);
+    //     try ser.serialize(?SpatterArray, &spatter, out);
+    // }
+
+    // pub fn deserialize(ser: *serializer.Serializer, out: *Tile, in: anytype, alloc: mem.Allocator) !void {
+    //     const flags = try ser.deserializeQ(u8, in, alloc);
+    //     const ty = try ser.deserializeQ(TileType, in, alloc);
+    //     const material_ind = try ser.deserializeQ(u8, in, alloc);
+    //     const terrain_ind = try ser.deserializeQ(u8, in, alloc);
+    //     const mob = try ser.deserializeQ(?*Mob, in, alloc);
+    //     const sfitem = try ser.deserializeQ(?SurfaceItem, in, alloc);
+    //     const spatter = try ser.deserializeQ(?SpatterArray, in, alloc);
+
+    //     const marked = (flags & (1 << 1)) != 0;
+    //     const prison = (flags & (1 << 2)) != 0;
+
+    //     out.* = Tile{
+    //         .marked = marked,
+    //         .prison = prison,
+    //         .type = ty,
+    //         .material = materials.MATERIALS[material_ind],
+    //         .terrain = surfaces.TERRAIN[terrain_ind],
+    //         .mob = mob,
+    //         .surface = sfitem,
+    //         .spatter = spatter orelse SpatterArray.initFill(0),
+    //     };
+    // }
 
     pub fn displayAs(coord: Coord, ignore_lights: bool, ignore_mobs: bool) display.Cell {
         const self = state.dungeon.at(coord);
@@ -5849,8 +5914,8 @@ pub const Tile = struct {
             },
         }
 
-        const gases = state.dungeon.atGas(coord);
-        for (gases, 0..) |q, g| {
+        for (0..gas.GAS_NUM) |g| {
+            const q = state.dungeon.gasAt(coord, g).*;
             const gcolor = gas.Gases[g].color;
             // const aq = 1 - math.clamp(q, 0.19, 1);
             if (q > 0) {
@@ -6017,8 +6082,9 @@ pub const Tile = struct {
         const material = state.dungeon.at(coord).material;
         const terrain = state.dungeon.terrainAt(coord);
 
-        const there_is_gas = for (state.dungeon.atGas(coord)) |q| {
-            if (q > 0) break true;
+        const there_is_gas = for (0..gas.GAS_NUM) |g| {
+            if (state.dungeon.gasAt(coord, g).* > 0)
+                break true;
         } else false;
 
         if (state.dungeon.at(coord).type == .Wall and material.color_fg_dance != null) {
@@ -6107,10 +6173,28 @@ pub const Tile = struct {
     }
 };
 
+test "Tile serialization" {
+    var buf: [2048]u8 = undefined;
+    var fbs = std.io.fixedBufferStream(&buf);
+
+    var ser = serializer.Serializer.new(testing.allocator, false);
+    defer ser.deinit();
+
+    const t = Tile{};
+
+    try ser.serializeWE(Tile, &t, fbs.writer());
+
+    fbs.reset();
+    var t_deser: Tile = undefined;
+    try ser.deserializeWE(Tile, &t_deser, fbs.reader(), testing.allocator);
+
+    try testing.expect(t.eq(&t_deser));
+}
+
 pub const Dungeon = struct {
     map: [LEVELS][HEIGHT][WIDTH]Tile = [1][HEIGHT][WIDTH]Tile{[1][WIDTH]Tile{[1]Tile{.{}} ** WIDTH} ** HEIGHT} ** LEVELS,
     items: [LEVELS][HEIGHT][WIDTH]ItemBuffer = [1][HEIGHT][WIDTH]ItemBuffer{[1][WIDTH]ItemBuffer{[1]ItemBuffer{ItemBuffer.init(null)} ** WIDTH} ** HEIGHT} ** LEVELS,
-    gas: [LEVELS][HEIGHT][WIDTH][gas.GAS_NUM]usize = [1][HEIGHT][WIDTH][gas.GAS_NUM]usize{[1][WIDTH][gas.GAS_NUM]usize{[1][gas.GAS_NUM]usize{[1]usize{0} ** gas.GAS_NUM} ** WIDTH} ** HEIGHT} ** LEVELS,
+    gas: [LEVELS][gas.GAS_NUM][HEIGHT][WIDTH]usize = mem.zeroes([LEVELS][gas.GAS_NUM][HEIGHT][WIDTH]usize),
     sound: [LEVELS][HEIGHT][WIDTH]Sound = [1][HEIGHT][WIDTH]Sound{[1][WIDTH]Sound{[1]Sound{.{}} ** WIDTH} ** HEIGHT} ** LEVELS,
     light: [LEVELS][HEIGHT][WIDTH]bool = [1][HEIGHT][WIDTH]bool{[1][WIDTH]bool{[1]bool{false} ** WIDTH} ** HEIGHT} ** LEVELS,
     fire: [LEVELS][HEIGHT][WIDTH]usize = [1][HEIGHT][WIDTH]usize{[1][WIDTH]usize{[1]usize{0} ** WIDTH} ** HEIGHT} ** LEVELS,
@@ -6128,6 +6212,190 @@ pub const Dungeon = struct {
 
     pub const MOB_OPACITY: usize = 0;
     pub const FLOOR_OPACITY: usize = 10;
+
+    // pub fn __SER_FIELDR_items(ser: *serializer.Serializer, out: *[LEVELS][HEIGHT][WIDTH]ItemBuffer, in: anytype, alloc: mem.Allocator) !void {
+    //     for (0..LEVELS) |z| {
+    //         for (0..HEIGHT) |y|
+    //             for (0..WIDTH) |x| {
+    //                 out[z][y][x].reinit(null);
+    //             };
+
+    //         const count = try ser.deserializeQ(usize, in, alloc);
+    //         for (0..count) |_| {
+    //             const c = try ser.deserializeQ(serializer.TinyCoord, in, alloc);
+    //             try ser.deserialize(ItemBuffer, &out[z][c.y][c.x], in, alloc);
+    //         }
+    //     }
+    // }
+
+    // pub fn __SER_FIELDW_items(_: *const Dungeon, ser: *serializer.Serializer, field: *const [LEVELS][HEIGHT][WIDTH]ItemBuffer, out: anytype) !void {
+    //     for (0..LEVELS) |z| {
+    //         var count: usize = 0;
+    //         for (0..HEIGHT) |y|
+    //             for (0..WIDTH) |x|
+    //                 if (field[z][y][x].len > 0) {
+    //                     count += 1;
+    //                 };
+    //         try ser.serializeScalar(usize, count, out);
+
+    //         for (0..HEIGHT) |y|
+    //             for (0..WIDTH) |x|
+    //                 if (field[z][y][x].len > 0) {
+    //                     const c = serializer.TinyCoord.new(x, y);
+    //                     try ser.serialize(serializer.TinyCoord, &c, out);
+    //                     try ser.serialize([]const Item, &field[z][y][x].constSlice(), out);
+    //                 };
+    //     }
+    // }
+
+    // pub fn __SER_FIELDR_sound(ser: *serializer.Serializer, out: *[LEVELS][HEIGHT][WIDTH]Sound, in: anytype, alloc: mem.Allocator) !void {
+    //     for (0..LEVELS) |z| {
+    //         for (0..HEIGHT) |y|
+    //             for (0..WIDTH) |x| {
+    //                 out[z][y][x] = .{};
+    //             };
+
+    //         const count = try ser.deserializeQ(usize, in, alloc);
+    //         for (0..count) |_| {
+    //             const c = try ser.deserializeQ(serializer.TinyCoord, in, alloc);
+    //             const s = try ser.deserializeQ(Sound, in, alloc);
+    //             out[z][c.y][c.x] = s;
+    //         }
+    //     }
+    // }
+
+    // pub fn __SER_FIELDW_sound(_: *const Dungeon, ser: *serializer.Serializer, field: *const [LEVELS][HEIGHT][WIDTH]Sound, out: anytype) !void {
+    //     for (0..LEVELS) |z| {
+    //         var count: usize = 0;
+    //         for (0..HEIGHT) |y|
+    //             for (0..WIDTH) |x|
+    //                 if (!field[z][y][x].eq(.{})) {
+    //                     count += 1;
+    //                 };
+    //         try ser.serializeScalar(usize, count, out);
+
+    //         for (0..HEIGHT) |y|
+    //             for (0..WIDTH) |x|
+    //                 if (!field[z][y][x].eq(.{})) {
+    //                     const c = serializer.TinyCoord.new(x, y);
+    //                     try ser.serialize(serializer.TinyCoord, &c, out);
+    //                     try ser.serialize(Sound, &field[z][y][x], out);
+    //                 };
+    //     }
+    // }
+
+    // pub fn __SER_FIELDR_light(ser: *serializer.Serializer, out: *[LEVELS][HEIGHT][WIDTH]bool, in: anytype, alloc: mem.Allocator) !void {
+    //     for (0..LEVELS) |z|
+    //         for (0..HEIGHT) |y|
+    //             for (0..WIDTH) |x| {
+    //                 out[z][y][x] = false;
+    //             };
+
+    //     for (0..LEVELS) |z|
+    //         try serializer.helpers_matrix.deserializeMatrix(bool, void, struct {
+    //             pub fn f(_: usize, _: usize, _: usize, _: void) bool {
+    //                 return true;
+    //             }
+    //         }.f, HEIGHT, WIDTH, ser, &out[z], in, alloc);
+    // }
+
+    // pub fn __SER_FIELDW_light(_: *const Dungeon, ser: *serializer.Serializer, field: *const [LEVELS][HEIGHT][WIDTH]bool, out: anytype) !void {
+    //     for (0..LEVELS) |z|
+    //         try serializer.helpers_matrix.serializeMatrix(bool, void, struct {
+    //             pub fn f(_: usize, _: usize, v: *const bool) ?void {
+    //                 return if (v.*) {} else null;
+    //             }
+    //         }.f, HEIGHT, WIDTH, &field[z], ser, out);
+    // }
+
+    // const SerializeFire = u16; // In theory fire value could go above 256, since there are no checks to the contrary
+
+    // pub fn __SER_FIELDW_fire(_: *const Dungeon, ser: *serializer.Serializer, field: *const [LEVELS][HEIGHT][WIDTH]usize, out: anytype) !void {
+    //     for (0..LEVELS) |z| {
+    //         const any_fire_on_level = b: for (0..HEIGHT) |y| {
+    //             for (0..WIDTH) |x|
+    //                 if (field[z][y][x] != 0)
+    //                     break :b true;
+    //         } else false;
+
+    //         if (any_fire_on_level) {
+    //             try ser.serializeScalar(u1, 1, out);
+    //             for (0..HEIGHT) |y|
+    //                 for (0..WIDTH) |x|
+    //                     try ser.serializeScalar(SerializeFire, @intCast(field[z][x][y]), out);
+    //         } else {
+    //             try ser.serializeScalar(u1, 0, out);
+    //         }
+    //     }
+    // }
+
+    // pub fn __SER_FIELDR_fire(ser: *serializer.Serializer, out: *[LEVELS][HEIGHT][WIDTH]usize, in: anytype, alloc: mem.Allocator) !void {
+    //     for (0..LEVELS) |z|
+    //         for (0..HEIGHT) |y|
+    //             for (0..WIDTH) |x| {
+    //                 out[z][y][x] = 0;
+    //             };
+
+    //     for (0..LEVELS) |z| {
+    //         const flag = try ser.deserializeQ(u1, in, alloc);
+    //         switch (flag) {
+    //             0 => {},
+    //             1 => {
+    //                 for (0..HEIGHT) |y|
+    //                     for (0..WIDTH) |x| {
+    //                         out[z][x][y] = try ser.deserializeQ(SerializeFire, in, alloc);
+    //                     };
+    //             },
+    //         }
+    //     }
+    // }
+
+    // const SerializeGas = u16; // In theory gas value could go above 256, since there are no checks to the contrary
+
+    // pub fn __SER_FIELDW_gas(_: *const Dungeon, ser: *serializer.Serializer, field: *const [LEVELS][gas.GAS_NUM][HEIGHT][WIDTH]usize, out: anytype) !void {
+    //     for (0..LEVELS) |z| {
+    //         for (0..gas.GAS_NUM) |gas_id| {
+    //             const any_on_level = b: for (0..HEIGHT) |y| {
+    //                 for (0..WIDTH) |x|
+    //                     if (field[z][gas_id][y][x] != 0)
+    //                         break :b true;
+    //             } else false;
+
+    //             if (any_on_level) {
+    //                 try ser.serializeScalar(u1, 1, out);
+    //                 for (0..HEIGHT) |y|
+    //                     for (0..WIDTH) |x|
+    //                         try ser.serializeScalar(SerializeGas, @intCast(field[z][gas_id][x][y]), out);
+    //             } else {
+    //                 try ser.serializeScalar(u1, 0, out);
+    //             }
+    //         }
+    //     }
+    // }
+
+    // pub fn __SER_FIELDR_gas(ser: *serializer.Serializer, out: *[LEVELS][gas.GAS_NUM][HEIGHT][WIDTH]usize, in: anytype, alloc: mem.Allocator) !void {
+    //     for (0..LEVELS) |z|
+    //         for (0..gas.GAS_NUM) |g|
+    //             for (0..HEIGHT) |y|
+    //                 for (0..WIDTH) |x| {
+    //                     out[z][g][y][x] = 0;
+    //                 };
+
+    //     for (0..LEVELS) |z| {
+    //         for (0..gas.GAS_NUM) |g| {
+    //             const flag = try ser.deserializeQ(u1, in, alloc);
+    //             switch (flag) {
+    //                 0 => {},
+    //                 1 => {
+    //                     for (0..HEIGHT) |y|
+    //                         for (0..WIDTH) |x| {
+    //                             out[z][g][x][y] = try ser.deserializeQ(SerializeFire, in, alloc);
+    //                         };
+    //                 },
+    //             }
+    //         }
+    //     }
+    // }
 
     // Return the terrain if no surface item, else the default terrain.
     //
@@ -6151,9 +6419,9 @@ pub const Dungeon = struct {
             }
         }
 
-        const gases = state.dungeon.atGas(coord);
-        for (gases, 0..) |q, g| {
-            if (q > 0 and gas.Gases[g].opacity >= 1.0) return true;
+        for (0..gas.GAS_NUM) |g| {
+            if (gas.Gases[g].opacity >= 1.0 and state.dungeon.gasAt(coord, g).* > 0)
+                return true;
         }
 
         return false;
@@ -6179,9 +6447,9 @@ pub const Dungeon = struct {
             }
         }
 
-        const gases = state.dungeon.atGas(coord);
-        for (gases, 0..) |q, g| {
-            if (q > 0) o += @intFromFloat(gas.Gases[g].opacity * 100);
+        for (0..gas.GAS_NUM) |g| {
+            if (state.dungeon.gasAt(coord, g).* > 0)
+                o += @intFromFloat(gas.Gases[g].opacity * 100);
         }
 
         o += fire.fireOpacity(state.dungeon.fireAt(coord).*);
@@ -6288,14 +6556,14 @@ pub const Dungeon = struct {
 
             if (c.move(d, state.mapgeometry)) |neighbor| {
                 const prev = self.at(neighbor).spatter.get(what);
-                const new = @min(prev + rng.range(usize, 0, 4), 10);
+                const new = @min(prev +| rng.range(usize, 0, 4), 10);
                 self.at(neighbor).spatter.set(what, new);
             }
         }
 
         if (rng.boolean()) {
             const prev = self.at(c).spatter.get(what);
-            const new = @min(prev + rng.range(usize, 0, 5), 10);
+            const new = @min(prev +| rng.range(usize, 0, 5), 10);
             self.at(c).spatter.set(what, new);
         }
     }
@@ -6320,17 +6588,14 @@ pub const Dungeon = struct {
         return null;
     }
 
-    // STYLE: rename to gasAt
-    pub inline fn atGas(self: *Dungeon, c: Coord) []usize {
-        return &self.gas[c.z][c.y][c.x];
+    pub inline fn gasAt(self: *Dungeon, c: Coord, gas_id: usize) *usize {
+        return &self.gas[c.z][gas_id][c.y][c.x];
     }
 
     pub fn anyGasAt(self: *Dungeon, c: Coord) bool {
-        const g = self.atGas(c);
-        return for (g) |gas_amount| {
-            if (gas_amount > 0) {
+        return for (0..gas.GAS_NUM) |gas_num| {
+            if (self.gasAt(c, gas_num).* > 0)
                 break true;
-            }
         } else false;
     }
 

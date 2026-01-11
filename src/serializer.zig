@@ -22,6 +22,8 @@ const StackBuffer = @import("buffer.zig").StackBuffer;
 // const Generator = @import("generators.zig").Generator;
 // const GeneratorCtx = @import("generators.zig").GeneratorCtx;
 
+pub const helpers_matrix = @import("serializer/helpers_matrix.zig");
+
 pub const Error = error{
     PointerNotFound,
     MismatchedPointerTypes,
@@ -153,6 +155,15 @@ pub fn read(comptime IntType: type, in: anytype) !IntType {
     return @intCast(value);
 }
 
+pub const TinyCoord = struct {
+    x: u8,
+    y: u8,
+
+    pub fn new(x: usize, y: usize) TinyCoord {
+        return .{ .x = @intCast(x), .y = @intCast(y) };
+    }
+};
+
 // Deserialize a string without allocating, instead returning a reference to
 // some kind of interned string.
 //
@@ -220,11 +231,28 @@ pub fn DeserializeFunctionFromModule(
 
 pub const Serializer = struct {
     temp_alloc: std.heap.ArenaAllocator,
+    counting_writer: ?std.io.CountingWriter(std.fs.File.Writer),
 
     stderr: std.fs.File,
     debug: bool = false,
     fields: std.ArrayList(struct { name: []const u8, ty: []const u8 }),
     indent: usize = 0,
+
+    pub fn new(alloc: std.mem.Allocator, debug: bool) Serializer {
+        return Serializer{
+            .temp_alloc = std.heap.ArenaAllocator.init(alloc),
+            .counting_writer = null,
+            .fields = .init(alloc),
+            .stderr = std.io.getStdErr(),
+            .debug = debug,
+        };
+    }
+
+    pub fn countBytes(self: Serializer, out: anytype) Serializer {
+        var p = self;
+        p.counting_writer = std.io.countingWriter(out);
+        return p;
+    }
 
     pub fn deinit(self: *Serializer) void {
         self.fields.deinit();
@@ -261,6 +289,9 @@ pub const Serializer = struct {
     }
 
     pub fn serializeScalar(self: *Serializer, comptime T: type, obj: T, out: anytype) Error!void {
+        const bytes_before = if (self.counting_writer) |cw| cw.bytes_written else 0;
+        defer if (is_benchmarking) benchmarker.record(@typeName(T), self.counting_writer.?.bytes_written - bytes_before);
+
         switch (@typeInfo(T)) {
             .bool => try write(u8, if (obj) @as(u8, 1) else 0, out),
             .int => try write(_normIntT(T), obj, out),
@@ -273,14 +304,13 @@ pub const Serializer = struct {
         }
     }
 
-    pub fn serialize(self: *Serializer, comptime T: type, obj: *const T, p_out: anytype) Error!void {
+    pub fn serialize(self: *Serializer, comptime T: type, obj: *const T, out: anytype) Error!void {
         self.debugLog("* Serializing {} ...\n", .{T});
         self.indent += 1;
         defer self.indent -= 1;
 
-        var counting_writer = std.io.countingWriter(p_out);
-        defer if (is_benchmarking) benchmarker.record(@typeName(T), counting_writer.bytes_written);
-        const out = counting_writer.writer();
+        const bytes_before = if (self.counting_writer) |cw| cw.bytes_written else 0;
+        defer if (is_benchmarking) benchmarker.record(@typeName(T), self.counting_writer.?.bytes_written - bytes_before);
 
         if (comptime mem.startsWith(u8, @typeName(T), "hash_map.HashMap")) {
             try self.serializeScalar(usize, obj.count(), out);
@@ -399,6 +429,7 @@ pub const Serializer = struct {
                         break;
                     };
             },
+            .void => {},
             else => @compileError("Cannot serialize " ++ @typeName(T)),
         }
     }
@@ -671,6 +702,7 @@ pub const Serializer = struct {
                         break;
                     };
             },
+            .void => {},
             else => @compileError("Cannot deserialize " ++ @typeName(T)),
         }
     }
@@ -723,14 +755,12 @@ pub fn buildPointerTable() void {
 
 pub fn initPointerContainers() void {
     for (ptrinits.constSlice()) |ptrinit| {
-        std.log.info("* ptrinit: {s}, init to {}", .{ ptrinit.container, ptrinit.init_up_to });
         inline for (@typeInfo(state).@"struct".decls) |declinfo| {
             if (@typeInfo(@TypeOf(@field(state, declinfo.name))) == .@"struct" and
                 @hasDecl(@TypeOf(@field(state, declinfo.name)), "nth"))
             {
                 if (mem.eql(u8, declinfo.name, ptrinit.container)) {
                     const container = &@field(state, declinfo.name);
-                    std.log.info("* initing {s}", .{declinfo.name});
                     var i: usize = ptrinit.init_up_to -| container.len();
                     while (i > 0) : (i -= 1) {
                         container.append(undefined) catch err.wat();
@@ -742,20 +772,8 @@ pub fn initPointerContainers() void {
 }
 
 pub fn serializeWorld() !void {
-    is_benchmarking = true;
+    //is_benchmarking = true;
     benchmarker.init();
-
-    // if (true)
-    //     @compileError(
-    //         \\ Stop, you forgot about Angels.
-    //         \\
-    //         \\ Mob serialization assumes that spell list will be immutable,
-    //         \\ but angels violate this principle. (Probably other fields that
-    //         \\ I'm forgetting now as well.)
-    //         \\
-    //         \\ In theory we can regenerate angels on deserialization just fine given the
-    //         \\ seed. But this will have to be tested.
-    //     );
 
     // var tar = try microtar.MTar.init("dump.tar", "w");
     // defer tar.deinit();
@@ -776,24 +794,22 @@ pub fn serializeWorld() !void {
     //     });
     // }
 
-    var ser = Serializer{
-        .temp_alloc = std.heap.ArenaAllocator.init(state.alloc),
-        .fields = .init(state.alloc),
-        .stderr = std.io.getStdErr(),
-    };
+    var ser = Serializer.new(state.alloc, false); //.countBytes(f.writer());
     defer ser.deinit();
 
-    try ser.serializeWE(@TypeOf(ptrtable), &ptrtable, f.writer());
-    try ser.serializeWE(@TypeOf(ptrinits), &ptrinits, f.writer());
+    try ser.serializeWE(@TypeOf(ptrtable), &ptrtable, f.writer()); //ser.counting_writer.?.writer());
+    try ser.serializeWE(@TypeOf(ptrinits), &ptrinits, f.writer()); //ser.counting_writer.?.writer());
 
-    inline for (GAME_OBJECTS) |gobj| {
-        const T, const ptr = gobj;
-        try ser.serializeWE(T, ptr, f.writer());
-    }
+    try ser.serializeWE(*types.Dungeon, &state.dungeon, f.writer());
+
+    // inline for (GAME_OBJECTS) |gobj| {
+    //     const T, const ptr = gobj;
+    //     try ser.serializeWE(T, ptr, ser.counting_writer.?.writer());
+    // }
 
     ptrtable.deinit();
 
-    benchmarker.print();
+    //benchmarker.print(ser.counting_writer.?.bytes_written);
     benchmarker.deinit();
     is_benchmarking = false;
 }
@@ -805,22 +821,18 @@ pub fn deserializeWorld() !void {
     var f = std.fs.cwd().openFile("dump.dat", .{}) catch err.wat();
     defer f.close();
 
-    var ser = Serializer{
-        .temp_alloc = std.heap.ArenaAllocator.init(state.alloc),
-        .fields = .init(state.alloc),
-        .stderr = std.io.getStdErr(),
-        .debug = true,
-    };
+    var ser = Serializer.new(state.alloc, false);
     defer ser.deinit();
 
     try ser.deserializeWE(@TypeOf(ptrtable), &ptrtable, f.reader(), state.alloc);
     try ser.deserializeWE(@TypeOf(ptrinits), &ptrinits, f.reader(), state.alloc);
     initPointerContainers();
 
-    inline for (GAME_OBJECTS) |gobj| {
-        const T, const ptr = gobj;
-        try ser.deserializeWE(T, ptr, f.reader(), state.alloc);
-    }
+    try ser.deserializeWE(*types.Dungeon, &state.dungeon, f.reader(), state.alloc);
+    // inline for (GAME_OBJECTS) |gobj| {
+    //     const T, const ptr = gobj;
+    //     try ser.deserializeWE(T, ptr, f.reader(), state.alloc);
+    // }
 
     var ptrtable_iter = ptrtable.iterator();
     while (ptrtable_iter.next()) |entry| {
