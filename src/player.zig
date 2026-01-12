@@ -21,7 +21,7 @@ const literature = @import("literature.zig");
 const mapgen = @import("mapgen.zig");
 const rng = @import("rng.zig");
 const scores = @import("scores.zig");
-const serializer = @import("serializer.zig");
+const serde = @import("serde.zig");
 const spells = @import("spells.zig");
 const state = @import("state.zig");
 const surfaces = @import("surfaces.zig");
@@ -473,10 +473,10 @@ pub fn executeWizardFun(w: WizardFun) void {
             // ui.hud_win.deinit();
             // ui.hud_win.init();
             // ui.map_win.drawTextLinef("This is a test.", .{}, .{});
-            // serializer.serializeWorld() catch |e| {
+            // serde.serializeWorld() catch |e| {
             //     err.bug("Ser failed ({})", .{e});
             // };
-            // serializer.deserializeWorld() catch |e| {
+            // serde.deserializeWorld() catch |e| {
             //     err.bug("Deser failed ({})", .{e});
             // };
             // alert.queueThreatResponse(.{ .Assault = .{
@@ -503,10 +503,10 @@ pub fn executeWizardFun(w: WizardFun) void {
             _ = state.player.teleportTo(chosen, null, true, false);
         },
         .SaveLoad => {
-            serializer.serializeWorld() catch err.wat();
+            serde.serializeWorld() catch err.wat();
             @import("main.zig").deinitGameState();
             @import("main.zig").initGameState();
-            serializer.deserializeWorld() catch err.wat();
+            serde.deserializeWorld() catch err.wat();
         },
     }
 }

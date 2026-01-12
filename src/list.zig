@@ -3,7 +3,7 @@ const mem = std.mem;
 const assert = std.debug.assert;
 const testing = std.testing;
 
-const serializer = @import("serializer.zig");
+const serde = @import("serde.zig");
 // const Generator = @import("generators.zig").Generator;
 // const GeneratorCtx = @import("generators.zig").GeneratorCtx;
 
@@ -152,7 +152,7 @@ pub fn LinkedList(comptime T: type) type {
             return i;
         }
 
-        pub fn serialize(self: *const @This(), ser: *serializer.Serializer, out: anytype) !void {
+        pub fn serialize(self: *const @This(), ser: *serde.Serializer, out: anytype) !void {
             var iter = self.iterator();
             var i: usize = 0;
             while (iter.next()) |_| i += 1;
@@ -162,7 +162,7 @@ pub fn LinkedList(comptime T: type) type {
             while (iter.next()) |item| try ser.serialize(T, item, out);
         }
 
-        pub fn deserialize(ser: *serializer.Deserializer, out: *@This(), in: anytype, alloc: mem.Allocator) !void {
+        pub fn deserialize(ser: *serde.Deserializer, out: *@This(), in: anytype, alloc: mem.Allocator) !void {
             //out.* = @This().init(alloc);
             const neededlen = try ser.deserializeQ(usize, in, alloc);
 
@@ -189,7 +189,7 @@ pub fn LinkedList(comptime T: type) type {
                 };
             }
 
-            pub fn next(self: *@This()) ?serializer.PointerData2 {
+            pub fn next(self: *@This()) ?serde.PointerData2 {
                 if (self.i.next()) |item| {
                     self.c += 1;
                     return .{ .ptr = @intFromPtr(item), .ind = self.c - 1, .ptrtype = @typeName(*T) };

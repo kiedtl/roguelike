@@ -37,7 +37,7 @@ const mobs = @import("mobs.zig");
 const player = @import("player.zig");
 const rng = @import("rng.zig");
 const scores = @import("scores.zig");
-const serializer = @import("serializer.zig");
+const serde = @import("serde.zig");
 const sound = @import("sound.zig");
 const spells = @import("spells.zig");
 const state = @import("state.zig");
@@ -56,6 +56,7 @@ const Cloak = items.Cloak;
 const Headgear = items.Headgear;
 const Shoe = items.Shoe;
 const Aux = items.Aux;
+const VarInt = serde.varint.VarInt;
 
 const Sound = @import("sound.zig").Sound;
 const SoundIntensity = @import("sound.zig").SoundIntensity;
@@ -1218,7 +1219,7 @@ pub const Message = struct {
     noise: bool = false,
 };
 
-pub const Faction = enum(usize) {
+pub const Faction = enum(u8) {
     Necromancer = 0,
     Player = 1,
     CaveGoblins = 2,
@@ -1951,10 +1952,10 @@ pub const AI = struct {
 
     flags: []const Flag = &[_]Flag{},
 
-    pub const __SER_FIELDW_work_fn = serializer.SerializeFunctionFromModule(AI, "work_fn", ai);
-    pub const __SER_FIELDR_work_fn = serializer.DeserializeFunctionFromModule(AI, "work_fn", ai);
-    pub const __SER_FIELDW_fight_fn = serializer.SerializeFunctionFromModule(AI, "fight_fn", ai);
-    pub const __SER_FIELDR_fight_fn = serializer.DeserializeFunctionFromModule(AI, "fight_fn", ai);
+    pub const __SER_FIELDW_work_fn = serde.SerializeFunctionFromModule(AI, "work_fn", ai);
+    pub const __SER_FIELDR_work_fn = serde.DeserializeFunctionFromModule(AI, "work_fn", ai);
+    pub const __SER_FIELDW_fight_fn = serde.SerializeFunctionFromModule(AI, "fight_fn", ai);
+    pub const __SER_FIELDR_fight_fn = serde.DeserializeFunctionFromModule(AI, "fight_fn", ai);
 
     pub const Flag = enum {
         AwakesNearAllies, // If the monster is dormant, it awakes near allies.
@@ -2303,18 +2304,18 @@ pub const Stat = enum {
 pub const MobFov = struct { // {{{
     m: [HEIGHT][WIDTH]usize = [1][WIDTH]usize{[1]usize{0} ** WIDTH} ** HEIGHT,
 
-    pub fn serialize(self: *const MobFov, ser: *serializer.Serializer, out: anytype) !void {
-        try serializer.helpers_matrix.serializeMatrix(usize, void, struct {
+    pub fn serialize(self: *const MobFov, ser: *serde.Serializer, out: anytype) !void {
+        try serde.helpers_matrix.serializeMatrix(usize, void, struct {
             pub fn f(_: usize, _: usize, v: *const usize) ?void {
                 return if (v.* > 0) {} else null;
             }
         }.f, HEIGHT, WIDTH, &self.m, ser, out);
     }
 
-    pub fn deserialize(ser: *serializer.Deserializer, out: *MobFov, in: anytype, alloc: mem.Allocator) !void {
+    pub fn deserialize(ser: *serde.Deserializer, out: *MobFov, in: anytype, alloc: mem.Allocator) !void {
         out.* = MobFov{};
 
-        try serializer.helpers_matrix.deserializeMatrix(usize, void, struct {
+        try serde.helpers_matrix.deserializeMatrix(usize, void, struct {
             pub fn f(_: usize, _: usize, _: usize, _: void) usize {
                 return 100;
             }
@@ -2330,7 +2331,7 @@ test "MobFov serialization" {
                 mfov.m[y][x] = 100;
             };
 
-    var ser = serializer.Serializer.new(testing.allocator, false);
+    var ser = serde.Serializer.new(testing.allocator, false);
     defer ser.deinit();
 
     var buf: [HEIGHT * WIDTH * 10]u8 = undefined;
@@ -2338,8 +2339,10 @@ test "MobFov serialization" {
     try ser.serializeWE(MobFov, &mfov, fbs.writer());
 
     fbs.reset();
+    var deser = serde.Deserializer.new(testing.allocator, false);
+    defer deser.deinit();
     var mfov_deser: MobFov = undefined;
-    try ser.deserializeWE(MobFov, &mfov_deser, fbs.reader(), testing.allocator);
+    try deser.deserializeWE(MobFov, &mfov_deser, fbs.reader(), testing.allocator);
 
     for (0..HEIGHT) |y|
         for (0..WIDTH) |x|
@@ -2469,23 +2472,23 @@ pub const Mob = struct { // {{{
         } else err.bug("Deserialization: No proto for id {s}", .{id});
     }
 
-    pub fn __SER_FIELDR_name_given(ser: *serializer.Deserializer, out: *?[]const u8, in: anytype, alloc: mem.Allocator) !void {
+    pub fn __SER_FIELDR_name_given(ser: *serde.Deserializer, out: *?[]const u8, in: anytype, alloc: mem.Allocator) !void {
         const flag = try ser.deserializeQ(u1, in, alloc);
         switch (flag) {
             0 => out.* = null,
-            1 => try serializer.deserializeInternedString(literature.Name, ser, out, literature.names.items, in, alloc),
+            1 => try serde.deserializeInternedString(literature.Name, ser, out, literature.names.items, in, alloc),
         }
     }
 
-    pub fn __SER_FIELDR_name_family(ser: *serializer.Deserializer, out: *?[]const u8, in: anytype, alloc: mem.Allocator) !void {
+    pub fn __SER_FIELDR_name_family(ser: *serde.Deserializer, out: *?[]const u8, in: anytype, alloc: mem.Allocator) !void {
         const flag = try ser.deserializeQ(u1, in, alloc);
         switch (flag) {
             0 => out.* = null,
-            1 => try serializer.deserializeInternedString(literature.Name, ser, out, literature.names.items, in, alloc),
+            1 => try serde.deserializeInternedString(literature.Name, ser, out, literature.names.items, in, alloc),
         }
     }
 
-    pub fn __SER_FIELDW_statuses(self: *const Mob, ser: *serializer.Serializer, field: *const StatusArray, out: anytype) !void {
+    pub fn __SER_FIELDW_statuses(self: *const Mob, ser: *serde.Serializer, field: *const StatusArray, out: anytype) !void {
         var item_count: u16 = 0;
         for (0..StatusArray.Indexer.count) |i|
             if (self.hasStatus(StatusArray.Indexer.keyForIndex(i))) {
@@ -2502,7 +2505,7 @@ pub const Mob = struct { // {{{
         }
     }
 
-    pub fn __SER_FIELDR_statuses(ser: *serializer.Deserializer, out: *StatusArray, in: anytype, alloc: mem.Allocator) !void {
+    pub fn __SER_FIELDR_statuses(ser: *serde.Deserializer, out: *StatusArray, in: anytype, alloc: mem.Allocator) !void {
         out.* = StatusArray.initFill(.{});
         var i: usize = try ser.deserializeQ(u16, in, alloc);
         while (i > 0) : (i -= 1) {
@@ -5004,38 +5007,6 @@ pub const Mob = struct { // {{{
     }
 }; // }}}
 
-// Like a machine, but does something each tick while not being visible to the
-// player (or needing any "power" or other stimuli.
-//
-// Created by events, originally for delayed effects, but can be used for many
-// other things.
-pub const Fuse = struct {
-    // linked list stuff
-    __next: ?*Fuse = null,
-    __prev: ?*Fuse = null,
-
-    // For debugging and introspection purposes.
-    name: []const u8 = "",
-
-    level: union(enum) { specific: usize },
-    ctx: Ctx = undefined,
-    is_disabled: bool = false,
-
-    on_tick: *const fn (self: *Fuse, level: usize) void,
-
-    pub const List = LinkedList(Fuse);
-
-    pub fn initFrom(self: Fuse) Fuse {
-        var s = self;
-        s.ctx = Ctx.init();
-        return s;
-    }
-
-    pub fn disable(self: *Fuse) void {
-        self.is_disabled = true;
-    }
-};
-
 pub const Machine = struct {
     // linked list stuff
     __next: ?*Machine = null,
@@ -5833,7 +5804,7 @@ pub const Tile = struct {
             mem.eql(u8, &self.spatter.values, &other.spatter.values);
     }
 
-    pub fn serialize(self: *const Tile, ser: *serializer.Serializer, out: anytype) !void {
+    pub fn serialize(self: *const Tile, ser: *serde.Serializer, out: anytype) !void {
         var flags: u8 = 0;
         if (self.marked) flags |= 1 << 1;
         if (self.prison) flags |= 1 << 2;
@@ -5859,7 +5830,7 @@ pub const Tile = struct {
         try ser.serialize(?SpatterArray, &spatter, out);
     }
 
-    pub fn deserialize(ser: *serializer.Deserializer, out: *Tile, in: anytype, alloc: mem.Allocator) !void {
+    pub fn deserialize(ser: *serde.Deserializer, out: *Tile, in: anytype, alloc: mem.Allocator) !void {
         const flags = try ser.deserializeQ(u8, in, alloc);
         const ty = try ser.deserializeQ(TileType, in, alloc);
         const material_ind = try ser.deserializeQ(u8, in, alloc);
@@ -6177,7 +6148,7 @@ test "Tile serialization" {
     var buf: [2048]u8 = undefined;
     var fbs = std.io.fixedBufferStream(&buf);
 
-    var ser = serializer.Serializer.new(testing.allocator, false);
+    var ser = serde.Serializer.new(testing.allocator, false);
     defer ser.deinit();
 
     const t = Tile{};
@@ -6185,8 +6156,10 @@ test "Tile serialization" {
     try ser.serializeWE(Tile, &t, fbs.writer());
 
     fbs.reset();
+    var deser = serde.Deserializer.new(testing.allocator, false);
+    defer deser.deinit();
     var t_deser: Tile = undefined;
-    try ser.deserializeWE(Tile, &t_deser, fbs.reader(), testing.allocator);
+    try deser.deserializeWE(Tile, &t_deser, fbs.reader(), testing.allocator);
 
     try testing.expect(t.eq(&t_deser));
 }
@@ -6213,7 +6186,7 @@ pub const Dungeon = struct {
     pub const MOB_OPACITY: usize = 0;
     pub const FLOOR_OPACITY: usize = 10;
 
-    pub fn __SER_FIELDR_items(ser: *serializer.Deserializer, out: *[LEVELS][HEIGHT][WIDTH]ItemBuffer, in: anytype, alloc: mem.Allocator) !void {
+    pub fn __SER_FIELDR_items(ser: *serde.Deserializer, out: *[LEVELS][HEIGHT][WIDTH]ItemBuffer, in: anytype, alloc: mem.Allocator) !void {
         for (0..LEVELS) |z| {
             for (0..HEIGHT) |y|
                 for (0..WIDTH) |x| {
@@ -6222,13 +6195,13 @@ pub const Dungeon = struct {
 
             const count = try ser.deserializeQ(usize, in, alloc);
             for (0..count) |_| {
-                const c = try ser.deserializeQ(serializer.TinyCoord, in, alloc);
+                const c = try ser.deserializeQ(serde.TinyCoord, in, alloc);
                 try ser.deserialize(ItemBuffer, &out[z][c.y][c.x], in, alloc);
             }
         }
     }
 
-    pub fn __SER_FIELDW_items(_: *const Dungeon, ser: *serializer.Serializer, field: *const [LEVELS][HEIGHT][WIDTH]ItemBuffer, out: anytype) !void {
+    pub fn __SER_FIELDW_items(_: *const Dungeon, ser: *serde.Serializer, field: *const [LEVELS][HEIGHT][WIDTH]ItemBuffer, out: anytype) !void {
         for (0..LEVELS) |z| {
             var count: usize = 0;
             for (0..HEIGHT) |y|
@@ -6241,14 +6214,14 @@ pub const Dungeon = struct {
             for (0..HEIGHT) |y|
                 for (0..WIDTH) |x|
                     if (field[z][y][x].len > 0) {
-                        const c = serializer.TinyCoord.new(x, y);
-                        try ser.serialize(serializer.TinyCoord, &c, out);
+                        const c = serde.TinyCoord.new(x, y);
+                        try ser.serialize(serde.TinyCoord, &c, out);
                         try ser.serialize([]const Item, &field[z][y][x].constSlice(), out);
                     };
         }
     }
 
-    pub fn __SER_FIELDR_sound(ser: *serializer.Deserializer, out: *[LEVELS][HEIGHT][WIDTH]Sound, in: anytype, alloc: mem.Allocator) !void {
+    pub fn __SER_FIELDR_sound(ser: *serde.Deserializer, out: *[LEVELS][HEIGHT][WIDTH]Sound, in: anytype, alloc: mem.Allocator) !void {
         for (0..LEVELS) |z| {
             for (0..HEIGHT) |y|
                 for (0..WIDTH) |x| {
@@ -6257,14 +6230,14 @@ pub const Dungeon = struct {
 
             const count = try ser.deserializeQ(usize, in, alloc);
             for (0..count) |_| {
-                const c = try ser.deserializeQ(serializer.TinyCoord, in, alloc);
+                const c = try ser.deserializeQ(serde.TinyCoord, in, alloc);
                 const s = try ser.deserializeQ(Sound, in, alloc);
                 out[z][c.y][c.x] = s;
             }
         }
     }
 
-    pub fn __SER_FIELDW_sound(_: *const Dungeon, ser: *serializer.Serializer, field: *const [LEVELS][HEIGHT][WIDTH]Sound, out: anytype) !void {
+    pub fn __SER_FIELDW_sound(_: *const Dungeon, ser: *serde.Serializer, field: *const [LEVELS][HEIGHT][WIDTH]Sound, out: anytype) !void {
         for (0..LEVELS) |z| {
             var count: usize = 0;
             for (0..HEIGHT) |y|
@@ -6277,14 +6250,14 @@ pub const Dungeon = struct {
             for (0..HEIGHT) |y|
                 for (0..WIDTH) |x|
                     if (!field[z][y][x].eq(.{})) {
-                        const c = serializer.TinyCoord.new(x, y);
-                        try ser.serialize(serializer.TinyCoord, &c, out);
+                        const c = serde.TinyCoord.new(x, y);
+                        try ser.serialize(serde.TinyCoord, &c, out);
                         try ser.serialize(Sound, &field[z][y][x], out);
                     };
         }
     }
 
-    pub fn __SER_FIELDR_light(ser: *serializer.Deserializer, out: *[LEVELS][HEIGHT][WIDTH]bool, in: anytype, alloc: mem.Allocator) !void {
+    pub fn __SER_FIELDR_light(ser: *serde.Deserializer, out: *[LEVELS][HEIGHT][WIDTH]bool, in: anytype, alloc: mem.Allocator) !void {
         for (0..LEVELS) |z|
             for (0..HEIGHT) |y|
                 for (0..WIDTH) |x| {
@@ -6292,25 +6265,23 @@ pub const Dungeon = struct {
                 };
 
         for (0..LEVELS) |z|
-            try serializer.helpers_matrix.deserializeMatrix(bool, void, struct {
+            try serde.helpers_matrix.deserializeMatrix(bool, void, struct {
                 pub fn f(_: usize, _: usize, _: usize, _: void) bool {
                     return true;
                 }
             }.f, HEIGHT, WIDTH, ser, &out[z], in, alloc);
     }
 
-    pub fn __SER_FIELDW_light(_: *const Dungeon, ser: *serializer.Serializer, field: *const [LEVELS][HEIGHT][WIDTH]bool, out: anytype) !void {
+    pub fn __SER_FIELDW_light(_: *const Dungeon, ser: *serde.Serializer, field: *const [LEVELS][HEIGHT][WIDTH]bool, out: anytype) !void {
         for (0..LEVELS) |z|
-            try serializer.helpers_matrix.serializeMatrix(bool, void, struct {
+            try serde.helpers_matrix.serializeMatrix(bool, void, struct {
                 pub fn f(_: usize, _: usize, v: *const bool) ?void {
                     return if (v.*) {} else null;
                 }
             }.f, HEIGHT, WIDTH, &field[z], ser, out);
     }
 
-    const SerializeFire = u16; // In theory fire value could go above 256, since there are no checks to the contrary
-
-    pub fn __SER_FIELDW_fire(_: *const Dungeon, ser: *serializer.Serializer, field: *const [LEVELS][HEIGHT][WIDTH]usize, out: anytype) !void {
+    pub fn __SER_FIELDW_fire(_: *const Dungeon, ser: *serde.Serializer, field: *const [LEVELS][HEIGHT][WIDTH]usize, out: anytype) !void {
         for (0..LEVELS) |z| {
             const any_fire_on_level = b: for (0..HEIGHT) |y| {
                 for (0..WIDTH) |x|
@@ -6322,14 +6293,14 @@ pub const Dungeon = struct {
                 try ser.serializeScalar(u1, 1, out);
                 for (0..HEIGHT) |y|
                     for (0..WIDTH) |x|
-                        try ser.serializeScalar(SerializeFire, @intCast(field[z][y][x]), out);
+                        try ser.serialize(VarInt, &VarInt.from(field[z][y][x]), out);
             } else {
                 try ser.serializeScalar(u1, 0, out);
             }
         }
     }
 
-    pub fn __SER_FIELDR_fire(ser: *serializer.Deserializer, out: *[LEVELS][HEIGHT][WIDTH]usize, in: anytype, alloc: mem.Allocator) !void {
+    pub fn __SER_FIELDR_fire(ser: *serde.Deserializer, out: *[LEVELS][HEIGHT][WIDTH]usize, in: anytype, alloc: mem.Allocator) !void {
         for (0..LEVELS) |z|
             for (0..HEIGHT) |y|
                 for (0..WIDTH) |x| {
@@ -6343,16 +6314,15 @@ pub const Dungeon = struct {
                 1 => {
                     for (0..HEIGHT) |y|
                         for (0..WIDTH) |x| {
-                            out[z][x][y] = try ser.deserializeQ(SerializeFire, in, alloc);
+                            const v = try ser.deserializeQ(VarInt, in, alloc);
+                            out[z][x][y] = @intCast(v.value);
                         };
                 },
             }
         }
     }
 
-    const SerializeGas = u16; // In theory gas value could go above 256, since there are no checks to the contrary
-
-    pub fn __SER_FIELDW_gas(_: *const Dungeon, ser: *serializer.Serializer, field: *const [LEVELS][gas.GAS_NUM][HEIGHT][WIDTH]usize, out: anytype) !void {
+    pub fn __SER_FIELDW_gas(_: *const Dungeon, ser: *serde.Serializer, field: *const [LEVELS][gas.GAS_NUM][HEIGHT][WIDTH]usize, out: anytype) !void {
         for (0..LEVELS) |z| {
             for (0..gas.GAS_NUM) |gas_id| {
                 const any_on_level = b: for (0..HEIGHT) |y| {
@@ -6365,7 +6335,7 @@ pub const Dungeon = struct {
                     try ser.serializeScalar(u1, 1, out);
                     for (0..HEIGHT) |y|
                         for (0..WIDTH) |x|
-                            try ser.serializeScalar(SerializeGas, @intCast(field[z][gas_id][y][x]), out);
+                            try ser.serialize(VarInt, &VarInt.from(field[z][gas_id][y][x]), out);
                 } else {
                     try ser.serializeScalar(u1, 0, out);
                 }
@@ -6373,7 +6343,7 @@ pub const Dungeon = struct {
         }
     }
 
-    pub fn __SER_FIELDR_gas(ser: *serializer.Deserializer, out: *[LEVELS][gas.GAS_NUM][HEIGHT][WIDTH]usize, in: anytype, alloc: mem.Allocator) !void {
+    pub fn __SER_FIELDR_gas(ser: *serde.Deserializer, out: *[LEVELS][gas.GAS_NUM][HEIGHT][WIDTH]usize, in: anytype, alloc: mem.Allocator) !void {
         for (0..LEVELS) |z|
             for (0..gas.GAS_NUM) |g|
                 for (0..HEIGHT) |y|
@@ -6389,7 +6359,8 @@ pub const Dungeon = struct {
                     1 => {
                         for (0..HEIGHT) |y|
                             for (0..WIDTH) |x| {
-                                out[z][g][y][x] = try ser.deserializeQ(SerializeFire, in, alloc);
+                                const v = try ser.deserializeQ(VarInt, in, alloc);
+                                out[z][g][y][x] = @intCast(v.value);
                             };
                     },
                 }

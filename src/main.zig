@@ -22,6 +22,7 @@ const events = @import("events.zig");
 const explosions = @import("explosions.zig");
 const fire = @import("fire.zig");
 const font = @import("font.zig");
+const fuses = @import("fuses.zig");
 const gas = @import("gas.zig");
 const items = @import("items.zig");
 const janet = @import("janet.zig");
@@ -33,7 +34,7 @@ const player = @import("player.zig");
 const Rect = types.Rect;
 const rng = @import("rng.zig");
 const scores = @import("scores.zig");
-const serializer = @import("serializer.zig");
+const serde = @import("serde.zig");
 const spells = @import("spells.zig");
 const state = @import("state.zig");
 const surfaces = @import("surfaces.zig");
@@ -46,7 +47,7 @@ const utils = @import("utils.zig");
 
 const ArmorList = types.ArmorList;
 const ContainerList = types.ContainerList;
-const Fuse = types.Fuse;
+const Fuse = fuses.Fuse;
 const MachineList = types.MachineList;
 const MessageArrayList = types.MessageArrayList;
 const Message = types.Message;
@@ -127,7 +128,7 @@ pub fn panic(msg: []const u8, trace: ?*std.builtin.StackTrace, x: ?usize) noretu
 }
 
 fn initGame(no_display: bool, display_scale: f32) bool {
-    state.benchmarker.init();
+    state.benchmarker = .new();
 
     janet.init() catch return false;
     _ = janet.loadFile("scripts/particles.janet", state.alloc) catch return false;
@@ -470,7 +471,7 @@ fn tickGame(p_cur_level: ?usize) !void {
     fire.tickFire(cur_level);
     gas.tickGasEmitters(cur_level);
     gas.tickGases(cur_level);
-    state.tickFuses(cur_level);
+    fuses.tickFuses(cur_level);
     state.tickSound(cur_level);
     state.tickLight(cur_level);
     alert.tickThreats(cur_level);
@@ -713,8 +714,8 @@ fn viewerMain() void {
                     switch (ev.key) {
                         termbox.TB_KEY_CTRL_C => break,
                         termbox.TB_KEY_F7 => {
-                            serializer.serializeWorld() catch err.wat();
-                            serializer.deserializeWorld() catch err.wat();
+                            serde.serializeWorld() catch err.wat();
+                            serde.deserializeWorld() catch err.wat();
                         },
                         else => {},
                     }

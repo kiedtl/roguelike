@@ -1,7 +1,7 @@
 const std = @import("std");
 const testing = std.testing;
 
-const serializer = @import("serializer.zig");
+const serde = @import("serde.zig");
 
 // Well, it's something like a ring buffer
 pub fn RingBuffer(comptime T: type, size: usize) type {
@@ -67,13 +67,13 @@ pub fn RingBuffer(comptime T: type, size: usize) type {
             try writer.print("]", .{});
         }
 
-        pub fn serialize(self: *const @This(), ser: *serializer.Serializer, out: anytype) !void {
+        pub fn serialize(self: *const @This(), ser: *serde.Serializer, out: anytype) !void {
             try ser.serializeScalar(usize, self.top, out);
             for (self.buffer) |item|
                 try ser.serialize(?T, &item, out);
         }
 
-        pub fn deserialize(ser: *serializer.Deserializer, out: *@This(), in: anytype, alloc: std.mem.Allocator) !void {
+        pub fn deserialize(ser: *serde.Deserializer, out: *@This(), in: anytype, alloc: std.mem.Allocator) !void {
             out.init();
             out.top = try ser.deserializeQ(usize, in, alloc);
             for (&out.buffer) |*sl|

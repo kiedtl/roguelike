@@ -4,6 +4,7 @@ const mem = std.mem;
 const ai = @import("ai.zig");
 const alert = @import("alert.zig");
 const err = @import("err.zig");
+const fuses = @import("fuses.zig");
 const mapgen = @import("mapgen.zig");
 const mobs = @import("mobs.zig");
 const rng = @import("rng.zig");
@@ -15,7 +16,7 @@ const utils = @import("utils.zig");
 
 const AIJob = types.AIJob;
 const Coord = types.Coord;
-const Fuse = types.Fuse;
+const Fuse = fuses.Fuse;
 const MobTemplate = mobs.MobTemplate;
 const Mob = types.Mob;
 
@@ -273,25 +274,8 @@ pub const EV_HUNT_PLAYER = Event{
         .Custom = struct {
             pub fn f(_: *const Event, event_level: usize) void {
                 const fuse = (Fuse{
-                    .name = "spawn hunter for upper levels",
                     .level = .{ .specific = event_level },
-                    .on_tick = struct {
-                        pub fn f(self: *Fuse, level: usize) void {
-                            const CTX_CTR = "ctx_ctr";
-                            const ctr = self.ctx.get(usize, CTX_CTR, 100);
-
-                            if (ctr == 0) {
-                                alert.spawnAssault(level, state.player, "h") catch {
-                                    self.ctx.set(usize, CTX_CTR, 20);
-                                    return;
-                                };
-                                _ = ui.drawTextModal("You feel uneasy.", .{});
-                                self.disable();
-                            } else {
-                                self.ctx.set(usize, CTX_CTR, ctr - 1);
-                            }
-                        }
-                    }.f,
+                    .on_tick = .spawn_hunter_in_100,
                 }).initFrom();
                 state.fuses.append(fuse) catch err.wat();
             }

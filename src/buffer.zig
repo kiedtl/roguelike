@@ -6,7 +6,7 @@ const mem = std.mem;
 const assert = std.debug.assert;
 
 const rng = @import("rng.zig");
-const serializer = @import("serializer.zig");
+const serde = @import("serde.zig");
 
 pub fn StackBuffer(comptime T: type, comptime capacity: usize) type {
     return struct {
@@ -164,13 +164,13 @@ pub fn StackBuffer(comptime T: type, comptime capacity: usize) type {
             try stream.write(val.constSlice());
         }
 
-        pub fn serialize(self: *const @This(), ser: *serializer.Serializer, out: anytype) !void {
+        pub fn serialize(self: *const @This(), ser: *serde.Serializer, out: anytype) !void {
             try ser.serialize([]const T, &self.constSlice(), out);
         }
 
-        pub fn deserialize(ser: *serializer.Deserializer, out: *@This(), in: anytype, alloc: mem.Allocator) !void {
+        pub fn deserialize(ser: *serde.Deserializer, out: *@This(), in: anytype, alloc: mem.Allocator) !void {
             out.* = @This().init(null);
-            var i = try ser.deserializeQ(usize, in, alloc);
+            var i = try ser.deserializeVarInt(usize, in, alloc);
             while (i > 0) : (i -= 1)
                 out.append(try ser.deserializeQ(T, in, alloc)) catch unreachable;
         }

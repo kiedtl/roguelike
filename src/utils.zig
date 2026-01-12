@@ -737,8 +737,8 @@ pub const Benchmarker = struct {
         }
     };
 
-    pub fn init(self: *Benchmarker) void {
-        self.records = std.StringHashMap(Record).init(state.alloc);
+    pub fn new() Benchmarker {
+        return .{ .records = .init(state.alloc) };
     }
 
     pub fn deinit(self: *Benchmarker) void {

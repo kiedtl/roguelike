@@ -23,7 +23,8 @@ const StackBuffer = @import("buffer.zig").StackBuffer;
 // const Generator = @import("generators.zig").Generator;
 // const GeneratorCtx = @import("generators.zig").GeneratorCtx;
 
-pub const helpers_matrix = @import("serializer/helpers_matrix.zig");
+pub const varint = @import("serde/varint.zig");
+pub const helpers_matrix = @import("serde/helpers_matrix.zig");
 
 pub const Error = error{
     PointerNotFound,
@@ -32,7 +33,7 @@ pub const Error = error{
     MismatchedType,
     InvalidUnionField,
     StaticItemNotFound,
-} || std.ArrayList(u8).Writer.Error || std.mem.Allocator.Error || std.fs.File.Reader.Error || std.fs.File.Writer.Error || error{EndOfStream} || microtar.MTar.Error;
+} || varint.VarIntError || std.ArrayList(u8).Writer.Error || std.mem.Allocator.Error || std.fs.File.Reader.Error || std.fs.File.Writer.Error || error{EndOfStream} || microtar.MTar.Error;
 
 const FIELDS_ALWAYS_SKIP_LIST = [_][]const u8{ "__next", "__prev" };
 const FIELDS_ALWAYS_KEEP_LIST = [_][]const u8{ "__next", "__prev" };
@@ -252,7 +253,7 @@ pub const Serializer = struct {
         var p = self;
         p.stats = .{
             .counting_writer = std.io.countingWriter(out),
-            .benchmarker = .init(),
+            .benchmarker = .new(),
         };
         return p;
     }
@@ -261,6 +262,12 @@ pub const Serializer = struct {
         var p = self;
         p.ptrtable = ptrtable;
         return p;
+    }
+
+    // No-op if benchmarking/stats-collecting is disabled.
+    pub fn printBenchmarks(self: *const Serializer) void {
+        if (self.stats) |*stats|
+            stats.benchmarker.print(stats.counting_writer.bytes_written);
     }
 
     pub fn deinit(self: *Serializer) void {
@@ -303,6 +310,10 @@ pub const Serializer = struct {
         try self.serialize(T, obj, out);
     }
 
+    pub fn serializeVarInt(self: *Serializer, val: u64, out: anytype) Error!void {
+        try self.serialize(varint.VarInt, &varint.VarInt.from(val), out);
+    }
+
     pub fn serializeScalar(self: *Serializer, comptime T: type, obj: T, out: anytype) Error!void {
         const bytes_before = if (self.stats) |*stats| stats.counting_writer.bytes_written else 0;
         defer if (self.stats) |*stats|
@@ -330,7 +341,7 @@ pub const Serializer = struct {
             stats.benchmarker.record(@typeName(T), stats.counting_writer.bytes_written - bytes_before);
 
         if (comptime mem.startsWith(u8, @typeName(T), "hash_map.HashMap")) {
-            try self.serializeScalar(usize, obj.count(), out);
+            try self.serializeVarInt(obj.count(), out);
             var iter = obj.iterator();
             while (iter.next()) |entry| {
                 try self.serialize(@TypeOf(entry.key_ptr.*), entry.key_ptr, out);
@@ -372,7 +383,7 @@ pub const Serializer = struct {
                     }
                 },
                 .slice => {
-                    try self.serializeScalar(usize, obj.len, out);
+                    try self.serializeVarInt(obj.len, out);
                     for (obj.*) |*value| try self.serialize(p.child, value, out);
                 },
                 .many, .c => @compileError("Cannot serialize " ++ @typeName(T)),
@@ -508,11 +519,16 @@ pub const Deserializer = struct {
 
     pub fn deserializeTempString(self: *Deserializer, in: anytype) Error![]const u8 {
         const alloc = self.temp_alloc.allocator();
-        const len = try self.deserializeQ(usize, in, alloc);
+        const len = try self.deserializeVarInt(usize, in, alloc);
         const buf = try alloc.alloc(u8, len);
         for (0..len) |i|
             try self.deserialize(u8, &buf[i], in, alloc);
         return buf;
+    }
+
+    pub fn deserializeVarInt(self: *Deserializer, comptime T: type, in: anytype, alloc: mem.Allocator) Error!T {
+        const v = try self.deserializeQ(varint.VarInt, in, alloc);
+        return @intCast(v.value);
     }
 
     pub fn deserializeQ(self: *Deserializer, comptime T: type, in: anytype, alloc: mem.Allocator) Error!T {
@@ -550,7 +566,7 @@ pub const Deserializer = struct {
             const K = _fieldType(@field(T, "KV"), "key");
             const V = _fieldType(@field(T, "KV"), "value");
             var obj = T.init(state.alloc);
-            var i = try self.deserializeQ(usize, in, alloc);
+            var i = try self.deserializeVarInt(usize, in, alloc);
             while (i > 0) : (i -= 1) {
                 const k = try self.deserializeQ(K, in, alloc);
                 const v = try self.deserializeQ(V, in, alloc);
@@ -561,7 +577,7 @@ pub const Deserializer = struct {
         } else if (comptime mem.startsWith(u8, @typeName(T), "array_list.ArrayList")) {
             const Elem = meta.Elem(_fieldType(T, "items"));
             out.* = std.ArrayList(Elem).init(alloc);
-            var i = try self.deserializeQ(usize, in, alloc);
+            var i = try self.deserializeVarInt(usize, in, alloc);
             while (i > 0) : (i -= 1)
                 try out.append(try self.deserializeQ(Elem, in, alloc));
             self.debugLog("  * ArrayList address: {x}\n", .{@intFromPtr(out.items.ptr)});
@@ -570,7 +586,7 @@ pub const Deserializer = struct {
             // Deserialize manually (rather than calling deserialize([]const u8, ...) to ensure
             // no unnecessary allocs
             out.* = strig.Strig.empty;
-            var i = try self.deserializeQ(usize, in, alloc);
+            var i = try self.deserializeVarInt(usize, in, alloc);
             while (i > 0) : (i -= 1) {
                 const b = try self.deserializeQ(u8, in, alloc);
                 out.append(b, alloc) catch |e| {
@@ -593,7 +609,6 @@ pub const Deserializer = struct {
                     };
 
                     if (!is_game_data_ref) {
-                        std.log.info("Treated {} as owned data, deserializing as {}", .{ T, p.child });
                         // FIXME: we don't do a heap allocation here. This is fine
                         // for the one and only __SER_ALWAYS_OWNED type as of
                         // writing this (Dungeon), since initGameState should take
@@ -654,7 +669,7 @@ pub const Deserializer = struct {
                     }
                 },
                 .slice => {
-                    var i = try self.deserializeQ(usize, in, alloc);
+                    var i = try self.deserializeVarInt(usize, in, alloc);
                     self.debugFieldsPrint();
                     self.debugLog(": Allocating {} blocks...\n", .{i});
                     if (i > 0) {
@@ -698,10 +713,6 @@ pub const Deserializer = struct {
                         if (!noser_field) {
                             self.debugField(field.name, @typeName(field.type));
                             defer self.debugFieldPop();
-                            // std.log.debug("Deser {s: <20} ({s})", .{
-                            //     field.name,
-                            //     @typeName(field.type),
-                            // });
 
                             try self.deserializeExpect(field.type, in, alloc);
 
@@ -723,28 +734,6 @@ pub const Deserializer = struct {
                                     try self.deserialize(field.type, ptr, in, alloc);
                                 }
                             }
-
-                            // switch (@typeInfo(field.type)) {
-                            //     .pointer => if (field.type == []const u8) std.log.debug("Deser value: {s}", .{@field(out, field.name)}) else std.log.debug("Deser value: skip", .{}),
-                            //     .array => std.log.debug("Deser value: {any}", .{@field(out, field.name)}),
-                            //     .@"bool", .@"enum", .int, .float => {
-                            //         std.log.debug("Deser value: {}", .{@field(out, field.name)});
-                            //     },
-                            //     else => {
-                            //         if (field.type == ?[]const u8) {
-                            //             if (@field(out, field.name)) |v|
-                            //                 std.log.debug("Deser value: {s}", .{v})
-                            //             else
-                            //                 std.log.debug("Deser value: null", .{});
-                            //         } else if (field.type == ?types.Damage or
-                            //             field.type == ?types.Direction)
-                            //         {
-                            //             std.log.debug("Deser value: {}", .{@field(out, field.name)});
-                            //         } else {
-                            //             std.log.debug("Deser value: skip", .{});
-                            //         }
-                            //     },
-                            // }
                         } else if (keep_field) {
                             @field(out, field.name) = @field(oldobj, field.name);
                         }
@@ -865,20 +854,20 @@ pub fn serializeWorld() !void {
     // }
 
     var ser = Serializer.new(state.alloc, false)
-        //.recordStats(f.writer())
+        .recordStats(f.writer())
         .pointerInfo(&ptrtable);
     defer ser.deinit();
 
-    try ser.serializeWE(@TypeOf(ptrtable), &ptrtable, f.writer()); //ser.counting_writer.?.writer());
-    try ser.serializeWE(@TypeOf(ptrinits), &ptrinits, f.writer()); //ser.counting_writer.?.writer());
+    try ser.serializeWE(@TypeOf(ptrtable), &ptrtable, ser.stats.?.counting_writer.writer());
+    try ser.serializeWE(@TypeOf(ptrinits), &ptrinits, ser.stats.?.counting_writer.writer());
 
     inline for (GAME_OBJECTS) |gobj| {
         const T, const ptr = gobj;
-        try ser.serializeWE(T, ptr, f.writer()); //ser.counting_writer.?.writer());
+        try ser.serializeWE(T, ptr, ser.stats.?.counting_writer.writer());
     }
 
     ptrtable.deinit();
-    //ser.stats.?.benchmarker.print(ser.stats.?.counting_writer.bytes_written);
+    ser.printBenchmarks();
 }
 
 pub fn deserializeWorld() !void {
@@ -888,7 +877,7 @@ pub fn deserializeWorld() !void {
     var f = std.fs.cwd().openFile("dump.dat", .{}) catch err.wat();
     defer f.close();
 
-    var deser = Deserializer.new(state.alloc, true);
+    var deser = Deserializer.new(state.alloc, false);
     defer deser.deinit();
 
     var ptrinits: ContainerInits = .empty;
@@ -923,6 +912,8 @@ pub fn Tester(comptime T: type) type {
         buf: []u8,
         fbs: std.io.FixedBufferStream([]u8),
 
+        written: usize = 0,
+
         d_ser: T,
         d_deser: T,
 
@@ -939,12 +930,13 @@ pub fn Tester(comptime T: type) type {
         }
 
         pub fn serialize(self: *@This()) !void {
-            try self.ser.serializeWE(T, &self.d_ser, self.fbs.writer());
+            try self.ser.serialize(T, &self.d_ser, self.fbs.writer());
+            self.written = self.fbs.pos;
             self.fbs.reset();
         }
 
         pub fn deserialize(self: *@This()) !void {
-            try self.deser.deserializeWE(T, &self.d_deser, self.fbs.reader(), testing.allocator);
+            try self.deser.deserialize(T, &self.d_deser, self.fbs.reader(), testing.allocator);
         }
 
         pub fn deinit(self: *@This()) void {

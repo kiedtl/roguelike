@@ -24,7 +24,6 @@ const mobs_m = @import("mobs.zig");
 const player_m = @import("player.zig");
 const rng = @import("rng.zig");
 const scores = @import("scores.zig");
-const serializer = @import("serializer.zig");
 const tsv = @import("tsv.zig");
 const types = @import("types.zig");
 const ui = @import("ui.zig");
@@ -35,7 +34,7 @@ const ContainerList = types.ContainerList;
 const Coord = types.Coord;
 const Direction = types.Direction;
 const Dungeon = types.Dungeon;
-const Fuse = types.Fuse;
+const Fuse = @import("fuses.zig").Fuse;
 const Item = types.Item;
 const MachineList = types.MachineList;
 const MessageArrayList = types.MessageArrayList;
@@ -429,23 +428,6 @@ pub fn createMobList(include_player: bool, only_if_infov: bool, level: usize, my
     std.sort.insertion(*Mob, moblist.items, {}, S._sortFunc);
 
     return moblist;
-}
-
-pub fn tickFuses(level: usize) void {
-    var timer = benchmarker.timer("tickFuses");
-    defer timer.end();
-
-    var iter = fuses.iterator();
-    while (iter.next()) |fuse| {
-        if (fuse.is_disabled)
-            continue; // TODO: actually delete it from the linked list
-
-        switch (fuse.level) {
-            .specific => |req_lvl| if (req_lvl != level) continue,
-        }
-
-        (fuse.on_tick)(fuse, level);
-    }
 }
 
 pub fn tickLight(level: usize) void {

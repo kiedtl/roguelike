@@ -16,7 +16,6 @@ const literature = @import("literature.zig");
 const materials = @import("materials.zig");
 const mobs = @import("mobs.zig");
 const rng = @import("rng.zig");
-const serializer = @import("serializer.zig");
 const state = @import("state.zig");
 const surfaces = @import("surfaces.zig");
 const tsv = @import("tsv.zig");
