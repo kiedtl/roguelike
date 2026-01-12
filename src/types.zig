@@ -2311,7 +2311,7 @@ pub const MobFov = struct { // {{{
         }.f, HEIGHT, WIDTH, &self.m, ser, out);
     }
 
-    pub fn deserialize(ser: *serializer.Serializer, out: *MobFov, in: anytype, alloc: mem.Allocator) !void {
+    pub fn deserialize(ser: *serializer.Deserializer, out: *MobFov, in: anytype, alloc: mem.Allocator) !void {
         out.* = MobFov{};
 
         try serializer.helpers_matrix.deserializeMatrix(usize, void, struct {
@@ -2469,48 +2469,48 @@ pub const Mob = struct { // {{{
         } else err.bug("Deserialization: No proto for id {s}", .{id});
     }
 
-    // pub fn __SER_FIELDR_name_given(ser: *serializer.Serializer, out: *?[]const u8, in: anytype, alloc: mem.Allocator) !void {
-    //     const flag = try ser.deserializeQ(u1, in, alloc);
-    //     switch (flag) {
-    //         0 => out.* = null,
-    //         1 => try serializer.deserializeInternedString(literature.Name, ser, out, literature.names.items, in, alloc),
-    //     }
-    // }
+    pub fn __SER_FIELDR_name_given(ser: *serializer.Deserializer, out: *?[]const u8, in: anytype, alloc: mem.Allocator) !void {
+        const flag = try ser.deserializeQ(u1, in, alloc);
+        switch (flag) {
+            0 => out.* = null,
+            1 => try serializer.deserializeInternedString(literature.Name, ser, out, literature.names.items, in, alloc),
+        }
+    }
 
-    // pub fn __SER_FIELDR_name_family(ser: *serializer.Serializer, out: *?[]const u8, in: anytype, alloc: mem.Allocator) !void {
-    //     const flag = try ser.deserializeQ(u1, in, alloc);
-    //     switch (flag) {
-    //         0 => out.* = null,
-    //         1 => try serializer.deserializeInternedString(literature.Name, ser, out, literature.names.items, in, alloc),
-    //     }
-    // }
+    pub fn __SER_FIELDR_name_family(ser: *serializer.Deserializer, out: *?[]const u8, in: anytype, alloc: mem.Allocator) !void {
+        const flag = try ser.deserializeQ(u1, in, alloc);
+        switch (flag) {
+            0 => out.* = null,
+            1 => try serializer.deserializeInternedString(literature.Name, ser, out, literature.names.items, in, alloc),
+        }
+    }
 
-    // pub fn __SER_FIELDW_statuses(self: *const Mob, ser: *serializer.Serializer, field: *const StatusArray, out: anytype) !void {
-    //     var item_count: u16 = 0;
-    //     for (0..StatusArray.Indexer.count) |i|
-    //         if (self.hasStatus(StatusArray.Indexer.keyForIndex(i))) {
-    //             item_count += 1;
-    //         };
-    //     try ser.serializeScalar(u16, item_count, out);
+    pub fn __SER_FIELDW_statuses(self: *const Mob, ser: *serializer.Serializer, field: *const StatusArray, out: anytype) !void {
+        var item_count: u16 = 0;
+        for (0..StatusArray.Indexer.count) |i|
+            if (self.hasStatus(StatusArray.Indexer.keyForIndex(i))) {
+                item_count += 1;
+            };
+        try ser.serializeScalar(u16, item_count, out);
 
-    //     for (0..StatusArray.Indexer.count) |i| {
-    //         const key = StatusArray.Indexer.keyForIndex(i);
-    //         if (self.hasStatus(key)) {
-    //             try ser.serializeScalar(@TypeOf(key), key, out);
-    //             try ser.serialize(@TypeOf(field.values[0]), &field.values[i], out);
-    //         }
-    //     }
-    // }
+        for (0..StatusArray.Indexer.count) |i| {
+            const key = StatusArray.Indexer.keyForIndex(i);
+            if (self.hasStatus(key)) {
+                try ser.serializeScalar(@TypeOf(key), key, out);
+                try ser.serialize(@TypeOf(field.values[0]), &field.values[i], out);
+            }
+        }
+    }
 
-    // pub fn __SER_FIELDR_statuses(ser: *serializer.Serializer, out: *StatusArray, in: anytype, alloc: mem.Allocator) !void {
-    //     out.* = StatusArray.initFill(.{});
-    //     var i: usize = try ser.deserializeQ(u16, in, alloc);
-    //     while (i > 0) : (i -= 1) {
-    //         const k = try ser.deserializeQ(StatusArray.Key, in, alloc);
-    //         const v = try ser.deserializeQ(StatusArray.Value, in, alloc);
-    //         out.set(k, v);
-    //     }
-    // }
+    pub fn __SER_FIELDR_statuses(ser: *serializer.Deserializer, out: *StatusArray, in: anytype, alloc: mem.Allocator) !void {
+        out.* = StatusArray.initFill(.{});
+        var i: usize = try ser.deserializeQ(u16, in, alloc);
+        while (i > 0) : (i -= 1) {
+            const k = try ser.deserializeQ(StatusArray.Key, in, alloc);
+            const v = try ser.deserializeQ(StatusArray.Value, in, alloc);
+            out.set(k, v);
+        }
+    }
 
     // Don't use EnumFieldStruct here because we want to provide per-field
     // defaults.
@@ -5859,7 +5859,7 @@ pub const Tile = struct {
         try ser.serialize(?SpatterArray, &spatter, out);
     }
 
-    pub fn deserialize(ser: *serializer.Serializer, out: *Tile, in: anytype, alloc: mem.Allocator) !void {
+    pub fn deserialize(ser: *serializer.Deserializer, out: *Tile, in: anytype, alloc: mem.Allocator) !void {
         const flags = try ser.deserializeQ(u8, in, alloc);
         const ty = try ser.deserializeQ(TileType, in, alloc);
         const material_ind = try ser.deserializeQ(u8, in, alloc);
@@ -6213,7 +6213,7 @@ pub const Dungeon = struct {
     pub const MOB_OPACITY: usize = 0;
     pub const FLOOR_OPACITY: usize = 10;
 
-    pub fn __SER_FIELDR_items(ser: *serializer.Serializer, out: *[LEVELS][HEIGHT][WIDTH]ItemBuffer, in: anytype, alloc: mem.Allocator) !void {
+    pub fn __SER_FIELDR_items(ser: *serializer.Deserializer, out: *[LEVELS][HEIGHT][WIDTH]ItemBuffer, in: anytype, alloc: mem.Allocator) !void {
         for (0..LEVELS) |z| {
             for (0..HEIGHT) |y|
                 for (0..WIDTH) |x| {
@@ -6248,7 +6248,7 @@ pub const Dungeon = struct {
         }
     }
 
-    pub fn __SER_FIELDR_sound(ser: *serializer.Serializer, out: *[LEVELS][HEIGHT][WIDTH]Sound, in: anytype, alloc: mem.Allocator) !void {
+    pub fn __SER_FIELDR_sound(ser: *serializer.Deserializer, out: *[LEVELS][HEIGHT][WIDTH]Sound, in: anytype, alloc: mem.Allocator) !void {
         for (0..LEVELS) |z| {
             for (0..HEIGHT) |y|
                 for (0..WIDTH) |x| {
@@ -6284,7 +6284,7 @@ pub const Dungeon = struct {
         }
     }
 
-    pub fn __SER_FIELDR_light(ser: *serializer.Serializer, out: *[LEVELS][HEIGHT][WIDTH]bool, in: anytype, alloc: mem.Allocator) !void {
+    pub fn __SER_FIELDR_light(ser: *serializer.Deserializer, out: *[LEVELS][HEIGHT][WIDTH]bool, in: anytype, alloc: mem.Allocator) !void {
         for (0..LEVELS) |z|
             for (0..HEIGHT) |y|
                 for (0..WIDTH) |x| {
@@ -6329,7 +6329,7 @@ pub const Dungeon = struct {
         }
     }
 
-    pub fn __SER_FIELDR_fire(ser: *serializer.Serializer, out: *[LEVELS][HEIGHT][WIDTH]usize, in: anytype, alloc: mem.Allocator) !void {
+    pub fn __SER_FIELDR_fire(ser: *serializer.Deserializer, out: *[LEVELS][HEIGHT][WIDTH]usize, in: anytype, alloc: mem.Allocator) !void {
         for (0..LEVELS) |z|
             for (0..HEIGHT) |y|
                 for (0..WIDTH) |x| {
@@ -6373,7 +6373,7 @@ pub const Dungeon = struct {
         }
     }
 
-    pub fn __SER_FIELDR_gas(ser: *serializer.Serializer, out: *[LEVELS][gas.GAS_NUM][HEIGHT][WIDTH]usize, in: anytype, alloc: mem.Allocator) !void {
+    pub fn __SER_FIELDR_gas(ser: *serializer.Deserializer, out: *[LEVELS][gas.GAS_NUM][HEIGHT][WIDTH]usize, in: anytype, alloc: mem.Allocator) !void {
         for (0..LEVELS) |z|
             for (0..gas.GAS_NUM) |g|
                 for (0..HEIGHT) |y|

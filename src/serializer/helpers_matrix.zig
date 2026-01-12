@@ -96,7 +96,7 @@ pub fn deserializeMatrix(
     convert_run_value: *const fn (usize, usize, usize, RunValue) Elem,
     comptime height: usize,
     comptime width: usize,
-    ser: *serializer.Serializer,
+    ser: *serializer.Deserializer,
     out: *[height][width]Elem,
     in: anytype,
     alloc: mem.Allocator,

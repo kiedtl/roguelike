@@ -162,7 +162,7 @@ pub fn LinkedList(comptime T: type) type {
             while (iter.next()) |item| try ser.serialize(T, item, out);
         }
 
-        pub fn deserialize(ser: *serializer.Serializer, out: *@This(), in: anytype, alloc: mem.Allocator) !void {
+        pub fn deserialize(ser: *serializer.Deserializer, out: *@This(), in: anytype, alloc: mem.Allocator) !void {
             //out.* = @This().init(alloc);
             const neededlen = try ser.deserializeQ(usize, in, alloc);
 

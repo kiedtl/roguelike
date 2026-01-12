@@ -91,8 +91,7 @@ pub const PointerData = struct { container: []const u8, ptrtype: []const u8, ind
 pub const PointerData2 = struct { ptr: usize, ind: usize, ptrtype: []const u8 };
 
 const PtrTable = std.AutoHashMap(u64, PointerData);
-var ptrtable: PtrTable = undefined;
-var ptrinits: StackBuffer(ContainerInit, 32) = undefined;
+const ContainerInits = StackBuffer(ContainerInit, 32);
 
 // Cache type ids so we can look up a type by its id
 var typelist = StackBuffer([]const u8, 256).init(null);
@@ -168,7 +167,7 @@ pub const TinyCoord = struct {
 // The table's elements must have a .interned_string() function.
 pub fn deserializeInternedString(
     comptime Element: type,
-    ser: *Serializer,
+    ser: *Deserializer,
     out: *?[]const u8,
     table: []const Element,
     in: anytype,
@@ -211,10 +210,10 @@ pub fn DeserializeFunctionFromModule(
     comptime T: type,
     field: []const u8,
     container: type,
-) fn (*Serializer, *_fieldType(T, field), anytype, mem.Allocator) Error!void {
+) fn (*Deserializer, *_fieldType(T, field), anytype, mem.Allocator) Error!void {
     return struct {
-        pub fn f(serializer: *Serializer, out: *_fieldType(T, field), in: anytype, _: mem.Allocator) Error!void {
-            const val = try serializer.deserializeTempString(in);
+        pub fn f(ser: *Deserializer, out: *_fieldType(T, field), in: anytype, _: mem.Allocator) Error!void {
+            const val = try ser.deserializeTempString(in);
             inline for (@typeInfo(container).@"struct".decls) |decl|
                 if (*const @TypeOf(@field(container, decl.name)) == _fieldType(T, field))
                     if (mem.eql(u8, val, decl.name)) {
@@ -228,8 +227,6 @@ pub fn DeserializeFunctionFromModule(
 }
 
 pub const Serializer = struct {
-    temp_alloc: std.heap.ArenaAllocator,
-
     stats: ?struct {
         counting_writer: std.io.CountingWriter(std.fs.File.Writer),
         benchmarker: utils.Benchmarker,
@@ -240,9 +237,10 @@ pub const Serializer = struct {
     fields: std.ArrayList(struct { name: []const u8, ty: []const u8 }),
     indent: usize = 0,
 
+    ptrtable: ?*const PtrTable = null,
+
     pub fn new(alloc: std.mem.Allocator, debug: bool) Serializer {
         return Serializer{
-            .temp_alloc = std.heap.ArenaAllocator.init(alloc),
             .stats = null,
             .fields = .init(alloc),
             .stderr = std.io.getStdErr(),
@@ -259,12 +257,21 @@ pub const Serializer = struct {
         return p;
     }
 
+    pub fn pointerInfo(self: Serializer, ptrtable: *const PtrTable) Serializer {
+        var p = self;
+        p.ptrtable = ptrtable;
+        return p;
+    }
+
     pub fn deinit(self: *Serializer) void {
         self.fields.deinit();
-        self.temp_alloc.deinit();
         if (self.stats) |*stats| {
             stats.benchmarker.deinit();
         }
+    }
+
+    fn pointerInfoContains(self: *Serializer, val: usize) bool {
+        return if (self.ptrtable) |ptrtable| ptrtable.contains(val) else false;
     }
 
     fn debugLog(self: *Serializer, comptime fmt: []const u8, args: anytype) void {
@@ -350,7 +357,7 @@ pub const Serializer = struct {
 
                     if (is_game_data_ref) {
                         const ptrval = @intFromPtr(obj.*);
-                        if (!ptrtable.contains(ptrval)) {
+                        if (!self.pointerInfoContains(ptrval)) {
                             std.log.warn("serialize: found {} pointer {x} not in table (child of {})", .{ p.child, ptrval, T });
                             const maybe_id: ?[]const u8 = switch (p.child) {
                                 types.Weapon, types.Material => obj.*.id,
@@ -441,23 +448,80 @@ pub const Serializer = struct {
             else => @compileError("Cannot serialize " ++ @typeName(T)),
         }
     }
+};
 
-    pub fn deserializeTempString(self: *Serializer, in: anytype) Error![]const u8 {
-        const alloc = self.temp_alloc.allocator();
-        var i = try self.deserializeQ(usize, in, alloc);
-        var o = try alloc.alloc(u8, i);
-        while (i > 0) : (i -= 1)
-            try self.deserialize(u8, &o[o.len - i], in, alloc);
-        return o;
+pub const Deserializer = struct {
+    temp_alloc: std.heap.ArenaAllocator,
+
+    stderr: std.fs.File,
+    debug: bool = false,
+    fields: std.ArrayList(struct { name: []const u8, ty: []const u8 }),
+    indent: usize = 0,
+
+    ptrtable: ?*PtrTable = null,
+
+    pub fn new(alloc: std.mem.Allocator, debug: bool) Deserializer {
+        return Deserializer{
+            .temp_alloc = std.heap.ArenaAllocator.init(alloc),
+            .fields = .init(alloc),
+            .stderr = std.io.getStdErr(),
+            .debug = debug,
+        };
     }
 
-    pub fn deserializeQ(self: *Serializer, comptime T: type, in: anytype, alloc: mem.Allocator) Error!T {
+    pub fn setPointerInfo(self: *Deserializer, ptrtable: *PtrTable) void {
+        self.ptrtable = ptrtable;
+    }
+
+    pub fn deinit(self: *Deserializer) void {
+        self.fields.deinit();
+        self.temp_alloc.deinit();
+    }
+
+    fn pointerInfoGet(self: *Deserializer, val: usize) ?PointerData {
+        return if (self.ptrtable) |ptrtable| ptrtable.get(val) else null;
+    }
+
+    fn debugLog(self: *Deserializer, comptime fmt: []const u8, args: anytype) void {
+        if (!self.debug)
+            return;
+
+        var w = self.stderr.writer();
+        for (0..self.indent) |_|
+            w.print("  ", .{}) catch unreachable;
+        w.print(fmt, args) catch unreachable;
+    }
+
+    fn debugField(self: *Deserializer, name: []const u8, ty: []const u8) void {
+        self.fields.append(.{ .name = name, .ty = ty }) catch unreachable;
+        self.debugLog("-> {s} ('{s}')\n", .{ ty, name });
+    }
+
+    fn debugFieldPop(self: *Deserializer) void {
+        _ = self.fields.pop().?;
+    }
+
+    fn debugFieldsPrint(self: *Deserializer) void {
+        for (self.fields.items) |f|
+            self.debugLog("{s}.", .{f.name});
+    }
+
+    pub fn deserializeTempString(self: *Deserializer, in: anytype) Error![]const u8 {
+        const alloc = self.temp_alloc.allocator();
+        const len = try self.deserializeQ(usize, in, alloc);
+        const buf = try alloc.alloc(u8, len);
+        for (0..len) |i|
+            try self.deserialize(u8, &buf[i], in, alloc);
+        return buf;
+    }
+
+    pub fn deserializeQ(self: *Deserializer, comptime T: type, in: anytype, alloc: mem.Allocator) Error!T {
         var r: T = undefined;
         try self.deserialize(T, &r, in, alloc);
         return r;
     }
 
-    pub fn deserializeExpect(self: *Serializer, comptime T: type, in: anytype, alloc: mem.Allocator) !void {
+    pub fn deserializeExpect(self: *Deserializer, comptime T: type, in: anytype, alloc: mem.Allocator) !void {
         const data_type_id = try self.deserializeQ(TypeId, in, alloc);
         const data_type_id_str = typelist.get(data_type_id);
 
@@ -472,12 +536,12 @@ pub const Serializer = struct {
         }
     }
 
-    pub fn deserializeWE(self: *Serializer, comptime T: type, out: *T, in: anytype, alloc: mem.Allocator) Error!void {
+    pub fn deserializeWE(self: *Deserializer, comptime T: type, out: *T, in: anytype, alloc: mem.Allocator) Error!void {
         try self.deserializeExpect(T, in, alloc);
         try self.deserialize(T, out, in, alloc);
     }
 
-    pub fn deserialize(self: *Serializer, comptime T: type, out: *T, in: anytype, alloc: mem.Allocator) Error!void {
+    pub fn deserialize(self: *Deserializer, comptime T: type, out: *T, in: anytype, alloc: mem.Allocator) Error!void {
         self.debugLog("* Deserializing {} ...\n", .{T});
         self.indent += 1;
         defer self.indent -= 1;
@@ -539,7 +603,7 @@ pub const Serializer = struct {
                         try self.deserialize(p.child, out.*, in, alloc);
                     } else {
                         const ptr = try self.deserializeQ(usize, in, alloc);
-                        if (ptrtable.get(ptr)) |ptrdata| {
+                        if (self.pointerInfoGet(ptr)) |ptrdata| {
                             if (!mem.eql(u8, ptrdata.ptrtype, @typeName(T))) {
                                 std.log.err("Wanted pointer of type {}, found {s}", .{ T, ptrdata.ptrtype });
                                 return error.MismatchedPointerTypes;
@@ -714,8 +778,9 @@ pub const Serializer = struct {
     }
 };
 
-pub fn buildPointerTable() void {
-    ptrtable = PtrTable.init(state.alloc);
+pub fn buildPointerTable() struct { PtrTable, ContainerInits } {
+    var ptrtable = PtrTable.init(state.alloc);
+    var ptrinits = ContainerInits.init(null);
 
     inline for (STATIC_CONTAINERS) |container| {
         const Ptr = if (@typeInfo(container.t) == .pointer) container.t else *const container.t;
@@ -757,10 +822,12 @@ pub fn buildPointerTable() void {
             ptrinits.append(.{ .container = declinfo.name, .init_up_to = max + 1 }) catch err.wat();
         }
     }
+
+    return .{ ptrtable, ptrinits };
 }
 
-pub fn initPointerContainers() void {
-    for (ptrinits.constSlice()) |ptrinit| {
+pub fn initPointerContainers(ptrinits: []const ContainerInit) void {
+    for (ptrinits) |ptrinit| {
         inline for (@typeInfo(state).@"struct".decls) |declinfo| {
             if (@typeInfo(@TypeOf(@field(state, declinfo.name))) == .@"struct" and
                 @hasDecl(@TypeOf(@field(state, declinfo.name)), "nth"))
@@ -788,7 +855,7 @@ pub fn serializeWorld() !void {
     //
     // - ptrtable.dat, ptrinits.dat, mobs.dat
 
-    buildPointerTable();
+    var ptrtable, const ptrinits = buildPointerTable();
 
     // var iter = ptrtable.iterator();
     // while (iter.next()) |item| {
@@ -797,18 +864,18 @@ pub fn serializeWorld() !void {
     //     });
     // }
 
-    var ser = Serializer.new(state.alloc, false); //.recordStats(f.writer());
+    var ser = Serializer.new(state.alloc, false)
+        //.recordStats(f.writer())
+        .pointerInfo(&ptrtable);
     defer ser.deinit();
 
     try ser.serializeWE(@TypeOf(ptrtable), &ptrtable, f.writer()); //ser.counting_writer.?.writer());
     try ser.serializeWE(@TypeOf(ptrinits), &ptrinits, f.writer()); //ser.counting_writer.?.writer());
 
-    try ser.serializeWE(*types.Dungeon, &state.dungeon, f.writer());
-
-    // inline for (GAME_OBJECTS) |gobj| {
-    //     const T, const ptr = gobj;
-    //     try ser.serializeWE(T, ptr, ser.counting_writer.?.writer());
-    // }
+    inline for (GAME_OBJECTS) |gobj| {
+        const T, const ptr = gobj;
+        try ser.serializeWE(T, ptr, f.writer()); //ser.counting_writer.?.writer());
+    }
 
     ptrtable.deinit();
     //ser.stats.?.benchmarker.print(ser.stats.?.counting_writer.bytes_written);
@@ -821,18 +888,21 @@ pub fn deserializeWorld() !void {
     var f = std.fs.cwd().openFile("dump.dat", .{}) catch err.wat();
     defer f.close();
 
-    var ser = Serializer.new(state.alloc, false);
-    defer ser.deinit();
+    var deser = Deserializer.new(state.alloc, true);
+    defer deser.deinit();
 
-    try ser.deserializeWE(@TypeOf(ptrtable), &ptrtable, f.reader(), state.alloc);
-    try ser.deserializeWE(@TypeOf(ptrinits), &ptrinits, f.reader(), state.alloc);
-    initPointerContainers();
+    var ptrinits: ContainerInits = .empty;
+    var ptrtable: PtrTable = undefined;
 
-    try ser.deserializeWE(*types.Dungeon, &state.dungeon, f.reader(), state.alloc);
-    // inline for (GAME_OBJECTS) |gobj| {
-    //     const T, const ptr = gobj;
-    //     try ser.deserializeWE(T, ptr, f.reader(), state.alloc);
-    // }
+    try deser.deserializeWE(PtrTable, &ptrtable, f.reader(), state.alloc);
+    try deser.deserializeWE(ContainerInits, &ptrinits, f.reader(), state.alloc);
+    deser.setPointerInfo(&ptrtable);
+    initPointerContainers(ptrinits.constSlice());
+
+    inline for (GAME_OBJECTS) |gobj| {
+        const T, const ptr = gobj;
+        try deser.deserializeWE(T, ptr, f.reader(), state.alloc);
+    }
 
     var ptrtable_iter = ptrtable.iterator();
     while (ptrtable_iter.next()) |entry| {
@@ -849,6 +919,7 @@ pub fn deserializeWorld() !void {
 pub fn Tester(comptime T: type) type {
     return struct {
         ser: Serializer,
+        deser: Deserializer,
         buf: []u8,
         fbs: std.io.FixedBufferStream([]u8),
 
@@ -859,6 +930,7 @@ pub fn Tester(comptime T: type) type {
             const buf = try testing.allocator.alloc(u8, @sizeOf(T) * 2);
             return .{
                 .ser = .new(testing.allocator, false),
+                .deser = .new(testing.allocator, false),
                 .buf = buf,
                 .fbs = std.io.fixedBufferStream(buf),
                 .d_ser = initial,
@@ -872,11 +944,12 @@ pub fn Tester(comptime T: type) type {
         }
 
         pub fn deserialize(self: *@This()) !void {
-            try self.ser.deserializeWE(T, &self.d_deser, self.fbs.reader(), testing.allocator);
+            try self.deser.deserializeWE(T, &self.d_deser, self.fbs.reader(), testing.allocator);
         }
 
         pub fn deinit(self: *@This()) void {
             self.ser.deinit();
+            self.deser.deinit();
             testing.allocator.free(self.buf);
         }
     };

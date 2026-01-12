@@ -73,7 +73,7 @@ pub fn RingBuffer(comptime T: type, size: usize) type {
                 try ser.serialize(?T, &item, out);
         }
 
-        pub fn deserialize(ser: *serializer.Serializer, out: *@This(), in: anytype, alloc: std.mem.Allocator) !void {
+        pub fn deserialize(ser: *serializer.Deserializer, out: *@This(), in: anytype, alloc: std.mem.Allocator) !void {
             out.init();
             out.top = try ser.deserializeQ(usize, in, alloc);
             for (&out.buffer) |*sl|

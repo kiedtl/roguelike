@@ -16,6 +16,8 @@ pub fn StackBuffer(comptime T: type, comptime capacity: usize) type {
 
         const Self = @This();
 
+        pub const empty = Self{};
+
         pub fn init(data: ?[]const T) Self {
             if (data) |d| {
                 var b: Self = .{ .len = d.len };
@@ -166,7 +168,7 @@ pub fn StackBuffer(comptime T: type, comptime capacity: usize) type {
             try ser.serialize([]const T, &self.constSlice(), out);
         }
 
-        pub fn deserialize(ser: *serializer.Serializer, out: *@This(), in: anytype, alloc: mem.Allocator) !void {
+        pub fn deserialize(ser: *serializer.Deserializer, out: *@This(), in: anytype, alloc: mem.Allocator) !void {
             out.* = @This().init(null);
             var i = try ser.deserializeQ(usize, in, alloc);
             while (i > 0) : (i -= 1)
