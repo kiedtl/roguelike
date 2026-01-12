@@ -2,6 +2,7 @@ const std = @import("std");
 const meta = std.meta;
 const mem = std.mem;
 const assert = std.debug.assert;
+const testing = std.testing;
 
 const strig = @import("strig");
 
@@ -92,9 +93,6 @@ pub const PointerData2 = struct { ptr: usize, ind: usize, ptrtype: []const u8 };
 const PtrTable = std.AutoHashMap(u64, PointerData);
 var ptrtable: PtrTable = undefined;
 var ptrinits: StackBuffer(ContainerInit, 32) = undefined;
-
-var benchmarker: utils.Benchmarker = undefined;
-var is_benchmarking = false;
 
 // Cache type ids so we can look up a type by its id
 var typelist = StackBuffer([]const u8, 256).init(null);
@@ -231,7 +229,11 @@ pub fn DeserializeFunctionFromModule(
 
 pub const Serializer = struct {
     temp_alloc: std.heap.ArenaAllocator,
-    counting_writer: ?std.io.CountingWriter(std.fs.File.Writer),
+
+    stats: ?struct {
+        counting_writer: std.io.CountingWriter(std.fs.File.Writer),
+        benchmarker: utils.Benchmarker,
+    } = null,
 
     stderr: std.fs.File,
     debug: bool = false,
@@ -241,22 +243,28 @@ pub const Serializer = struct {
     pub fn new(alloc: std.mem.Allocator, debug: bool) Serializer {
         return Serializer{
             .temp_alloc = std.heap.ArenaAllocator.init(alloc),
-            .counting_writer = null,
+            .stats = null,
             .fields = .init(alloc),
             .stderr = std.io.getStdErr(),
             .debug = debug,
         };
     }
 
-    pub fn countBytes(self: Serializer, out: anytype) Serializer {
+    pub fn recordStats(self: Serializer, out: anytype) Serializer {
         var p = self;
-        p.counting_writer = std.io.countingWriter(out);
+        p.stats = .{
+            .counting_writer = std.io.countingWriter(out),
+            .benchmarker = .init(),
+        };
         return p;
     }
 
     pub fn deinit(self: *Serializer) void {
         self.fields.deinit();
         self.temp_alloc.deinit();
+        if (self.stats) |*stats| {
+            stats.benchmarker.deinit();
+        }
     }
 
     fn debugLog(self: *Serializer, comptime fmt: []const u8, args: anytype) void {
@@ -289,8 +297,9 @@ pub const Serializer = struct {
     }
 
     pub fn serializeScalar(self: *Serializer, comptime T: type, obj: T, out: anytype) Error!void {
-        const bytes_before = if (self.counting_writer) |cw| cw.bytes_written else 0;
-        defer if (is_benchmarking) benchmarker.record(@typeName(T), self.counting_writer.?.bytes_written - bytes_before);
+        const bytes_before = if (self.stats) |*stats| stats.counting_writer.bytes_written else 0;
+        defer if (self.stats) |*stats|
+            stats.benchmarker.record(@typeName(T), stats.counting_writer.bytes_written - bytes_before);
 
         switch (@typeInfo(T)) {
             .bool => try write(u8, if (obj) @as(u8, 1) else 0, out),
@@ -309,8 +318,9 @@ pub const Serializer = struct {
         self.indent += 1;
         defer self.indent -= 1;
 
-        const bytes_before = if (self.counting_writer) |cw| cw.bytes_written else 0;
-        defer if (is_benchmarking) benchmarker.record(@typeName(T), self.counting_writer.?.bytes_written - bytes_before);
+        const bytes_before = if (self.stats) |*stats| stats.counting_writer.bytes_written else 0;
+        defer if (self.stats) |*stats|
+            stats.benchmarker.record(@typeName(T), stats.counting_writer.bytes_written - bytes_before);
 
         if (comptime mem.startsWith(u8, @typeName(T), "hash_map.HashMap")) {
             try self.serializeScalar(usize, obj.count(), out);
@@ -351,7 +361,6 @@ pub const Serializer = struct {
                         }
                         try self.serializeScalar(usize, ptrval, out);
                     } else {
-                        std.log.info("Treated {} as owned data, serializing as {}", .{ T, p.child });
                         try self.serialize(p.child, obj.*, out);
                     }
                 },
@@ -362,7 +371,6 @@ pub const Serializer = struct {
                 .many, .c => @compileError("Cannot serialize " ++ @typeName(T)),
             },
             .array => |a| {
-                try self.serializeScalar(usize, a.len, out);
                 for (obj) |*value| try self.serialize(a.child, value, out);
             },
             .@"struct" => |info| {
@@ -596,11 +604,9 @@ pub const Serializer = struct {
                 },
                 .many, .c => @compileError("Cannot deserialize " ++ @typeName(T)),
             },
-            .array => {
-                var i = try self.deserializeQ(usize, in, alloc);
-                assert(i == out.len);
-                while (i > 0) : (i -= 1)
-                    try self.deserialize(meta.Child(T), &out[out.len - 1], in, alloc);
+            .array => |a| {
+                for (0..a.len) |i|
+                    try self.deserialize(a.child, &out[i], in, alloc);
             },
             .@"struct" => |info| {
                 if (@hasDecl(T, "deserialize")) {
@@ -772,9 +778,6 @@ pub fn initPointerContainers() void {
 }
 
 pub fn serializeWorld() !void {
-    //is_benchmarking = true;
-    benchmarker.init();
-
     // var tar = try microtar.MTar.init("dump.tar", "w");
     // defer tar.deinit();
 
@@ -794,7 +797,7 @@ pub fn serializeWorld() !void {
     //     });
     // }
 
-    var ser = Serializer.new(state.alloc, false); //.countBytes(f.writer());
+    var ser = Serializer.new(state.alloc, false); //.recordStats(f.writer());
     defer ser.deinit();
 
     try ser.serializeWE(@TypeOf(ptrtable), &ptrtable, f.writer()); //ser.counting_writer.?.writer());
@@ -808,10 +811,7 @@ pub fn serializeWorld() !void {
     // }
 
     ptrtable.deinit();
-
-    //benchmarker.print(ser.counting_writer.?.bytes_written);
-    benchmarker.deinit();
-    is_benchmarking = false;
+    //ser.stats.?.benchmarker.print(ser.stats.?.counting_writer.bytes_written);
 }
 
 pub fn deserializeWorld() !void {
@@ -844,4 +844,74 @@ pub fn deserializeWorld() !void {
     for (ptrinits.constSlice()) |entry| {
         state.alloc.free(entry.container);
     }
+}
+
+pub fn Tester(comptime T: type) type {
+    return struct {
+        ser: Serializer,
+        buf: []u8,
+        fbs: std.io.FixedBufferStream([]u8),
+
+        d_ser: T,
+        d_deser: T,
+
+        pub fn new(initial: T) !@This() {
+            const buf = try testing.allocator.alloc(u8, @sizeOf(T) * 2);
+            return .{
+                .ser = .new(testing.allocator, false),
+                .buf = buf,
+                .fbs = std.io.fixedBufferStream(buf),
+                .d_ser = initial,
+                .d_deser = undefined,
+            };
+        }
+
+        pub fn serialize(self: *@This()) !void {
+            try self.ser.serializeWE(T, &self.d_ser, self.fbs.writer());
+            self.fbs.reset();
+        }
+
+        pub fn deserialize(self: *@This()) !void {
+            try self.ser.deserializeWE(T, &self.d_deser, self.fbs.reader(), testing.allocator);
+        }
+
+        pub fn deinit(self: *@This()) void {
+            self.ser.deinit();
+            testing.allocator.free(self.buf);
+        }
+    };
+}
+
+test "owned_data_ser" {
+    const S = struct {
+        a: u16 = 555,
+        b: [10]u8 = [_]u8{'f'} ** 10,
+        pub const __SER_ALWAYS_OWNED = {};
+    };
+
+    var tester = try Tester(*S).new(undefined);
+    defer tester.deinit();
+
+    tester.d_ser = try testing.allocator.create(S);
+    tester.d_deser = try testing.allocator.create(S);
+    tester.d_ser.* = .{};
+
+    defer testing.allocator.destroy(tester.d_ser);
+    defer testing.allocator.destroy(tester.d_deser);
+
+    try tester.serialize();
+    try tester.deserialize();
+
+    try testing.expectEqual(tester.d_ser.a, tester.d_deser.a);
+    try testing.expectEqualSlices(u8, &tester.d_ser.b, &tester.d_deser.b);
+}
+
+test "array_ser" {
+    var tester = try Tester([10]u8).new([_]u8{'b'} ** 10);
+    defer tester.deinit();
+
+    try tester.serialize();
+    try tester.deserialize();
+
+    try testing.expectEqualSlices(u8, &tester.d_ser, &tester.d_deser);
 }

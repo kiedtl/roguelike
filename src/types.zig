@@ -2303,23 +2303,23 @@ pub const Stat = enum {
 pub const MobFov = struct { // {{{
     m: [HEIGHT][WIDTH]usize = [1][WIDTH]usize{[1]usize{0} ** WIDTH} ** HEIGHT,
 
-    // pub fn serialize(self: *const MobFov, ser: *serializer.Serializer, out: anytype) !void {
-    //     try serializer.helpers_matrix.serializeMatrix(usize, void, struct {
-    //         pub fn f(_: usize, _: usize, v: *const usize) ?void {
-    //             return if (v.* > 0) {} else null;
-    //         }
-    //     }.f, HEIGHT, WIDTH, &self.m, ser, out);
-    // }
+    pub fn serialize(self: *const MobFov, ser: *serializer.Serializer, out: anytype) !void {
+        try serializer.helpers_matrix.serializeMatrix(usize, void, struct {
+            pub fn f(_: usize, _: usize, v: *const usize) ?void {
+                return if (v.* > 0) {} else null;
+            }
+        }.f, HEIGHT, WIDTH, &self.m, ser, out);
+    }
 
-    // pub fn deserialize(ser: *serializer.Serializer, out: *MobFov, in: anytype, alloc: mem.Allocator) !void {
-    //     out.* = MobFov{};
+    pub fn deserialize(ser: *serializer.Serializer, out: *MobFov, in: anytype, alloc: mem.Allocator) !void {
+        out.* = MobFov{};
 
-    //     try serializer.helpers_matrix.deserializeMatrix(usize, void, struct {
-    //         pub fn f(_: usize, _: usize, _: usize, _: void) usize {
-    //             return 100;
-    //         }
-    //     }.f, HEIGHT, WIDTH, ser, &out.m, in, alloc);
-    // }
+        try serializer.helpers_matrix.deserializeMatrix(usize, void, struct {
+            pub fn f(_: usize, _: usize, _: usize, _: void) usize {
+                return 100;
+            }
+        }.f, HEIGHT, WIDTH, ser, &out.m, in, alloc);
+    }
 }; // }}}
 
 test "MobFov serialization" {
@@ -5833,55 +5833,55 @@ pub const Tile = struct {
             mem.eql(u8, &self.spatter.values, &other.spatter.values);
     }
 
-    // pub fn serialize(self: *const Tile, ser: *serializer.Serializer, out: anytype) !void {
-    //     var flags: u8 = 0;
-    //     if (self.marked) flags |= 1 << 1;
-    //     if (self.prison) flags |= 1 << 2;
+    pub fn serialize(self: *const Tile, ser: *serializer.Serializer, out: anytype) !void {
+        var flags: u8 = 0;
+        if (self.marked) flags |= 1 << 1;
+        if (self.prison) flags |= 1 << 2;
 
-    //     const material: u8 = for (&materials.MATERIALS, 0..) |m, i| {
-    //         if (m == self.material) break @intCast(i);
-    //     } else unreachable;
-    //     const terrain: u8 = for (&surfaces.TERRAIN, 0..) |m, i| {
-    //         if (m == self.terrain) break @intCast(i);
-    //     } else unreachable;
+        const material: u8 = for (&materials.MATERIALS, 0..) |m, i| {
+            if (m == self.material) break @intCast(i);
+        } else unreachable;
+        const terrain: u8 = for (&surfaces.TERRAIN, 0..) |m, i| {
+            if (m == self.terrain) break @intCast(i);
+        } else unreachable;
 
-    //     const any_spatter = for (self.spatter.values) |value| {
-    //         if (value > 0) break true;
-    //     } else false;
-    //     const spatter = if (any_spatter) self.spatter else null;
+        const any_spatter = for (self.spatter.values) |value| {
+            if (value > 0) break true;
+        } else false;
+        const spatter = if (any_spatter) self.spatter else null;
 
-    //     try ser.serializeScalar(u8, flags, out);
-    //     try ser.serialize(TileType, &self.type, out);
-    //     try ser.serializeScalar(u8, material, out);
-    //     try ser.serializeScalar(u8, terrain, out);
-    //     try ser.serialize(?*Mob, &self.mob, out);
-    //     try ser.serialize(?SurfaceItem, &self.surface, out);
-    //     try ser.serialize(?SpatterArray, &spatter, out);
-    // }
+        try ser.serializeScalar(u8, flags, out);
+        try ser.serialize(TileType, &self.type, out);
+        try ser.serializeScalar(u8, material, out);
+        try ser.serializeScalar(u8, terrain, out);
+        try ser.serialize(?*Mob, &self.mob, out);
+        try ser.serialize(?SurfaceItem, &self.surface, out);
+        try ser.serialize(?SpatterArray, &spatter, out);
+    }
 
-    // pub fn deserialize(ser: *serializer.Serializer, out: *Tile, in: anytype, alloc: mem.Allocator) !void {
-    //     const flags = try ser.deserializeQ(u8, in, alloc);
-    //     const ty = try ser.deserializeQ(TileType, in, alloc);
-    //     const material_ind = try ser.deserializeQ(u8, in, alloc);
-    //     const terrain_ind = try ser.deserializeQ(u8, in, alloc);
-    //     const mob = try ser.deserializeQ(?*Mob, in, alloc);
-    //     const sfitem = try ser.deserializeQ(?SurfaceItem, in, alloc);
-    //     const spatter = try ser.deserializeQ(?SpatterArray, in, alloc);
+    pub fn deserialize(ser: *serializer.Serializer, out: *Tile, in: anytype, alloc: mem.Allocator) !void {
+        const flags = try ser.deserializeQ(u8, in, alloc);
+        const ty = try ser.deserializeQ(TileType, in, alloc);
+        const material_ind = try ser.deserializeQ(u8, in, alloc);
+        const terrain_ind = try ser.deserializeQ(u8, in, alloc);
+        const mob = try ser.deserializeQ(?*Mob, in, alloc);
+        const sfitem = try ser.deserializeQ(?SurfaceItem, in, alloc);
+        const spatter = try ser.deserializeQ(?SpatterArray, in, alloc);
 
-    //     const marked = (flags & (1 << 1)) != 0;
-    //     const prison = (flags & (1 << 2)) != 0;
+        const marked = (flags & (1 << 1)) != 0;
+        const prison = (flags & (1 << 2)) != 0;
 
-    //     out.* = Tile{
-    //         .marked = marked,
-    //         .prison = prison,
-    //         .type = ty,
-    //         .material = materials.MATERIALS[material_ind],
-    //         .terrain = surfaces.TERRAIN[terrain_ind],
-    //         .mob = mob,
-    //         .surface = sfitem,
-    //         .spatter = spatter orelse SpatterArray.initFill(0),
-    //     };
-    // }
+        out.* = Tile{
+            .marked = marked,
+            .prison = prison,
+            .type = ty,
+            .material = materials.MATERIALS[material_ind],
+            .terrain = surfaces.TERRAIN[terrain_ind],
+            .mob = mob,
+            .surface = sfitem,
+            .spatter = spatter orelse SpatterArray.initFill(0),
+        };
+    }
 
     pub fn displayAs(coord: Coord, ignore_lights: bool, ignore_mobs: bool) display.Cell {
         const self = state.dungeon.at(coord);
@@ -6213,189 +6213,189 @@ pub const Dungeon = struct {
     pub const MOB_OPACITY: usize = 0;
     pub const FLOOR_OPACITY: usize = 10;
 
-    // pub fn __SER_FIELDR_items(ser: *serializer.Serializer, out: *[LEVELS][HEIGHT][WIDTH]ItemBuffer, in: anytype, alloc: mem.Allocator) !void {
-    //     for (0..LEVELS) |z| {
-    //         for (0..HEIGHT) |y|
-    //             for (0..WIDTH) |x| {
-    //                 out[z][y][x].reinit(null);
-    //             };
+    pub fn __SER_FIELDR_items(ser: *serializer.Serializer, out: *[LEVELS][HEIGHT][WIDTH]ItemBuffer, in: anytype, alloc: mem.Allocator) !void {
+        for (0..LEVELS) |z| {
+            for (0..HEIGHT) |y|
+                for (0..WIDTH) |x| {
+                    out[z][y][x].reinit(null);
+                };
 
-    //         const count = try ser.deserializeQ(usize, in, alloc);
-    //         for (0..count) |_| {
-    //             const c = try ser.deserializeQ(serializer.TinyCoord, in, alloc);
-    //             try ser.deserialize(ItemBuffer, &out[z][c.y][c.x], in, alloc);
-    //         }
-    //     }
-    // }
+            const count = try ser.deserializeQ(usize, in, alloc);
+            for (0..count) |_| {
+                const c = try ser.deserializeQ(serializer.TinyCoord, in, alloc);
+                try ser.deserialize(ItemBuffer, &out[z][c.y][c.x], in, alloc);
+            }
+        }
+    }
 
-    // pub fn __SER_FIELDW_items(_: *const Dungeon, ser: *serializer.Serializer, field: *const [LEVELS][HEIGHT][WIDTH]ItemBuffer, out: anytype) !void {
-    //     for (0..LEVELS) |z| {
-    //         var count: usize = 0;
-    //         for (0..HEIGHT) |y|
-    //             for (0..WIDTH) |x|
-    //                 if (field[z][y][x].len > 0) {
-    //                     count += 1;
-    //                 };
-    //         try ser.serializeScalar(usize, count, out);
+    pub fn __SER_FIELDW_items(_: *const Dungeon, ser: *serializer.Serializer, field: *const [LEVELS][HEIGHT][WIDTH]ItemBuffer, out: anytype) !void {
+        for (0..LEVELS) |z| {
+            var count: usize = 0;
+            for (0..HEIGHT) |y|
+                for (0..WIDTH) |x|
+                    if (field[z][y][x].len > 0) {
+                        count += 1;
+                    };
+            try ser.serializeScalar(usize, count, out);
 
-    //         for (0..HEIGHT) |y|
-    //             for (0..WIDTH) |x|
-    //                 if (field[z][y][x].len > 0) {
-    //                     const c = serializer.TinyCoord.new(x, y);
-    //                     try ser.serialize(serializer.TinyCoord, &c, out);
-    //                     try ser.serialize([]const Item, &field[z][y][x].constSlice(), out);
-    //                 };
-    //     }
-    // }
+            for (0..HEIGHT) |y|
+                for (0..WIDTH) |x|
+                    if (field[z][y][x].len > 0) {
+                        const c = serializer.TinyCoord.new(x, y);
+                        try ser.serialize(serializer.TinyCoord, &c, out);
+                        try ser.serialize([]const Item, &field[z][y][x].constSlice(), out);
+                    };
+        }
+    }
 
-    // pub fn __SER_FIELDR_sound(ser: *serializer.Serializer, out: *[LEVELS][HEIGHT][WIDTH]Sound, in: anytype, alloc: mem.Allocator) !void {
-    //     for (0..LEVELS) |z| {
-    //         for (0..HEIGHT) |y|
-    //             for (0..WIDTH) |x| {
-    //                 out[z][y][x] = .{};
-    //             };
+    pub fn __SER_FIELDR_sound(ser: *serializer.Serializer, out: *[LEVELS][HEIGHT][WIDTH]Sound, in: anytype, alloc: mem.Allocator) !void {
+        for (0..LEVELS) |z| {
+            for (0..HEIGHT) |y|
+                for (0..WIDTH) |x| {
+                    out[z][y][x] = .{};
+                };
 
-    //         const count = try ser.deserializeQ(usize, in, alloc);
-    //         for (0..count) |_| {
-    //             const c = try ser.deserializeQ(serializer.TinyCoord, in, alloc);
-    //             const s = try ser.deserializeQ(Sound, in, alloc);
-    //             out[z][c.y][c.x] = s;
-    //         }
-    //     }
-    // }
+            const count = try ser.deserializeQ(usize, in, alloc);
+            for (0..count) |_| {
+                const c = try ser.deserializeQ(serializer.TinyCoord, in, alloc);
+                const s = try ser.deserializeQ(Sound, in, alloc);
+                out[z][c.y][c.x] = s;
+            }
+        }
+    }
 
-    // pub fn __SER_FIELDW_sound(_: *const Dungeon, ser: *serializer.Serializer, field: *const [LEVELS][HEIGHT][WIDTH]Sound, out: anytype) !void {
-    //     for (0..LEVELS) |z| {
-    //         var count: usize = 0;
-    //         for (0..HEIGHT) |y|
-    //             for (0..WIDTH) |x|
-    //                 if (!field[z][y][x].eq(.{})) {
-    //                     count += 1;
-    //                 };
-    //         try ser.serializeScalar(usize, count, out);
+    pub fn __SER_FIELDW_sound(_: *const Dungeon, ser: *serializer.Serializer, field: *const [LEVELS][HEIGHT][WIDTH]Sound, out: anytype) !void {
+        for (0..LEVELS) |z| {
+            var count: usize = 0;
+            for (0..HEIGHT) |y|
+                for (0..WIDTH) |x|
+                    if (!field[z][y][x].eq(.{})) {
+                        count += 1;
+                    };
+            try ser.serializeScalar(usize, count, out);
 
-    //         for (0..HEIGHT) |y|
-    //             for (0..WIDTH) |x|
-    //                 if (!field[z][y][x].eq(.{})) {
-    //                     const c = serializer.TinyCoord.new(x, y);
-    //                     try ser.serialize(serializer.TinyCoord, &c, out);
-    //                     try ser.serialize(Sound, &field[z][y][x], out);
-    //                 };
-    //     }
-    // }
+            for (0..HEIGHT) |y|
+                for (0..WIDTH) |x|
+                    if (!field[z][y][x].eq(.{})) {
+                        const c = serializer.TinyCoord.new(x, y);
+                        try ser.serialize(serializer.TinyCoord, &c, out);
+                        try ser.serialize(Sound, &field[z][y][x], out);
+                    };
+        }
+    }
 
-    // pub fn __SER_FIELDR_light(ser: *serializer.Serializer, out: *[LEVELS][HEIGHT][WIDTH]bool, in: anytype, alloc: mem.Allocator) !void {
-    //     for (0..LEVELS) |z|
-    //         for (0..HEIGHT) |y|
-    //             for (0..WIDTH) |x| {
-    //                 out[z][y][x] = false;
-    //             };
+    pub fn __SER_FIELDR_light(ser: *serializer.Serializer, out: *[LEVELS][HEIGHT][WIDTH]bool, in: anytype, alloc: mem.Allocator) !void {
+        for (0..LEVELS) |z|
+            for (0..HEIGHT) |y|
+                for (0..WIDTH) |x| {
+                    out[z][y][x] = false;
+                };
 
-    //     for (0..LEVELS) |z|
-    //         try serializer.helpers_matrix.deserializeMatrix(bool, void, struct {
-    //             pub fn f(_: usize, _: usize, _: usize, _: void) bool {
-    //                 return true;
-    //             }
-    //         }.f, HEIGHT, WIDTH, ser, &out[z], in, alloc);
-    // }
+        for (0..LEVELS) |z|
+            try serializer.helpers_matrix.deserializeMatrix(bool, void, struct {
+                pub fn f(_: usize, _: usize, _: usize, _: void) bool {
+                    return true;
+                }
+            }.f, HEIGHT, WIDTH, ser, &out[z], in, alloc);
+    }
 
-    // pub fn __SER_FIELDW_light(_: *const Dungeon, ser: *serializer.Serializer, field: *const [LEVELS][HEIGHT][WIDTH]bool, out: anytype) !void {
-    //     for (0..LEVELS) |z|
-    //         try serializer.helpers_matrix.serializeMatrix(bool, void, struct {
-    //             pub fn f(_: usize, _: usize, v: *const bool) ?void {
-    //                 return if (v.*) {} else null;
-    //             }
-    //         }.f, HEIGHT, WIDTH, &field[z], ser, out);
-    // }
+    pub fn __SER_FIELDW_light(_: *const Dungeon, ser: *serializer.Serializer, field: *const [LEVELS][HEIGHT][WIDTH]bool, out: anytype) !void {
+        for (0..LEVELS) |z|
+            try serializer.helpers_matrix.serializeMatrix(bool, void, struct {
+                pub fn f(_: usize, _: usize, v: *const bool) ?void {
+                    return if (v.*) {} else null;
+                }
+            }.f, HEIGHT, WIDTH, &field[z], ser, out);
+    }
 
-    // const SerializeFire = u16; // In theory fire value could go above 256, since there are no checks to the contrary
+    const SerializeFire = u16; // In theory fire value could go above 256, since there are no checks to the contrary
 
-    // pub fn __SER_FIELDW_fire(_: *const Dungeon, ser: *serializer.Serializer, field: *const [LEVELS][HEIGHT][WIDTH]usize, out: anytype) !void {
-    //     for (0..LEVELS) |z| {
-    //         const any_fire_on_level = b: for (0..HEIGHT) |y| {
-    //             for (0..WIDTH) |x|
-    //                 if (field[z][y][x] != 0)
-    //                     break :b true;
-    //         } else false;
+    pub fn __SER_FIELDW_fire(_: *const Dungeon, ser: *serializer.Serializer, field: *const [LEVELS][HEIGHT][WIDTH]usize, out: anytype) !void {
+        for (0..LEVELS) |z| {
+            const any_fire_on_level = b: for (0..HEIGHT) |y| {
+                for (0..WIDTH) |x|
+                    if (field[z][y][x] != 0)
+                        break :b true;
+            } else false;
 
-    //         if (any_fire_on_level) {
-    //             try ser.serializeScalar(u1, 1, out);
-    //             for (0..HEIGHT) |y|
-    //                 for (0..WIDTH) |x|
-    //                     try ser.serializeScalar(SerializeFire, @intCast(field[z][x][y]), out);
-    //         } else {
-    //             try ser.serializeScalar(u1, 0, out);
-    //         }
-    //     }
-    // }
+            if (any_fire_on_level) {
+                try ser.serializeScalar(u1, 1, out);
+                for (0..HEIGHT) |y|
+                    for (0..WIDTH) |x|
+                        try ser.serializeScalar(SerializeFire, @intCast(field[z][y][x]), out);
+            } else {
+                try ser.serializeScalar(u1, 0, out);
+            }
+        }
+    }
 
-    // pub fn __SER_FIELDR_fire(ser: *serializer.Serializer, out: *[LEVELS][HEIGHT][WIDTH]usize, in: anytype, alloc: mem.Allocator) !void {
-    //     for (0..LEVELS) |z|
-    //         for (0..HEIGHT) |y|
-    //             for (0..WIDTH) |x| {
-    //                 out[z][y][x] = 0;
-    //             };
+    pub fn __SER_FIELDR_fire(ser: *serializer.Serializer, out: *[LEVELS][HEIGHT][WIDTH]usize, in: anytype, alloc: mem.Allocator) !void {
+        for (0..LEVELS) |z|
+            for (0..HEIGHT) |y|
+                for (0..WIDTH) |x| {
+                    out[z][y][x] = 0;
+                };
 
-    //     for (0..LEVELS) |z| {
-    //         const flag = try ser.deserializeQ(u1, in, alloc);
-    //         switch (flag) {
-    //             0 => {},
-    //             1 => {
-    //                 for (0..HEIGHT) |y|
-    //                     for (0..WIDTH) |x| {
-    //                         out[z][x][y] = try ser.deserializeQ(SerializeFire, in, alloc);
-    //                     };
-    //             },
-    //         }
-    //     }
-    // }
+        for (0..LEVELS) |z| {
+            const flag = try ser.deserializeQ(u1, in, alloc);
+            switch (flag) {
+                0 => {},
+                1 => {
+                    for (0..HEIGHT) |y|
+                        for (0..WIDTH) |x| {
+                            out[z][x][y] = try ser.deserializeQ(SerializeFire, in, alloc);
+                        };
+                },
+            }
+        }
+    }
 
-    // const SerializeGas = u16; // In theory gas value could go above 256, since there are no checks to the contrary
+    const SerializeGas = u16; // In theory gas value could go above 256, since there are no checks to the contrary
 
-    // pub fn __SER_FIELDW_gas(_: *const Dungeon, ser: *serializer.Serializer, field: *const [LEVELS][gas.GAS_NUM][HEIGHT][WIDTH]usize, out: anytype) !void {
-    //     for (0..LEVELS) |z| {
-    //         for (0..gas.GAS_NUM) |gas_id| {
-    //             const any_on_level = b: for (0..HEIGHT) |y| {
-    //                 for (0..WIDTH) |x|
-    //                     if (field[z][gas_id][y][x] != 0)
-    //                         break :b true;
-    //             } else false;
+    pub fn __SER_FIELDW_gas(_: *const Dungeon, ser: *serializer.Serializer, field: *const [LEVELS][gas.GAS_NUM][HEIGHT][WIDTH]usize, out: anytype) !void {
+        for (0..LEVELS) |z| {
+            for (0..gas.GAS_NUM) |gas_id| {
+                const any_on_level = b: for (0..HEIGHT) |y| {
+                    for (0..WIDTH) |x|
+                        if (field[z][gas_id][y][x] != 0)
+                            break :b true;
+                } else false;
 
-    //             if (any_on_level) {
-    //                 try ser.serializeScalar(u1, 1, out);
-    //                 for (0..HEIGHT) |y|
-    //                     for (0..WIDTH) |x|
-    //                         try ser.serializeScalar(SerializeGas, @intCast(field[z][gas_id][x][y]), out);
-    //             } else {
-    //                 try ser.serializeScalar(u1, 0, out);
-    //             }
-    //         }
-    //     }
-    // }
+                if (any_on_level) {
+                    try ser.serializeScalar(u1, 1, out);
+                    for (0..HEIGHT) |y|
+                        for (0..WIDTH) |x|
+                            try ser.serializeScalar(SerializeGas, @intCast(field[z][gas_id][y][x]), out);
+                } else {
+                    try ser.serializeScalar(u1, 0, out);
+                }
+            }
+        }
+    }
 
-    // pub fn __SER_FIELDR_gas(ser: *serializer.Serializer, out: *[LEVELS][gas.GAS_NUM][HEIGHT][WIDTH]usize, in: anytype, alloc: mem.Allocator) !void {
-    //     for (0..LEVELS) |z|
-    //         for (0..gas.GAS_NUM) |g|
-    //             for (0..HEIGHT) |y|
-    //                 for (0..WIDTH) |x| {
-    //                     out[z][g][y][x] = 0;
-    //                 };
+    pub fn __SER_FIELDR_gas(ser: *serializer.Serializer, out: *[LEVELS][gas.GAS_NUM][HEIGHT][WIDTH]usize, in: anytype, alloc: mem.Allocator) !void {
+        for (0..LEVELS) |z|
+            for (0..gas.GAS_NUM) |g|
+                for (0..HEIGHT) |y|
+                    for (0..WIDTH) |x| {
+                        out[z][g][y][x] = 0;
+                    };
 
-    //     for (0..LEVELS) |z| {
-    //         for (0..gas.GAS_NUM) |g| {
-    //             const flag = try ser.deserializeQ(u1, in, alloc);
-    //             switch (flag) {
-    //                 0 => {},
-    //                 1 => {
-    //                     for (0..HEIGHT) |y|
-    //                         for (0..WIDTH) |x| {
-    //                             out[z][g][x][y] = try ser.deserializeQ(SerializeFire, in, alloc);
-    //                         };
-    //                 },
-    //             }
-    //         }
-    //     }
-    // }
+        for (0..LEVELS) |z| {
+            for (0..gas.GAS_NUM) |g| {
+                const flag = try ser.deserializeQ(u1, in, alloc);
+                switch (flag) {
+                    0 => {},
+                    1 => {
+                        for (0..HEIGHT) |y|
+                            for (0..WIDTH) |x| {
+                                out[z][g][y][x] = try ser.deserializeQ(SerializeFire, in, alloc);
+                            };
+                    },
+                }
+            }
+        }
+    }
 
     // Return the terrain if no surface item, else the default terrain.
     //
