@@ -80,11 +80,9 @@ pub fn build(b: *Build) void {
         });
         fabedit.linkLibC();
         fabedit.addIncludePath(b.path("third_party/janet/")); // janet.h
-        fabedit.addIncludePath(b.path("third_party/microtar/src/"));
         fabedit.addIncludePath(Build.LazyPath{ .cwd_relative = "/usr/include/SDL2/" });
         fabedit.addCSourceFiles(.{
             .files = &[_][]const u8{
-                "third_party/microtar/src/microtar.c", // FIXME: why is this needed
                 "third_party/janet/janet.c",
             },
         });
@@ -133,11 +131,9 @@ pub fn build(b: *Build) void {
     }
 
     exe.addIncludePath(b.path("third_party/janet/")); // janet.h
-    exe.addIncludePath(b.path("third_party/microtar/src/"));
     exe.addIncludePath(Build.LazyPath{ .cwd_relative = "/usr/include/SDL2/" });
     exe.addCSourceFiles(.{
         .files = &[_][]const u8{
-            "third_party/microtar/src/microtar.c", // FIXME: why is this needed
             "third_party/janet/janet.c",
         },
         .flags = &[_][]const u8{ "-O3", "-fomit-frame-pointer", "-march=native" },
@@ -225,11 +221,9 @@ pub fn build(b: *Build) void {
     const curl = b.dependency("curl", .{});
     build_tests.root_module.addImport("curl", curl.module("curl"));
     build_tests.addIncludePath(b.path("third_party/janet/")); // janet.h
-    build_tests.addIncludePath(b.path("third_party/microtar/src/"));
     build_tests.addIncludePath(Build.LazyPath{ .cwd_relative = "/usr/include/SDL2/" });
     build_tests.addCSourceFiles(.{
         .files = &[_][]const u8{
-            "third_party/microtar/src/microtar.c", // FIXME: why is this needed
             "third_party/janet/janet.c",
         },
         .flags = &[_][]const u8{ "-O3", "-fomit-frame-pointer", "-march=native" },

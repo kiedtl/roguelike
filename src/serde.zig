@@ -12,7 +12,6 @@ const items = @import("items.zig");
 const literature = @import("literature.zig");
 const mapgen = @import("mapgen.zig");
 const materials = @import("materials.zig");
-const microtar = @import("microtar.zig");
 const mobs = @import("mobs.zig");
 const state = @import("state.zig");
 const surfaces = @import("surfaces.zig");
@@ -33,7 +32,23 @@ pub const Error = error{
     MismatchedType,
     InvalidUnionField,
     StaticItemNotFound,
-} || varint.VarIntError || std.ArrayList(u8).Writer.Error || std.mem.Allocator.Error || std.fs.File.Reader.Error || std.fs.File.Writer.Error || error{EndOfStream} || microtar.MTar.Error;
+} || varint.VarIntError || std.ArrayList(u8).Writer.Error || std.mem.Allocator.Error || std.fs.File.Reader.Error || std.fs.File.Writer.Error || error{EndOfStream} || error{
+    // Manually compression/tar errors. In future when upgrading to Zig 0.15 this won't
+    // be necessary
+    BadGzipHeader,
+    BadZlibHeader,
+    WrongGzipChecksum,
+    WrongGzipSize,
+    WrongZlibChecksum,
+    InvalidCode,
+    OversubscribedHuffmanTree,
+    IncompleteHuffmanTree,
+    MissingEndOfBlockCode,
+    InvalidMatch,
+    InvalidBlockType,
+    WrongStoredBlockNlen,
+    InvalidDynamicBlockHeader,
+};
 
 const FIELDS_ALWAYS_SKIP_LIST = [_][]const u8{ "__next", "__prev" };
 const FIELDS_ALWAYS_KEEP_LIST = [_][]const u8{ "__next", "__prev" };
@@ -74,7 +89,7 @@ const GAME_OBJECTS = blk: {
         } else if (mem.eql(u8, declinfo.name, "__SER_STOP")) {
             begin = false;
         } else if (begin) {
-            const item = .{ @TypeOf(@field(state, declinfo.name)), &@field(state, declinfo.name) };
+            const item = .{ @TypeOf(@field(state, declinfo.name)), &@field(state, declinfo.name), declinfo.name };
 
             const cur_val = @as(*const CurTy, @alignCast(@ptrCast(cur_ptr))).*;
             const new_val = cur_val ++ .{item};
@@ -85,6 +100,12 @@ const GAME_OBJECTS = blk: {
 
     const final = @as(*const CurTy, @alignCast(@ptrCast(cur_ptr))).*;
     break :blk final;
+};
+
+const CURRENT_SAVE_VERSION: u16 = 0;
+const SaveMetadata = struct {
+    datetime: utils.DateTime,
+    version: u16,
 };
 
 pub const ContainerInit = struct { container: []const u8, init_up_to: usize };
@@ -122,13 +143,6 @@ fn _typeId(comptime T: type) TypeId {
     };
 }
 
-fn _fieldType(comptime T: type, fieldname: []const u8) type {
-    return inline for (meta.fields(T)) |field| {
-        if (mem.eql(u8, field.name, fieldname))
-            break field.type;
-    } else @compileError("Type " ++ @typeName(T) ++ " has no field " ++ fieldname);
-}
-
 fn _normIntT(comptime Int: type) type {
     const s = @typeInfo(Int).int.signedness == .signed;
     return switch (@typeInfo(Int).int.bits) {
@@ -142,12 +156,12 @@ fn _normIntT(comptime Int: type) type {
     };
 }
 
-pub fn write(comptime IntType: type, value: IntType, out: anytype) !void {
+fn write(comptime IntType: type, value: IntType, out: anytype) !void {
     // std.log.debug("..... => {: <20} {}", .{ _normIntT(IntType), value });
     try out.writeInt(_normIntT(IntType), @as(_normIntT(IntType), value), .little);
 }
 
-pub fn read(comptime IntType: type, in: anytype) !IntType {
+fn read(comptime IntType: type, in: anytype) !IntType {
     const value = try in.readInt(_normIntT(IntType), .little);
     // std.log.debug("..... <= {: <20} {}", .{ _normIntT(IntType), value });
     return @intCast(value);
@@ -189,11 +203,11 @@ pub fn SerializeFunctionFromModule(
     comptime T: type,
     field: []const u8,
     comptime container: type,
-) fn (*const T, *Serializer, *const _fieldType(T, field), anytype) Error!void {
+) fn (*const T, *Serializer, *const @FieldType(T, field), anytype) Error!void {
     return struct {
-        pub fn f(_: *const T, serializer: *Serializer, field_value: *const _fieldType(T, field), out: anytype) Error!void {
+        pub fn f(_: *const T, serializer: *Serializer, field_value: *const @FieldType(T, field), out: anytype) Error!void {
             inline for (@typeInfo(container).@"struct".decls) |decl|
-                if (_fieldType(T, field) == *const @TypeOf(@field(container, decl.name))) {
+                if (@FieldType(T, field) == *const @TypeOf(@field(container, decl.name))) {
                     // std.log.debug("comparing 0x{x:0>8} to 0x{x:0>8} ({s})", .{
                     //     @intFromPtr(field_value), @intFromPtr(&@field(container, decl.name)), decl.name,
                     // });
@@ -211,12 +225,12 @@ pub fn DeserializeFunctionFromModule(
     comptime T: type,
     field: []const u8,
     container: type,
-) fn (*Deserializer, *_fieldType(T, field), anytype, mem.Allocator) Error!void {
+) fn (*Deserializer, *@FieldType(T, field), anytype, mem.Allocator) Error!void {
     return struct {
-        pub fn f(ser: *Deserializer, out: *_fieldType(T, field), in: anytype, _: mem.Allocator) Error!void {
+        pub fn f(ser: *Deserializer, out: *@FieldType(T, field), in: anytype, _: mem.Allocator) Error!void {
             const val = try ser.deserializeTempString(in);
             inline for (@typeInfo(container).@"struct".decls) |decl|
-                if (*const @TypeOf(@field(container, decl.name)) == _fieldType(T, field))
+                if (*const @TypeOf(@field(container, decl.name)) == @FieldType(T, field))
                     if (mem.eql(u8, val, decl.name)) {
                         out.* = @field(container, decl.name);
                         return;
@@ -563,8 +577,8 @@ pub const Deserializer = struct {
         defer self.indent -= 1;
 
         if (comptime mem.startsWith(u8, @typeName(T), "hash_map.HashMap")) {
-            const K = _fieldType(@field(T, "KV"), "key");
-            const V = _fieldType(@field(T, "KV"), "value");
+            const K = @FieldType(@field(T, "KV"), "key");
+            const V = @FieldType(@field(T, "KV"), "value");
             var obj = T.init(state.alloc);
             var i = try self.deserializeVarInt(usize, in, alloc);
             while (i > 0) : (i -= 1) {
@@ -575,7 +589,7 @@ pub const Deserializer = struct {
             out.* = obj;
             return;
         } else if (comptime mem.startsWith(u8, @typeName(T), "array_list.ArrayList")) {
-            const Elem = meta.Elem(_fieldType(T, "items"));
+            const Elem = meta.Elem(@FieldType(T, "items"));
             out.* = std.ArrayList(Elem).init(alloc);
             var i = try self.deserializeVarInt(usize, in, alloc);
             while (i > 0) : (i -= 1)
@@ -834,48 +848,64 @@ pub fn initPointerContainers(ptrinits: []const ContainerInit) void {
 }
 
 pub fn serializeWorld() !void {
-    // var tar = try microtar.MTar.init("dump.tar", "w");
-    // defer tar.deinit();
+    var buf = std.ArrayList(u8).init(state.alloc);
+    defer buf.deinit();
 
-    var f = std.fs.cwd().createFile("dump.dat", .{}) catch err.wat();
+    var f = std.fs.cwd().createFile("dump.tar.gz", .{}) catch err.wat();
     defer f.close();
 
-    // tar.writer()
-    //
-    // - ptrtable.dat, ptrinits.dat, mobs.dat
+    var gz = try std.compress.gzip.compressor(f.writer(), .{ .level = .best });
+    var tar = std.tar.writer(gz.writer());
+
+    const metadata = SaveMetadata{
+        .version = CURRENT_SAVE_VERSION,
+        .datetime = utils.DateTime.collect(),
+    };
 
     var ptrtable, const ptrinits = buildPointerTable();
 
-    // var iter = ptrtable.iterator();
-    // while (iter.next()) |item| {
-    //     std.log.debug("ptr entry: 0x{X:0>16} -> {: >4} @ {s: >16} ({s})", .{
-    //         item.key_ptr.*, item.value_ptr.index, item.value_ptr.container, item.value_ptr.ptrtype,
-    //     });
-    // }
-
     var ser = Serializer.new(state.alloc, false)
-        .recordStats(f.writer())
+        //.recordStats(f.writer())
         .pointerInfo(&ptrtable);
     defer ser.deinit();
 
-    try ser.serializeWE(@TypeOf(ptrtable), &ptrtable, ser.stats.?.counting_writer.writer());
-    try ser.serializeWE(@TypeOf(ptrinits), &ptrinits, ser.stats.?.counting_writer.writer());
+    try ser.serializeWE(SaveMetadata, &metadata, buf.writer()); //ser.stats.?.counting_writer.writer());
+    try tar.writeFileBytes("meta", buf.items, .{});
+    buf.clearRetainingCapacity();
+
+    try ser.serializeWE(@TypeOf(ptrtable), &ptrtable, buf.writer()); //ser.stats.?.counting_writer.writer());
+    try tar.writeFileBytes("ptrtable", buf.items, .{});
+    buf.clearRetainingCapacity();
+
+    try ser.serializeWE(@TypeOf(ptrinits), &ptrinits, buf.writer()); //ser.stats.?.counting_writer.writer());
+    try tar.writeFileBytes("ptrinits", buf.items, .{});
+    buf.clearRetainingCapacity();
 
     inline for (GAME_OBJECTS) |gobj| {
-        const T, const ptr = gobj;
-        try ser.serializeWE(T, ptr, ser.stats.?.counting_writer.writer());
+        const T, const ptr, const name = gobj;
+        try ser.serializeWE(T, ptr, buf.writer()); //ser.stats.?.counting_writer.writer());
+        try tar.writeFileBytes(name, buf.items, .{});
+        buf.clearRetainingCapacity();
     }
 
     ptrtable.deinit();
     ser.printBenchmarks();
+
+    try tar.finish();
+    try gz.finish();
 }
 
 pub fn deserializeWorld() !void {
-    // var tar = try microtar.MTar.init("dump.tar", "w");
-    // defer tar.deinit();
-
-    var f = std.fs.cwd().openFile("dump.dat", .{}) catch err.wat();
+    var f = std.fs.cwd().openFile("dump.tar.gz", .{}) catch err.wat();
     defer f.close();
+
+    var gz = std.compress.gzip.decompressor(f.reader());
+
+    var fname_buf: [std.fs.max_path_bytes]u8 = undefined;
+    var tar = std.tar.iterator(gz.reader(), .{
+        .file_name_buffer = &fname_buf,
+        .link_name_buffer = undefined, // We don't use symlinks
+    });
 
     var deser = Deserializer.new(state.alloc, false);
     defer deser.deinit();
@@ -883,14 +913,32 @@ pub fn deserializeWorld() !void {
     var ptrinits: ContainerInits = .empty;
     var ptrtable: PtrTable = undefined;
 
-    try deser.deserializeWE(PtrTable, &ptrtable, f.reader(), state.alloc);
-    try deser.deserializeWE(ContainerInits, &ptrinits, f.reader(), state.alloc);
+    var metadata: SaveMetadata = undefined;
+    var meta_entry = try tar.next() orelse return error.MissingSection;
+    if (!mem.eql(u8, meta_entry.name, "meta")) return error.UnexpectedSection;
+    try deser.deserializeWE(SaveMetadata, &metadata, meta_entry.reader(), state.alloc);
+
+    if (metadata.version != CURRENT_SAVE_VERSION)
+        return error.MismatchedSaveVersion;
+
+    var ptrtable_entry = try tar.next() orelse return error.MissingSection;
+    if (!mem.eql(u8, ptrtable_entry.name, "ptrtable")) return error.UnexpectedSection;
+    try deser.deserializeWE(PtrTable, &ptrtable, ptrtable_entry.reader(), state.alloc);
+
+    var ptrinits_entry = try tar.next() orelse return error.MissingSection;
+    if (!mem.eql(u8, ptrinits_entry.name, "ptrinits")) return error.UnexpectedSection;
+    try deser.deserializeWE(ContainerInits, &ptrinits, ptrinits_entry.reader(), state.alloc);
     deser.setPointerInfo(&ptrtable);
     initPointerContainers(ptrinits.constSlice());
 
     inline for (GAME_OBJECTS) |gobj| {
-        const T, const ptr = gobj;
-        try deser.deserializeWE(T, ptr, f.reader(), state.alloc);
+        const T, const ptr, const name = gobj;
+        var entry = try tar.next() orelse return error.MissingSection;
+        if (!mem.eql(u8, entry.name, name)) return error.UnexpectedSection;
+        deser.deserializeWE(T, ptr, entry.reader(), state.alloc) catch |e| {
+            std.log.info("err: {}", .{e});
+            err.wat();
+        };
     }
 
     var ptrtable_iter = ptrtable.iterator();

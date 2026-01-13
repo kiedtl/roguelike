@@ -146,11 +146,11 @@ pub fn BStr(comptime sz: usize) type {
 }
 
 pub const DateTime = struct {
-    Y: usize,
-    M: usize,
-    D: usize,
-    h: usize,
-    m: usize,
+    Y: std.time.epoch.Year,
+    M: u9,
+    D: u5,
+    h: u5,
+    m: u6,
 
     pub fn collect() @This() {
         const ep_secs = std.time.epoch.EpochSeconds{ .secs = @intCast(std.time.timestamp()) };
