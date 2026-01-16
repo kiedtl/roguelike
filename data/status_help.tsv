@@ -32,6 +32,7 @@
 .Blind             	"blind"               	 -                     	 "blind"
 .Corruption        	"corrupted"           	 "eating cabbage"      	 "corrupt"
 .Conductive        	"conductive"          	 -                     	 "conduct"
+.Slade             	"slade"               	 -                     	 "slade"
 .Corona            	"glowing"             	 -                     	 "glow"
 .Daze              	"dazed"               	 -                     	 "dazed"
 .Debil             	"debilitated"         	 -                     	 "debil"

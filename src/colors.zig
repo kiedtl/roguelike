@@ -24,6 +24,8 @@ pub const AQUAMARINE: u32 = 0x7fffd4;
 pub const GOLD: u32 = 0xddb733;
 pub const LIGHT_GOLD: u32 = 0xfdd753;
 pub const COPPER_RED: u32 = 0x985744;
+pub const NIGHT_BLUE: u32 = 0x5919d3;
+pub const POLISHED_SLADE: u32 = 0xa01bcf;
 
 pub const DARK_GREEN = 0x075f00;
 pub const GREEN = 0x37af00;
@@ -39,13 +41,32 @@ pub const ColorDance = struct {
     all: u8,
 
     pub fn apply(self: @This(), to: u32, n: anytype) u32 {
-        const common = rng.rangeManaged(n, u24, 0, self.all);
-        const r = (to >> 16) + rng.rangeManaged(n, u24, 0, self.each >> 16) + common;
-        const g = ((to >> 8) & 0xFF) + rng.rangeManaged(n, u24, 0, (self.each >> 8) & 0xFF) + common;
-        const b = (to & 0xFF) + rng.rangeManaged(n, u24, 0, (self.each) & 0xFF) + common;
-        return r << 16 | g << 8 | b;
+        const common = rng.rangeManaged(n, u8, 0, self.all);
+        const each_r, const each_g, const each_b = decompose(self.each);
+        const cr, const cg, const cb = decompose(to);
+        const r = cr +| rng.rangeManaged(n, u8, 0, each_r) +| common;
+        const g = cg +| rng.rangeManaged(n, u8, 0, each_g) +| common;
+        const b = cb +| rng.rangeManaged(n, u8, 0, each_b) +| common;
+        assert(r <= 255 and g <= 255 and b <= 255);
+        return compose(r, g, b);
     }
 };
+
+pub fn compose(r: u8, g: u8, b: u8) u24 {
+    return (@as(u24, @intCast(r)) << 16) | (@as(u24, @intCast(g)) << 8) | b;
+}
+
+pub fn decompose(c: u32) struct { u8, u8, u8 } {
+    return .{ @intCast(c >> 16), @intCast((c >> 8) & 0xFF), @intCast(c & 0xFF) };
+}
+
+pub fn decomposeIntoFloat(c: u32) struct { f32, f32, f32 } {
+    return .{
+        @as(f32, @floatFromInt(c >> 16)) / 255.0,
+        @as(f32, @floatFromInt((c >> 8) & 0xFF)) / 255.0,
+        @as(f32, @floatFromInt(c & 0xFF)) / 255.0,
+    };
+}
 
 // Interpolate linearly between two vals.
 fn interpolate(a: u32, b: u32, f: f64) u32 {
@@ -108,4 +129,13 @@ pub fn filterBluescale(color: u32) u32 {
     const bri = brightness(color);
     const newrg = bri * 60 / 100;
     return (newrg << 16) | (newrg << 8) | bri;
+}
+
+pub fn filterGreenscale(color: u32) u32 {
+    const bri = brightness(color);
+    // Percentages are derived from the color 0x506057
+    const r: u8 = @intCast(bri * 833 / 1000);
+    const g: u8 = @intCast(bri);
+    const b: u8 = @intCast(bri * 906 / 1000);
+    return compose(r, g, b);
 }

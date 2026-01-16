@@ -273,7 +273,8 @@ pub fn rayCast(
     center: Coord,
     radius: usize,
     energy: usize,
-    opacity_func: *const fn (Coord) usize,
+    opacity_func_ctx: anytype,
+    opacity_func: *const fn (Coord, @TypeOf(opacity_func_ctx)) usize,
     buffer: *[HEIGHT][WIDTH]usize,
     direction: ?Direction,
     remove_artefacts: bool,
@@ -311,10 +312,10 @@ pub fn rayCast(
             .SouthWest => [_]usize{ 270, 315, 315, 360 },
         };
 
-        rayCastOctants(center, radius, energy, opacity_func, buffer, quadrant[0], quadrant[1]);
-        rayCastOctants(center, radius, energy, opacity_func, buffer, quadrant[2], quadrant[3]);
+        rayCastOctants(center, radius, energy, opacity_func_ctx, opacity_func, buffer, quadrant[0], quadrant[1]);
+        rayCastOctants(center, radius, energy, opacity_func_ctx, opacity_func, buffer, quadrant[2], quadrant[3]);
     } else {
-        rayCastOctants(center, radius, energy, opacity_func, buffer, 0, 360);
+        rayCastOctants(center, radius, energy, opacity_func_ctx, opacity_func, buffer, 0, 360);
     }
 
     const x_min = center.x -| radius;
@@ -323,10 +324,10 @@ pub fn rayCast(
     const y_max = math.clamp(center.y + radius + 1, 0, HEIGHT - 1);
 
     if (remove_artefacts) {
-        _removeArtifacts(center.z, x_min, y_min, center.x, center.y, -1, -1, buffer, opacity_func);
-        _removeArtifacts(center.z, center.x, y_min, x_max - 1, center.y, 1, -1, buffer, opacity_func);
-        _removeArtifacts(center.z, x_min, center.y, center.x, y_max - 1, -1, 1, buffer, opacity_func);
-        _removeArtifacts(center.z, center.x, center.y, x_max - 1, y_max - 1, 1, 1, buffer, opacity_func);
+        _removeArtifacts(center.z, x_min, y_min, center.x, center.y, -1, -1, buffer, opacity_func_ctx, opacity_func);
+        _removeArtifacts(center.z, center.x, y_min, x_max - 1, center.y, 1, -1, buffer, opacity_func_ctx, opacity_func);
+        _removeArtifacts(center.z, x_min, center.y, center.x, y_max - 1, -1, 1, buffer, opacity_func_ctx, opacity_func);
+        _removeArtifacts(center.z, center.x, center.y, x_max - 1, y_max - 1, 1, 1, buffer, opacity_func_ctx, opacity_func);
     }
 
     buffer[center.y][center.x] = 100;
@@ -336,7 +337,8 @@ pub fn rayCastOctants(
     center: Coord,
     radius: usize,
     energy: usize,
-    opacity_func: *const fn (Coord) usize,
+    opacity_func_ctx: anytype,
+    opacity_func: *const fn (Coord, @TypeOf(opacity_func_ctx)) usize,
     buffer: *[HEIGHT][WIDTH]usize,
     start: usize,
     end: usize,
@@ -370,7 +372,7 @@ pub fn rayCastOctants(
                 buffer[coord.y][coord.x] = energy_percent;
             }
 
-            ray_energy -|= opacity_func(coord);
+            ray_energy -|= opacity_func(coord, opacity_func_ctx);
             if (ray_energy == 0) break;
         }
     }
@@ -386,7 +388,8 @@ fn _removeArtifacts(
     dx: isize,
     dy: isize,
     buffer: *[HEIGHT][WIDTH]usize,
-    opacity_func: *const fn (Coord) usize,
+    opacity_func_ctx: anytype,
+    opacity_func: *const fn (Coord, @TypeOf(opacity_func_ctx)) usize,
 ) void {
     assert(@abs(dx) == 1);
     assert(@abs(dy) == 1);
@@ -411,17 +414,17 @@ fn _removeArtifacts(
                 continue;
             }
 
-            if (buffer[cy][cx] > 0 and opacity_func(Coord.new2(z, cx, cy)) < 100) {
+            if (buffer[cy][cx] > 0 and opacity_func(Coord.new2(z, cx, cy), opacity_func_ctx) < 100) {
                 if (x2 >= @as(isize, @intCast(x0)) and x2 <= @as(isize, @intCast(x1))) {
                     const cx2: usize = @intCast(x2);
-                    if (cx2 < WIDTH and cy < HEIGHT and opacity_func(Coord.new2(z, cx2, cy)) >= 100) {
+                    if (cx2 < WIDTH and cy < HEIGHT and opacity_func(Coord.new2(z, cx2, cy), opacity_func_ctx) >= 100) {
                         buffer[cy][cx2] = @max(buffer[cy][cx2], buffer[cy][cx]);
                     }
                 }
 
                 if (@as(isize, @intCast(y2)) >= y0 and @as(isize, @intCast(y2)) <= y1) {
                     const cy2: usize = @intCast(y2);
-                    if (cx < WIDTH and cy2 < HEIGHT and opacity_func(Coord.new2(z, cx, cy2)) >= 100) {
+                    if (cx < WIDTH and cy2 < HEIGHT and opacity_func(Coord.new2(z, cx, cy2), opacity_func_ctx) >= 100) {
                         buffer[cy2][cx] = @max(buffer[cy2][cx], buffer[cy][cx]);
                     }
                 }
@@ -433,7 +436,7 @@ fn _removeArtifacts(
                 {
                     const cx2: usize = @intCast(x2);
                     const cy2: usize = @intCast(y2);
-                    if (cx2 < WIDTH and cy2 < HEIGHT and opacity_func(Coord.new2(z, cx2, cy2)) >= 100) {
+                    if (cx2 < WIDTH and cy2 < HEIGHT and opacity_func(Coord.new2(z, cx2, cy2), opacity_func_ctx) >= 100) {
                         buffer[cy2][cx2] = @max(buffer[cy2][cx2], buffer[cy][cx]);
                     }
                 }
@@ -583,13 +586,18 @@ fn _cast_light(
 //
 // Used for creating list of allies (since we don't want to take directional FOV
 // into account for that case).
-pub fn quickLOSCheck(refpoint: Coord, coord: Coord, opacity_func: *const fn (Coord) usize) bool {
+pub fn quickLOSCheck(
+    refpoint: Coord,
+    coord: Coord,
+    opacity_func_ctx: anytype,
+    opacity_func: *const fn (Coord, @TypeOf(opacity_func_ctx)) usize,
+) bool {
     var energy: usize = 100;
     const trajectory = refpoint.drawLine(coord, state.mapgeometry, 0);
     for (trajectory.constSlice(), 0..) |line_coord, i| {
         if (i == 0 or i == trajectory.len - 1) continue;
 
-        energy -|= opacity_func(line_coord);
+        energy -|= opacity_func(line_coord, opacity_func_ctx);
 
         if (energy == 0 and i != trajectory.len - 1)
             return false;

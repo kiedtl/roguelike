@@ -78,17 +78,19 @@ pub const GreenGold = Material{
 
 pub const PolishedSlade = Material{
     .name = "polished slade",
-    .color_fg = 0xb00bb0,
+    .color_fg = colors.mix(colors.NIGHT_BLUE, 0xa00ba0, 0.7),
+    .color_fg_dance = .{ .each = 0x25021f, .all = 0x15 },
     .color_bg = null,
     .color_floor = 0x9e9e9e,
     .tileset = 0,
     .luminescence = 0,
-    .opacity = 0.9,
+    .opacity = 0.4,
 };
 
 pub const Slade = Material{
     .name = "slade",
-    .color_fg = 0x775599,
+    .color_fg = colors.percentageOf2(colors.NIGHT_BLUE, 120),
+    .color_fg_dance = .{ .each = 0x05221f, .all = 0x20 },
     .color_bg = null,
     .color_floor = 0x9e9e9e,
     .tileset = 0,

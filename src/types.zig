@@ -1350,6 +1350,11 @@ pub const Status = enum {
     // Doesn't have a power field.
     Conductive,
 
+    // Standing on slade terrain.
+    //
+    // Doesn't have a power field.
+    Slade,
+
     // Monster always makes noise, unless it has .Sleeping status.
     //
     // Doesn't have a power field.
@@ -2683,7 +2688,8 @@ pub const Mob = struct { // {{{
 
         if (self.isUnderStatus(.Sleeping)) |_| return;
 
-        const is_blinded = self.isUnderStatus(.Blind) != null;
+        const is_on_slade = self.hasStatus(.Slade);
+        const is_blinded = self.hasStatus(.Blind);
         const light_needs = [_]bool{ self.canSeeInLight(false), self.canSeeInLight(true) };
 
         const perceptive = self.hasStatus(.Perceptive);
@@ -2711,14 +2717,14 @@ pub const Mob = struct { // {{{
         while (gen.next()) |eye_coord|
             if (perceptive) {
                 const S = struct {
-                    pub fn tileOpacity(coord: Coord) usize {
-                        const o = Dungeon.tileOpacity(coord);
+                    pub fn tileOpacity(coord: Coord, slade: bool) usize {
+                        const o = Dungeon.tileOpacity(coord, slade);
                         return if (o < 100) 0 else 100;
                     }
                 };
-                fov.rayCast(eye_coord, vision, energy, S.tileOpacity, &self.fov.m, direction, self == state.player);
+                fov.rayCast(eye_coord, vision, energy, is_on_slade, S.tileOpacity, &self.fov.m, direction, self == state.player);
             } else {
-                fov.rayCast(eye_coord, vision, energy, Dungeon.tileOpacity, &self.fov.m, direction, self == state.player);
+                fov.rayCast(eye_coord, vision, energy, is_on_slade, Dungeon.tileOpacity, &self.fov.m, direction, self == state.player);
             };
 
         for (self.fov.m, 0..) |row, y| for (row, 0..) |_, x| {
@@ -5903,26 +5909,26 @@ pub const Tile = struct {
 
             const mob = self.mob.?;
 
-            cell.fg = switch (mob.ai.phase) {
-                .Work, .Flee => 0xffffff,
-                .Investigate => 0xffca00,
-                .Hunt => 0xff6f4f,
-            };
-            if (mob == state.player or
-                mob.isUnderStatus(.Paralysis) != null or
-                mob.isUnderStatus(.Daze) != null)
-                cell.fg = 0xffffff;
-            if (mob.isUnderStatus(.Sleeping) != null)
-                cell.fg = 0xffcfff;
+            if (mob.faction == .Night) {
+                cell.fg = colors.NIGHT_BLUE;
+            } else {
+                cell.fg = switch (mob.ai.phase) {
+                    .Work, .Flee => 0xffffff,
+                    .Investigate => 0xffca00,
+                    .Hunt => 0xff6f4f,
+                };
 
-            // const hp_loss_percent = 100 - (mob.HP * 100 / mob.max_HP);
-            // if (hp_loss_percent > 0) {
-            //     const red = @intFromFloat(u32, (255 * (hp_loss_percent / 2)) / 100) + 0x22;
-            //     cell.bg = math.clamp(red, 0x66, 0xff) << 16;
-            // }
+                if (mob == state.player or
+                    mob.isUnderStatus(.Paralysis) != null or
+                    mob.isUnderStatus(.Daze) != null)
+                    cell.fg = 0xffffff;
 
-            if (!mob.ai.is_combative or mob.ai.fight_fn == ai.workerFight) {
-                cell.fg = colors.AQUAMARINE;
+                if (mob.isUnderStatus(.Sleeping) != null)
+                    cell.fg = 0xffcfff;
+
+                if (!mob.ai.is_combative or mob.ai.fight_fn == ai.workerFight) {
+                    cell.fg = colors.AQUAMARINE;
+                }
             }
 
             if (mob.prisoner_status) |ps| {
@@ -6087,27 +6093,51 @@ pub const Tile = struct {
                 .interval = rng.rangeManaged(rand, usize, 15, 25),
             };
         } else if (state.dungeon.at(coord).mob) |mob| {
-            var ch: ?u21 = null;
-            var interval: usize = 25;
+            if (mob.faction == .Night) {
+                const base = colors.NIGHT_BLUE;
+                const dance = colors.ColorDance{ .each = 0x0f081f, .all = 5 };
 
-            if (mob.hasStatus(.Sleeping)) {
-                ch = 'Z';
-            } else if (mob.ai.phase == .Flee) {
-                ch = '!';
-                interval = if (mob.bflee_flag) 10 else interval;
-            }
+                const rand = ui.uirng.random();
+                var cells = StackBuffer(display.Cell, 4).init(null);
+                const count: usize = if (rng.onein(4)) 4 else 3;
 
-            if (ch != null)
+                for (0..count) |_| {
+                    cells.append(.{
+                        .ch = mob.tile,
+                        .fg = dance.apply(base, rand),
+                    }) catch err.wat();
+                }
+
                 return ui.CellAnimation{
                     .id = @intFromPtr(mob),
                     .kind = ui.CellAnimation.Kind{
-                        .RotateCells = .{ .cells = StackBuffer(display.Cell, 4).init(&.{
-                            .{ .trans = true },
-                            .{ .fg = colors.GREY, .ch = ch.? },
-                        }) },
+                        .RotateCells = .{ .cells = cells },
                     },
-                    .interval = interval,
+                    .interval = 28,
                 };
+            } else {
+                var ch: ?u21 = null;
+                var interval: usize = 25;
+
+                if (mob.hasStatus(.Sleeping)) {
+                    ch = 'Z';
+                } else if (mob.ai.phase == .Flee) {
+                    ch = '!';
+                    interval = if (mob.bflee_flag) 10 else interval;
+                }
+
+                if (ch != null)
+                    return ui.CellAnimation{
+                        .id = @intFromPtr(mob),
+                        .kind = ui.CellAnimation.Kind{
+                            .RotateCells = .{ .cells = StackBuffer(display.Cell, 4).init(&.{
+                                .{ .trans = true },
+                                .{ .fg = colors.GREY, .ch = ch.? },
+                            }) },
+                        },
+                        .interval = interval,
+                    };
+            }
         } else if (there_is_gas) {
             // Nothing
         } else if (state.dungeon.fireAt(coord).* > 0) {
@@ -6398,14 +6428,20 @@ pub const Dungeon = struct {
         return false;
     }
 
-    pub fn tileOpacity(coord: Coord) usize {
+    pub fn tileOpacity(coord: Coord, standing_on_slade: bool) usize {
         const tile = state.dungeon.at(coord);
         var o: usize = FLOOR_OPACITY;
 
         if (tile.type == .Wall)
             return @intFromFloat(tile.material.opacity * 100);
 
-        o += state.dungeon.terrainAt(coord).opacity;
+        const terrain = state.dungeon.terrainAt(coord);
+        const terrain_is_slade = terrain == &surfaces.SladeTerrain;
+
+        if (standing_on_slade)
+            o += if (terrain_is_slade) terrain.opacity else 90
+        else
+            o += if (terrain_is_slade) 90 else terrain.opacity;
 
         if (tile.mob) |_|
             o += MOB_OPACITY;

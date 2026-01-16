@@ -610,7 +610,7 @@ pub fn checkForAllies(mob: *Mob) void {
 
         if (state.dungeon.at(fitem).mob) |othermob| {
             if (othermob != mob and othermob.faction == mob.faction and
-                fov.quickLOSCheck(mob.coord, fitem, Dungeon.tileOpacity))
+                fov.quickLOSCheck(mob.coord, fitem, mob.hasStatus(.Slade), Dungeon.tileOpacity))
             {
                 mob.allies.append(othermob) catch err.wat();
             }

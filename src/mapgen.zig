@@ -3135,6 +3135,7 @@ pub fn removeEnemiesNearEntry(level: usize) void {
                     if (fov.quickLOSCheck(
                         down_staircase,
                         neighbor,
+                        false,
                         types.Dungeon.tileOpacity,
                     ))
                         break true;

@@ -43,7 +43,7 @@ pub const FireBurstOpts = struct {
 
 pub fn fireBurst(ground0: Coord, max_radius: usize, opts: FireBurstOpts) void {
     const S = struct {
-        pub fn _opacityFunc(c: Coord) usize {
+        pub fn _opacityFunc(c: Coord, _: void) usize {
             return switch (state.dungeon.at(c).type) {
                 .Lava, .Water, .Wall => 100,
                 .Floor => if (state.dungeon.at(c).surface) |surf| switch (surf) {
@@ -71,7 +71,7 @@ pub fn fireBurst(ground0: Coord, max_radius: usize, opts: FireBurstOpts) void {
     var deg: usize = 0;
     while (deg < 360) : (deg += 30) {
         const radius = rng.range(usize, max_radius / 2, max_radius);
-        fov.rayCastOctants(ground0, radius, radius * 10, S._opacityFunc, &result, deg, deg + 31);
+        fov.rayCastOctants(ground0, radius, radius * 10, {}, S._opacityFunc, &result, deg, deg + 31);
     }
     result[ground0.y][ground0.x] = 100; // Ground zero is always incinerated
 
@@ -117,7 +117,7 @@ pub fn fireBurst(ground0: Coord, max_radius: usize, opts: FireBurstOpts) void {
 
 pub fn elecBurst(ground0: Coord, max_damage: usize, by: ?*Mob) void {
     const S = struct {
-        pub fn _opacityFunc(coord: Coord) usize {
+        pub fn _opacityFunc(coord: Coord, _: void) usize {
             return switch (state.dungeon.at(coord).type) {
                 .Wall => 100,
                 .Lava, .Water, .Floor => b: {
@@ -156,7 +156,7 @@ pub fn elecBurst(ground0: Coord, max_damage: usize, by: ?*Mob) void {
     var deg: usize = 0;
     while (deg < 360) : (deg += 30) {
         const s = rng.range(usize, 1, 2);
-        fov.rayCastOctants(ground0, s, 100, S._opacityFunc, &result, deg, deg + 31);
+        fov.rayCastOctants(ground0, s, 100, {}, S._opacityFunc, &result, deg, deg + 31);
     }
 
     result[ground0.y][ground0.x] = 100; // Ground zero is always harmed
@@ -204,7 +204,7 @@ pub const ExplosionOpts = struct {
 //
 pub fn kaboom(ground0: Coord, opts: ExplosionOpts) void {
     const S = struct {
-        pub fn _opacityFunc(coord: Coord) usize {
+        pub fn _opacityFunc(coord: Coord, _: void) usize {
             return switch (state.dungeon.at(coord).type) {
                 .Wall => rng.range(usize, 60, 140),
                 .Lava, .Water, .Floor => b: {
@@ -242,7 +242,7 @@ pub fn kaboom(ground0: Coord, opts: ExplosionOpts) void {
     var deg: usize = 0;
     while (deg < 360) : (deg += 30) {
         const s = rng.range(usize, opts.strength / 2, opts.strength);
-        fov.rayCastOctants(ground0, (s / 100), s, S._opacityFunc, &result, deg, deg + 31);
+        fov.rayCastOctants(ground0, (s / 100), s, {}, S._opacityFunc, &result, deg, deg + 31);
     }
 
     var coords = CoordArrayList.init(state.alloc);

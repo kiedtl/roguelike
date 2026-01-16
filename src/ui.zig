@@ -2092,6 +2092,8 @@ pub fn modifyTile(moblist: []const *Mob, coord: Coord, p_tile: display.Cell) dis
 // fragile.
 //
 pub fn drawMap(console: *Console, moblist: []const *Mob, refpoint: Coord) void {
+    const is_on_slade = state.player.hasStatus(.Slade);
+
     const refpointy: isize = @intCast(refpoint.y);
     const refpointx: isize = @intCast(refpoint.x);
     const level = state.player.coord.z;
@@ -2144,12 +2146,13 @@ pub fn drawMap(console: *Console, moblist: []const *Mob, refpoint: Coord) void {
                 if (state.memory.contains(coord)) {
                     tile = (state.memory.get(coord) orelse unreachable).tile;
 
+                    const darken_factor: usize = if (is_on_slade) 20 else 45;
                     const old_sbg = tile.sbg;
 
-                    tile.bg = colors.percentageOf(colors.filterBluescale(tile.bg), 60);
-                    tile.fg = colors.percentageOf(colors.filterBluescale(tile.fg), 60);
-                    tile.sbg = colors.percentageOf(colors.filterBluescale(tile.sbg), 60);
-                    tile.sfg = colors.percentageOf(colors.filterBluescale(tile.sfg), 60);
+                    tile.bg = colors.percentageOf(colors.filterGreenscale(tile.bg), darken_factor);
+                    tile.fg = colors.percentageOf(colors.filterGreenscale(tile.fg), darken_factor);
+                    tile.sbg = colors.percentageOf(colors.filterGreenscale(tile.sbg), darken_factor);
+                    tile.sfg = colors.percentageOf(colors.filterGreenscale(tile.sfg), darken_factor);
 
                     if (tile.bg < colors.BG) tile.bg = colors.BG;
 

@@ -160,9 +160,12 @@ pub const DefaultTerrain = Terrain{
 pub const SladeTerrain = Terrain{
     .id = "t_slade",
     .name = "slade",
-    .fg = 0xb00bb0, // polished slade
+    .fg = colors.percentageOf2(colors.NIGHT_BLUE, 120),
     .tile = '·',
     .stats = .{},
+    .effects = &[_]StatusDataInfo{
+        .{ .status = .Slade, .duration = .{ .Ctx = null } },
+    },
 
     .for_levels = &[_][]const u8{"LAI"},
     .placement = .EntireRoom,
@@ -803,10 +806,10 @@ pub const SladeDoor = Machine{
     .powered_bg = 0x29147a,
     .unpowered_bg = 0x29147a,
 
-    .powered_sprite = .S_G_M_DoorOpen,
-    .unpowered_sprite = .S_G_M_DoorShut,
-    .powered_sfg = 0x775599,
-    .unpowered_sfg = 0x775599,
+    .powered_sprite = .S_O_M_NightDoor,
+    .unpowered_sprite = .S_O_M_NightDoor,
+    .powered_sfg = colors.percentageOf2(colors.NIGHT_BLUE, 140),
+    .unpowered_sfg = colors.percentageOf2(colors.NIGHT_BLUE, 140),
     .powered_sbg = colors.BG,
     .unpowered_sbg = colors.BG,
 
