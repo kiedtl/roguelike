@@ -84,10 +84,12 @@ fn leaveInShame(mob: *Mob) AIJob.JStatus {
 fn useAdjacentMachine(mob: *Mob, id: []const u8) !bool {
     const origcoord = mob.coord;
     const mach = utils.getSpecificMachineInRoom(mob.coord, id) orelse return error.NotFound;
-    err.ensure(mob.distance2(mach.coord) == 1, "{cf}: Machine {s} isn't adjacent", .{ mob, mach.id }) catch return error.NotAdjacent;
+    err.ensure(mob.distance2(mach.coord) == 1, "{f}: Machine {s} isn't adjacent", .{ mob.fmt().caps().force(), mach.id }) catch return error.NotAdjacent;
     const r = mob.moveInDirection(mob.nextDirectionTo(mach.coord).?);
-    err.ensure(r, "{cf}: Powering lever failed", .{mob}) catch {};
-    err.ensure(mob.coord.eq(origcoord), "{cf}: Attempt to power {s} caused movement", .{ mob, mach.id }) catch {};
+    err.ensure(r, "{f}: Powering lever failed", .{mob.fmt().caps().force()}) catch {};
+    err.ensure(mob.coord.eq(origcoord), "{f}: Attempt to power {s} caused movement", .{
+        mob.fmt().caps().force(), mach.id,
+    }) catch {};
     return r;
 }
 

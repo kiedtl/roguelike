@@ -205,11 +205,11 @@ pub fn throwMob(thrower: ?*Mob, throwee: *Mob, direction: Direction, distance: u
     })) {
         if (thrower) |thrower_mob| {
             thrower_mob.makeNoise(.Combat, .Loud);
-            state.message(.Combat, "{c} knocks {} back!", .{ thrower_mob, throwee });
+            state.message(.Combat, "{f} knocks {f} back!", .{ thrower_mob.fmt().caps(), throwee.fmt() });
             state.markMessageNoisy();
         } else {
             throwee.makeNoise(.Combat, .Loud);
-            state.message(.Combat, "{c} is/are knocked back!", .{throwee});
+            state.message(.Combat, "{f} is knocked back!", .{throwee.fmt().caps()});
             state.markMessageNoisy();
         }
     }
@@ -382,7 +382,7 @@ pub fn disruptIndividualUndead(mob: *Mob, candles: usize) void {
     } else return;
 
     if (state.player.canSeeMob(mob)) {
-        state.message(.Status, "{c} is disrupted ($b{s}$.)", .{ mob, msg });
+        state.message(.Status, "{f} is disrupted ($b{s}$.)", .{ mob.fmt().caps(), msg });
     }
 }
 

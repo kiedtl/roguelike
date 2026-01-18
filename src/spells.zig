@@ -104,11 +104,7 @@ fn newCorpseSpell(
 
                         // TODO: remove?
                         if (state.player.cansee(coord)) {
-                            state.message(
-                                .SpellCast,
-                                msg_name ++ " bursts out of the {s} corpse!",
-                                .{corpse.displayName()},
-                            );
+                            state.message(.SpellCast, msg_name ++ " bursts out of the {f} corpse!", .{corpse.fmt()});
                         }
                     }
                 }
@@ -601,7 +597,7 @@ pub const BOLT_AIRBLAST = Spell{
     .effects = &[_]Effect{.{ .Custom = struct {
         fn f(caster_c: Coord, opts: SpellOptions, coord: Coord) void {
             if (state.dungeon.at(coord).mob) |victim| {
-                state.message(.Combat, "The blast of air hits {}!", .{victim});
+                state.message(.Combat, "The blast of air hits {f}!", .{victim.fmt()});
                 const distance = victim.coord.distance(caster_c);
                 assert(distance < opts.power);
                 const knockback = opts.power - distance;
@@ -1379,14 +1375,14 @@ fn _hasEffectHealUndead(caster: *Mob, _: SpellOptions, target: Coord) bool {
 fn _effectHealUndead(caster: Coord, _: SpellOptions, coord: Coord) void {
     const caster_mob = state.dungeon.at(caster).mob.?;
     const corpse_coord = utils.getNearestCorpse(caster_mob).?;
-    const corpse_name = state.dungeon.at(corpse_coord).surface.?.Corpse.displayName();
+    const corpse = state.dungeon.at(corpse_coord).surface.?.Corpse;
     state.dungeon.at(corpse_coord).surface = null;
 
     const ally = state.dungeon.at(coord).mob.?;
     ally.HP = math.clamp(ally.HP + ((ally.max_HP - ally.HP) / 2), 0, ally.max_HP);
 
-    state.message(.SpellCast, "The {s} corpse dissolves away, healing the {s}!", .{
-        corpse_name, ally.displayName(),
+    state.message(.SpellCast, "The {} corpse dissolves away, healing the {}!", .{
+        corpse.fmt(), ally.fmt(),
     });
 }
 
@@ -1405,9 +1401,7 @@ fn _effectHastenRot(_: Coord, opts: SpellOptions, coord: Coord) void {
 
     state.dungeon.gasAt(coord, gas.Miasma.id).* = opts.power;
     if (state.player.cansee(coord)) {
-        state.message(.SpellCast, "The {s} corpse explodes in a blast of foul miasma!", .{
-            corpse.displayName(),
-        });
+        state.message(.SpellCast, "The {f} corpse explodes in a blast of foul miasma!", .{corpse.fmt()});
     }
 }
 
@@ -1424,9 +1418,7 @@ fn _resurrectFire(caster_coord: Coord, opts: SpellOptions, coord: Coord) void {
     const corpse = state.dungeon.at(coord).surface.?.Corpse;
     if (corpse.raiseAsUndead(coord)) {
         if (state.player.cansee(coord)) {
-            state.message(.SpellCast, "The {s} rises, burning with an unearthly flame!", .{
-                corpse.displayName(),
-            });
+            state.message(.SpellCast, "The {f} rises, burning with an unearthly flame!", .{corpse.fmt()});
         }
         corpse.faction = state.dungeon.at(caster_coord).mob.?.faction;
         corpse.addStatus(.Fire, 0, .Prm);
@@ -1449,9 +1441,7 @@ fn _resurrectFrozen(_: Coord, opts: SpellOptions, coord: Coord) void {
     const corpse = state.dungeon.at(coord).surface.?.Corpse;
     if (corpse.raiseAsUndead(coord)) {
         if (state.player.cansee(coord)) {
-            state.message(.SpellCast, "The {s} glows with a cold light!", .{
-                corpse.displayName(),
-            });
+            state.message(.SpellCast, "The {f} glows with a cold light!", .{corpse.fmt()});
         }
         corpse.tile = 'Z';
         corpse.immobile = true;
@@ -1496,7 +1486,7 @@ pub const CAST_AWAKEN_STONE = Spell{
                 if (mob == state.player) {
                     state.message(.SpellCast, "The walls near you awaken!", .{});
                 } else if (state.player.cansee(mob.coord)) {
-                    state.message(.SpellCast, "The walls near {} transmute into living stone!", .{mob});
+                    state.message(.SpellCast, "The walls near {f} transmute into living stone!", .{mob.fmt()});
                 }
             }
         }.f,
@@ -1516,9 +1506,7 @@ fn _resurrectNormal(_: Coord, _: SpellOptions, coord: Coord) void {
     const corpse = state.dungeon.at(coord).surface.?.Corpse;
     if (corpse.raiseAsUndead(coord)) {
         if (state.player.cansee(coord)) {
-            state.message(.SpellCast, "The {s} rises from the dead!", .{
-                corpse.displayName(),
-            });
+            state.message(.SpellCast, "The {f} rises from the dead!", .{corpse.fmt()});
         }
     }
 }
@@ -1843,7 +1831,7 @@ pub const Spell = struct {
                 state.message(.SpellCast, "The {s} uses $o{s}$.!", .{ name, self.name });
             } else if (caster) |c| {
                 const verb: []const u8 = if (state.player == c) "use" else "uses";
-                state.message(.SpellCast, "{c} {s} $o{s}$.!", .{ c, verb, self.name });
+                state.message(.SpellCast, "{f} {s} $o{s}$.!", .{ c.fmt().caps(), verb, self.name });
             } else {
                 state.message(.SpellCast, "The giant tomato uses $o{s}$.!", .{self.name});
             }
@@ -1876,7 +1864,7 @@ pub const Spell = struct {
                 {
                     missed = true;
                     if (state.dungeon.at(target).mob) |victim|
-                        state.messageAboutMob(caster.?, target, .CombatUnimportant, "missed {}.", .{victim}, "missed {}.", .{victim});
+                        state.messageAboutMob(caster.?, target, .CombatUnimportant, "missed {f}.", .{victim.fmt()}, "missed {f}.", .{victim.fmt()});
                     const dist = caster_coord.distanceEuclidean(target);
                     const diff_x = @as(f64, @floatFromInt(target.x)) - @as(f64, @floatFromInt(caster_coord.x));
                     const diff_y = @as(f64, @floatFromInt(target.y)) - @as(f64, @floatFromInt(caster_coord.y));
@@ -1981,7 +1969,9 @@ pub const Spell = struct {
                         if (self.checks_will and !willSucceedAgainstMob(caster.?, victim)) {
                             const chance = 100 - checkAvgWillChances(caster.?, victim);
                             if (state.player.cansee(victim.coord) or state.player.cansee(caster_coord)) {
-                                state.message(.SpellCast, "{c} resisted $g($c{}%$g chance)$.", .{ victim, chance });
+                                state.message(.SpellCast, "{f} resisted $g($c{}%$g chance)$.", .{
+                                    victim.fmt().caps(), chance,
+                                });
                             }
                             continue;
                         }
@@ -2047,7 +2037,9 @@ pub const Spell = struct {
                         if (self.checks_will and !willSucceedAgainstMob(caster.?, victim)) {
                             const chance = 100 - checkAvgWillChances(caster.?, victim);
                             if (state.player.cansee(victim.coord) or state.player.cansee(caster_coord)) {
-                                state.message(.SpellCast, "{c} resisted $g($c{}%$g chance)$.", .{ victim, chance });
+                                state.message(.SpellCast, "{f} resisted $g($c{}%$g chance)$.", .{
+                                    victim.fmt().caps(), chance,
+                                });
                             }
                             continue;
                         }
@@ -2127,7 +2119,9 @@ pub const Spell = struct {
                         if (self.checks_will and !willSucceedAgainstMob(caster.?, target_mob)) {
                             const chance = 100 - checkAvgWillChances(caster.?, target_mob);
                             if (state.player.cansee(target_mob.coord) or state.player.cansee(caster_coord)) {
-                                state.message(.SpellCast, "{c} resisted $g($c{}%$g chance)$.", .{ target_mob, chance });
+                                state.message(.SpellCast, "{f} resisted $g($c{}%$g chance)$.", .{
+                                    target_mob.fmt().caps(), chance,
+                                });
                             }
                             return;
                         }

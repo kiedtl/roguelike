@@ -1292,7 +1292,7 @@ pub fn drainMob(mob: *Mob) void {
         if (mob.is_dead) {
             state.message(.Drain, "You drained the corpse of the Necromancer's power.", .{});
         } else {
-            state.message(.Drain, "You drained {} of the Necromancer's power.", .{mob});
+            state.message(.Drain, "You drained {} of the Necromancer's power.", .{mob.fmt()});
         }
     }
 }

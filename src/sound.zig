@@ -114,7 +114,7 @@ pub fn announceSound(coord: Coord) void {
         };
 
         if (text) |_text| {
-            state.message(.Info, "{c} {s}", .{ sound.mob_source.?, _text });
+            state.message(.Info, "{f} {s}", .{ sound.mob_source.?.fmt().caps(), _text });
             state.markMessageNoisy();
         }
     }

@@ -602,7 +602,7 @@ pub fn freeLevelInfo() void {
 
 pub fn dialog(by: *const Mob, text: []const u8) void {
     ui.Animation.apply(.{ .PopChar = .{ .coord = by.coord, .char = '!' } });
-    message(.Dialog, "{c}: \"{s}\"", .{ by, text });
+    message(.Dialog, "{f}: \"{s}\"", .{ by.fmt().caps(), text });
     ui.drawTextModalAtMob(by, "{s}", .{text}) catch
         err.ensure(false, "Couldn't find a space to draw the dialog. Dialog len: {}; mob coord: {}", .{ text.len, by.coord }) catch {};
 }
@@ -625,14 +625,12 @@ pub fn messageAboutMob(
     var fbs = std.io.fixedBufferStream(&buf);
 
     if (mob == player) {
-        std.fmt.format(fbs.writer(), mob_is_me_fmt, mob_is_me_args) catch err.wat();
-        message(mtype, "You {s}", .{fbs.getWritten()});
+        message(mtype, "You " ++ mob_is_me_fmt, mob_is_me_args);
     } else if (player.cansee(mob.coord)) {
-        std.fmt.format(fbs.writer(), mob_is_else_fmt, mob_is_else_args) catch err.wat();
-        message(mtype, "The {s} {s}", .{ mob.displayName(), fbs.getWritten() });
+        message(mtype, "The {s} " ++ mob_is_else_fmt, .{mob.displayName()} ++ mob_is_else_args);
     } else if (ref_coord != null and player.cansee(ref_coord.?)) {
         std.fmt.format(fbs.writer(), mob_is_else_fmt, mob_is_else_args) catch err.wat();
-        message(mtype, "Something {s}", .{fbs.getWritten()});
+        message(mtype, "Something " ++ mob_is_else_fmt, mob_is_else_args);
     }
 }
 

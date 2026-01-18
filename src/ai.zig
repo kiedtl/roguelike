@@ -316,7 +316,7 @@ pub fn tryRest(mob: *Mob) void {
             if (mob.coord.move(direction, state.mapgeometry)) |dest_coord| {
                 if (mob.teleportTo(dest_coord, direction, true, false)) {
                     if (state.player.cansee(mob.coord)) {
-                        state.message(.Unimportant, "{c} writhes in agony.", .{mob});
+                        state.message(.Unimportant, "{f} writhes in agony.", .{mob.fmt().caps()});
                     }
 
                     // if (rng.percent(@as(usize, 50))) {
@@ -1989,8 +1989,8 @@ pub fn _Job_WRK_WrkstationBusyWork(mob: *Mob, j: *AIJob) AIJob.JStatus {
                 rng.onein(8))
             {
                 const r = mob.moveInDirection(d);
-                err.ensure(r, "{cf}: Busywork failed", .{mob}) catch {};
-                err.ensure(mob.coord.eq(origcoord), "{cf}: Busywork caused movement", .{mob}) catch {};
+                err.ensure(r, "{f}: Busywork failed", .{mob.fmt().caps().force()}) catch {};
+                err.ensure(mob.coord.eq(origcoord), "{f}: Busywork caused movement", .{mob.fmt().caps().force()}) catch {};
                 if (r) didstuff = true;
                 break;
             };
@@ -2012,7 +2012,7 @@ pub fn _Job_ATK_Homing(homer: *Mob, job: *AIJob) AIJob.JStatus {
         pub fn _die(me: *Mob) AIJob.JStatus {
             if (state.player.canSeeMob(me)) {
                 const verb = if (mem.eql(u8, me.id, "rolling_boulder")) "stops" else "dissipates";
-                state.message(.CombatUnimportant, "{c} {s}.", .{ me, verb });
+                state.message(.CombatUnimportant, "{f} {s}.", .{ me.fmt().caps(), verb });
             }
             state.dungeon.gasAt(me.coord, gas.SmokeGas.id).* += gas.MIN_GAS_SPREAD - 1;
             me.deinitNoCorpse();
@@ -2022,7 +2022,7 @@ pub fn _Job_ATK_Homing(homer: *Mob, job: *AIJob) AIJob.JStatus {
         pub fn _dieWithVictim(me: *Mob, target: *Mob, damage: usize, is_blast: bool) AIJob.JStatus {
             if (is_blast) {
                 if (state.player.canSeeMob(me))
-                    state.message(.SpellCast, "{c} explodes!!", .{me});
+                    state.message(.SpellCast, "{f} explodes!!", .{me.fmt().caps()});
                 spells.BLAST_HELLFIRE.use(me, me.coord, me.coord, .{
                     .power = damage,
                     .free = true,
@@ -2156,7 +2156,7 @@ pub fn _Job_ATK_FightOnlyDoomed(mob: *Mob, _: *AIJob) AIJob.JStatus {
 
     if (!some_enemies_are_doomed) {
         if (state.player.canSeeMob(mob))
-            state.message(.Info, "{c} vanishes into thin air.", .{mob});
+            state.message(.Info, "{f} vanishes into thin air.", .{mob.fmt().caps()});
         mob.deinitNoCorpse();
         return .Complete;
     }

@@ -576,7 +576,9 @@ fn tickGame(p_cur_level: ?usize) !void {
             }
 
             const _j = if (mob.newestJob()) |j| j.job else .Dummy;
-            err.ensure(prev_energy > mob.energy, "{cf} (phase: {}; job: {}) did nothing during turn!", .{ mob, mob.ai.phase, _j }) catch {
+            err.ensure(prev_energy > mob.energy, "{f} (phase: {}; job: {}) did nothing during turn!", .{
+                mob.fmt().caps().force(), mob.ai.phase, _j,
+            }) catch {
                 ai.tryRest(mob);
             };
 
@@ -814,7 +816,13 @@ fn testerMain() void {
         pub fn assertEq(x: *@This(), a: anytype, b: @TypeOf(a), comptime c_fmt: []const u8, c_args: anytype) Error!void {
             x.total_asserts += 1;
             if (a != b) {
-                x.record("Expected equality ({} != {}) (" ++ c_fmt ++ ")", .{ a, b } ++ c_args);
+                if (@TypeOf(a) == *Mob) {
+                    x.record("Expected equality ({} != {}) (" ++ c_fmt ++ ")", .{
+                        a.fmt().force(), b.fmt().force(),
+                    } ++ c_args);
+                } else {
+                    x.record("Expected equality ({} != {}) (" ++ c_fmt ++ ")", .{ a, b } ++ c_args);
+                }
                 return error.Failed;
             }
         }

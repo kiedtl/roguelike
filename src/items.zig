@@ -1090,7 +1090,7 @@ pub const MagnetizationRing = Ring{ // {{{
             // }
 
             if (state.player.cansee(magnet.coord))
-                state.message(.Info, "{c} becomes briefly magnetic!", .{magnet});
+                state.message(.Info, "{f} becomes briefly magnetic!", .{magnet.fmt().caps()});
 
             return true;
         }
@@ -1206,7 +1206,7 @@ pub const DetonationRing = Ring{ // {{{
 
             if (!spells.willSucceedAgainstMob(state.player, target)) {
                 const chance = 100 - spells.checkAvgWillChances(state.player, target);
-                state.message(.SpellCast, "{c} resisted $oDetonation$. $g($c{}%$g chance)$.", .{ target, chance });
+                state.message(.SpellCast, "{f} resisted $oDetonation$. $g($c{}%$g chance)$.", .{ target.fmt().caps(), chance });
                 return true;
             }
 
@@ -1549,7 +1549,7 @@ pub const Consumable = struct {
                         pub fn f(machine: *Machine) void {
                             if (machine.last_interaction) |mob| {
                                 if (state.player.cansee(machine.coord))
-                                    state.message(.Info, "{c} triggers the {s}!", .{ mob, name });
+                                    state.message(.Info, "{f} triggers the {s}!", .{ mob.fmt().caps(), name });
                                 state.dungeon.at(machine.coord).surface = null;
                                 func(machine, mob);
                             }

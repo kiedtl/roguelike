@@ -201,7 +201,7 @@ pub const Info = struct {
             for (can_see.items) |mob| {
                 s.in_view_ids.append(mob.id) catch break;
                 s.in_view_names.append(
-                    std.fmt.allocPrint(alloc, "{cAf}", .{mob}) catch err.wat(),
+                    std.fmt.allocPrint(alloc, "{f}", .{mob.fmt().caps().article().force()}) catch err.wat(),
                 ) catch err.wat();
             }
         }

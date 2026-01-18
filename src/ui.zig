@@ -4208,7 +4208,7 @@ pub fn drawTextModalAt(
 }
 
 pub fn drawTextModalAtMob(mob: *const Mob, comptime fmt: []const u8, args: anytype) !void {
-    return drawTextModalAt(mob.coord, "{Ac}", .{mob}, fmt, args);
+    return drawTextModalAt(mob.coord, "{f}", .{mob.fmt().caps().article()}, fmt, args);
 }
 
 pub fn drawChoicePrompt(comptime fmt: []const u8, args: anytype, options: []const []const u8) ?usize {

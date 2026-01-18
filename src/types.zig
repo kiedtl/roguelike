@@ -3,7 +3,6 @@ const math = std.math;
 const mem = std.mem;
 const meta = std.meta;
 const sort = std.sort;
-const fmt = std.fmt;
 const assert = std.debug.assert;
 const enums = std.enums;
 const testing = std.testing;
@@ -250,7 +249,7 @@ pub const Direction = enum { // {{{
         } else error.NoSuchDirection;
     }
 
-    pub fn format(self: Self, comptime f: []const u8, _: fmt.FormatOptions, writer: anytype) !void {
+    pub fn format(self: Self, comptime f: []const u8, _: std.fmt.FormatOptions, writer: anytype) !void {
         if (comptime !mem.eql(u8, f, "")) {
             @compileError("Unknown format string: '" ++ f ++ "'");
         }
@@ -1635,7 +1634,9 @@ pub const Status = enum {
             if (!spells.willSucceedAgainstMob(mob, othermob)) {
                 if (state.player.cansee(othermob.coord) or state.player.cansee(mob.coord)) {
                     const chance = 100 - spells.checkAvgWillChances(mob, othermob);
-                    state.message(.SpellCast, "{c} resisted $oTorment Undead$. $g($c{}%$g chance)$.", .{ othermob, chance });
+                    state.message(.SpellCast, "{f} resisted $oTorment Undead$. $g($c{}%$g chance)$.", .{
+                        othermob.fmt().caps(), chance,
+                    });
                 }
                 continue;
             }
@@ -2354,6 +2355,48 @@ test "MobFov serialization" {
             try testing.expectEqual(mfov.m[y][x], mfov_deser.m[y][x]);
 }
 
+pub const MobFormatter = struct {
+    mob: *const Mob,
+
+    use_article: bool = true,
+    use_caps: bool = false,
+
+    // List the mob's name even if it's not visible. If false, will instead
+    // print "something"/"someone"
+    force_name: bool = false,
+
+    pub fn article(self: MobFormatter) MobFormatter {
+        var s = self;
+        s.use_article = !s.use_article;
+        return s;
+    }
+
+    pub fn caps(self: MobFormatter) MobFormatter {
+        var s = self;
+        s.use_caps = !s.use_caps;
+        return s;
+    }
+
+    pub fn force(self: MobFormatter) MobFormatter {
+        var s = self;
+        s.force_name = !s.force_name;
+        return s;
+    }
+
+    pub fn format(self: *const MobFormatter, _: []const u8, _: std.fmt.FormatOptions, writer: anytype) !void {
+        if (self.mob == state.player) {
+            const n = if (self.use_caps) "You" else "you";
+            try std.fmt.format(writer, "{s}", .{n});
+        } else if (!state.player.cansee(self.mob.coord) and !self.force_name) {
+            const n = if (self.use_caps) "Something" else "something";
+            try std.fmt.format(writer, "{s}", .{n});
+        } else {
+            const the = if (!self.use_article) @as([]const u8, "") else if (self.use_caps) "The " else "the ";
+            try std.fmt.format(writer, "{s}{s}", .{ the, self.mob.displayName() });
+        }
+    }
+};
+
 pub const Mob = struct { // {{{
     // linked list stuff
     __next: ?*Mob = null,
@@ -2617,30 +2660,8 @@ pub const Mob = struct { // {{{
         return fbs.getWritten();
     }
 
-    pub fn format(self: *const Mob, comptime f: []const u8, opts: fmt.FormatOptions, writer: anytype) !void {
-        _ = opts;
-
-        comptime var article = true;
-        comptime var caps = false;
-        comptime var force = false;
-
-        inline for (f) |char| switch (char) {
-            'A' => article = false,
-            'c' => caps = true,
-            'f' => force = true,
-            else => @compileError("Unknown format string: '" ++ f ++ "'"),
-        };
-
-        if (self == state.player) {
-            const n = if (caps) "You" else "you";
-            try fmt.format(writer, "{s}", .{n});
-        } else if (!state.player.cansee(self.coord) and !force) {
-            const n = if (caps) "Something" else "something";
-            try fmt.format(writer, "{s}", .{n});
-        } else {
-            const the = if (!article) @as([]const u8, "") else if (caps) "The " else "the ";
-            try fmt.format(writer, "{s}{s}", .{ the, self.displayName() });
-        }
+    pub fn fmt(self: *const Mob) MobFormatter {
+        return MobFormatter{ .mob = self };
     }
 
     pub fn areaRect(self: *const Mob) Rect {
@@ -2819,7 +2840,7 @@ pub const Mob = struct { // {{{
                         scores.recordTaggedUsize(.TimesCorrupted, .{ .M = hostile }, 1);
                     }
                     if (state.player.cansee(self.coord)) {
-                        state.message(.Combat, "{c} corrupts {}!", .{ hostile, self });
+                        state.message(.Combat, "{f} corrupts {f}!", .{ hostile.fmt().caps(), self.fmt() });
                     }
                     self.addStatus(.Corruption, 0, .{ .Tmp = 7 });
                     ai.updateEnemyKnowledge(hostile, self, null);
@@ -2987,7 +3008,7 @@ pub const Mob = struct { // {{{
     }
 
     pub fn newJob(self: *Mob, jtype: AIJob.Type) void {
-        err.ensure(!self.jobs.isFull(), "{cf} has too many jobs, clearing.", .{self}) catch {
+        err.ensure(!self.jobs.isFull(), "{f} has too many jobs, clearing.", .{self.fmt().caps().force()}) catch {
             // Somehow jobs queue is full, use nuclear option (remove all)
             for (self.jobs.slice()) |*j| {
                 std.log.err("    - Job: {}", .{j.job});
@@ -3058,7 +3079,7 @@ pub const Mob = struct { // {{{
         if (direct) {
             const verbs = if (state.player == self) item.verbs_player else item.verbs_other;
             const verb = rng.chooseUnweighted([]const u8, verbs);
-            state.message(.Info, "{c} {s} a {s}!", .{ self, verb, item.name });
+            state.message(.Info, "{f} {s} a {s}!", .{ self.fmt().caps(), verb, item.name });
         }
 
         for (item.effects) |effect| switch (effect) {
@@ -3696,14 +3717,14 @@ pub const Mob = struct { // {{{
             if (state.player.canSeeMob(attacker) or state.player.canSeeMob(recipient)) {
                 if (missed) {
                     const verb = if (attacker == state.player) "miss" else "misses";
-                    state.message(.CombatUnimportant, "{c} {s} {}.", .{
-                        attacker, verb, recipient,
+                    state.message(.CombatUnimportant, "{f} {s} {f}.", .{
+                        attacker.fmt().caps(), verb, recipient.fmt(),
                     });
                     ui.Animation.blinkMob(&.{recipient}, '/', colors.LIGHT_STEEL_BLUE, .{});
                 } else if (evaded) {
                     const verb = if (recipient == state.player) "evade" else "evades";
-                    state.message(.CombatUnimportant, "{c} {s} {}.", .{
-                        recipient, verb, attacker,
+                    state.message(.CombatUnimportant, "{f} {s} {f}.", .{
+                        recipient.fmt().caps(), verb, attacker.fmt(),
                     });
                     ui.Animation.blinkMob(&.{recipient}, ')', colors.LIGHT_STEEL_BLUE, .{});
                 }
@@ -3776,7 +3797,7 @@ pub const Mob = struct { // {{{
                     ui.Animation.blinkMob(&.{recipient}, '@', colors.LIGHT_STEEL_BLUE, .{});
                     recipient.faction = attacker.faction;
                     if (state.player.canSeeMob(recipient))
-                        state.message(.Info, "{c} is turned.", .{recipient});
+                        state.message(.Info, "{f} is turned.", .{recipient.fmt().caps()});
                 } else if (recipient.life_type == .Construct and recipient.resistance(.rElec) < 0 and
                     rng.percent(@as(usize, 33)))
                 {
@@ -3894,7 +3915,7 @@ pub const Mob = struct { // {{{
         const fully_adj: []const u8 = if (self.HP == self.max_HP) "fully " else "";
         const punc: []const u8 = if (self.HP == self.max_HP) "!" else ".";
         if (state.player.canSeeMob(self))
-            state.message(.Info, "{c} {s} {s}healed{s} $g($c{}$g HP)", .{ self, verb, fully_adj, punc, h });
+            state.message(.Info, "{f} {s} {s}healed{s} $g($c{}$g HP)", .{ self.fmt().caps(), verb, fully_adj, punc, h });
     }
 
     pub fn takeDamage(self: *Mob, d: Damage, msg: DamageMessage) void {
@@ -3929,7 +3950,7 @@ pub const Mob = struct { // {{{
             self.cancelStatus(.Protected);
             ui.Animation.blinkMob(&.{self}, '0', colors.PALE_VIOLET_RED, .{});
             if (state.player.cansee(self.coord) or (d.by_mob != null and state.player.cansee(d.by_mob.?.coord))) {
-                state.message(.Combat, "{c} ignores the damage. $b*Protected*$.", .{self});
+                state.message(.Combat, "{} ignores the damage. $b*Protected*$.", .{self.fmt().caps()});
             }
             return;
         }
@@ -3985,11 +4006,11 @@ pub const Mob = struct { // {{{
 
                 state.message(
                     .Combat,
-                    "{c} {s} {s}{s} $g($r{}$. $g{s}$g, $c{}$. $g{s}$.)",
+                    "{f} {s} {s}{s} $g($r{}$. $g{s}$g, $c{}$. $g{s}$.)",
                     .{
-                        self,        basic_helper_verb, basic_verb,
-                        punctuation, amount,            d.kind.string(),
-                        resisted,    resist_str,
+                        self.fmt().caps(), basic_helper_verb, basic_verb,
+                        punctuation,       amount,            d.kind.string(),
+                        resisted,          resist_str,
                     },
                 );
             } else {
@@ -4005,7 +4026,7 @@ pub const Mob = struct { // {{{
                 if (msg.noun) |m_noun| {
                     noun.fmt("{s}", .{m_noun});
                 } else {
-                    noun.fmt("{c}", .{d.by_mob.?});
+                    noun.fmt("{f}", .{d.by_mob.?.fmt().caps()});
                 }
 
                 const verb = if (d.by_mob != null and d.by_mob.? == state.player)
@@ -4017,7 +4038,7 @@ pub const Mob = struct { // {{{
                     .Combat,
                     "{s} {s} {}{s}{s} $g($r{}$. $g{s}$g, $c{}$. $g{s}$.) {s}{s}{s}{s}{s}{s}{s}",
                     .{
-                        noun.constSlice(),   verb,        self,
+                        noun.constSlice(),   verb,        self.fmt(),
                         hitstrs.verb_degree, punctuation, amount,
                         d.kind.string(),     resisted,    resist_str,
 
@@ -4251,15 +4272,15 @@ pub const Mob = struct { // {{{
         if (self != state.player) {
             if (self.killed_by) |by_mob| {
                 if (by_mob == state.player) {
-                    state.message(.Damage, "You slew {}.", .{self});
+                    state.message(.Damage, "You slew {}.", .{self.fmt()});
                 } else if (state.player.cansee(by_mob.coord)) {
-                    state.message(.Damage, "{c} killed the {}.", .{ by_mob, self });
+                    state.message(.Damage, "{f} killed the {}.", .{ by_mob.fmt().caps(), self.fmt() });
                 } else if (state.player.cansee(self.coord)) {
-                    state.message(.Damage, "{c} dies.", .{self});
+                    state.message(.Damage, "{f} dies.", .{self.fmt().caps()});
                 }
             } else {
                 if (state.player.cansee(self.coord)) {
-                    state.message(.Damage, "{c} dies.", .{self});
+                    state.message(.Damage, "{f} dies.", .{self.fmt().caps()});
                 }
             }
         }
@@ -4321,7 +4342,7 @@ pub const Mob = struct { // {{{
 
                 // FIXME: make template specify message, currently this only works
                 // for hulkers
-                state.message(.Combat, "{c} contorts and breaks up.", .{self});
+                state.message(.Combat, "{f} contorts and breaks up.", .{self.fmt().caps()});
             },
         }
     }
@@ -4406,9 +4427,7 @@ pub const Mob = struct { // {{{
 
     pub fn assertIsAtLocation(self: *const Mob) void {
         if (state.dungeon.at(self.coord).mob == null) {
-            err.bug("Nothing at mob {f} location. ({}, last activity: {any})", .{
-                self, self.coord, self.activities.current(),
-            });
+            err.bug("Nothing at mob {f} location. ({})", .{ self.fmt().force(), self.coord });
         }
     }
 
@@ -4600,7 +4619,7 @@ pub const Mob = struct { // {{{
             (self == state.player or state.player.cansee(self.coord)))
         {
             const verb = if (got.?) @as([]const u8, "gained") else "lost";
-            state.message(.Info, "{c} {s} $a{s}$..", .{ self, verb, string });
+            state.message(.Info, "{f} {s} $a{s}$..", .{ self.fmt().caps(), verb, string });
             if (ministring) |str| {
                 const pref = if (got.?) "+" else "-";
                 ui.labels.addForf(self, "{s}{s}", .{ pref, str }, .{ .color = colors.AQUAMARINE });
@@ -4905,8 +4924,8 @@ pub const Mob = struct { // {{{
         //std.log.info("{}: {}: {}", .{ self, resist, innate });
         err.ensure(
             innate <= 100 and innate >= -100,
-            "{cf} has out-of-bounds resist ({}, {})",
-            .{ self, resist, innate },
+            "{f} has out-of-bounds resist ({}, {})",
+            .{ self.fmt().caps().force(), resist, innate },
         ) catch {};
         r += innate;
 
@@ -5222,7 +5241,7 @@ pub const Machine = struct {
                         }
 
                         if (state.player.cansee(machine.coord)) {
-                            state.message(.Trap, "{c} triggers a " ++ gstr ++ " trap!", .{mob});
+                            state.message(.Trap, "{f} triggers a " ++ gstr ++ " trap!", .{mob.fmt().caps()});
                             state.message(.Trap, "Noxious fumes seep through nearby vents!", .{});
                         }
 
@@ -5692,7 +5711,7 @@ pub const Item = union(ItemType) {
         return cell;
     }
 
-    pub fn format(self: *const Item, comptime f: []const u8, _: fmt.FormatOptions, writer: anytype) !void {
+    pub fn format(self: *const Item, comptime f: []const u8, _: std.fmt.FormatOptions, writer: anytype) !void {
         comptime var func = &shortNameWrite;
 
         if (comptime mem.eql(u8, f, "l")) {
@@ -5903,7 +5922,9 @@ pub const Tile = struct {
         }
 
         if (self.mob != null and !ignore_mobs) {
-            err.ensure(self.type != .Wall, "Mob {f} located in wall @({},{})", .{ self.mob.?, coord.x, coord.y }) catch {
+            err.ensure(self.type != .Wall, "Mob {f} located in wall @({},{})", .{
+                self.mob.?.fmt().force(), coord.x, coord.y,
+            }) catch {
                 return .{ .fg = 0xffffff, .bg = 0xff0000, .sfg = 0, .sbg = 0, .ch = self.mob.?.tile, .sch = null };
             };
 

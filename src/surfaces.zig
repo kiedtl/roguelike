@@ -602,7 +602,7 @@ pub const SirenTrap = Machine{
             if (machine.last_interaction) |mob| {
                 if (mob.faction == .Necromancer) return;
                 if (state.player.cansee(machine.coord))
-                    state.message(.Info, "{c} triggers the siren trap!", .{mob});
+                    state.message(.Info, "{f} triggers the siren trap!", .{mob.fmt().caps()});
                 state.dungeon.at(machine.coord).surface = null;
                 alert.queueThreatResponse(.{ .Assault = .{ .waves = 3, .target = mob } });
                 state.message(.Info, "You hear an ominous alarm blaring.", .{});
@@ -832,14 +832,6 @@ pub const SladeDoor = Machine{
                         return;
                     }
                 };
-
-                // const orig = mob.coord;
-                // if (state.player.cansee(orig)) {
-                //     state.message(.Info, "{c} phases through the door.", .{});
-                // }
-                // if (state.player.cansee(dest)) {
-                //     state.message(.Info, "{c} phases through the door.", .{});
-                // }
             }
         }
     }.f,
@@ -1119,7 +1111,7 @@ pub const Alarm = Machine{
             }
 
             if (state.player.canSeeMob(mob) and state.player.cansee(machine.coord)) {
-                state.message(.Info, "{c} pulls the alarm!", .{mob});
+                state.message(.Info, "{f} pulls the alarm!", .{mob.fmt().caps()});
             } else {
                 state.message(.Info, "You hear an ominous alarm blaring.", .{});
             }
@@ -1502,7 +1494,7 @@ pub const DustlingProducer = Machine{
                 leader.?.addUnderling(dustling);
 
                 if (state.player.canSeeMob(dustling) or state.player.cansee(machine.coord))
-                    state.message(.Info, "{c} emerges from the machinery.", .{dustling});
+                    state.message(.Info, "{f} emerges from the machinery.", .{dustling.fmt().caps()});
 
                 machine.ctx.unset("ctx_leader_for_dustling");
             }
