@@ -268,6 +268,7 @@ pub fn triggerStair(stair: surfaces.Stair, cur_stair: Coord) bool {
     // Index into inventory
     var stair_key: ?usize = null;
 
+    // Early return: stair is locked
     if (stair.locked) {
         assert(stair.stairtype != .Down);
         stair_key = for (state.player.inventory.pack.constSlice(), 0..) |item, ind| {
@@ -284,13 +285,20 @@ pub fn triggerStair(stair: surfaces.Stair, cur_stair: Coord) bool {
         }
     }
 
+    // Early return: stair is down staircase
+    if (stair.stairtype == .Down) {
+        ui.drawAlert("Why would you want to go back?", .{});
+        return false;
+    }
+
+    // Scorekeeping
+    scores.recordUsize(.Health, state.player.HP);
+    scores.recordIsize(.NightRep, state.night_rep[@intFromEnum(types.Faction.Player)]);
+
     if (stair.stairtype == .Access) {
         state.state = .Win;
         // Don't bother removing key
         return true;
-    } else if (stair.stairtype == .Down) {
-        ui.drawAlert("Why would you want to go back?", .{});
-        return false;
     }
 
     const dest_floor = stair.stairtype.Up;

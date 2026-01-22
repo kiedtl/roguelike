@@ -38,7 +38,6 @@ pub const Info = struct {
     statuses: StackBuffer(types.StatusDataInfo, Status.TOTAL),
     stats: Mob.MobStat,
     resists: Mob.MobResists,
-    night_rep: isize,
     surroundings: [SURROUND_RADIUS][SURROUND_RADIUS]u21,
     messages: StackBuffer(Message, MESSAGE_COUNT),
 
@@ -171,8 +170,6 @@ pub const Info = struct {
             .Armor = state.player.resistance(.Armor),
         };
 
-        s.night_rep = state.night_rep[@intFromEnum(types.Faction.Player)];
-
         {
             var dy: usize = 0;
             var my: usize = state.player.coord.y -| Info.SURROUND_RADIUS / 2;
@@ -275,36 +272,40 @@ pub const Chunk = union(enum) {
         return .{ .Header = .{ .n = n } };
     }
 
-    pub fn stat(s: Stat, n: []const u8) Chunk {
-        return .{ .Stat = .{ .s = s, .n = n } };
+    pub fn stat(s: Stat, n: []const u8, ign0: bool) Chunk {
+        return .{ .Stat = .{ .s = s, .n = n, .ign0 = ign0 } };
     }
 };
 
 // zig fmt: off
 pub const CHUNKS = [_]Chunk{
     .header("General stats"),
-    .stat(.TurnsSpent,       "turns spent"),
-    .stat(.StatusRecord,     "turns w/ statuses"),
+    .stat(.TurnsSpent,       "turns spent", true),
+    .stat(.StatusRecord,     "turns w/ statuses", true),
+
+    .header("Before leaving floor"),
+    .stat(.Health,           "health",            true),
+    .stat(.NightRep,         "night reputation",  false),
 
     .header("Combat"),
-    .stat(.KillRecord,       "vanquished foes"),
-    .stat(.StabRecord,       "stabbed foes"),
-    .stat(.DamageInflicted,  "inflicted damage"),
-    .stat(.DamageEndured,    "endured damage"),
-    .stat(.SpellsEndured,    "endured spells"),
-    .stat(.HealingEndured,   "health restored"),
+    .stat(.KillRecord,       "vanquished foes",   true),
+    .stat(.StabRecord,       "stabbed foes",      true),
+    .stat(.DamageInflicted,  "inflicted damage",  true),
+    .stat(.DamageEndured,    "endured damage",    true),
+    .stat(.SpellsEndured,    "endured spells",    true),
+    .stat(.HealingEndured,   "health restored",   true),
 
-    .header("Items/rings"),
-    .stat(.ItemsUsed,        "items used"),
-    .stat(.ItemsThrown,      "items thrown"),
-    .stat(.RingsUsed,        "rings used"),
+    .header("Items & rings"),
+    .stat(.ItemsUsed,        "items used",        true),
+    .stat(.ItemsThrown,      "items thrown",      true),
+    .stat(.RingsUsed,        "rings used",        true),
 
     .header("Misc"),
-    .stat(.RaidedLairs,      "lairs trespassed"),
-    .stat(.CandlesDestroyed, "candles destroyed"),
-    .stat(.ShrinesDrained,   "shrines drained"),
-    .stat(.TimesCorrupted,   "times corrupted"),
-    .stat(.WizardUsed,       "wizard keys used"),
+    .stat(.RaidedLairs,      "lairs trespassed",  true),
+    .stat(.CandlesDestroyed, "candles destroyed", true),
+    .stat(.ShrinesDrained,   "shrines drained",   true),
+    .stat(.TimesCorrupted,   "times corrupted",   true),
+    .stat(.WizardUsed,       "wizard keys used",  true),
 };
 // zig fmt: on
 
@@ -327,6 +328,8 @@ pub const Stat = enum(usize) {
     ShrinesDrained = 13,
     TimesCorrupted = 14,
     WizardUsed = 15,
+    Health = 16,
+    NightRep = 17,
 
     pub fn id(self: Stat) usize {
         return @intFromEnum(self);
@@ -350,12 +353,15 @@ pub const Stat = enum(usize) {
             .ShrinesDrained => .SingleUsize,
             .TimesCorrupted => .BatchUsize,
             .WizardUsed => .BatchUsize,
+            .Health => .SingleUsize,
+            .NightRep => .SingleIsize,
         };
     }
 };
 
 pub const StatValue = struct {
-    SingleUsize: Single = .{},
+    SingleUsize: Single(usize) = .{},
+    SingleIsize: Single(isize) = .{},
     BatchUsize: struct {
         total: usize = 0,
         singles: StackBuffer(BatchEntry, 256) = StackBuffer(BatchEntry, 256).init(null),
@@ -363,34 +369,36 @@ pub const StatValue = struct {
 
     pub const BatchEntry = struct {
         id: StackBuffer(u8, 64) = StackBuffer(u8, 64).init(null),
-        val: Single = .{},
+        val: Single(usize) = .{},
     };
 
-    pub const Single = struct {
-        total: usize = 0,
-        each: [LEVELS]usize = [1]usize{0} ** LEVELS,
+    pub fn Single(comptime T: type) type {
+        return struct {
+            total: T = 0,
+            each: [LEVELS]T = [1]T{0} ** LEVELS,
 
-        pub fn jsonStringify(val: Single, stream: anytype) !void {
-            const JsonValue = struct { floor_type: []const u8, floor_name: []const u8, value: usize };
-            var object: struct { total: usize, values: StackBuffer(JsonValue, LEVELS) } = .{
-                .total = val.total,
-                .values = StackBuffer(JsonValue, LEVELS).init(null),
-            };
-
-            var c: usize = state.levelinfo.len - 1;
-            while (c > 0) : (c -= 1) if (_isLevelSignificant(c)) {
-                const v = JsonValue{
-                    .floor_type = state.levelinfo[c].id,
-                    .floor_name = state.levelinfo[c].name,
-                    .value = val.each[c],
+            pub fn jsonStringify(val: Single(T), stream: anytype) !void {
+                const JsonValue = struct { floor_type: []const u8, floor_name: []const u8, value: T };
+                var object: struct { total: T, values: StackBuffer(JsonValue, LEVELS) } = .{
+                    .total = val.total,
+                    .values = StackBuffer(JsonValue, LEVELS).init(null),
                 };
-                object.values.append(v) catch err.wat();
-            };
 
-            //try std.json.stringify(object, opts, stream);
-            try stream.write(object);
-        }
-    };
+                var c: usize = state.levelinfo.len - 1;
+                while (c > 0) : (c -= 1) if (_isLevelSignificant(c)) {
+                    const v = JsonValue{
+                        .floor_type = state.levelinfo[c].id,
+                        .floor_name = state.levelinfo[c].name,
+                        .value = val.each[c],
+                    };
+                    object.values.append(v) catch err.wat();
+                };
+
+                //try std.json.stringify(object, opts, stream);
+                try stream.write(object);
+            }
+        };
+    }
 };
 
 pub fn init() void {
@@ -402,6 +410,18 @@ pub fn init() void {
 
 pub fn get(stat: Stat) *StatValue {
     return &state.scoredata[stat.id()];
+}
+
+// XXX: this hidden reliance on state.player.z could cause bugs
+// e.g. when recording stats of a level the player just left
+pub fn recordIsize(stat: Stat, value: isize) void {
+    switch (stat.stattype()) {
+        .SingleIsize => {
+            state.scoredata[stat.id()].SingleIsize.total += value;
+            state.scoredata[stat.id()].SingleIsize.each[state.player.coord.z] += value;
+        },
+        else => unreachable,
+    }
 }
 
 // XXX: this hidden reliance on state.player.z could cause bugs
@@ -513,11 +533,6 @@ fn exportTextMorgue(info: Info, alloc: mem.Allocator) !std.ArrayList(u8) {
         try w.print("\n", .{});
     }
     try w.print("\n", .{});
-
-    if (info.night_rep != 0) {
-        try w.print("Night Rep: {}\n", .{info.night_rep});
-        try w.print("\n", .{});
-    }
 
     try w.print("Inventory:\n", .{});
     if (info.inventory_ids.len > 0) {
@@ -655,6 +670,20 @@ fn exportTextMorgue(info: Info, alloc: mem.Allocator) !std.ArrayList(u8) {
             .Stat => |stat| {
                 const entry = &state.scoredata[stat.s.id()];
                 switch (stat.s.stattype()) {
+                    .SingleIsize => { // Duplicate of SingleUsize
+                        try w.print("{s: <24} {: >5} | ", .{ stat.n, entry.SingleUsize.total });
+                        {
+                            var c: usize = state.levelinfo.len - 1;
+                            while (c > 0) : (c -= 1) if (_isLevelSignificant(c)) {
+                                if (stat.ign0 and entry.SingleUsize.each[c] == 0) {
+                                    try w.print("-    ", .{});
+                                } else {
+                                    try w.print("{: <4} ", .{entry.SingleUsize.each[c]});
+                                }
+                            };
+                        }
+                        try w.print("\n", .{});
+                    },
                     .SingleUsize => {
                         try w.print("{s: <24} {: >5} | ", .{ stat.n, entry.SingleUsize.total });
                         {
@@ -710,6 +739,10 @@ fn exportJsonMorgue(info: Info) !std.ArrayList(u8) {
             const entry = &state.scoredata[stat.s.id()];
             try w.print("\"{s}\": {{", .{stat.n});
             switch (stat.s.stattype()) {
+                .SingleIsize => {
+                    try w.writeAll("\"value\":");
+                    try std.json.stringify(entry.SingleIsize, .{}, w);
+                },
                 .SingleUsize => {
                     try w.writeAll("\"value\":");
                     try std.json.stringify(entry.SingleUsize, .{}, w);
