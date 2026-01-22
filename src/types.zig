@@ -4006,7 +4006,7 @@ pub const Mob = struct { // {{{
 
                 state.message(
                     .Combat,
-                    "{f} {s} {s}{s} $g($r{}$. $g{s}$g, $c{}$. $g{s}$.)",
+                    "{f} {s} {s}{s} $g($r{}$. $g{s}$g, $c{}$. $g{s}$g)$.",
                     .{
                         self.fmt().caps(), basic_helper_verb, basic_verb,
                         punctuation,       amount,            d.kind.string(),
@@ -4036,7 +4036,7 @@ pub const Mob = struct { // {{{
 
                 state.message(
                     .Combat,
-                    "{s} {s} {}{s}{s} $g($r{}$. $g{s}$g, $c{}$. $g{s}$.) {s}{s}{s}{s}{s}{s}{s}",
+                    "{s} {s} {}{s}{s} $g($r{}$. $g{s}$g, $c{}$. $g{s}$g)$. {s}{s}{s}{s}{s}{s}{s}",
                     .{
                         noun.constSlice(),   verb,        self.fmt(),
                         hitstrs.verb_degree, punctuation, amount,
