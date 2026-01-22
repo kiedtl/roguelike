@@ -246,44 +246,67 @@ pub const Info = struct {
 pub const Chunk = union(enum) {
     Header: struct { n: []const u8 },
     Stat: struct { s: Stat, n: []const u8, ign0: bool = true },
+
+    pub fn header(n: []const u8) Chunk {
+        return .{ .Header = .{ .n = n } };
+    }
+
+    pub fn stat(s: Stat, n: []const u8) Chunk {
+        return .{ .Stat = .{ .s = s, .n = n } };
+    }
 };
 
+// zig fmt: off
 pub const CHUNKS = [_]Chunk{
-    .{ .Header = .{ .n = "General stats" } },
-    .{ .Stat = .{ .s = .TurnsSpent, .n = "turns spent" } },
-    .{ .Stat = .{ .s = .StatusRecord, .n = "turns w/ statuses" } },
-    .{ .Header = .{ .n = "Combat" } },
-    .{ .Stat = .{ .s = .KillRecord, .n = "vanquished foes" } },
-    .{ .Stat = .{ .s = .StabRecord, .n = "stabbed foes" } },
-    .{ .Stat = .{ .s = .DamageInflicted, .n = "inflicted damage" } },
-    .{ .Stat = .{ .s = .DamageEndured, .n = "endured damage" } },
-    .{ .Header = .{ .n = "Items/rings" } },
-    .{ .Stat = .{ .s = .ItemsUsed, .n = "items used" } },
-    .{ .Stat = .{ .s = .ItemsThrown, .n = "items thrown" } },
-    .{ .Stat = .{ .s = .RingsUsed, .n = "rings used" } },
-    .{ .Header = .{ .n = "Misc" } },
-    .{ .Stat = .{ .s = .RaidedLairs, .n = "lairs trespassed" } },
-    .{ .Stat = .{ .s = .CandlesDestroyed, .n = "candles destroyed" } },
-    .{ .Stat = .{ .s = .ShrinesDrained, .n = "shrines drained" } },
-    .{ .Stat = .{ .s = .TimesCorrupted, .n = "times corrupted" } },
-    .{ .Stat = .{ .s = .WizardUsed, .n = "wizard keys used" } },
+    .header("General stats"),
+    .stat(.TurnsSpent,       "turns spent"),
+    .stat(.StatusRecord,     "turns w/ statuses"),
+
+    .header("Combat"),
+    .stat(.KillRecord,       "vanquished foes"),
+    .stat(.StabRecord,       "stabbed foes"),
+    .stat(.DamageInflicted,  "inflicted damage"),
+    .stat(.DamageEndured,    "endured damage"),
+    .stat(.SpellsEndured,    "endured spells"),
+    .stat(.HealingEndured,   "health restored"),
+
+    .header("Items/rings"),
+    .stat(.ItemsUsed,        "items used"),
+    .stat(.ItemsThrown,      "items thrown"),
+    .stat(.RingsUsed,        "rings used"),
+
+    .header("Misc"),
+    .stat(.RaidedLairs,      "lairs trespassed"),
+    .stat(.CandlesDestroyed, "candles destroyed"),
+    .stat(.ShrinesDrained,   "shrines drained"),
+    .stat(.TimesCorrupted,   "times corrupted"),
+    .stat(.WizardUsed,       "wizard keys used"),
 };
+// zig fmt: on
 
 pub const Stat = enum(usize) {
+    // Numbers are used for indexes into state.scoredata, and can be changed
+    // without worry (doing so might invalidate save files, but who cares)
     TurnsSpent = 0,
     KillRecord = 1,
     StabRecord = 2,
     DamageInflicted = 3,
     DamageEndured = 4,
-    StatusRecord = 5,
-    ItemsUsed = 6,
-    ItemsThrown = 7,
-    RingsUsed = 8,
-    RaidedLairs = 9,
-    CandlesDestroyed = 10,
-    ShrinesDrained = 11,
-    TimesCorrupted = 12,
-    WizardUsed = 13,
+    HealingEndured = 5,
+    SpellsEndured = 6,
+    StatusRecord = 7,
+    ItemsUsed = 8,
+    ItemsThrown = 9,
+    RingsUsed = 10,
+    RaidedLairs = 11,
+    CandlesDestroyed = 12,
+    ShrinesDrained = 13,
+    TimesCorrupted = 14,
+    WizardUsed = 15,
+
+    pub fn id(self: Stat) usize {
+        return @intFromEnum(self);
+    }
 
     pub fn stattype(self: Stat) std.meta.FieldEnum(StatValue) {
         return switch (self) {
@@ -292,6 +315,8 @@ pub const Stat = enum(usize) {
             .StabRecord => .BatchUsize,
             .DamageInflicted => .BatchUsize,
             .DamageEndured => .BatchUsize,
+            .HealingEndured => .BatchUsize,
+            .SpellsEndured => .BatchUsize,
             .StatusRecord => .BatchUsize,
             .ItemsUsed => .BatchUsize,
             .ItemsThrown => .BatchUsize,
@@ -351,8 +376,8 @@ pub fn init() void {
         } else |_| {};
 }
 
-pub fn get(s: Stat) *StatValue {
-    return &state.scoredata[@intFromEnum(s)];
+pub fn get(stat: Stat) *StatValue {
+    return &state.scoredata[stat.id()];
 }
 
 // XXX: this hidden reliance on state.player.z could cause bugs
@@ -360,8 +385,8 @@ pub fn get(s: Stat) *StatValue {
 pub fn recordUsize(stat: Stat, value: usize) void {
     switch (stat.stattype()) {
         .SingleUsize => {
-            state.scoredata[@intFromEnum(stat)].SingleUsize.total += value;
-            state.scoredata[@intFromEnum(stat)].SingleUsize.each[state.player.coord.z] += value;
+            state.scoredata[stat.id()].SingleUsize.total += value;
+            state.scoredata[stat.id()].SingleUsize.each[state.player.coord.z] += value;
         },
         else => unreachable,
     }
@@ -371,6 +396,7 @@ pub const Tag = union(enum) {
     M: *Mob,
     I: types.Item,
     W: player.WizardFun,
+    status: types.Status,
     s: []const u8,
 
     pub fn intoString(self: Tag) StackBuffer(u8, 64) {
@@ -378,6 +404,7 @@ pub const Tag = union(enum) {
             .M => |mob| StackBuffer(u8, 64).initFmt("{s}", .{mob.displayName()}),
             .I => |item| StackBuffer(u8, 64).initFmt("{h}", .{item}),
             .W => |wiz| StackBuffer(u8, 64).init(@tagName(wiz)),
+            .status => |status| StackBuffer(u8, 64).init(status.string(state.player)),
             .s => |str| StackBuffer(u8, 64).init(str),
         };
     }
@@ -389,18 +416,18 @@ pub fn recordTaggedUsize(stat: Stat, tag: Tag, value: usize) void {
     const key = tag.intoString();
     switch (stat.stattype()) {
         .BatchUsize => {
-            state.scoredata[@intFromEnum(stat)].BatchUsize.total += value;
-            const index: ?usize = for (state.scoredata[@intFromEnum(stat)].BatchUsize.singles.constSlice(), 0..) |single, i| {
+            state.scoredata[stat.id()].BatchUsize.total += value;
+            const index: ?usize = for (state.scoredata[stat.id()].BatchUsize.singles.constSlice(), 0..) |single, i| {
                 if (mem.eql(u8, single.id.constSlice(), key.constSlice())) break i;
             } else null;
             if (index) |i| {
-                state.scoredata[@intFromEnum(stat)].BatchUsize.singles.slice()[i].val.total += value;
-                state.scoredata[@intFromEnum(stat)].BatchUsize.singles.slice()[i].val.each[state.player.coord.z] += value;
+                state.scoredata[stat.id()].BatchUsize.singles.slice()[i].val.total += value;
+                state.scoredata[stat.id()].BatchUsize.singles.slice()[i].val.each[state.player.coord.z] += value;
             } else {
-                state.scoredata[@intFromEnum(stat)].BatchUsize.singles.append(.{}) catch err.wat();
-                state.scoredata[@intFromEnum(stat)].BatchUsize.singles.lastPtr().?.id = key;
-                state.scoredata[@intFromEnum(stat)].BatchUsize.singles.lastPtr().?.val.total += value;
-                state.scoredata[@intFromEnum(stat)].BatchUsize.singles.lastPtr().?.val.each[state.player.coord.z] += value;
+                state.scoredata[stat.id()].BatchUsize.singles.append(.{}) catch err.wat();
+                state.scoredata[stat.id()].BatchUsize.singles.lastPtr().?.id = key;
+                state.scoredata[stat.id()].BatchUsize.singles.lastPtr().?.val.total += value;
+                state.scoredata[stat.id()].BatchUsize.singles.lastPtr().?.val.each[state.player.coord.z] += value;
             }
         },
         else => unreachable,
@@ -469,8 +496,8 @@ fn exportTextMorgue(info: Info, alloc: mem.Allocator) !std.ArrayList(u8) {
         try w.print("\n", .{});
     }
 
-    const killed = state.scoredata[@intFromEnum(@as(Stat, .KillRecord))].BatchUsize.total;
-    const stabbed = state.scoredata[@intFromEnum(@as(Stat, .StabRecord))].BatchUsize.total;
+    const killed = state.scoredata[Stat.KillRecord.id()].BatchUsize.total;
+    const stabbed = state.scoredata[Stat.StabRecord.id()].BatchUsize.total;
     try w.print("You killed {} foe(s), stabbing {} of them.\n", .{ killed, stabbed });
     try w.print("\n", .{});
 
@@ -578,7 +605,7 @@ fn exportTextMorgue(info: Info, alloc: mem.Allocator) !std.ArrayList(u8) {
                 try w.print("\n", .{});
             },
             .Stat => |stat| {
-                const entry = &state.scoredata[@intFromEnum(stat.s)];
+                const entry = &state.scoredata[stat.s.id()];
                 switch (stat.s.stattype()) {
                     .SingleUsize => {
                         try w.print("{s: <24} {: >5} | ", .{ stat.n, entry.SingleUsize.total });
@@ -632,7 +659,7 @@ fn exportJsonMorgue(info: Info) !std.ArrayList(u8) {
     for (&CHUNKS, 0..) |chunk, chunk_i| switch (chunk) {
         .Header => {},
         .Stat => |stat| {
-            const entry = &state.scoredata[@intFromEnum(stat.s)];
+            const entry = &state.scoredata[stat.s.id()];
             try w.print("\"{s}\": {{", .{stat.n});
             try w.print("\"type\": \"{s}\",", .{@tagName(stat.s.stattype())});
             switch (stat.s.stattype()) {

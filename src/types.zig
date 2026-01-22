@@ -1710,7 +1710,8 @@ pub const Status = enum {
     }
 
     pub fn tickRecuperate(mob: *Mob) void {
-        if (rng.percent(RECUPERATION_HEAL_CHANCE)) mob.takeHealing(1);
+        if (rng.percent(RECUPERATION_HEAL_CHANCE))
+            mob.takeHealing(.{ .amount = 1, .source = .{ .status = .Recuperate } });
     }
 
     pub fn tickNausea(mob: *Mob) void {
@@ -3092,7 +3093,7 @@ pub const Mob = struct { // {{{
                 .kind = d.kind,
                 .by_mob = self,
             }, .{ .basic = true }),
-            .Heal => |h| self.takeHealing(h),
+            .Heal => |h| self.takeHealing(.{ .amount = h, .source = .{ .item = Item{ .Consumable = item } } }),
             .Resist => |r| utils.getFieldByEnumPtr(Resistance, *isize, &self.innate_resists, r.r).* += r.change,
             .Stat => |s| utils.getFieldByEnumPtr(Stat, *isize, &self.stats, s.s).* += s.change,
             .Kit => |template| {
@@ -3908,14 +3909,40 @@ pub const Mob = struct { // {{{
         }
     }
 
-    pub fn takeHealing(self: *Mob, h: usize) void {
-        self.HP = math.clamp(self.HP + h, 0, self.max_HP);
+    pub const Healing = struct {
+        amount: usize,
+        source: ?Source,
+
+        pub const Source = union(enum) {
+            mob: *Mob,
+            item: Item,
+            status: Status,
+            other: []const u8,
+        };
+    };
+
+    pub fn takeHealing(self: *Mob, h: Healing) void {
+        self.HP = math.clamp(self.HP + h.amount, 0, self.max_HP);
+
+        if (self == state.player) {
+            const source = h.source orelse Healing.Source{ .other = "???" };
+            scores.recordTaggedUsize(
+                .HealingEndured,
+                switch (source) {
+                    .mob => |m| .{ .M = m },
+                    .item => |i| .{ .I = i },
+                    .status => |i| .{ .status = i },
+                    .other => |s| .{ .s = s },
+                },
+                h.amount,
+            );
+        }
 
         const verb: []const u8 = if (self == state.player) "are" else "is";
         const fully_adj: []const u8 = if (self.HP == self.max_HP) "fully " else "";
         const punc: []const u8 = if (self.HP == self.max_HP) "!" else ".";
         if (state.player.canSeeMob(self))
-            state.message(.Info, "{f} {s} {s}healed{s} $g($c{}$g HP)", .{ self.fmt().caps(), verb, fully_adj, punc, h });
+            state.message(.Info, "{f} {s} {s}healed{s} $g($c{}$g HP)", .{ self.fmt().caps(), verb, fully_adj, punc, h.amount });
     }
 
     pub fn takeDamage(self: *Mob, d: Damage, msg: DamageMessage) void {
@@ -3927,13 +3954,11 @@ pub const Mob = struct { // {{{
         const amount = if (!d.lethal and unshaved_amount >= self.HP) self.HP - 1 else unshaved_amount;
         const dmg_percent = amount * 100 / @max(1, self.HP);
 
-        self.HP -|= amount;
-
         // Inform defender of attacker
         //
         // We already do this in fight() for missed attacks, but this takes
         // care of ranged combat, spell damage, etc.
-        if (!d.stealth and d.by_mob != null) {
+        if (amount < self.HP and !d.stealth and d.by_mob != null) {
             const attacker = d.by_mob.?;
             if (attacker.isHostileTo(self) and self.hasStatus(.Amnesia)) {
                 self.cancelStatus(.Amnesia);
@@ -3955,14 +3980,16 @@ pub const Mob = struct { // {{{
             return;
         }
 
+        self.HP -|= amount;
+
         // Record stats
         if (d.by_mob != null and d.by_mob == state.player) {
-            scores.recordTaggedUsize(.DamageInflicted, .{ .M = self }, 1);
+            scores.recordTaggedUsize(.DamageInflicted, .{ .M = self }, amount);
         } else if (self == state.player) {
             if (d.by_mob) |attacker| {
-                scores.recordTaggedUsize(.DamageEndured, .{ .M = attacker }, 1);
+                scores.recordTaggedUsize(.DamageEndured, .{ .M = attacker }, amount);
             } else {
-                scores.recordTaggedUsize(.DamageEndured, .{ .s = "???" }, 1);
+                scores.recordTaggedUsize(.DamageEndured, .{ .s = "???" }, amount);
             }
         }
 

@@ -21,6 +21,7 @@ const items = @import("items.zig");
 const mobs = @import("mobs.zig");
 const player = @import("player.zig");
 const rng = @import("rng.zig");
+const scores = @import("scores.zig");
 const sound = @import("sound.zig");
 const state = @import("state.zig");
 const types = @import("types.zig");
@@ -1714,7 +1715,10 @@ pub const Effect = union(enum) {
                 }, d.msg);
             },
             .Heal => if (state.dungeon.at(target_c).mob) |victim|
-                victim.takeHealing(spellcfg.power),
+                victim.takeHealing(.{
+                    .amount = spellcfg.power,
+                    .source = if (caster) |c| .{ .mob = c } else null,
+                }),
             .FireBlast => |b| explosions.fireBurst(target_c, b.radius.get(spellcfg), .{
                 .initial_damage = b.damage.get(spellcfg),
                 .culprit = caster,
@@ -1850,6 +1854,10 @@ pub const Spell = struct {
                 .when = state.ticks,
             };
         }
+
+        if (state.dungeon.at(target).mob) |target_mob|
+            if (target_mob == state.player and caster != state.player)
+                scores.recordTaggedUsize(.SpellsEndured, .{ .s = self.name }, 1);
 
         switch (self.cast_type) {
             .Ray => err.todo(),

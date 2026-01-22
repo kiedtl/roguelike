@@ -1368,7 +1368,7 @@ pub const CombatDummyRepairLever = Machine{
             };
             if (state.player.canSeeMob(dummy))
                 state.message(.Info, "The combat dummy suddenly re-inflates.", .{});
-            dummy.takeHealing(dummy.max_HP);
+            dummy.takeHealing(.{ .amount = dummy.max_HP, .source = null });
             dummy.addStatus(.Sleeping, 0, .Prm);
         }
     }.f,
@@ -1756,7 +1756,7 @@ fn interact1FirstAidStation(m: *Machine, mob: *Mob) bool {
 
     const HP = state.player.HP;
     const heal_amount = @min(rng.range(usize, 3, 5), state.player.max_HP - HP);
-    state.player.takeHealing(heal_amount);
+    state.player.takeHealing(.{ .amount = heal_amount, .source = .{ .other = "first aid station" } });
 
     // Remove some harmful statuses.
     state.player.cancelStatus(.Nausea);
