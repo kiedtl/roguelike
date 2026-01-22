@@ -37,6 +37,7 @@ pub const Info = struct {
     level: usize,
     statuses: StackBuffer(types.StatusDataInfo, Status.TOTAL),
     stats: Mob.MobStat,
+    resists: Mob.MobResists,
     surroundings: [SURROUND_RADIUS][SURROUND_RADIUS]u21,
     messages: StackBuffer(Message, MESSAGE_COUNT),
 
@@ -80,8 +81,8 @@ pub const Info = struct {
 
         s.result = switch (state.state) {
             .Viewer => "Ate a polar bear's liver",
-            .Game => "Began meditating on the mysteries of eggplants",
-            .Win => "Escaped the Necromancer's wrath",
+            .Game => "Began meditating on the mysteries of giant pineapples",
+            .Win => "Escaped the jaws of death",
             .Quit => "Overcome by the Fear of death",
             .Lose => b: {
                 if (state.player.killed_by) |by| {
@@ -104,7 +105,7 @@ pub const Info = struct {
                     } else if (by.faction == .Revgenunkim) {
                         break :b "Overcome by an ancient Power";
                     } else if (by.faction == .Holy) {
-                        break :b "Cast into the Abyss";
+                        break :b "Executed by a Supernatural Presence";
                     } else {
                         break :b "Died on the journey";
                     }
@@ -123,8 +124,8 @@ pub const Info = struct {
             const ldp = state.player.lastDamagePercentage();
             s.slain_str = "slain";
             if (ldp > 10) s.slain_str = "executed";
-            if (ldp > 20) s.slain_str = "demolished";
-            if (ldp > 30) s.slain_str = "miserably destroyed";
+            if (ldp > 15) s.slain_str = "demolished";
+            if (ldp > 20) s.slain_str = "destroyed";
 
             const killer = state.player.killed_by.?;
             s.slain_by_id = killer.id;
@@ -147,7 +148,27 @@ pub const Info = struct {
             s.statuses.append(entry.value.*) catch err.wat();
         }
 
-        s.stats = state.player.stats;
+        s.stats = .{
+            .Melee = state.player.stat(.Melee),
+            .Missile = state.player.stat(.Missile),
+            .Martial = state.player.stat(.Martial),
+            .Evade = state.player.stat(.Evade),
+            .Speed = state.player.stat(.Speed),
+            .Vision = state.player.stat(.Vision),
+            .Willpower = state.player.stat(.Willpower),
+            .Spikes = state.player.stat(.Spikes),
+            .Conjuration = state.player.stat(.Conjuration),
+            .Potential = state.player.stat(.Potential),
+        };
+
+        s.resists = .{
+            .rFire = state.player.resistance(.rFire),
+            .rElec = state.player.resistance(.rElec),
+            .rAcid = state.player.resistance(.rAcid),
+            .rHoly = state.player.resistance(.rHoly),
+            .rFume = state.player.resistance(.rFume),
+            .Armor = state.player.resistance(.Armor),
+        };
 
         {
             var dy: usize = 0;
@@ -442,32 +463,51 @@ fn exportTextMorgue(info: Info, alloc: mem.Allocator) !std.ArrayList(u8) {
     var buf = std.ArrayList(u8).init(alloc);
     var w = buf.writer();
 
-    try w.print("// Oathbreaker morgue entry @@ {}-{}-{} {}:{}\n", .{ info.end_datetime.Y, info.end_datetime.M, info.end_datetime.D, info.end_datetime.h, info.end_datetime.m });
-    try w.print("// Seed: {}\n", .{info.seed});
+    try w.print("Oathbreaker morgue entry @@ {}-{}-{} {}:{}\n", .{ info.end_datetime.Y, info.end_datetime.M, info.end_datetime.D, info.end_datetime.h, info.end_datetime.m });
+    try w.print("Seed: {}\n", .{info.seed});
     try w.print("\n", .{});
 
     try w.print("{s} the Oathbreaker\n", .{info.username.constSlice()});
-    try w.print("\n", .{});
-    try w.print("*** {s} ***\n", .{info.result});
-    try w.print("\n", .{});
+    try w.print("    *** {s} ***\n", .{info.result});
 
     if (state.state == .Lose or state.state == .Quit) {
         if (info.slain_str.len > 0) {
-            try w.print("... {s} by a {s}\n", .{ info.slain_str, info.slain_by_name.constSlice() });
+            try w.print("    ... {s} by a {s}\n", .{ info.slain_str, info.slain_by_name.constSlice() });
             if (info.slain_by_captain_name.len > 0)
-                try w.print("... in service of a {s}\n", .{info.slain_by_captain_name.constSlice()});
+                try w.print("    ... in service of a {s}\n", .{info.slain_by_captain_name.constSlice()});
         }
     }
 
-    try w.print("... at {s} after {} turns\n", .{ state.levelinfo[info.level].name, info.turns });
+    try w.print("    ... at {s} after {} turns\n", .{ state.levelinfo[info.level].name, info.turns });
     try w.print("\n", .{});
 
     try w.print(" State \n", .{});
     try w.print("=======\n", .{});
     try w.print("\n", .{});
 
-    for (info.equipment.constSlice()) |equ| {
-        try w.print("{s: <7} {s}\n", .{ equ.slot_name, equ.name.constSlice() });
+    const equipment = info.equipment.constSlice();
+    const stats = utils.fieldsAndValues(info.stats, types.Stat);
+    const resists = utils.fieldsAndValues(info.resists, types.Resistance);
+
+    for (0..@max(equipment.len, stats.len, resists.len)) |i| {
+        if (i < stats.len)
+            try w.print("{s: >12}: {: <5}    |    ", .{
+                stats[i].@"0".string(), utils.SignedFormatter.of(stats[i].@"1"),
+            })
+        else
+            try w.writeByteNTimes(' ', 12 + 2 + 5 + 9);
+
+        if (i < resists.len)
+            try w.print("{s: >7}: {: <5}    |    ", .{
+                resists[i].@"0".string(), utils.SignedFormatter.of(resists[i].@"1"),
+            })
+        else
+            try w.writeByteNTimes(' ', 7 + 2 + 5 + 9);
+
+        if (i < equipment.len)
+            try w.print("[{s: >7}] {s}", .{ equipment[i].slot_name, equipment[i].name.constSlice() });
+
+        try w.print("\n", .{});
     }
     try w.print("\n", .{});
 
@@ -650,7 +690,7 @@ fn exportJsonMorgue(info: Info) !std.ArrayList(u8) {
     var buf = std.ArrayList(u8).init(state.alloc);
     var w = buf.writer();
 
-    try w.writeAll("{");
+    try w.writeByte('{');
 
     try w.writeAll("\"info\":");
     try std.json.stringify(info, .{}, w);
@@ -661,7 +701,6 @@ fn exportJsonMorgue(info: Info) !std.ArrayList(u8) {
         .Stat => |stat| {
             const entry = &state.scoredata[stat.s.id()];
             try w.print("\"{s}\": {{", .{stat.n});
-            try w.print("\"type\": \"{s}\",", .{@tagName(stat.s.stattype())});
             switch (stat.s.stattype()) {
                 .SingleUsize => {
                     try w.writeAll("\"value\":");
@@ -672,17 +711,17 @@ fn exportJsonMorgue(info: Info) !std.ArrayList(u8) {
                     for (entry.BatchUsize.singles.slice(), 0..) |batch_entry, i| {
                         try w.print("{{ \"name\": \"{s}\", \"value\":", .{batch_entry.id.constSlice()});
                         try std.json.stringify(batch_entry.val, .{}, w);
-                        try w.writeAll("}");
+                        try w.writeByte('}');
                         if (i != entry.BatchUsize.singles.slice().len - 1)
-                            try w.writeAll(",");
+                            try w.writeByte(',');
                     }
-                    try w.writeAll("]");
+                    try w.writeByte(']');
                 },
             }
-            try w.writeAll("}");
+            try w.writeByte('}');
 
             if (chunk_i != CHUNKS.len - 1)
-                try w.writeAll(",");
+                try w.writeByte(',');
         },
     };
     try w.writeByte('}');

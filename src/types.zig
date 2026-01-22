@@ -2488,7 +2488,7 @@ pub const Mob = struct { // {{{
     deaf: bool = false,
     max_HP: usize,
     immobile: bool = false,
-    innate_resists: enums.EnumFieldStruct(Resistance, isize, 0) = .{},
+    innate_resists: MobResists = .{},
     blood: ?Spatter = .Blood,
     blood_spray: ?usize = null, // Gas ID
     corpse: enum { Normal, Wall, Dust, None } = .Normal,
@@ -2578,6 +2578,8 @@ pub const Mob = struct { // {{{
         Conjuration: isize = 0,
         Potential: isize = 0,
     };
+
+    pub const MobResists = enums.EnumFieldStruct(Resistance, isize, 0);
 
     pub const Inventory = struct {
         pack: PackBuffer = PackBuffer.init(&[_]Item{}),

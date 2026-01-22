@@ -46,6 +46,22 @@ pub fn is(comptime id: std.builtin.TypeId) fn (type) bool {
     return Closure.trait;
 }
 
+// Get a struct that has all fields of the same type, and return a list
+// of struct { enum.FieldName, value }
+pub fn fieldsAndValues(set: anytype, comptime FieldEnum: type) b: {
+    const fields = @typeInfo(@TypeOf(set)).@"struct".fields;
+    break :b [fields.len]struct { FieldEnum, fields[0].type };
+} {
+    const fields = @typeInfo(@TypeOf(set)).@"struct".fields;
+    var buf: [fields.len]struct { FieldEnum, fields[0].type } = undefined;
+
+    inline for (fields, 0..) |field, i| {
+        buf[i] = .{ @field(FieldEnum, field.name), @field(set, field.name) };
+    }
+
+    return buf;
+}
+
 /// Copied from Zig 0.9.1 standard library.
 ///
 /// Returns true if the passed type will coerce to []const u8.
@@ -421,6 +437,10 @@ pub const CountingAllocator = struct {
 //
 pub const SignedFormatter = struct {
     v: isize,
+
+    pub fn of(value: isize) SignedFormatter {
+        return .{ .v = value };
+    }
 
     pub fn format(value: @This(), comptime fmt: []const u8, options: std.fmt.FormatOptions, writer: anytype) !void {
         if (value.v >= 0) {
