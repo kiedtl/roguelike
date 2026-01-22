@@ -828,7 +828,7 @@ pub const SladeDoor = Machine{
                 for (&DIRECTIONS) |d| if (m.coord.move(d, state.mapgeometry)) |neighbor| {
                     // A bit hackish
                     if (neighbor.distance(mob.coord) == 2 and state.is_walkable(neighbor, .{ .mob = mob })) {
-                        _ = mob.teleportTo(neighbor, null, true, true);
+                        _ = mob.teleportTo(neighbor, null, false, true);
                         return;
                     }
                 };
