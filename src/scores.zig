@@ -38,6 +38,7 @@ pub const Info = struct {
     statuses: StackBuffer(types.StatusDataInfo, Status.TOTAL),
     stats: Mob.MobStat,
     resists: Mob.MobResists,
+    night_rep: isize,
     surroundings: [SURROUND_RADIUS][SURROUND_RADIUS]u21,
     messages: StackBuffer(Message, MESSAGE_COUNT),
 
@@ -169,6 +170,8 @@ pub const Info = struct {
             .rFume = state.player.resistance(.rFume),
             .Armor = state.player.resistance(.Armor),
         };
+
+        s.night_rep = state.night_rep[@intFromEnum(types.Faction.Player)];
 
         {
             var dy: usize = 0;
@@ -511,8 +514,13 @@ fn exportTextMorgue(info: Info, alloc: mem.Allocator) !std.ArrayList(u8) {
     }
     try w.print("\n", .{});
 
+    if (info.night_rep != 0) {
+        try w.print("Night Rep: {}\n", .{info.night_rep});
+        try w.print("\n", .{});
+    }
+
+    try w.print("Inventory:\n", .{});
     if (info.inventory_ids.len > 0) {
-        try w.print("Inventory:\n", .{});
         for (info.inventory_names.constSlice()) |item|
             try w.print("- {s}\n", .{item.constSlice()});
     } else {
@@ -520,8 +528,8 @@ fn exportTextMorgue(info: Info, alloc: mem.Allocator) !std.ArrayList(u8) {
     }
     try w.print("\n", .{});
 
+    try w.print("Aptitudes:\n", .{});
     if (info.aptitudes_names.len > 0) {
-        try w.print("Aptitudes:\n", .{});
         for (info.aptitudes_names.constSlice(), 0..) |apt, i|
             try w.print("- [{s}] {s}\n", .{ apt, info.aptitudes_descs.data[i] });
     } else {
