@@ -892,8 +892,6 @@ fn _getMonsInfoSet(mob: *Mob, alloc: mem.Allocator) MobInfoLine.ArrayList {
     }
 
     if (mob.ai.phase == .Investigate) {
-        assert(mob.sustiles.items.len > 0);
-
         var i = MobInfoLine.new('?', alloc);
         var you_str: []const u8 = "";
         {
