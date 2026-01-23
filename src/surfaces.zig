@@ -817,8 +817,8 @@ pub const SladeDoor = Machine{
     .restricted_to = .Night,
     .powered_walkable = true,
     .unpowered_walkable = false,
-    .powered_opacity = 0.0,
-    .unpowered_opacity = 0.0,
+    .powered_opacity = 1.0,
+    .unpowered_opacity = 1.0,
     .porous = false,
 
     .on_power = struct {
