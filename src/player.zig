@@ -351,8 +351,8 @@ pub fn triggerStair(stair: surfaces.Stair, cur_stair: Coord) bool {
     // "Garbage-collect" previous level.
     var iter = state.mobs.iterator();
     while (iter.next()) |mob| {
-        if (mob.coord.z != cur_stair.z) continue;
-        mob.path_cache.clearAndFree();
+        if (mob.coord.z == cur_stair.z and mob.is_inited)
+            mob.deinitNoCorpse();
     }
 
     if (stair_key) |pack_ind|

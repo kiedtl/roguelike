@@ -779,10 +779,8 @@ pub fn excavatePrefab(
     // then subsequent tiles are cleared of that mob leaving only one tile
     // with the mob on it)
     //
-    var y: usize = 0;
-    while (y < fab.height) : (y += 1) {
-        var x: usize = 0;
-        while (x < fab.width) : (x += 1) {
+    for (0..fab.height) |y| {
+        for (0..fab.width) |x| {
             const rc = Coord.new2(
                 room.rect.start.z,
                 x + room.rect.start.x + startx,
@@ -799,10 +797,8 @@ pub fn excavatePrefab(
         }
     }
 
-    y = 0;
-    while (y < fab.height) : (y += 1) {
-        var x: usize = 0;
-        while (x < fab.width) : (x += 1) {
+    for (0..fab.height) |y| {
+        for (0..fab.width) |x| {
             const rc = Coord.new2(
                 room.rect.start.z,
                 x + room.rect.start.x + startx,
@@ -844,8 +840,8 @@ pub fn excavatePrefab(
                 .Window => state.dungeon.at(rc).material = Configs[room.rect.start.z].window_material,
                 .LevelFeature => |l| (Configs[room.rect.start.z].level_features[l].?)(l, rc, room, fab, allocator),
                 .Feature => |feature_id| {
-                    if (fab.features[feature_id]) |feature| {
-                        switch (feature) {
+                    if (fab.features.get(feature_id)) |feature| {
+                        switch (feature.feature) {
                             .Stair => |stair| {
                                 state.dungeon.at(rc).surface = .{ .Stair = stair };
                                 if (stair.stairtype == .Down)
@@ -3854,12 +3850,12 @@ pub const Prefab = struct {
     notraps: bool = false,
     nostairs: bool = false,
     nopadding: bool = false,
-    transforms: StackBuffer(Transform, 5) = StackBuffer(Transform, 5).init(null),
+    transforms: StackBuffer(Transform, 5) = .init(null),
 
     tunneler_prefab: bool = false,
     tunneler_corridor_prefab: bool = false,
     tunneler_inset: bool = false,
-    tunneler_orientation: StackBuffer(Direction, 4) = StackBuffer(Direction, 4).init(null),
+    tunneler_orientation: StackBuffer(Direction, 4) = .init(null),
 
     name: Strig = .empty,
     variation: usize = 0,
@@ -3872,12 +3868,11 @@ pub const Prefab = struct {
     width: usize = 0,
     content: [40][60]FabTile = undefined,
     connections: [40]?Connection = undefined,
-    features: [128]?Feature = [_]?Feature{null} ** 128,
-    features_global: [128]bool = [_]bool{false} ** 128,
-    mobs: StackBuffer(FeatureMob, 16) = StackBuffer(FeatureMob, 16).init(null),
-    prisons: StackBuffer(Rect, 16) = StackBuffer(Rect, 16).init(null),
-    subroom_areas: StackBuffer(SubroomArea, 4) = StackBuffer(SubroomArea, 4).init(null),
-    whitelist: StackBuffer(usize, LEVELS) = StackBuffer(usize, LEVELS).init(null),
+    features: std.AutoHashMap(u21, FeatureContainer),
+    mobs: StackBuffer(FeatureMob, 16) = .init(null),
+    prisons: StackBuffer(Rect, 16) = .init(null),
+    subroom_areas: StackBuffer(SubroomArea, 4) = .init(null),
+    whitelist: StackBuffer(usize, LEVELS) = .init(null),
     stockpile: ?Rect = null,
     input: ?Rect = null,
     output: ?Rect = null,
@@ -3934,6 +3929,15 @@ pub const Prefab = struct {
         Corpse,
         Ring,
         Any,
+    };
+
+    pub const FeatureContainer = struct {
+        is_global: bool,
+        feature: Feature,
+
+        pub fn new(is_global: bool, feature: Feature) FeatureContainer {
+            return .{ .is_global = is_global, .feature = feature };
+        }
     };
 
     pub const FeatureMob = struct {
@@ -3997,6 +4001,8 @@ pub const Prefab = struct {
 
     fn _parseTransform(f: *Prefab, origname: []const u8, t: Transform) !void {
         var new = f.*;
+        new.name = f.name.clone(state.alloc) catch err.oom();
+        new.features = f.features.clone() catch err.oom();
 
         if (f.input != null or f.output != null or f.stockpile != null or
             f.connections[0] != null or f.mobs.len != 0 or
@@ -4110,20 +4116,22 @@ pub const Prefab = struct {
         const prefab_name = mem.trimRight(u8, name, ".fab");
         f.name = Strig.init(prefab_name, state.alloc) catch err.oom();
 
-        const to = if (f.subroom) &s_fabs else &n_fabs;
-        to.append(f.*) catch err.oom();
-
         for (f.transforms.constSlice()) |transform|
             try f._parseTransform(name, transform);
+
+        const to = if (f.subroom) &s_fabs else &n_fabs;
+        to.append(f.*) catch err.oom();
     }
 
     // XXX: anyerror is a hack because we call ourselves, meaning Zig can't
     // infer the error type
     //
     pub fn parseAndLoad(name: []const u8, from: []const u8) anyerror!void {
-        var f: Prefab = .{};
+        var f: Prefab = .{
+            .features = .init(state.alloc),
+            .connections = @splat(null),
+        };
         for (&f.content) |*row| @memset(row, .Wall);
-        @memset(&f.connections, null);
 
         var ci: usize = 0; // index for f.connections
         var w: usize = 0;
@@ -4150,9 +4158,13 @@ pub const Prefab = struct {
                     f.subroom_areas.clear();
                     for (&f.content) |*row| @memset(row, .Wall);
                     @memset(&f.connections, null);
-                    for (&f.features, 0..) |*feat, i| {
-                        if (!f.features_global[i])
-                            feat.* = null;
+                    {
+                        var new = std.AutoHashMap(u21, FeatureContainer).init(state.alloc);
+                        var old_features = f.features.iterator();
+                        while (old_features.next()) |entry|
+                            if (entry.value_ptr.is_global)
+                                new.put(entry.key_ptr.*, entry.value_ptr.*) catch err.oom();
+                        f.features = new;
                     }
                     f.mobs.clear();
                     f.stockpile = null;
@@ -4411,15 +4423,16 @@ pub const Prefab = struct {
 
                                 const r = cbf.deserializeStruct(mobs.PlaceMobOptions, res.items[0].value.List, .{}) catch
                                     return error.InvalidMetadataValue;
-                                f.features[identifier] = Feature{ .CMob = .{ .t = mob_t, .opts = r } };
-                                f.features_global[identifier] = is_global;
+                                f.features.put(identifier, .new(is_global, .{ .CMob = .{ .t = mob_t, .opts = r } })) catch err.oom();
                             } else if (mem.eql(u8, feature_type, "Ccont")) {
                                 const container = for (&surfaces.ALL_CONTAINERS) |c| {
                                     if (mem.eql(u8, c.id, id orelse return error.MalformedFeatureDefinition)) break c;
                                 } else return error.NoSuchContainer;
 
-                                f.features[identifier] = Feature{ .CCont = .{ .t = container } };
-                                f.features_global[identifier] = is_global;
+                                f.features.put(
+                                    identifier,
+                                    .new(is_global, .{ .CCont = .{ .t = container } }),
+                                ) catch err.oom();
                             } else if (mem.eql(u8, feature_type, "Cpitem")) {
                                 const rest = line[@intFromPtr((id orelse return error.MalformedFeatureDefinition).ptr) - @intFromPtr(line.ptr) ..];
                                 var cbf_p = cbf.Parser{ .input = rest };
@@ -4447,8 +4460,7 @@ pub const Prefab = struct {
                                     feature.Cpitem.we.append(weight) catch err.wat();
                                 }
 
-                                f.features[identifier] = feature;
-                                f.features_global[identifier] = is_global;
+                                f.features.put(identifier, .new(is_global, feature)) catch err.oom();
                             } else if (mem.eql(u8, feature_type, "Ckey")) {
                                 const rest = line[@intFromPtr((id orelse return error.MalformedFeatureDefinition).ptr) - @intFromPtr(line.ptr) ..];
                                 var cbf_p = cbf.Parser{ .input = rest };
@@ -4461,7 +4473,7 @@ pub const Prefab = struct {
                                     .Access => .Access,
                                     .Down => return error.InvalidMetadataValue,
                                 };
-                                f.features[identifier] = Feature{ .Key = artoo };
+                                f.features.put(identifier, .new(is_global, .{ .Key = artoo })) catch err.oom();
                             } else if (mem.eql(u8, feature_type, "Cstair")) {
                                 const rest = line[@intFromPtr((id orelse return error.MalformedFeatureDefinition).ptr) - @intFromPtr(line.ptr) ..];
                                 var cbf_p = cbf.Parser{ .input = rest };
@@ -4481,7 +4493,7 @@ pub const Prefab = struct {
                                         .Down => .Down,
                                     },
                                 };
-                                f.features[identifier] = Feature{ .Stair = artoo };
+                                f.features.put(identifier, .new(is_global, .{ .Stair = artoo })) catch err.oom();
                             } else {
                                 return error.InvalidFeatureType;
                             }
@@ -4489,13 +4501,11 @@ pub const Prefab = struct {
                         's' => {
                             const level = state.findLevelByName(id orelse return error.InvalidMetadataValue) orelse
                                 return error.InvalidMetadataValue;
-                            f.features[identifier] = Feature{ .Stair = .{ .stairtype = .{ .Up = level } } };
-                            f.features_global[identifier] = is_global;
+                            f.features.put(identifier, .new(is_global, .{ .Stair = .{ .stairtype = .{ .Up = level } } })) catch err.oom();
                         },
                         'M' => {
                             if (mobs.findMobById(id orelse return error.MalformedFeatureDefinition)) |mob_template| {
-                                f.features[identifier] = Feature{ .Mob = mob_template };
-                                f.features_global[identifier] = is_global;
+                                f.features.put(identifier, .new(is_global, .{ .Mob = mob_template })) catch err.oom();
                             } else return error.NoSuchMob;
                         },
                         'P' => {
@@ -4522,14 +4532,12 @@ pub const Prefab = struct {
                                 try buf.toOwnedSlice(),
                             );
                             try literature.posters.append(poster);
-                            f.features[identifier] = Feature{ .Poster = poster };
-                            f.features_global[identifier] = is_global;
+                            f.features.put(identifier, .new(is_global, .{ .Poster = poster })) catch err.oom();
                         },
                         'p' => {
                             const _id = id orelse return error.MalformedFeatureDefinition;
                             if (utils.findById(surfaces.props.items, _id)) |ind| {
-                                f.features[identifier] = Feature{ .Prop = &surfaces.props.items[ind] };
-                                f.features_global[identifier] = is_global;
+                                f.features.put(identifier, .new(is_global, .{ .Prop = &surfaces.props.items[ind] })) catch err.oom();
                             } else {
                                 std.log.err("{s}: Couldn't load prop {s}.", .{ f.name.bytes(), utils.used(_id) });
                                 return error.InvalidMetadataValue;
@@ -4555,13 +4563,11 @@ pub const Prefab = struct {
                                 points.append(coord) catch err.wat();
                             }
 
-                            f.features[identifier] = Feature{ .Machine = .{ .mach = machine, .points = points } };
-                            f.features_global[identifier] = is_global;
+                            f.features.put(identifier, .new(is_global, .{ .Machine = .{ .mach = machine, .points = points } })) catch err.oom();
                         },
                         'i' => {
                             if (items.findItemById(id orelse return error.MalformedFeatureDefinition)) |template| {
-                                f.features[identifier] = Feature{ .Item = template };
-                                f.features_global[identifier] = is_global;
+                                f.features.put(identifier, .new(is_global, .{ .Item = template })) catch err.oom();
                             } else {
                                 return error.NoSuchItem;
                             }
@@ -4711,18 +4717,40 @@ pub fn readPrefabs() void {
     }
 
     rng.shuffle(Prefab, s_fabs.items);
-    std.sort.insertion(Prefab, s_fabs.items, {}, Prefab.lesserThan);
+    std.sort.heap(Prefab, s_fabs.items, {}, Prefab.lesserThan);
 
     std.log.info("Loaded {} prefabs.", .{n_fabs.items.len + s_fabs.items.len});
+
+    for (n_fabs.items) |fab| {
+        std.log.info("Prefab: {} v{}", .{ fab.name, fab.variation });
+        for ('0'..'z') |chr| {
+            const ch: u21 = @intCast(chr);
+            if (fab.features.get(ch)) |feature| {
+                std.log.info("Feature {u}: {s}", .{ ch, @tagName(@as(meta.Tag(Prefab.Feature), feature.feature)) });
+            }
+        }
+    }
+
+    for (s_fabs.items) |fab| {
+        std.log.info("Prefab: {} v{}", .{ fab.name, fab.variation });
+        for ('0'..'z') |chr| {
+            const ch: u21 = @intCast(chr);
+            if (fab.features.get(ch)) |feature| {
+                std.log.info("Feature {u}: {s}", .{ ch, @tagName(@as(meta.Tag(Prefab.Feature), feature.feature)) });
+            }
+        }
+    }
 }
 
 pub fn freePrefabs() void {
-    for (s_fabs.items) |fab| {
+    for (s_fabs.items) |*fab| {
         fab.name.deinit(state.alloc);
+        fab.features.deinit();
     }
 
-    for (n_fabs.items) |fab| {
+    for (n_fabs.items) |*fab| {
         fab.name.deinit(state.alloc);
+        fab.features.deinit();
     }
 
     s_fabs.deinit();

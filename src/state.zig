@@ -77,7 +77,7 @@ pub var gpa = std.heap.DebugAllocator(.{
 
     .safety = true,
     .thread_safe = true,
-    .never_unmap = true,
+    .never_unmap = false,
     .stack_trace_frames = 10,
 }){};
 
@@ -620,34 +620,27 @@ pub fn messageAboutMob(
     comptime mob_is_else_fmt: []const u8,
     mob_is_else_args: anytype,
 ) void {
-    var buf: [128]u8 = undefined;
-    for (&buf) |*i| i.* = 0;
-    var fbs = std.io.fixedBufferStream(&buf);
-
     if (mob == player) {
         message(mtype, "You " ++ mob_is_me_fmt, mob_is_me_args);
     } else if (player.cansee(mob.coord)) {
         message(mtype, "The {s} " ++ mob_is_else_fmt, .{mob.displayName()} ++ mob_is_else_args);
     } else if (ref_coord != null and player.cansee(ref_coord.?)) {
-        std.fmt.format(fbs.writer(), mob_is_else_fmt, mob_is_else_args) catch err.wat();
         message(mtype, "Something " ++ mob_is_else_fmt, mob_is_else_args);
     }
 }
 
 pub fn message(mtype: MessageType, comptime fmt: []const u8, args: anytype) void {
-    const msg = Message{
-        .msg = BStr(256).initFmt(fmt, args),
-        .type = mtype,
-        .turn = player_turns,
-    };
+    var msg = Message{ .msg = .empty, .type = mtype, .turn = player_turns };
+    std.fmt.format(msg.msg.writer(alloc), fmt, args) catch err.oom();
 
     // If the message isn't a prompt, check if the message is a duplicate
     if (mtype != .Prompt and messages.items.len > 0 and mem.eql(
         u8,
-        messages.items[messages.items.len - 1].msg.constSlice(),
-        msg.msg.constSlice(),
+        messages.items[messages.items.len - 1].msg.bytes(),
+        msg.msg.bytes(),
     )) {
         messages.items[messages.items.len - 1].dups += 1;
+        msg.msg.deinit(alloc);
     } else {
         messages.append(msg) catch err.oom();
     }
@@ -656,4 +649,10 @@ pub fn message(mtype: MessageType, comptime fmt: []const u8, args: anytype) void
 pub fn markMessageNoisy() void {
     assert(messages.items.len > 0);
     messages.items[messages.items.len - 1].noise = true;
+}
+
+pub fn deinitMessages() void {
+    for (messages.items) |msg|
+        msg.msg.deinit(alloc);
+    messages.deinit();
 }

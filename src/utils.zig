@@ -37,6 +37,57 @@ const StackBuffer = buffer.StackBuffer;
 
 pub const testing = @import("utils/testing.zig");
 
+// Removes items from list if pred(&list[i], i) is true, adding them to trash
+// if provided. Returns number of items removed.
+//
+// Order of elements aren't preserved
+pub fn filterUnordered(
+    comptime T: type,
+    list: *std.ArrayList(T),
+    trash: ?*std.ArrayList(T),
+    ctx: anytype,
+    pred: *const fn (*const T, usize, @TypeOf(ctx)) bool,
+) usize {
+    var removed: usize = 0;
+    var i: usize = 0;
+    while (i < list.items.len) {
+        if ((pred)(&list.items[i], i, ctx)) {
+            const item = list.swapRemove(i);
+            if (trash) |t|
+                t.append(item) catch err.oom();
+            removed += 1;
+        } else {
+            i += 1;
+        }
+    }
+    return removed;
+}
+
+test "filterUnordered" {
+    var trash = std.ArrayList(usize).init(std.testing.allocator);
+    defer trash.deinit();
+
+    var b = std.ArrayList(usize).init(std.testing.allocator);
+    defer b.deinit();
+
+    try b.append(1);
+    try b.append(19);
+    try b.append(32);
+    try b.append(27);
+    try b.append(54);
+    try b.append(7);
+
+    const removed = filterUnordered(usize, &b, &trash, {}, struct {
+        pub fn f(value: *const usize, _: usize, _: void) bool {
+            return value.* % 2 == 0;
+        }
+    }.f);
+
+    try std.testing.expectEqual(removed, 2);
+    try std.testing.expectEqualSlices(usize, &[_]usize{ 32, 54 }, trash.items);
+    try std.testing.expectEqualSlices(usize, &[_]usize{ 1, 19, 7, 27 }, b.items);
+}
+
 pub fn is(comptime id: std.builtin.TypeId) fn (type) bool {
     const Closure = struct {
         pub fn trait(comptime T: type) bool {

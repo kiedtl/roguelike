@@ -14,6 +14,7 @@ const utils = @import("utils.zig");
 
 const StackBuffer = @import("buffer.zig").StackBuffer;
 const BStr = utils.BStr;
+const Strig = @import("strig").Strig;
 
 const Mob = types.Mob;
 const Coord = types.Coord;
@@ -55,7 +56,7 @@ pub const Info = struct {
     pub const MESSAGE_COUNT = 30;
     pub const SURROUND_RADIUS = 20;
     pub const Self = @This();
-    pub const Message = struct { text: BStr(128), dups: usize };
+    pub const Message = struct { text: Strig, dups: usize };
     pub const Equipment = struct { slot_id: []const u8, slot_name: []const u8, id: []const u8, name: BStr(128) };
 
     pub fn collect(alloc: std.mem.Allocator) Self {
@@ -207,10 +208,7 @@ pub const Info = struct {
             var i: usize = msgcount - @min(msgcount, MESSAGE_COUNT - 1);
             while (i <= msgcount) : (i += 1) {
                 const msg = state.messages.items[i];
-                s.messages.append(.{
-                    .text = BStr(128).init(msg.msg.constSlice()),
-                    .dups = msg.dups,
-                }) catch err.wat();
+                s.messages.append(.{ .text = msg.msg, .dups = msg.dups }) catch err.wat();
             }
         }
 
@@ -590,7 +588,7 @@ fn exportTextMorgue(info: Info, alloc: mem.Allocator) !std.ArrayList(u8) {
         try w.print("- ", .{});
         {
             var f = false;
-            for (message.text.constSlice()) |ch| {
+            for (message.text.bytes()) |ch| {
                 if (f) {
                     f = false;
                     continue;

@@ -1211,7 +1211,7 @@ pub const SuspiciousTileRecord = struct {
 };
 
 pub const Message = struct {
-    msg: BStr(256),
+    msg: Strig,
     type: MessageType,
     turn: usize,
     dups: usize = 0,
@@ -2309,24 +2309,44 @@ pub const Stat = enum {
 };
 
 pub const MobFov = struct { // {{{
-    m: [HEIGHT][WIDTH]usize = [1][WIDTH]usize{[1]usize{0} ** WIDTH} ** HEIGHT,
+    m: *[HEIGHT][WIDTH]u8 = undefined,
+    inited: bool = false,
+
+    pub fn new() MobFov {
+        var mobfov = MobFov{
+            .m = state.alloc.create([HEIGHT][WIDTH]u8) catch err.oom(),
+            .inited = true,
+        };
+        mobfov.reset();
+        return mobfov;
+    }
+
+    pub fn deinit(self: *MobFov) void {
+        state.alloc.destroy(self.m);
+        self.inited = false;
+    }
+
+    pub fn reset(self: *MobFov) void {
+        for (0..HEIGHT) |y|
+            @memset(&self.m[y], 0);
+    }
 
     pub fn serialize(self: *const MobFov, ser: *serde.Serializer, out: anytype) !void {
-        try serde.helpers_matrix.serializeMatrix(usize, void, struct {
-            pub fn f(_: usize, _: usize, v: *const usize) ?void {
+        try serde.helpers_matrix.serializeMatrix(u8, void, struct {
+            pub fn f(_: usize, _: usize, v: *const u8) ?void {
                 return if (v.* > 0) {} else null;
             }
-        }.f, HEIGHT, WIDTH, &self.m, ser, out);
+        }.f, HEIGHT, WIDTH, self.m, ser, out);
     }
 
     pub fn deserialize(ser: *serde.Deserializer, out: *MobFov, in: anytype, alloc: mem.Allocator) !void {
-        out.* = MobFov{};
+        out.* = .new();
 
-        try serde.helpers_matrix.deserializeMatrix(usize, void, struct {
-            pub fn f(_: usize, _: usize, _: usize, _: void) usize {
+        try serde.helpers_matrix.deserializeMatrix(u8, void, struct {
+            pub fn f(_: usize, _: usize, _: usize, _: void) u8 {
                 return 100;
             }
-        }.f, HEIGHT, WIDTH, ser, &out.m, in, alloc);
+        }.f, HEIGHT, WIDTH, ser, out.m, in, alloc);
     }
 }; // }}}
 
@@ -2414,7 +2434,7 @@ pub const Mob = struct { // {{{
 
     squad: ?*Squad = null,
     prisoner_status: ?Prisoner = null,
-    linked_fovs: StackBuffer(*Mob, 16) = StackBuffer(*Mob, 16).init(null),
+    linked_fovs: std.ArrayList(*Mob) = undefined,
     tag: ?u8 = null, // Used by test harness
 
     fov: MobFov = .{},
@@ -2468,6 +2488,7 @@ pub const Mob = struct { // {{{
     life_type: enum { Living, Spectral, Construct, Undead } = .Living,
     multitile: ?usize = null,
     is_dead: bool = true,
+    is_inited: bool = false,
     corpse_info: CorpseInfo = .{},
     killed_by: ?*Mob = null,
 
@@ -2643,7 +2664,7 @@ pub const Mob = struct { // {{{
     };
 
     // Size of `activities` Ringbuffer
-    pub const MAX_ACTIVITY_BUFFER_SZ = 10;
+    pub const MAX_ACTIVITY_BUFFER_SZ = 6;
 
     // FIXME: shame shame shame
     pub fn displayName(self: *const Mob) []const u8 {
@@ -2706,9 +2727,7 @@ pub const Mob = struct { // {{{
         var timer = state.benchmarker.timer("Mob.tickFOV");
         defer timer.end();
 
-        for (&self.fov.m) |*row| for (row) |*cell| {
-            cell.* = 0;
-        };
+        self.fov.reset();
 
         if (self.isUnderStatus(.Sleeping)) |_| return;
 
@@ -2746,9 +2765,9 @@ pub const Mob = struct { // {{{
                         return if (o < 100) 0 else 100;
                     }
                 };
-                fov.rayCast(eye_coord, vision, energy, is_on_slade, S.tileOpacity, &self.fov.m, direction, self == state.player);
+                fov.rayCast(eye_coord, vision, energy, is_on_slade, S.tileOpacity, self.fov.m, direction, self == state.player);
             } else {
-                fov.rayCast(eye_coord, vision, energy, is_on_slade, Dungeon.tileOpacity, &self.fov.m, direction, self == state.player);
+                fov.rayCast(eye_coord, vision, energy, is_on_slade, Dungeon.tileOpacity, self.fov.m, direction, self == state.player);
             };
 
         for (self.fov.m, 0..) |row, y| for (row, 0..) |_, x| {
@@ -2783,15 +2802,13 @@ pub const Mob = struct { // {{{
         }
 
         // Clear out linked-fovs list of dead/non-z-level mobs
-        if (self.linked_fovs.len > 0) {
-            var new_linked_fovs = @TypeOf(self.linked_fovs).init(null);
-            for (self.linked_fovs.constSlice()) |linked_fov_mob|
-                if (!linked_fov_mob.is_dead and linked_fov_mob.coord.z == self.coord.z)
-                    new_linked_fovs.append(linked_fov_mob) catch unreachable;
-            self.linked_fovs = new_linked_fovs;
-        }
+        _ = utils.filterUnordered(*Mob, &self.linked_fovs, null, .{self}, struct {
+            pub fn f(linked_fov_mob: *const *Mob, _: usize, ctx: struct { *Mob }) bool {
+                return linked_fov_mob.*.is_dead or linked_fov_mob.*.coord.z != ctx.@"0".coord.z;
+            }
+        }.f);
 
-        for (self.linked_fovs.constSlice()) |linked_fov_mob| {
+        for (self.linked_fovs.items) |linked_fov_mob| {
             for (linked_fov_mob.fov.m, 0..) |row, y| for (row, 0..) |_, x| {
                 if (linked_fov_mob.fov.m[y][x] > 0) {
                     self.fov.m[y][x] = 100;
@@ -4158,20 +4175,22 @@ pub const Mob = struct { // {{{
     }
 
     pub fn init(self: *Mob, alloc: mem.Allocator) void {
+        self.is_inited = true;
         self.is_dead = false;
         self.HP = self.max_HP;
         if (!mem.eql(u8, self.id, "player"))
             self.MP = self.max_MP;
         self.enemies = EnemyRecord.AList.initCapacity(alloc, 5) catch err.oom();
         self.allies = MobArrayList.initCapacity(alloc, 5) catch err.oom();
-        self.sustiles = std.ArrayList(SuspiciousTileRecord).init(alloc);
+        self.sustiles = .init(alloc);
         self.jobs = @TypeOf(self.jobs).init(null);
         self.activities.init();
-        self.path_cache = std.AutoHashMap(Path, Coord).init(alloc);
-        self.ai.work_area = CoordArrayList.init(alloc);
+        self.fov = .new();
+        self.path_cache = .init(alloc);
+        self.ai.work_area = .init(alloc);
 
         self.squad = null;
-        self.linked_fovs.clear();
+        self.linked_fovs = .init(alloc);
         self.push_flag = false;
         self.energy = 0;
         self.statuses = StatusArray.initFill(.{});
@@ -4333,7 +4352,8 @@ pub const Mob = struct { // {{{
             }
         }
 
-        self.deinit();
+        self.is_dead = true;
+        self.placeCorpse();
 
         if (self.isUnderStatus(.Explosive)) |s| {
             explosions.kaboom(self.coord, .{ .strength = s.power });
@@ -4343,9 +4363,10 @@ pub const Mob = struct { // {{{
             explosions.elecBurst(self.coord, s.power, self);
         }
 
-        if (state.player.canSeeMob(self) and player.hasSabresInSight() and
-            self.isHostileTo(state.player) and self.life_type == .Undead and
-            player.hasAugment(.UndeadBloodthirst))
+        if (self != state.player and
+            self.life_type == .Undead and player.hasAugment(.UndeadBloodthirst) and
+            state.player.canSeeMob(self) and player.hasSabresInSight() and
+            self.isHostileTo(state.player))
         {
             spells.spawnSabreVolley(state.player, self.coord);
         }
@@ -4381,11 +4402,12 @@ pub const Mob = struct { // {{{
             for (squad.members.constSlice()) |member|
                 member.deinitNoCorpse();
         self.deinitNoCorpse();
-        // TODO: deinit squad object itself
     }
 
     pub fn deinitNoCorpse(self: *Mob) void {
-        assert(!self.is_dead);
+        assert(self.is_inited);
+        self.is_inited = false;
+        self.is_dead = true;
 
         if (self.ai.profession_name) |pn|
             pn.deinit(state.alloc);
@@ -4393,41 +4415,45 @@ pub const Mob = struct { // {{{
         self.enemies.deinit();
         self.allies.deinit();
         self.sustiles.deinit();
-        self.path_cache.clearAndFree();
+        self.fov.deinit();
+        self.path_cache.deinit();
         self.ai.work_area.deinit();
 
         for (self.jobs.slice()) |*job|
             job.deinit();
         self.jobs.clear();
 
-        self.is_dead = true;
-
         var gen = self.areaRect().iter();
         while (gen.next()) |mobcoord|
             state.dungeon.at(mobcoord).mob = null;
     }
 
-    // Separate from kill() because some code (e.g., mapgen) cannot rely on the player
-    // having been initialized (to print the messages).
-    pub fn deinit(self: *Mob) void {
-        const S = struct {
-            pub fn _isNotWall(c: Coord, _: state.IsWalkableOptions) bool {
-                return state.dungeon.at(c).type != .Wall and
-                    state.dungeon.at(c).surface == null;
-            }
-        };
+    // Create corpse and remove mob from map.
+    pub fn placeCorpse(self: *Mob) void {
+        self.is_dead = true;
 
-        self.deinitNoCorpse();
+        var gen = self.areaRect().iter();
+        while (gen.next()) |mobcoord|
+            state.dungeon.at(mobcoord).mob = null;
 
         if (self.corpse != .None) {
             assert(self.multitile == null);
 
             // Generate a corpse if possible.
-            var membuf: [4096]u8 = undefined;
-            var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
-
             var dijk: dijkstra.Dijkstra = undefined;
-            dijk.init(self.coord, state.mapgeometry, 2, S._isNotWall, .{}, fba.allocator());
+            dijk.init(
+                self.coord,
+                state.mapgeometry,
+                2,
+                struct {
+                    pub fn isNotWall(c: Coord, _: state.IsWalkableOptions) bool {
+                        return state.dungeon.at(c).type != .Wall and
+                            state.dungeon.at(c).surface == null;
+                    }
+                }.isNotWall,
+                .{},
+                state.alloc,
+            );
             defer dijk.deinit();
 
             const corpsetile: ?Coord = while (dijk.next()) |child| {
@@ -4448,6 +4474,13 @@ pub const Mob = struct { // {{{
                 }
             }
         }
+    }
+
+    // Separate from kill() because some code (e.g., mapgen) cannot rely on the player
+    // having been initialized (to print the messages).
+    pub fn deinit(self: *Mob) void {
+        self.deinitNoCorpse();
+        self.placeCorpse();
     }
 
     pub fn should_be_dead(self: *const Mob) bool {
@@ -4807,6 +4840,9 @@ pub const Mob = struct { // {{{
         if (self == state.player and player.wiz_lidless_eye)
             return true;
 
+        if (!self.fov.inited)
+            return false;
+
         // This was added previously as an "optimization", but it messes with
         // Detect Undead when the detected undead are outside normal field of
         // vision.
@@ -5129,13 +5165,13 @@ pub const Machine = struct {
     evoke_confirm: ?[]const u8 = null,
 
     // TODO: Remove
-    props: [40]?*Prop = [_]?*Prop{null} ** 40,
+    props: [30]?*Prop = [_]?*Prop{null} ** 30,
 
     // Areas the machine might manipulate/change while powered
     //
     // E.g., a blast furnace will heat up the first area, and search
     // for fuel in the second area.
-    areas: StackBuffer(Coord, 16) = StackBuffer(Coord, 16).init(null),
+    areas: StackBuffer(Coord, 10) = .init(null),
 
     pub const __SER_SKIP = [_][]const u8{
         "id",

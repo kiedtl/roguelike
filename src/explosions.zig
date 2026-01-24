@@ -56,7 +56,7 @@ pub fn fireBurst(ground0: Coord, max_radius: usize, opts: FireBurstOpts) void {
         }
     };
 
-    var result: [HEIGHT][WIDTH]usize = undefined;
+    var result: [HEIGHT][WIDTH]u8 = undefined;
     for (&result) |*row| for (row) |*cell| {
         cell.* = 0;
     };
@@ -148,7 +148,7 @@ pub fn elecBurst(ground0: Coord, max_damage: usize, by: ?*Mob) void {
     sound.makeNoise(ground0, .Explosion, .Loudest);
     state.message(.Info, "KABOOM!", .{});
 
-    var result: [HEIGHT][WIDTH]usize = undefined;
+    var result: [HEIGHT][WIDTH]u8 = undefined;
     for (&result) |*row| for (row) |*cell| {
         cell.* = 0;
     };
@@ -234,7 +234,7 @@ pub fn kaboom(ground0: Coord, opts: ExplosionOpts) void {
 
     sound.makeNoise(ground0, .Explosion, .Loudest);
 
-    var result: [HEIGHT][WIDTH]usize = undefined;
+    var result: [HEIGHT][WIDTH]u8 = undefined;
     for (&result) |*row| for (row) |*cell| {
         cell.* = 0;
     };

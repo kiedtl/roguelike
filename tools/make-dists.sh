@@ -43,7 +43,7 @@ mktarball() {
 }
 
 printf "Compiling for x86_64 Linux SDL...\n"
-zig build -Doptimize=ReleaseSafe -Dcpu=baseline -Duse-sdl=true
+zig build -Doptimize=ReleaseSafe -Dcpu=v86_64-v2 -Duse-sdl=true
 mktarball linux x86_64 SDL
 
 # oathbreaker-termbox crashes with illegal instruction if build with
@@ -54,5 +54,5 @@ mktarball linux x86_64 SDL
 # mktarball linux x86_64 termbox
 
 printf "Compiling for x86_64 Windows SDL...\n"
-zig build -Doptimize=ReleaseSafe -Dcpu=baseline -Duse-sdl=true -Dtarget=x86_64-windows-gnu
+zig build -Doptimize=ReleaseSafe -Dcpu=v86_64-v2 -Duse-sdl=true -Dtarget=x86_64-windows-gnu
 mktarball windows x86_64 SDL

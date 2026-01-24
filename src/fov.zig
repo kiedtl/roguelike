@@ -275,7 +275,7 @@ pub fn rayCast(
     energy: usize,
     opacity_func_ctx: anytype,
     opacity_func: *const fn (Coord, @TypeOf(opacity_func_ctx)) usize,
-    buffer: *[HEIGHT][WIDTH]usize,
+    buffer: *[HEIGHT][WIDTH]u8,
     direction: ?Direction,
     remove_artefacts: bool,
 ) void {
@@ -339,7 +339,7 @@ pub fn rayCastOctants(
     energy: usize,
     opacity_func_ctx: anytype,
     opacity_func: *const fn (Coord, @TypeOf(opacity_func_ctx)) usize,
-    buffer: *[HEIGHT][WIDTH]usize,
+    buffer: *[HEIGHT][WIDTH]u8,
     start: usize,
     end: usize,
 ) void {
@@ -369,7 +369,7 @@ pub fn rayCastOctants(
             const previous_energy = buffer[coord.y][coord.x];
             const energy_percent = ray_energy * 100 / energy;
             if (energy_percent > previous_energy) {
-                buffer[coord.y][coord.x] = energy_percent;
+                buffer[coord.y][coord.x] = @intCast(@min(255, energy_percent));
             }
 
             ray_energy -|= opacity_func(coord, opacity_func_ctx);
@@ -387,7 +387,7 @@ fn _removeArtifacts(
     y1: usize,
     dx: isize,
     dy: isize,
-    buffer: *[HEIGHT][WIDTH]usize,
+    buffer: *[HEIGHT][WIDTH]u8,
     opacity_func_ctx: anytype,
     opacity_func: *const fn (Coord, @TypeOf(opacity_func_ctx)) usize,
 ) void {

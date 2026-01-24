@@ -1970,9 +1970,9 @@ fn drawLog() void {
         str.clear();
 
         if (message.dups == 0) {
-            str.fmt("$G{u}$.{s}{s}", .{ line, noisetext, message.msg.constSlice() });
+            str.fmt("$G{u}$.{s}{s}", .{ line, noisetext, message.msg.bytes() });
         } else {
-            str.fmt("$G{u}$.{s}{s} (×{})", .{ line, noisetext, message.msg.constSlice(), message.dups + 1 });
+            str.fmt("$G{u}$.{s}{s} (×{})", .{ line, noisetext, message.msg.bytes(), message.dups + 1 });
         }
 
         var fibuf = StackBuffer(u8, 4096).init(null);
