@@ -4,6 +4,7 @@ const math = std.math;
 const assert = std.debug.assert;
 const sort = std.sort;
 
+const astar = @import("astar.zig");
 const err = @import("err.zig");
 const state = @import("state.zig");
 const rng = @import("rng.zig");
@@ -39,6 +40,7 @@ pub const Info = struct {
     statuses: StackBuffer(types.StatusDataInfo, Status.TOTAL),
     stats: Mob.MobStat,
     resists: Mob.MobResists,
+    distance_from_stairs: StackBuffer(DistanceFromStair, types.Dungeon.MAX_STAIRS),
     surroundings: [SURROUND_RADIUS][SURROUND_RADIUS]u21,
     messages: StackBuffer(Message, MESSAGE_COUNT),
 
@@ -53,11 +55,24 @@ pub const Info = struct {
     augments_names: StackBuffer([]const u8, player.ConjAugment.TOTAL),
     augments_descs: StackBuffer([]const u8, player.ConjAugment.TOTAL),
 
-    pub const MESSAGE_COUNT = 30;
+    pub const MESSAGE_COUNT = 50;
     pub const SURROUND_RADIUS = 20;
     pub const Self = @This();
+
     pub const Message = struct { text: Strig, dups: usize };
-    pub const Equipment = struct { slot_id: []const u8, slot_name: []const u8, id: []const u8, name: BStr(128) };
+
+    pub const Equipment = struct {
+        slot_id: []const u8,
+        slot_name: []const u8,
+        id: []const u8,
+        name: BStr(128),
+    };
+
+    pub const DistanceFromStair = struct {
+        distance: ?usize,
+        stair_dest_name: []const u8,
+        is_in_sight: bool,
+    };
 
     pub fn collect(alloc: std.mem.Allocator) Self {
         // FIXME: should be a cleaner way to do this...
@@ -199,6 +214,35 @@ pub const Info = struct {
                         s.surroundings[dy][dx] = @intCast(Tile.displayAs(coord, false, false).ch);
                     }
                 }
+            }
+        }
+
+        s.distance_from_stairs.reinit(null);
+        for (state.dungeon.stairs[state.player.coord.z].constSlice()) |stair_coord| {
+            const stair = state.dungeon.at(stair_coord).surface.?.Stair;
+            switch (stair.stairtype) {
+                .Up => |floor| {
+                    const distance: ?usize =
+                        if (astar.path(
+                            state.player.coord,
+                            stair_coord,
+                            state.mapgeometry,
+                            state.is_walkable,
+                            .{ .ignore_mobs = true },
+                            astar.dummyPenaltyFunc,
+                            &types.DIRECTIONS,
+                            state.alloc,
+                        )) |p| b: {
+                            defer p.deinit();
+                            break :b p.items.len;
+                        } else null;
+                    s.distance_from_stairs.append(.{
+                        .distance = distance,
+                        .stair_dest_name = state.levelinfo[floor].name,
+                        .is_in_sight = state.player.cansee(stair_coord),
+                    }) catch err.wat();
+                },
+                else => {},
             }
         }
 
@@ -602,6 +646,19 @@ fn exportTextMorgue(info: Info, alloc: mem.Allocator) !std.ArrayList(u8) {
         if (message.dups > 0) {
             try w.print(" (×{})", .{message.dups + 1});
         }
+        try w.print("\n", .{});
+    }
+    try w.print("\n", .{});
+
+    try w.print("Distance from stairs:\n", .{});
+    for (info.distance_from_stairs.constSlice()) |dfs| {
+        try w.print("- {s}: ", .{dfs.stair_dest_name});
+        if (dfs.distance) |distance|
+            try w.print("{}", .{distance})
+        else
+            try w.print("unreachable(?!)", .{});
+        if (dfs.is_in_sight)
+            try w.print(" (in sight)", .{});
         try w.print("\n", .{});
     }
     try w.print("\n", .{});
