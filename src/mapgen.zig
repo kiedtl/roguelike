@@ -2398,7 +2398,19 @@ pub fn placeMobScattered(
 pub fn placeMobs(level: usize, alloc: mem.Allocator) void {
     var level_mob_count: usize = 0;
 
-    for (state.rooms[level].items) |*room| {
+    // Create random permutation of rooms.
+    // Do this instead of visiting rooms in order, so that if we run out of
+    // mobs to place early (because of level_crowd_max) then we won't end up
+    // with only center rooms filled with mobs, or north-west rooms filled with
+    // mobs, or some other non-random pattern.
+    var room_inds = std.ArrayList(usize).init(alloc);
+    for (0..state.rooms[level].items.len) |i|
+        room_inds.append(i) catch err.oom();
+    rng.shuffle(usize, room_inds.items);
+
+    for (room_inds.items) |room_ind| {
+        const room = &state.rooms[level].items[room_ind];
+
         if (Configs[level].level_crowd_max) |level_crowd_max| {
             if (level_mob_count >= level_crowd_max) {
                 continue;
