@@ -198,7 +198,11 @@ pub fn queueThreatResponse(response: ThreatResponseType) void {
 
 // Also used by events, esp the one which sends hunters
 pub fn spawnAssault(level: usize, target: *Mob, spawn_class: []const u8) !void {
-    const squad_template = mobs.spawns.chooseMob(.Special, level, spawn_class) catch err.wat();
+    const squad_template = mobs.spawns.chooseMob(.Special, level, spawn_class) catch |e|
+        switch (e) {
+            error.NoSuitableMobs => return,
+        };
+
     const hunter = try mobs.placeMobNearStairs(&mobs.HunterTemplate, level, .{});
     const squad_coord = state.nextSpotForMob(hunter.coord, null) orelse {
         hunter.deinitEntirelyNoCorpse();
