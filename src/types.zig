@@ -4805,6 +4805,10 @@ pub const Mob = struct { // {{{
 
             if (ouchy)
                 hostile = true;
+        } else if (othermob.faction == .Night) {
+            if (othermob.isHostileTo(self)) {
+                hostile = true;
+            }
         } else if (self.faction == .Holy or othermob.faction == .Holy) {
             if (rep >= 0 and
                 ((self.faction == .Holy and othermob.resistance(.rHoly) >= 0) or
