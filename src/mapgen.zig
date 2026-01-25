@@ -2407,7 +2407,7 @@ pub fn placeMobs(level: usize, alloc: mem.Allocator) void {
 
         if (room.prefab) |rfb| if (rfb.noguards) continue;
         if (room.type == .Corridor and !Configs[level].allow_spawn_in_corridors) continue;
-        if (room.rect.height * room.rect.width < 25) continue;
+        if (room.rect.height * room.rect.width < 16) continue;
 
         const vault_type: ?usize = if (room.is_vault) |v| @intFromEnum(v) else null;
 
@@ -4841,7 +4841,7 @@ pub const LevelConfig = struct {
 
 // -----------------------------------------------------------------------------
 
-pub fn createLevelConfig_PRI(crowd: usize, statues: bool, comptime prefabs: []const []const u8) LevelConfig {
+pub fn createLevelConfig_PRI(level_crowd: ?usize, crowd: usize, statues: bool, comptime prefabs: []const []const u8) LevelConfig {
     return LevelConfig{
         .required_prefabs = prefabs,
         .prefab_chance = 20,
@@ -4866,6 +4866,7 @@ pub fn createLevelConfig_PRI(crowd: usize, statues: bool, comptime prefabs: []co
 
         .allow_statues = statues,
         .room_crowd_max = crowd,
+        .level_crowd_max = level_crowd,
         .machines = &[_]*const Machine{ &surfaces.FirstAidStation, &surfaces.Drain },
         .single_props = &[_][]const u8{ "wood_table", "wood_chair" },
     };
@@ -5304,26 +5305,26 @@ pub var Configs = [LEVELS]LevelConfig{
     createLevelConfig_NEC(),
     createLevelConfig_NEC(),
     createLevelConfig_NEC(),
-    createLevelConfig_PRI(3, true, &[_][]const u8{ "PRI_main_exit", "PRI_main_exit_key" }),
-    createLevelConfig_PRI(2, true, &[_][]const u8{}),
+    createLevelConfig_PRI(null, 3, true, &[_][]const u8{ "PRI_main_exit", "PRI_main_exit_key" }),
+    createLevelConfig_PRI(null, 2, true, &[_][]const u8{}),
     HLD_BASE_LEVELCONFIG,
     createLevelConfig_LAB(&[_][]const u8{"LAB_HLD_stair"}),
     createLevelConfig_LAB(&[_][]const u8{}),
     createLevelConfig_SIN(6),
     createLevelConfig_LAB(&[_][]const u8{"LAB_s_SIN_stair_1"}),
-    createLevelConfig_PRI(2, true, &[_][]const u8{}),
+    createLevelConfig_PRI(null, 2, true, &[_][]const u8{}),
     TEM_BASE_LEVELCONFIG,
     CAV_BASE_LEVELCONFIG,
     CAV_BASE_LEVELCONFIG,
     CAV_BASE_LEVELCONFIG,
-    createLevelConfig_PRI(2, true, &[_][]const u8{}),
+    createLevelConfig_PRI(20, 2, true, &[_][]const u8{}),
     CRY_BASE_LEVELCONFIG,
     createLevelConfig_WRK(2, &[_][]const u8{}),
     createLevelConfig_WRK(2, &[_][]const u8{}),
     createLevelConfig_SIN(4),
     createLevelConfig_WRK(1, &[_][]const u8{"WRK_s_SIN_stair_1"}),
-    createLevelConfig_PRI(1, false, &[_][]const u8{"PRI_NC"}),
-    createLevelConfig_PRI(1, false, &[_][]const u8{"PRI_start"}),
+    createLevelConfig_PRI(16, 1, false, &[_][]const u8{"PRI_NC"}),
+    createLevelConfig_PRI(16, 1, false, &[_][]const u8{"PRI_start"}),
 
     // TUT_BASE_LEVELCONFIG,
 };
