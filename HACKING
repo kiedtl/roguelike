@@ -1,0 +1,5 @@
+This codebase is a sprawling mess of garbage created over a period of five
+years where I simultaneously taught myself Zig, roguelike development, SDL2, 2D
+UI design and a bunch of other concepts from first principles whilst stubbornly
+refusing to look at a single tutorial or guide. If you choose to fork this
+codebase and work on it, you will have my permission but not my blessing.
