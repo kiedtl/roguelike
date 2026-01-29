@@ -1104,6 +1104,10 @@ fn _getMonsSpellsDescription(self: *Console, starty: usize, mob: *Mob, _: usize)
             y += self.drawTextAtf(0, y, "· $cdelay$.: {}%", .{weapon.delay}, .{});
         if (weapon.knockback != 0)
             y += self.drawTextAtf(0, y, "· $cknockback$.: {}", .{weapon.knockback}, .{});
+        for (weapon.effects) |effect| {
+            y += self.drawTextAtf(0, y, "· $ceffect$.: {s}", .{_formatStatusInfo(&effect)}, .{});
+            self.addTooltipForText("{s}", .{effect.status.string(mob)}, "nonplayer_{s}", .{@tagName(effect.status)});
+        }
         assert(weapon.reach == 1);
         y += self.drawTextAt(0, y, "\n", .{});
     }
