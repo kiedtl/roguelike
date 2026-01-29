@@ -1754,7 +1754,7 @@ pub const RegeneratePotion = Consumable{
     .color = 0xa7e234, // Same color as gas
     .verbs_player = Consumable.VERBS_PLAYER_POTION,
     .verbs_other = Consumable.VERBS_OTHER_POTION,
-    .throwable = true,
+    .throwable = false,
 };
 
 pub const CorrodePotion = Consumable{
@@ -1798,7 +1798,7 @@ pub const IntimidatePotion = Consumable{
     .color = colors.PALE_VIOLET_RED,
     .verbs_player = Consumable.VERBS_PLAYER_POTION,
     .verbs_other = Consumable.VERBS_OTHER_POTION,
-    .throwable = false,
+    .throwable = true,
 };
 
 pub const LeavenPotion = Consumable{
@@ -1809,7 +1809,7 @@ pub const LeavenPotion = Consumable{
     .color = colors.CONCRETE,
     .verbs_player = Consumable.VERBS_PLAYER_POTION,
     .verbs_other = Consumable.VERBS_OTHER_POTION,
-    .throwable = false,
+    .throwable = true,
 };
 
 pub const BlindPotion = Consumable{
@@ -1876,7 +1876,7 @@ pub const FastPotion = Consumable{
     .color = 0xbb6c55,
     .verbs_player = Consumable.VERBS_PLAYER_POTION,
     .verbs_other = Consumable.VERBS_OTHER_POTION,
-    .throwable = true,
+    .throwable = false,
 };
 
 pub const RecuperatePotion = Consumable{
@@ -1887,6 +1887,7 @@ pub const RecuperatePotion = Consumable{
     .color = 0xffffff,
     .verbs_player = Consumable.VERBS_PLAYER_POTION,
     .verbs_other = Consumable.VERBS_OTHER_POTION,
+    .throwable = false,
 };
 
 pub const RemediatePotion = Consumable{
@@ -1904,6 +1905,7 @@ pub const RemediatePotion = Consumable{
     .color = 0xffffff,
     .verbs_player = Consumable.VERBS_PLAYER_POTION,
     .verbs_other = Consumable.VERBS_OTHER_POTION,
+    .throwable = false,
 };
 
 pub const VisionPotion = Consumable{
@@ -1918,6 +1920,7 @@ pub const VisionPotion = Consumable{
     .color = 0xffffff,
     .verbs_player = Consumable.VERBS_PLAYER_POTION,
     .verbs_other = Consumable.VERBS_OTHER_POTION,
+    .throwable = false,
 };
 
 pub const AbsorbPotion = Consumable{
@@ -1928,6 +1931,7 @@ pub const AbsorbPotion = Consumable{
     .color = colors.GOLD,
     .verbs_player = Consumable.VERBS_PLAYER_POTION,
     .verbs_other = Consumable.VERBS_OTHER_POTION,
+    .throwable = false,
 };
 
 pub const PerceptionPotion = Consumable{
@@ -1941,6 +1945,7 @@ pub const PerceptionPotion = Consumable{
     .color = 0xffffff,
     .verbs_player = Consumable.VERBS_PLAYER_POTION,
     .verbs_other = Consumable.VERBS_OTHER_POTION,
+    .throwable = false,
 };
 
 pub const InvigoratePotion = Consumable{
@@ -1951,6 +1956,7 @@ pub const InvigoratePotion = Consumable{
     .color = 0xdada53,
     .verbs_player = Consumable.VERBS_PLAYER_POTION,
     .verbs_other = Consumable.VERBS_OTHER_POTION,
+    .throwable = false,
 };
 
 pub const IgnitePotion = Consumable{

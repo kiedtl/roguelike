@@ -3113,8 +3113,8 @@ pub const Mob = struct { // {{{
         }
 
         for (item.effects) |effect| switch (effect) {
-            .Status => |s| if (direct) self.addStatus(s, 0, .{ .Tmp = Status.MAX_DURATION }),
-            .CureStatus => |s| if (direct) self.cancelStatus(s),
+            .Status => |s| self.addStatus(s, 0, .{ .Tmp = Status.MAX_DURATION }),
+            .CureStatus => |s| self.cancelStatus(s),
             .Gas => |s| state.dungeon.gasAt(self.coord, s).* = 100,
             .Damage => |d| self.takeDamage(.{
                 .lethal = d.lethal,
