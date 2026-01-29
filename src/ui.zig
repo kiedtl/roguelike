@@ -1269,6 +1269,7 @@ fn _getItemDescription(self: *Console, starty: usize, item: Item, linewidth: usi
                 .MaxMP => |chg| y += self.drawTextAtf(0, y, "· $gPrm$. {s: <9} $b{:>4}$.", .{ "max MP", chg }, .{}),
                 .MaxHP => |chg| y += self.drawTextAtf(0, y, "· $gPrm$. {s: <9} $b{:>4}$.", .{ "max HP", chg }, .{}),
                 .RegenerateMP => y += self.drawTextAtf(0, y, "· $gPrm$. regenerate MP", .{}, .{}),
+                .Sound => |s| y += self.drawTextAtf(0, y, "· $gIns$. noise <$b{s}$.> $g[{s}]$.", .{ @tagName(s.@"0"), s.@"1".string() }, .{}),
                 .Custom => y += self.drawTextAt(0, y, "· $G(See description)$.", .{}),
             };
             y += self.drawTextAt(0, y, "\n", .{});
@@ -2277,6 +2278,7 @@ pub const ChooseCellOpts = struct {
         Exclusion: struct {},
         AoE1: struct { dist: usize, opts: state.IsWalkableOptions },
         Gas: struct { gas: usize },
+        Radius: struct { radius: usize },
         Duo: [2]*const Targeter,
 
         pub const Result = struct {
@@ -2367,6 +2369,17 @@ pub const ChooseCellOpts = struct {
                             const c = Coord.new2(coord.z, x, y);
                             buf.append(.{ .coord = c, .color = cell }) catch err.wat();
                         };
+                    }
+                }.f,
+                .Radius => struct {
+                    pub fn f(targeter: Targeter, _: bool, coord: Coord, buf: *Result.AList) Error!void {
+                        buf.append(.{ .coord = coord, .color = 100 }) catch err.wat();
+
+                        coord.iterCircle(targeter.Radius.radius, buf, struct {
+                            pub fn f(c: Coord, b: *Result.AList) void {
+                                b.append(.{ .coord = c, .color = 70 }) catch err.wat();
+                            }
+                        }.f);
                     }
                 }.f,
                 .AoE1 => struct {

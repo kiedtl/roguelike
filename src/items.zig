@@ -1516,6 +1516,7 @@ pub const Consumable = struct {
         MaxMP: isize,
         MaxHP: isize,
         RegenerateMP,
+        Sound: struct { sound.SoundType, sound.SoundIntensity },
         Custom: *const fn (?*Mob, Coord) void,
     };
 
@@ -1770,7 +1771,7 @@ pub const CorrodePotion = Consumable{
 pub const DistractPotion = Consumable{
     .id = "potion_distract",
     .name = "potion of distraction",
-    .effects = &[_]Consumable.Effect{.{ .Custom = triggerDistractPotion }},
+    .effects = &[_]Consumable.Effect{.{ .Sound = .{ .Explosion, .Loud } }},
     .is_potion = true,
     .color = 0xffd700,
     .verbs_player = Consumable.VERBS_PLAYER_POTION,

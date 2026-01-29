@@ -432,6 +432,14 @@ pub const Coord = struct { // {{{
         return self._closestDirectionTo(to, &CARDINAL_DIRECTIONS, limit);
     }
 
+    fn isValid(z: usize, x: isize, y: isize, limit: Coord) ?Coord {
+        if (x < 0 or y < 0)
+            return null;
+        if (x >= @as(isize, @intCast(limit.x)) or y >= @as(isize, @intCast(limit.y)))
+            return null;
+        return Coord.new2(z, @as(usize, @intCast(x)), @as(usize, @intCast(y)));
+    }
+
     fn insert_if_valid(z: usize, x: isize, y: isize, buf: *StackBuffer(Coord, 2048), limit: Coord) void {
         if (x < 0 or y < 0)
             return;
@@ -510,10 +518,14 @@ pub const Coord = struct { // {{{
         return buf;
     }
 
-    pub fn draw_circle(center: Coord, radius: usize, limit: Coord, alloc: mem.Allocator) CoordArrayList {
+    pub fn iterCircle(
+        center: Coord,
+        radius: usize,
+        ctx: anytype,
+        func: *const fn (Coord, @TypeOf(ctx)) void,
+    ) void {
+        const limit = state.mapgeometry;
         //const circum = @intFromFloat(usize, math.ceil(math.tau * @floatFromInt(f64, radius)));
-
-        var buf = CoordArrayList.init(alloc);
 
         const x: isize = @as(isize, @intCast(center.x));
         const y: isize = @as(isize, @intCast(center.y));
@@ -524,10 +536,10 @@ pub const Coord = struct { // {{{
         var dx: isize = 0;
         var dy: isize = @as(isize, @intCast(radius));
 
-        insert_if_valid(x, y + @as(isize, @intCast(radius)), &buf, limit);
-        insert_if_valid(x, y - @as(isize, @intCast(radius)), &buf, limit);
-        insert_if_valid(x + @as(isize, @intCast(radius)), y, &buf, limit);
-        insert_if_valid(x - @as(isize, @intCast(radius)), y, &buf, limit);
+        if (isValid(center.z, x, y + @as(isize, @intCast(radius)), limit)) |coord| (func)(coord, ctx);
+        if (isValid(center.z, x, y - @as(isize, @intCast(radius)), limit)) |coord| (func)(coord, ctx);
+        if (isValid(center.z, x + @as(isize, @intCast(radius)), y, limit)) |coord| (func)(coord, ctx);
+        if (isValid(center.z, x - @as(isize, @intCast(radius)), y, limit)) |coord| (func)(coord, ctx);
 
         while (dx < dy) {
             if (f >= 0) {
@@ -540,17 +552,15 @@ pub const Coord = struct { // {{{
             ddf_x += 2;
             f += ddf_x + 1;
 
-            insert_if_valid(x + dx, y + dy, &buf, limit);
-            insert_if_valid(x - dx, y + dy, &buf, limit);
-            insert_if_valid(x + dx, y - dy, &buf, limit);
-            insert_if_valid(x - dx, y - dy, &buf, limit);
-            insert_if_valid(x + dy, y + dx, &buf, limit);
-            insert_if_valid(x - dy, y + dx, &buf, limit);
-            insert_if_valid(x + dy, y - dx, &buf, limit);
-            insert_if_valid(x - dy, y - dx, &buf, limit);
+            if (isValid(center.z, x + dx, y + dy, limit)) |coord| (func)(coord, ctx);
+            if (isValid(center.z, x - dx, y + dy, limit)) |coord| (func)(coord, ctx);
+            if (isValid(center.z, x + dx, y - dy, limit)) |coord| (func)(coord, ctx);
+            if (isValid(center.z, x - dx, y - dy, limit)) |coord| (func)(coord, ctx);
+            if (isValid(center.z, x + dy, y + dx, limit)) |coord| (func)(coord, ctx);
+            if (isValid(center.z, x - dy, y + dx, limit)) |coord| (func)(coord, ctx);
+            if (isValid(center.z, x + dy, y - dx, limit)) |coord| (func)(coord, ctx);
+            if (isValid(center.z, x - dy, y - dx, limit)) |coord| (func)(coord, ctx);
         }
-
-        return buf;
     }
 
     // pub fn iterNeighbors(ctx: *GeneratorCtx(Coord), self: Coord) void {
@@ -3132,6 +3142,11 @@ pub const Mob = struct { // {{{
             .MaxMP => |change| self.max_MP = @intCast(@max(0, @as(isize, @intCast(self.max_MP)) + change)),
             .MaxHP => |change| self.max_HP = @intCast(@max(0, @as(isize, @intCast(self.max_HP)) + change)),
             .RegenerateMP => self.MP = self.max_MP,
+            .Sound => |opts| {
+                const stype, const inten = opts;
+                sound.makeNoise(self.coord, stype, inten);
+                ui.Animation.apply(.{ .Particle = .{ .name = "chargeover-noise", .coord = self.coord, .target = .{ .C = self.coord } } });
+            },
             .Custom => |c| c(self, self.coord),
         };
     }
@@ -3236,6 +3251,11 @@ pub const Mob = struct { // {{{
                         err.bug("Couldn't use thrown consumable: {}", .{e});
                 } else for (c.effects) |effect| switch (effect) {
                     .Gas => |s| state.dungeon.gasAt(coord, s).* = 100,
+                    .Sound => |opts| {
+                        const stype, const inten = opts;
+                        sound.makeNoise(coord, stype, inten);
+                        ui.Animation.apply(.{ .Particle = .{ .name = "chargeover-noise", .coord = coord, .target = .{ .C = coord } } });
+                    },
                     .Custom => |f| f(null, coord),
                     else => {},
                 };

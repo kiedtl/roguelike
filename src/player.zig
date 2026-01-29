@@ -886,13 +886,6 @@ pub fn throwItem(index: usize) bool {
         return false;
     }
 
-    //     var gas_targeter = ui.ChooseCellOpts.Targeter{
-    //         .Duo = [2]*const ui.ChooseCellOpts.Targeter{
-    //             &.{ .Gas = .{ .gas = 0 } },
-    //             &.{ .Trajectory = .{} },
-    //         },
-    //     };
-
     const targeter: ui.ChooseCellOpts.Targeter = switch (item) {
         .Projectile => .{ .Trajectory = .{} },
         .Consumable => |c| b: {
@@ -900,12 +893,23 @@ pub fn throwItem(index: usize) bool {
                 if (e == .Gas) break e.Gas;
             } else null;
 
+            const sound_effect = for (c.effects) |e| {
+                if (e == .Sound) break e.Sound;
+            } else null;
+
+            assert(gas_effect == null or sound_effect == null);
+
             if (gas_effect) |_| {
-                // gas_targeter.Duo[0].Gas.gas = g;
-                // break :b gas_targeter;
                 break :b ui.ChooseCellOpts.Targeter{
                     .Duo = [2]*const ui.ChooseCellOpts.Targeter{
                         &.{ .Gas = .{ .gas = 0 } },
+                        &.{ .Trajectory = .{} },
+                    },
+                };
+            } else if (sound_effect) |opts| {
+                break :b ui.ChooseCellOpts.Targeter{
+                    .Duo = [2]*const ui.ChooseCellOpts.Targeter{
+                        &.{ .Radius = .{ .radius = opts.@"1".radiusHeard() } },
                         &.{ .Trajectory = .{} },
                     },
                 };
