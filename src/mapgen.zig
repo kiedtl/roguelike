@@ -4732,26 +4732,6 @@ pub fn readPrefabs() void {
     std.sort.heap(Prefab, s_fabs.items, {}, Prefab.lesserThan);
 
     std.log.info("Loaded {} prefabs.", .{n_fabs.items.len + s_fabs.items.len});
-
-    for (n_fabs.items) |fab| {
-        std.log.info("Prefab: {} v{}", .{ fab.name, fab.variation });
-        for ('0'..'z') |chr| {
-            const ch: u21 = @intCast(chr);
-            if (fab.features.get(ch)) |feature| {
-                std.log.info("Feature {u}: {s}", .{ ch, @tagName(@as(meta.Tag(Prefab.Feature), feature.feature)) });
-            }
-        }
-    }
-
-    for (s_fabs.items) |fab| {
-        std.log.info("Prefab: {} v{}", .{ fab.name, fab.variation });
-        for ('0'..'z') |chr| {
-            const ch: u21 = @intCast(chr);
-            if (fab.features.get(ch)) |feature| {
-                std.log.info("Feature {u}: {s}", .{ ch, @tagName(@as(meta.Tag(Prefab.Feature), feature.feature)) });
-            }
-        }
-    }
 }
 
 pub fn freePrefabs() void {

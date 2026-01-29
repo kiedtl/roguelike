@@ -1409,18 +1409,18 @@ pub fn actualMain() anyerror!void {
 }
 
 pub fn main() void {
-    const T = mapgen.Prefab;
-    std.log.info("Total size: {}", .{@sizeOf(T)});
-    var total: usize = 0;
-    inline for (@typeInfo(T).@"struct".fields) |field| {
-        std.log.info("  * field: {s: <24}: {: <5} {}%", .{
-            field.name,
-            @sizeOf(field.type),
-            @sizeOf(field.type) * 100 / @sizeOf(T),
-        });
-        total += @sizeOf(field.type);
-    }
-    std.log.info("Padding: {}", .{@sizeOf(T) - total});
+    // const T = mapgen.Prefab;
+    // std.log.info("Total size: {}", .{@sizeOf(T)});
+    // var total: usize = 0;
+    // inline for (@typeInfo(T).@"struct".fields) |field| {
+    //     std.log.info("  * field: {s: <24}: {: <5} {}%", .{
+    //         field.name,
+    //         @sizeOf(field.type),
+    //         @sizeOf(field.type) * 100 / @sizeOf(T),
+    //     });
+    //     total += @sizeOf(field.type);
+    // }
+    // std.log.info("Padding: {}", .{@sizeOf(T) - total});
 
     actualMain() catch |e| {
         if (comptime builtin.os.tag != .windows) {
