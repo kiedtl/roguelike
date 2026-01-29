@@ -2361,14 +2361,15 @@ pub const ChooseCellOpts = struct {
                 }.f,
                 .Gas => struct {
                     pub fn f(targeter: Targeter, _: bool, coord: Coord, buf: *Result.AList) Error!void {
-                        buf.append(.{ .coord = coord, .color = 100 }) catch err.wat();
-
                         var matrix = std.mem.zeroes([HEIGHT][WIDTH]usize);
                         _ = gas.mockGasSpread(targeter.Gas.gas, 100, coord, &matrix);
                         for (matrix, 0..) |row, y| for (row, 0..) |cell, x| if (cell > 0) {
                             const c = Coord.new2(coord.z, x, y);
-                            buf.append(.{ .coord = c, .color = cell }) catch err.wat();
+                            const v = @max(30, cell * 8 / 10); // Darker than center
+                            buf.append(.{ .coord = c, .color = v }) catch err.wat();
                         };
+
+                        buf.append(.{ .coord = coord, .color = 100 }) catch err.wat();
                     }
                 }.f,
                 .Radius => struct {
@@ -2432,7 +2433,7 @@ pub const ChooseCellOpts = struct {
 };
 
 pub fn chooseCell(opts: ChooseCellOpts) ?Coord {
-    const COLOR_Y = colors.percentageOf(colors.LIGHT_STEEL_BLUE, 40);
+    const COLOR_Y = colors.percentageOf(colors.LIGHT_STEEL_BLUE, 50);
     const COLOR_N = colors.percentageOf(colors.PALE_VIOLET_RED, 40);
 
     var terror: ?ChooseCellOpts.Targeter.Error = null;

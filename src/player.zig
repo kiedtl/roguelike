@@ -899,10 +899,10 @@ pub fn throwItem(index: usize) bool {
 
             assert(gas_effect == null or sound_effect == null);
 
-            if (gas_effect) |_| {
+            if (gas_effect) |gas_id| {
                 break :b ui.ChooseCellOpts.Targeter{
                     .Duo = [2]*const ui.ChooseCellOpts.Targeter{
-                        &.{ .Gas = .{ .gas = 0 } },
+                        &.{ .Gas = .{ .gas = gas_id } },
                         &.{ .Trajectory = .{} },
                     },
                 };
