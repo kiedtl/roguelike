@@ -2404,6 +2404,7 @@ pub fn placeMobs(level: usize, alloc: mem.Allocator) void {
     // with only center rooms filled with mobs, or north-west rooms filled with
     // mobs, or some other non-random pattern.
     var room_inds = std.ArrayList(usize).init(alloc);
+    defer room_inds.deinit();
     for (0..state.rooms[level].items.len) |i|
         room_inds.append(i) catch err.oom();
     rng.shuffle(usize, room_inds.items);
@@ -4013,7 +4014,7 @@ pub const Prefab = struct {
 
     fn _parseTransform(f: *Prefab, origname: []const u8, t: Transform) !void {
         var new = f.*;
-        new.name = f.name.clone(state.alloc) catch err.oom();
+        new.name = .empty;
         new.features = f.features.clone() catch err.oom();
 
         if (f.input != null or f.output != null or f.stockpile != null or
