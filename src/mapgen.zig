@@ -2234,31 +2234,36 @@ pub fn placeItems(level: usize) void {
         // - Room is a lair of the night creatures.
         // - Room has a subroom (might be too crowded!).
         // - Room is a prefab and the prefab forbids items.
-        // - Random chance.
         //
         if (room.type == .Corridor or
             room.has_subroom or room.is_lair or
-            (room.prefab != null and room.prefab.?.noitems) or
-            rng.onein(4))
+            (room.prefab != null and room.prefab.?.noitems))
         {
             continue;
         }
 
-        if (rng.onein(2)) {
-            // 1/12 chance to have chest full of rubbish
-            if (rng.onein(12)) {
-                _placeLootChest(room, 0);
-            } else {
-                _placeLootChest(room, rng.range(usize, 1, 3));
-            }
+        switch (rng.int(u4)) {
+            // Chests
+            0...3 => {
+                // 1/12 chance to have chest full of rubbish
+                if (rng.onein(12)) {
+                    _placeLootChest(room, 0);
+                } else {
+                    _placeLootChest(room, rng.range(usize, 1, 3));
+                }
 
-            if (room.is_vault != null) {
-                _placeLootChest(room, rng.range(usize, 2, 4));
-                _placeLootChest(room, rng.range(usize, 2, 4));
-            }
-        } else {
-            const max_items = if (room.is_vault != null) rng.range(usize, 3, 7) else rng.range(usize, 1, 2);
-            _strewItemsAround(room, max_items);
+                if (room.is_vault != null) {
+                    _placeLootChest(room, rng.range(usize, 2, 4));
+                    _placeLootChest(room, rng.range(usize, 2, 4));
+                }
+            },
+            // Strew items around
+            4...4 => {
+                const max_items = if (room.is_vault) |_| rng.range(usize, 4, 7) else rng.range(usize, 1, 2);
+                _strewItemsAround(room, max_items);
+            },
+            // Nothing
+            5...15 => {},
         }
     }
 
@@ -2412,12 +2417,17 @@ pub fn placeMobs(level: usize, alloc: mem.Allocator) void {
     for (room_inds.items) |room_ind| {
         const room = &state.rooms[level].items[room_ind];
 
+        // Enforce level crowd cap (only if not a lair)
         if (Configs[level].level_crowd_max) |level_crowd_max| {
-            if (level_mob_count >= level_crowd_max) {
+            if (!room.is_lair and level_mob_count >= level_crowd_max) {
                 continue;
             }
         }
 
+        // Skip if:
+        // - Prefab specifies no guards
+        // - Room is a corridor and level config forbids placing in corridors
+        // - Height * width < 16
         if (room.prefab) |rfb| if (rfb.noguards) continue;
         if (room.type == .Corridor and !Configs[level].allow_spawn_in_corridors) continue;
         if (room.rect.height * room.rect.width < 16) continue;
