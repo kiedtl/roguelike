@@ -1258,7 +1258,12 @@ fn _getItemDescription(self: *Console, starty: usize, item: Item, linewidth: usi
             .Access => y += self.drawTextAt(0, y, "A key for the main entrace", .{}),
             .Down => y += self.drawTextAt(0, y, "On the key is a masterpiece engraving of a cockroach enjoying a hearty meal", .{}),
         },
-        .Ring => {},
+        .Ring => |r| {
+            y += self.drawTextAt(0, y, "Open the ring menu (with $bSPACE$.) to use the ring.", .{});
+            y += 1;
+            y += _writerHeader(self, y, linewidth, "stats", .{});
+            y += _writerSobStats(self, y, linewidth, r.stats, r.resists);
+        },
         .Consumable => |p| {
             y += _writerHeader(self, y, linewidth, "effects", .{});
             for (p.effects) |effect| switch (effect) {
