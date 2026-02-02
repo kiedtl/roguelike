@@ -2198,6 +2198,7 @@ pub const Species = struct {
     name: []const u8,
     default_attack: *const Weapon = &items.FistWeapon,
     aux_attacks: []const *const Weapon = &[_]*const Weapon{},
+    is_night_creature: bool = false,
 };
 
 // Stuff to keep track of coroner mechanics and such... not used for mobs not
@@ -6019,7 +6020,7 @@ pub const Tile = struct {
 
             const mob = self.mob.?;
 
-            if (mob.faction == .Night) {
+            if (mob.species.is_night_creature) {
                 cell.fg = colors.NIGHT_BLUE;
             } else {
                 cell.fg = switch (mob.ai.phase) {
@@ -6203,7 +6204,7 @@ pub const Tile = struct {
                 .interval = rng.rangeManaged(rand, usize, 15, 25),
             };
         } else if (state.dungeon.at(coord).mob) |mob| {
-            if (mob.faction == .Night) {
+            if (mob.species.is_night_creature) {
                 const base = colors.NIGHT_BLUE;
                 const dance = colors.ColorDance{ .each = 0x0f081f, .all = 5 };
 

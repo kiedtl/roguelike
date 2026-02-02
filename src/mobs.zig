@@ -2039,7 +2039,10 @@ pub const BallLightningTemplate = MobTemplate{
 pub const SpectralSwordTemplate = MobTemplate{
     .mob = .{
         .id = "spec_sword",
-        .species = &Species{ .name = "spectral sword" },
+        .species = &Species{
+            .name = "spectral sword",
+            .is_night_creature = true,
+        },
         .tile = '|',
         .ai = AI{
             .work_fn = ai.suicideWork,
@@ -2076,6 +2079,7 @@ pub const SpectralSabreTemplate = MobTemplate{
                 .damage = 1,
                 .strs = &[_]DamageStr{items._dmgstr(1, "nick", "nicks", "")},
             },
+            .is_night_creature = true,
         },
         .tile = ')',
         .ai = AI{
@@ -2106,7 +2110,10 @@ pub const SpectralSabreTemplate = MobTemplate{
 pub const SpectralTotemTemplate = MobTemplate{
     .mob = .{
         .id = "spec_totem",
-        .species = &Species{ .name = "spectral totem" },
+        .species = &Species{
+            .name = "spectral totem",
+            .is_night_creature = true,
+        },
         .tile = 'Д',
         .ai = AI{
             .work_fn = ai.dummyWork,
@@ -2143,7 +2150,10 @@ pub const SpectralTotemTemplate = MobTemplate{
 pub const NightReaperTemplate = MobTemplate{
     .mob = .{
         .id = "night_reaper",
-        .species = &Species{ .name = "night reaper" },
+        .species = &Species{
+            .name = "night reaper",
+            .is_night_creature = true,
+        },
         .tile = 'Я',
         .ai = AI{
             .work_fn = ai.nightCreatureWork,
@@ -2181,7 +2191,10 @@ pub const NightReaperTemplate = MobTemplate{
 pub const GrueTemplate = MobTemplate{
     .mob = .{
         .id = "grue",
-        .species = &Species{ .name = "grue" },
+        .species = &Species{
+            .name = "grue",
+            .is_night_creature = true,
+        },
         .tile = 'Ю',
         .ai = AI{
             .work_fn = ai.nightCreatureWork,
@@ -2228,6 +2241,7 @@ pub const SlinkingTerrorTemplate = MobTemplate{
                 &SLINKING_TERROR_CLAW_WEAPON,
                 &SLINKING_TERROR_CLAW_WEAPON,
             },
+            .is_night_creature = true,
         },
         .tile = 'Ж',
         .ai = AI{
