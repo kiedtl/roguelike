@@ -28,6 +28,7 @@ const types = @import("types.zig");
 const ui = @import("ui.zig");
 const utils = @import("utils.zig");
 
+const Room = @import("mapgen.zig").Room;
 const AIJob = types.AIJob;
 const Coord = types.Coord;
 const Damage = types.Damage;
@@ -583,6 +584,17 @@ pub const CAST_RESIST_WRATH = Spell{
     }},
 };
 
+pub const BOLT_PARALYSE_NIGHT = Spell{
+    .id = "sp_para_night",
+    .name = "paralysis",
+    .cast_type = .Bolt,
+    .bolt_avoids_allies = true,
+    .bolt_multitarget = false,
+    .effects = &[_]Effect{.{ .Status = .Paralysis }},
+    .checks_will = true,
+    .animation = .{ .Particles = .{ .name = "zap-statues" } },
+};
+
 pub const BOLT_AIRBLAST = Spell{
     .id = "sp_airblast",
     .name = "airblast",
@@ -773,6 +785,42 @@ pub const BOLT_SPEEDING = Spell{
             }
         }.f,
     }},
+};
+
+pub const CAST_BANISH_FROM_LAIR = Spell{
+    .id = "sp_banish_from_lair",
+    .name = "banishment",
+    .cast_type = .Smite,
+    .check_has_effect = struct {
+        pub fn f(caster: *Mob, _: SpellOptions, target: Coord) bool {
+            const target_mob = state.dungeon.at(target).mob orelse return false;
+            return caster.distance(target_mob) == 1;
+            // Commented out: Night creature might be chasing player
+            // and switch (state.layout[target.z][target.y][target.x]) {
+            //     .Unknown => false,
+            //     .Room => |r| state.rooms[target.z].items[r].is_lair,
+            // };
+        }
+    }.f,
+    .effects = &[_]Effect{.{ .Custom = struct {
+        pub fn f(_: Coord, _: SpellOptions, target: Coord) void {
+            const target_mob = state.dungeon.at(target).mob.?;
+
+            const location = for (0..50) |_| {
+                const candidate = rng.chooseUnweighted(Room, state.rooms[target.z].items);
+                if (candidate.is_lair or candidate.type != .Room)
+                    continue;
+                break for (0..10) |_| {
+                    const rndcoord = candidate.rect.randomCoord();
+                    if (!state.dungeon.at(rndcoord).prison and
+                        state.is_walkable(rndcoord, .{ .mob = target_mob, .right_now = true }))
+                        break rndcoord;
+                } else continue;
+            } else return;
+
+            _ = target_mob.teleportTo(location, null, true, false);
+        }
+    }.f }},
 };
 
 pub const CAST_MASS_DISMISSAL = Spell{

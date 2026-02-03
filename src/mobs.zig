@@ -726,7 +726,7 @@ pub const MellaentTemplate = MobTemplate{
     .mob = .{
         .id = "mellaent",
         .species = &Species{ .name = "mellaent" },
-        .tile = 'b',
+        .tile = 'v',
         .ai = AI{
             .work_fn = ai.patrolWork,
             .fight_fn = ai.meleeFight,
@@ -1380,7 +1380,7 @@ pub const BloatTemplate = MobTemplate{
             .name = "bloat",
             .default_attack = &Weapon{ .name = "fist", .damage = 1, .strs = &items.FIST_STRS },
         },
-        .tile = 'n',
+        .tile = 'b',
         .ai = AI{
             .work_fn = ai.dummyWork,
             .fight_fn = ai.meleeFight,
@@ -2147,6 +2147,46 @@ pub const SpectralTotemTemplate = MobTemplate{
     },
 };
 
+pub const SpectralFlanTemplate = MobTemplate{
+    .mob = .{
+        .id = "spec_flan",
+        .species = &Species{
+            .name = "spectral flan",
+            .is_night_creature = true,
+        },
+        .tile = 'Ц',
+        .ai = AI{
+            .work_fn = ai.nightCreatureWork,
+            .fight_fn = ai.mageFight,
+            .is_curious = false,
+            .is_fearless = true,
+            .spellcaster_backup_action = .Melee,
+            .work_phase = .NC_Guard,
+            .flags = &[_]AI.Flag{ .AvoidsEnemies, .FearsLight },
+        },
+
+        .spells = &[_]SpellOptions{
+            .{ .MP_cost = 0, .spell = &spells.BOLT_PARALYSE_NIGHT, .duration = 12 },
+            .{ .MP_cost = 0, .spell = &spells.CAST_BANISH_FROM_LAIR },
+        },
+        .max_MP = 0,
+
+        .base_night_vision = true,
+
+        .deaf = true,
+        .faction = .Night,
+        .max_HP = 7,
+        .memory_duration = 24,
+
+        .life_type = .Spectral,
+        .blood = null,
+        .corpse = .None,
+
+        .innate_resists = .{ .rFume = 100, .rElec = 50, .rFire = -25, .rAcid = RESIST_IMMUNE },
+        .stats = .{ .Willpower = 10, .Missile = 100, .Melee = 100, .Speed = 120, .Evade = 25, .Vision = 9 },
+    },
+};
+
 pub const NightReaperTemplate = MobTemplate{
     .mob = .{
         .id = "night_reaper",
@@ -2619,6 +2659,7 @@ pub const MOBS = [_]*const MobTemplate{
     &SpectralSwordTemplate,
     &SpectralSabreTemplate,
     &SpectralTotemTemplate,
+    &SpectralFlanTemplate,
     &NightReaperTemplate,
     &GrueTemplate,
     &SlinkingTerrorTemplate,

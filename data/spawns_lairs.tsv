@@ -9,10 +9,11 @@
 #
 # monster id        unused   (weight)
 
+"spec_flan"           	 "" 	 100
 "spec_totem"          	 "" 	 100
 "night_reaper"        	 "" 	  70
-"grue"                	 "" 	 100
-"slinking_terror"     	 "" 	 100
+"grue"                	 "" 	  90
+"slinking_terror"     	 "" 	  90
 #"creeping_death"      	 "" 	  70
 
 # monster id        unused   (weight)
