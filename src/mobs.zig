@@ -566,7 +566,7 @@ pub const PlayerTemplate = MobTemplate{
 
         .max_MP = PLAYER_MAX_MP,
 
-        .stats = .{ .Willpower = 4, .Missile = 60, .Evade = 10, .Vision = PLAYER_VISION, .Potential = 40 },
+        .stats = .{ .Melee = 50, .Willpower = 4, .Missile = 60, .Evade = 10, .Vision = PLAYER_VISION, .Potential = 40 },
     },
     .weapon = &items.DaggerWeapon,
     .shoes = &items.SandalShoe,
