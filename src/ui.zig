@@ -1492,6 +1492,7 @@ pub fn _drawBorder(color: u32, d: Dimension) void {
 pub const DrawStrOpts = struct {
     bg: ?u32 = colors.BG,
     fg: u32 = colors.OFF_WHITE,
+    fg_brightness: u32 = 100, // Percentage
     endy: ?usize = null,
     fold: bool = true,
     // When folding text, skip the first X lines. Used to implement scrolling.
@@ -1952,6 +1953,8 @@ fn drawLog() void {
     if (state.messages.items.len == 0)
         return;
 
+    var buf: BStr(256) = undefined;
+
     const linewidth = log_win.main.width - 1;
     const messages_len = state.messages.items.len - 1;
 
@@ -1960,10 +1963,6 @@ fn drawLog() void {
         if (log_win.last_message) |last_message|
             if (i <= last_message)
                 continue;
-        const col = if (message.turn >= state.player_turns or i == messages_len)
-            message.type.color()
-        else
-            colors.darken(message.type.color(), 2);
 
         const line = if (i > 0 and i < messages_len and (message.turn != state.messages.items[i - 1].turn and message.turn != state.messages.items[i + 1].turn))
             @as(u21, ' ')
@@ -1974,22 +1973,21 @@ fn drawLog() void {
         else
             @as(u21, '│');
 
-        const noisetext: []const u8 = if (message.noise) "$c─$a♫$. " else "$c─$.  ";
+        const noisetext: []const u8 = if (message.noise) "─$a♫$. " else "─$.  ";
 
-        var str: BStr(256) = undefined;
-        str.clear();
+        buf.clear();
 
         if (message.dups == 0) {
-            str.fmt("$G{u}$.{s}{s}", .{ line, noisetext, message.msg.bytes() });
+            buf.fmt("$G{u}$.{s}{s}", .{ line, noisetext, message.msg.bytes() });
         } else {
-            str.fmt("$G{u}$.{s}{s} (×{})", .{ line, noisetext, message.msg.bytes(), message.dups + 1 });
+            buf.fmt("$G{u}$.{s}{s} (×{})", .{ line, noisetext, message.msg.bytes(), message.dups + 1 });
         }
 
         var fibuf = StackBuffer(u8, 4096).init(null);
-        var fold_iter = utils.FoldedTextIterator.init(str.constSlice(), linewidth + 1);
+        var fold_iter = utils.FoldedTextIterator.init(buf.constSlice(), linewidth + 1);
         while (fold_iter.next(&fibuf)) |text_line| : (y += 1) {
             var console = Console.initHeap(state.alloc, linewidth, 1);
-            _ = console.drawTextAt(0, 0, text_line, .{ .fg = col });
+            _ = console.drawTextAt(0, 0, text_line, .{});
             console.addRevealAnimation(.{ .factor = 6 });
             log_win.main.addSubconsole(console, 0, y);
         }

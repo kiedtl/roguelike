@@ -489,7 +489,7 @@ pub fn drawTextAt(self: *Self, startx: usize, starty: usize, str: []const u8, op
     var skipped: usize = 0; // TODO: remove
     var no_incr_y = false;
 
-    var fg = opts.fg;
+    var fg = colors.percentageOf2(opts.fg, opts.fg_brightness);
     var bg: ?u32 = opts.bg;
 
     var fibuf = StackBuffer(u8, 4096).init(null);
@@ -533,8 +533,10 @@ pub fn drawTextAt(self: *Self, startx: usize, starty: usize, str: []const u8, op
                 '\r' => err.bug("Bad character found in string.", .{}),
                 '$' => {
                     const next_encoded_codepoint = utf8.nextCodepointSlice() orelse
-                        err.bug("Found incomplete escape sequence", .{});
+                        err.bug("[Console] Found incomplete escape sequence", .{});
                     const next_codepoint = std.unicode.utf8Decode(next_encoded_codepoint) catch err.bug("bad utf8", .{});
+
+                    const oldfg = fg;
                     switch (next_codepoint) {
                         '.' => {
                             fg = opts.fg;
@@ -556,6 +558,11 @@ pub fn drawTextAt(self: *Self, startx: usize, starty: usize, str: []const u8, op
                         'o' => fg = colors.GOLD,
                         else => err.bug("[Console] Found unknown escape sequence '${u}' (line: '{s}')", .{ next_codepoint, line }),
                     }
+
+                    if (oldfg != fg) {
+                        fg = colors.percentageOf2(fg, opts.fg_brightness);
+                    }
+
                     continue;
                 },
                 else => {

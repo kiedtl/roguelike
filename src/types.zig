@@ -1007,11 +1007,11 @@ pub const MessageType = union(enum) {
             .Damage => 0xed254d, // pinkish red
             .Important => 0xed254d, // pinkish red
             .SpellCast => 0xdadeda, // creamy white
-            .Drain => 0xffd700, // gold
+            .Drain => colors.GOLD, // gold
             .Status => colors.AQUAMARINE, // aquamarine
             .Combat => 0xdadeda, // creamy white
             .CombatUnimportant => 0x7a9cc7, // steel blue
-            .Unimportant => 0x8019ac,
+            .Unimportant => 0x9049ac,
             .Inventory => 0x7a9cc7, // steel blue
             .Dialog => 0x9abce7, // lighter steel blue
         };
