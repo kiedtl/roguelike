@@ -116,13 +116,14 @@ pub const RARE_ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 5, .i = .{ .W = &GoldDaggerWeapon } },
 };
 pub const WEAP_ITEM_DROPS = [_]ItemTemplate{
-    .{ .w = 40, .i = .{ .W = &SwordWeapon } },
+    .{ .w = 40, .i = .{ .W = &RustySwordWeapon } },
+    .{ .w = 30, .i = .{ .W = &SwordWeapon } },
     .{ .w = 30, .i = .{ .W = &RapierWeapon } },
-    .{ .w = 30, .i = .{ .W = &GreatMaceWeapon } },
-    .{ .w = 30, .i = .{ .W = &MonkSpadeWeapon } },
-    .{ .w = 20, .i = .{ .W = &BalancedSwordWeapon } },
-    .{ .w = 20, .i = .{ .W = &MartialSwordWeapon } },
-    .{ .w = 10, .i = .{ .W = &WoldoWeapon } },
+    .{ .w = 20, .i = .{ .W = &GreatMaceWeapon } },
+    .{ .w = 20, .i = .{ .W = &MonkSpadeWeapon } },
+    .{ .w = 10, .i = .{ .W = &BalancedSwordWeapon } },
+    .{ .w = 10, .i = .{ .W = &MartialSwordWeapon } },
+    .{ .w = 5, .i = .{ .W = &WoldoWeapon } },
     .{ .w = 5, .i = .{ .W = &MorningstarWeapon } },
     // Make it really rare since it's the starting weapon
     .{ .w = 1, .i = .{ .W = &DaggerWeapon } },
@@ -197,16 +198,16 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 8, .i = .{ .C = &AgilityCloak } },
     .{ .w = 8, .i = .{ .C = &ThornyCloak } },
     // Headgear
-    .{ .w = 20, .i = .{ .H = &MiningHelmet } },
-    .{ .w = 20, .i = .{ .H = &MailCoif } },
-    .{ .w = 20, .i = .{ .H = &BlackHood } },
+    .{ .w = 10, .i = .{ .H = &MiningHelmet } },
+    .{ .w = 10, .i = .{ .H = &MailCoif } },
+    .{ .w = 10, .i = .{ .H = &BlackHood } },
     .{ .w = 10, .i = .{ .H = &FumeHood } },
-    .{ .w = 20, .i = .{ .H = &WeldingHood } },
-    .{ .w = 20, .i = .{ .H = &GoldHeadband } },
-    .{ .w = 10, .i = .{ .H = &GoldTiara } },
-    .{ .w = 10, .i = .{ .H = &InsulatedMask } },
-    .{ .w = 10, .i = .{ .H = &SilusMask } },
+    .{ .w = 10, .i = .{ .H = &WeldingHood } },
+    .{ .w = 10, .i = .{ .H = &GoldHeadband } },
+    .{ .w = 5, .i = .{ .H = &InsulatedMask } },
+    .{ .w = 5, .i = .{ .H = &SilusMask } },
     .{ .w = 5, .i = .{ .H = &SilusHood } },
+    .{ .w = 1, .i = .{ .H = &GoldTiara } },
     // Shoes
     .{ .w = 10, .i = .{ .S = &SabatonsShoe } },
     .{ .w = 10, .i = .{ .S = &MartialShoe } },
@@ -2284,10 +2285,18 @@ pub const FistWeapon = Weapon{
 
 // Edged weapons {{{
 
+pub const RustySwordWeapon = Weapon{
+    .id = "sword_rusty",
+    .name = "rusty sword",
+    .damage = 1,
+    .stats = .{ .Melee = 5 },
+    .strs = &SLASHING_STRS,
+};
 pub const SwordWeapon = Weapon{
     .id = "sword",
     .name = "longsword",
     .damage = 2,
+    .stats = .{ .Melee = 5 },
     .strs = &SLASHING_STRS,
 };
 pub const BoneSwordWeapon = Weapon.createBoneWeapon(&SwordWeapon, .{});
@@ -2297,7 +2306,7 @@ pub const BalancedSwordWeapon = Weapon{
     .id = "sword_balanced",
     .name = "balanced sword",
     .damage = 2,
-    .stats = .{ .Melee = 10 },
+    .stats = .{ .Melee = 15 },
     .strs = &SLASHING_STRS,
 };
 
@@ -2314,7 +2323,7 @@ pub const MartialSwordWeapon = Weapon{
     .name = "martial sword",
     .damage = 2,
     .martial = true,
-    .stats = .{ .Melee = 10, .Martial = 1 },
+    .stats = .{ .Melee = 15, .Martial = 1 },
     .strs = &SLASHING_STRS,
 };
 
