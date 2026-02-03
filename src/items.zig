@@ -130,7 +130,7 @@ pub const WEAP_ITEM_DROPS = [_]ItemTemplate{
 pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 5, .i = .{ .List = &RARE_ITEM_DROPS } },
     // Weapons
-    .{ .w = 20, .i = .{ .List = &WEAP_ITEM_DROPS } },
+    .{ .w = 10, .i = .{ .List = &WEAP_ITEM_DROPS } },
     // Armor
     .{ .w = 30, .i = .{ .A = GambesonArmor } },
     .{ .w = 20, .i = .{ .A = BlueVestArmor } },
