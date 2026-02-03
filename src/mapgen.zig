@@ -805,28 +805,11 @@ pub fn excavatePrefab(
                 y + room.rect.start.y + starty,
             );
 
-            const tt: ?TileType = switch (fab.content[y][x]) {
-                .Any, .Connection => null,
+            state.dungeon.at(rc).type = switch (fab.content[y][x]) {
+                .Any, .Connection => state.dungeon.at(rc).type,
                 .Window, .Wall => .Wall,
-                .Water,
-                .LevelFeature,
-                .Feature,
-                .LockedDoor,
-                .HeavyLockedDoor,
-                .Door,
-                .Bars,
-                .Brazier,
-                .ShallowWater,
-                .Floor,
-                .Loot1,
-                .RareLoot,
-                .Corpse,
-                .Ring,
-                => .Floor,
-                //.Water => .Water,
-                .Lava => .Lava,
+                else => .Floor,
             };
-            if (tt) |_tt| state.dungeon.at(rc).type = _tt;
 
             if (fab.material) |mat|
                 if (fab.content[y][x] != .Any) {
@@ -906,6 +889,7 @@ pub fn excavatePrefab(
                 .Brazier => _place_machine(rc, Configs[room.rect.start.z].light),
                 .ShallowWater => state.dungeon.at(rc).terrain = &surfaces.ShallowWaterTerrain,
                 .Water => state.dungeon.at(rc).terrain = &surfaces.WaterTerrain,
+                .GlowingWater => state.dungeon.at(rc).terrain = &surfaces.GlowingWaterTerrain,
                 .Bars => {
                     const p_ind = utils.findById(surfaces.props.items, Configs[room.rect.start.z].bars);
                     _ = placeProp(rc, &surfaces.props.items[p_ind.?]);
@@ -3943,7 +3927,7 @@ pub const Prefab = struct {
         Floor,
         Connection,
         Water,
-        Lava,
+        GlowingWater,
         Bars,
         Feature: u8,
         LevelFeature: usize,
@@ -4636,7 +4620,7 @@ pub const Prefab = struct {
                                 break :con .Connection;
                             },
                             '~' => .Water,
-                            '≈' => .Lava,
+                            '≈' => .GlowingWater,
                             '≡' => .Bars,
                             '=' => .Ring,
                             '?' => .Any,

@@ -2047,42 +2047,35 @@ pub fn modifyTile(moblist: []const *Mob, coord: Coord, p_tile: display.Cell) dis
     // Draw noise and indicate if that tile is visible by another mob
     switch (state.dungeon.at(coord).type) {
         .Floor => {
-            // const has_stuff = state.dungeon.at(coord).surface != null or
-            //     state.dungeon.at(coord).mob != null or
-            //     state.dungeon.itemsAt(coord).len > 0;
-
             if (state.player.coord.eq(coord)) {
                 const light = state.dungeon.lightAt(state.player.coord).*;
                 tile.fg = if (light) colors.LIGHT_CONCRETE else colors.STEEL_BLUE;
             }
 
             if (_mobs_can_see(moblist, coord)) {
-                // // Treat this cell specially if it's the player and the player is
-                // // being watched.
-                // if (state.player.coord.eq(coord) and _mobs_can_see(moblist, coord)) {
-                //     return .{ .bg = colors.LIGHT_CONCRETE, .fg = colors.BG, .ch = '@' };
-                // }
-
-                // if (has_stuff) {
-                //     if (state.is_walkable(coord, .{ .right_now = true })) {
-                //         // Swap.
-                //         tile.fg ^= tile.bg;
-                //         tile.bg ^= tile.fg;
-                //         tile.fg ^= tile.bg;
-                //     }
-                // } else {
-                //tile.ch = '⬞';
-                //tile.ch = '÷';
-                //tile.fg = 0xffffff;
-                // tile.fg = 0xff6666;
                 if (state.is_walkable(coord, .{ .mob = state.player })) {
                     tile.bg = colors.percentageOf(colors.DOBALENE_BLUE, 10);
                     tile.outline = colors.percentageOf(colors.DOBALENE_BLUE, 25);
                 }
-                // }
             }
         },
         else => {},
+    }
+
+    var filter: ?struct { u32, f64 } = null;
+    if (state.dungeon.terrainAt(state.player.coord) == &surfaces.WaterTerrain)
+        filter = .{ 0x6a7ed4, 3.0 }
+    else if (state.dungeon.terrainAt(state.player.coord) == &surfaces.GlowingWaterTerrain)
+        filter = .{ 0x468496, 3.0 }
+    else if (state.player.hasStatus(.Fire))
+        filter = .{ 0xca2d08, 0.9 };
+
+    if (filter) |filter_info| {
+        const fil, const bg_factor = filter_info;
+        tile.bg = colors.mix(tile.bg, fil, colors.brightnessf(tile.bg) * bg_factor);
+        tile.fg = colors.mix(tile.fg, fil, colors.brightnessf(tile.fg));
+        tile.sbg = colors.mix(tile.sbg, fil, colors.brightnessf(tile.sbg) * bg_factor);
+        tile.sfg = colors.mix(tile.sfg, fil, colors.brightnessf(tile.sfg));
     }
 
     return tile;

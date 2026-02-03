@@ -75,15 +75,10 @@ fn interpolate(a: u32, b: u32, f: f64) u32 {
     return @as(u32, @intFromFloat((aa + f * (ab - aa)) * 255));
 }
 
-pub fn mix(a: u32, b: u32, frac: f64) u32 {
-    assert(frac <= 100);
-
-    const ar = (a >> 16) & 0xFF;
-    const ag = (a >> 8) & 0xFF;
-    const ab = (a >> 0) & 0xFF;
-    const br = (b >> 16) & 0xFF;
-    const bg = (b >> 8) & 0xFF;
-    const bb = (b >> 0) & 0xFF;
+pub fn mix(a: u32, b: u32, pfrac: f64) u32 {
+    const frac = math.clamp(pfrac, 0.0, 1.0);
+    const ar, const ag, const ab = decompose(a);
+    const br, const bg, const bb = decompose(b);
     const rr = interpolate(ar, br, frac);
     const rg = interpolate(ag, bg, frac);
     const rb = interpolate(ab, bb, frac);
@@ -113,11 +108,16 @@ pub fn darken(color: u32, by: u32) u32 {
     return (r << 16) | (g << 8) | b;
 }
 
+pub fn brightnessf(color: u32) f64 {
+    const r = @as(f64, @floatFromInt(((color >> 16) & 0xFF))) / 255.0;
+    const g = @as(f64, @floatFromInt(((color >> 8) & 0xFF))) / 255.0;
+    const b = @as(f64, @floatFromInt(((color >> 0) & 0xFF))) / 255.0;
+    return 0.299 * r + 0.587 * g + 0.114 * b;
+}
+
+// Returns integer in range 0..255, reflecting received brightness of color.
 pub fn brightness(color: u32) u32 {
-    const r = @as(f64, @floatFromInt(((color >> 16) & 0xFF)));
-    const g = @as(f64, @floatFromInt(((color >> 8) & 0xFF)));
-    const b = @as(f64, @floatFromInt(((color >> 0) & 0xFF)));
-    return @intFromFloat(0.299 * r + 0.587 * g + 0.114 * b);
+    return @intFromFloat(brightnessf(color) * 255.0);
 }
 
 pub fn filterGrayscale(color: u32) u32 {
