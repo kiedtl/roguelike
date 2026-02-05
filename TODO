@@ -426,6 +426,18 @@ x Dispel Undead
 
 Rings
 -----
+- ring of refrigeration
+  - Must stand next to unaware living/undead (not constructed) monster
+  - Theme:
+    - Monster's mind is "frozen" for 20 turns.
+    - They stand still in a confused state
+  - Implementation:
+    - They stand still, resting, doing nothing. No looking around, no moving.
+    - ie special ai routine
+  - Ends if they see an enemy or hear a noise.
+  - Crucially, they refuse allies who try to push past them.
+    - Thus the player can block a corridor or something with them.
+
 - ring of revelation
   - Must stand next to unaware living/undead (not constructed) monster
   - Monster's mind is read
@@ -1615,19 +1627,82 @@ x UI
   x Idea: when examining monster, FoV is highlighted
   x Show gas in examine mode
 x Wood should be creaky?
-*** 3.2.0 release ***
+*** 4.1.0 release ***
+- Night creatures, part two
+  - More "ethereal" feel
+    - Slade
+      - Indestructible by any means
+      x When standing on it, nothing outside lair can be seen (player-only?)
+      x When not on it, vision into lair is sharply decreased
+      x Color dance (walls also)
+    - Door should be invisible unless adjacent (or positive NC rep)
+  x Night shard: negative light
+  x Spectral Flan: gurgling creature that paralyses player, then touches player
+    to teleport them outside of lair
+    - Rebuilds door?
+      - Teleportation erases memory of the lair?
+      - "Scrambles" the inside?
+  - Balance conjuration
+    - Conjuration ring prefab (both lair and Prison) should have heavy guards
+      - Prison one should be larger so that it's harder to accidentally aggro them
+    - Conjuration ring prefab should be rarer
+    - Spectral orbs rarer
+    x More non-ring conjuration items
+      x Spectral Eye: consumable, create a region of slade in a dark area
+        x Spectral Tyrant: immobile, extremely fast
+          x Dreaming Mind spell (1 turn of insanity, 0 MP)
+          x Also Conjuration spell (10 MP)
+            - Conjuration stat is mirror of player's (but no conjuration augments)
+          x Blades and Tyrant are aligned with the Night
+      x Spectral Wisp: throwing it spawns spectral blades in that location.
+- Additional mundane items and content
+  - New polearm: push ego
+  - Mace/morningstar: stun/daze: unable to attack (also: add to debilitated).
+- Save files
+  x Memory leak fixes, refactoring
+  - Automatic testing
+  - Menu option to load a saved game
+  - Escape-menu option to save a game
+  - Anti-cheat?
+  - Serialize the player's "surroundings" and context to show on main menu when
+    loading a save
+- Scoresheets
+  x Website, highscore page
+  - Adding an actual score
+    - Record version of game, use different scoring methods for different versions
+    - Record number of times player was spotted (ignore statues)
+- UI/QoL
+  - Escape menu
+    - List of visited/unvisited floors
+  - Examine mode
+    - Fix: clicking area of map doesn't start examine mode on correct coord
+    x Ability to view info on gas/terrain/wall/floor
+    - Effect lists
+      x Gas: clicking on gas to see popup window with stats
+      - Status: clicking on status (e.g. potion screen doesn't have this)
+  - If mob is shouting, blink sound symbol
+  - If mob is making noise, sound symbol in HUD
+  x Effects of iron wasp attacks not shown for some reason
+  x Throwing/Choosing coordinate
+    x Rework/Fix UI that shows area size of potion being thrown
+    x Show area of effect for distraction potion when throwing
+  - Message when unable to push past ally
+x Balancing of early game
+  x Make it a little harder to be stocked up on armor in the beginning
+  x Cloaks should be rarer
+- More rings
+  - Ring of refrigeration
+  - Ring of revelation
+  - Ring of suggestion
+  - Ring of contriction
+  - Ring of excavation
+  - Ring of execution
 - Fire tweaks
   - Don't destroy corpses entirely, only char them
   - Monsters should scream when on fire, and do fireWork() (i.e. run around and panic)
   - Smoke when burning things
 - Add traps back in, reworking them to be useful
   - Idea: Vents are always near doors?
-- More rings
-  - Ring of revelation
-  - Ring of suggestion
-  - Ring of contriction
-  - Ring of excavation
-  - Ring of execution
 - Events
   - Lore quick speeches/monologues
   - Workshop/2 and Workshop/3
@@ -1641,7 +1716,7 @@ x Wood should be creaky?
   x Shrine-blowup effect (rework, simplify and speedup)
   - Lightning mage static discharge (speedup/rework)
   - Lightning mage lightning bolt (make more distinctive)
-x Fix prisoner hostility issues (with Revgen)
+x Fix prisoner hostility threeissues (with Revgen)
 - Vaults pt 2
   - Add number of vaults defeated to scoresheet
     - Some kind of mechanism to "know" when player has truly defeated vault,
@@ -1677,27 +1752,17 @@ x Fix prisoner hostility issues (with Revgen)
       hauler's AI); and tickEnv will automatically release prisoner if its
       guardian isn't adjacent. Yes, prisoner escapes far more often, but at
       least it's less fragile and fewer unpredictable situations
-- Night Creatures, part two
+- Night Creatures, part three
   - Decreased rep for:
     - Killing NC
     - Throwing fire/illuminations potions at NC
-  - Hiding lairs
-    - Doors appear to be concrete/dobalene
-      - Unless aligned w/ NC
-      - Unless adjacent
-  - More "ethereal" feeling
-    - Slade
-      - Indestructible by any means
-      - When standing on it, nothing outside lair can be seen (player-only?)
-      - When not on it, vision into lair is sharply decreased
-      - Color dance (walls also)
-    - Grues
-      - Need to be more terrifying
-      - Always emit blinding/insane gas?
-    - NC travel: "hop" (teleport) from one dark tile to another, only walking
-      if the next dark tile is too far away
+  - NC travel: "hop" (teleport) from one dark tile to another, only walking
+    if the next dark tile is too far away
   - Items
     - Item to find and reveal lairs
+    - Rare, limited-use evocable to "destroy" lair, removing all slade +
+      breaking door + tele'ing NCs (66% chance) to another lair (animation:
+      like Cogmind gamma burst trap)
     - Make illumination/glow potions useful for raiding lairs
       - Aggroes all NC in vicinity
       - Corona/glowing damages NC, causes fleeing if wounded
@@ -1778,16 +1843,6 @@ x Fix prisoner hostility issues (with Revgen)
   - Paralysing zap (directional bolt only)
   - Fry (Cardinal directional bolt only)
 - Change statue's FOV method
-- UI/QoL
-  - Escape menu
-    - List of visited/unvisited floors
-  - Examine mode
-    - Ability to view info on gas/terrain/wall/floor
-    - Effect lists
-      x Gas: clicking on gas to see popup window with stats
-      - Status: clicking on status (e.g. potion screen doesn't have this)
-    - Click on tile to move/attack/interact
-  - Warn when next to spreading gas and resting
 - Basic speeches by mobs
 - Rework gases
   x Remove usage of floats entirely
@@ -1797,9 +1852,6 @@ x Fix prisoner hostility issues (with Revgen)
   - AI to move out of dangerous tiles (gas/terrain)
   - AI to move out of reach of enemy, if mob has reaching weapon and is faster
   - AI to move onto advantageous terrain
-- Scoring
-- Scoresheet uploading (to where?)
-- Basic save system, replaying of saves
 - Rework 1/Prison to 1/Hub
   - Possibly create a new level, and shift other levels downward?
     - Is shifting necessary? Can just make it 0/Hub instead of 1/Hub
@@ -1809,10 +1861,7 @@ x Fix prisoner hostility issues (with Revgen)
     - If player tries to go up w/ center staircase, staircase gets
       locked down, and guards start pouring out. i.e. challenge mode
       - Prevents Revgenunkim invasion event?
-- Basalt monsters (-mages, -lings)?
-  - Plus: ability that confers status on player that causes Living Stone to
-    continually spawn around player
-- Night Creatures, part three
+- Night Creatures, part four
   - Creeping Death
     - Inject venom spell
     - Dijkstra vision
@@ -1906,3 +1955,6 @@ x Fix prisoner hostility issues (with Revgen)
   - Artwork
   - Traits & categories
   - Auto-identification
+- Basalt monsters (-mages, -lings)?
+  - Plus: ability that confers status on player that causes Living Stone to
+    continually spawn around player
