@@ -488,6 +488,16 @@
                })
 (defn new-emitter [table] (table/setproto table Emitter))
 (defn new-emitter-from [table proto] (table/setproto table (table/proto-flatten proto)))
+(defmacro SPAR-inacc-burst [&named spread-fac dist-fac dist-min]
+  ~(fn [self ticks ctx coord target]
+    (let [first? (= (self :total-spawned) 0)
+          diffx (- (target :x) (coord :x))
+          diffy (- (target :y) (coord :y))
+          angle (- (math/atan2 diffy diffx) (if first? 0 (* ,spread-fac (random-choose [-1 0 1]))))
+          dist  (- (:distance coord target) (if first? 0 (* (+ ,dist-min (math/random)) ,dist-fac)))
+          ntarg  (new-coord (+ (coord :x) (* dist (math/cos angle)))
+                            (+ (coord :y) (* dist (math/sin angle))))]
+      [coord ntarg])))
 (defmacro SPAR-circle [&named inverse radius sparsity-factor]
   (default inverse false)
   (default radius :distance)
@@ -1211,15 +1221,23 @@
       :lifetime 5
       :spawn-delay 1
       :spawn-count (fn [&] 3)
-      :get-spawn-params (fn [self ticks ctx coord target]
-                          (let [first? (= (self :total-spawned) 0)
-                                diffx (- (target :x) (coord :x))
-                                diffy (- (target :y) (coord :y))
-                                angle (- (math/atan2 diffy diffx) (if first? 0 (* 0.25 (random-choose [-1 0 1]))))
-                                dist  (- (:distance coord target) (if first? 0 (* (+ 0.5 (math/random)) 2.5)))
-                                ntarg  (new-coord (+ (coord :x) (* dist (math/cos angle)))
-                                                  (+ (coord :y) (* dist (math/sin angle))))]
-                            [coord ntarg]))
+      :get-spawn-params (SPAR-inacc-burst :spread-fac 0.25 :dist-fac 2.5 :dist-min 0.5)
+    })
+  ]
+  "zap-spectral-inacc" @[
+    (new-emitter @{
+      :particle (new-particle @{
+        :tile (new-tile @{ :ch "+" :fg 0x7939f3 :bg 0 :bg-mix 0 })
+        :speed 0.65
+        :triggers @[
+          [[:COND-percent? 30] [:TRIG-scramble-glyph "0OCUScueaos"]]
+          [[:COND-true] [:TRIG-lerp-color :bg 0xc03bef "rgb" [:sine-custom (fn [self ticks &] (* ticks 10))]]]
+        ]
+      })
+      :lifetime 6
+      :spawn-delay 1
+      :spawn-count (fn [&] 2)
+      :get-spawn-params (SPAR-inacc-burst :spread-fac 0.15 :dist-fac 2.5 :dist-min 0.8)
     })
   ]
   "explosion-hellfire" @[

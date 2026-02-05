@@ -592,7 +592,7 @@ pub const BOLT_PARALYSE_NIGHT = Spell{
     .bolt_multitarget = false,
     .effects = &[_]Effect{.{ .Status = .Paralysis }},
     .checks_will = true,
-    .animation = .{ .Particles = .{ .name = "zap-statues" } },
+    .animation = .{ .Particles = .{ .name = "zap-spectral-inacc" } },
 };
 
 pub const BOLT_AIRBLAST = Spell{
@@ -1609,7 +1609,7 @@ pub const CAST_DREAMING_MIND = Spell{
         .{ .Status = .Fear },
     },
     .checks_will = true,
-    .animation = .{ .Particles = .{ .name = "zap-statues" } },
+    .animation = .{ .Particles = .{ .name = "zap-spectral-inacc" } },
 };
 
 pub const CAST_BARTENDER_FERMENT = Spell{
