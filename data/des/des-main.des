@@ -383,6 +383,10 @@ explode if it hits an obstacle or if the target is adjacent at any time.
 The blast will deal $o3$.-$o7$. damage (with a bias toward damage in the middle of
 the range).
 
+% evoc_spectral_wisp
+Spawns spectral blades, the number of which is equal to your $oConjuration$.
+stat (but at least 2).
+
 % cons_life_bread
 Sacred food of cave-goblin craft, now stale and forgotten.
 
@@ -406,7 +410,7 @@ unless there are no more to give, or a 50% chance of increasing the
 $oConjuration$. stat.
 
 
-Only useful if you possess the Ring of Conjuration.
+Only useful if you possess the Ring of Conjuration or a Spectral Wisp.
 
 % kit_mine
 You can evoke it to build a small mine where you are standing.

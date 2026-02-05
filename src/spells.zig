@@ -1006,6 +1006,10 @@ fn _effectAuraDispersal(caster_coord: Coord, _: SpellOptions, target_coord: Coor
 //     }},
 // };
 
+pub const SpawnSabreOpts = struct {
+    min_spawn_num: usize = 1,
+};
+
 pub fn spawnSabreSingle(caster: *Mob, coord: Coord) void {
     const rFire = @as(usize, 0) +
         (if (caster == state.player and player.hasAugment(.rFire_25)) @as(usize, 25) else 0) +
@@ -1026,13 +1030,14 @@ pub fn spawnSabreSingle(caster: *Mob, coord: Coord) void {
     caster.addUnderling(ss);
 }
 
-pub fn spawnSabreVolley(caster: *Mob, coord: Coord) void {
+pub fn spawnSabreVolley(caster: *Mob, coord: Coord, opts: SpawnSabreOpts) void {
     var directions = DIRECTIONS;
     rng.shuffle(Direction, &directions);
 
     var spawned_ctr: usize = @intCast(caster.stat(.Conjuration));
+    spawned_ctr = @max(spawned_ctr, opts.min_spawn_num);
 
-    if (state.is_walkable(coord, .{ .right_now = true })) {
+    if (spawned_ctr > 0 and state.is_walkable(coord, .{ .right_now = true })) {
         spawnSabreSingle(caster, coord);
         spawned_ctr -= 1;
     }
@@ -1044,7 +1049,6 @@ pub fn spawnSabreVolley(caster: *Mob, coord: Coord) void {
         if (coord.move(d, state.mapgeometry)) |neighbor| {
             if (state.is_walkable(neighbor, .{ .right_now = true })) {
                 spawnSabreSingle(caster, neighbor);
-
                 spawned_ctr -= 1;
             }
         }
@@ -1062,7 +1066,7 @@ pub const BOLT_CONJURE = Spell{
         .Custom = struct {
             fn f(caster_c: Coord, _: SpellOptions, coord: Coord) void {
                 const caster = state.dungeon.at(caster_c).mob.?;
-                spawnSabreVolley(caster, coord);
+                spawnSabreVolley(caster, coord, .{});
             }
         }.f,
     }},

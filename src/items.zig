@@ -226,7 +226,8 @@ pub const NIGHT_ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 65, .i = .{ .P = &BlindPotion } },
     .{ .w = 65, .i = .{ .P = &SmokePotion } },
     .{ .w = 65, .i = .{ .P = &ParalysisPotion } },
-    .{ .w = 64, .i = .{ .c = &NightShardKit } },
+    .{ .w = 65, .i = .{ .c = &NightShardKit } },
+    .{ .w = 60, .i = .{ .E = SpectralWisp } },
     // Weapons
     .{ .w = 40, .i = .{ .W = &ShadowSwordWeapon } },
     .{ .w = 40, .i = .{ .W = &ShadowMaulWeapon } },
@@ -240,10 +241,10 @@ pub const NIGHT_ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 15, .i = .{ .A = SpectralVestArmor } },
     .{ .w = 15, .i = .{ .C = &SpectralCloak } },
     // Spectral orb
-    .{ .w = 20, .i = .{ .c = &SpectralOrbConsumable } },
+    .{ .w = 15, .i = .{ .c = &SpectralOrbConsumable } },
     // Auxes
     .{ .w = 10, .i = .{ .X = &ShadowShieldAux } },
-    .{ .w = 5, .i = .{ .X = &EtherealShieldAux } },
+    .{ .w = 10, .i = .{ .X = &EtherealShieldAux } },
 };
 pub const HOLY_ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 50, .i = .{ .c = &LifeBreadConsumable } },
@@ -918,6 +919,25 @@ pub const SanctuarySigilEvoc = Evocable{
                     }
                 }
             }
+        }
+    }.f,
+};
+
+pub const SpectralWisp = Evocable{
+    .id = "evoc_spectral_wisp",
+    .name = "spectral wisp",
+    .tile_fg = colors.POLISHED_SLADE,
+    .max_charges = 2,
+    .rechargable = false,
+    .delete_when_inert = true,
+    .trigger_fn = struct {
+        fn f(mob: *Mob, _: *Evocable) Evocable.EvokeError!void {
+            assert(mob == state.player);
+            const chosen = ui.chooseCell(.{
+                .require_seen = true,
+                .targeter = .{ .Trajectory = .{} },
+            }) orelse return;
+            spells.spawnSabreVolley(state.player, chosen, .{ .min_spawn_num = 2 });
         }
     }.f,
 };

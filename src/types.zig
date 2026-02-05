@@ -4476,7 +4476,7 @@ pub const Mob = struct { // {{{
             state.player.canSeeMob(self) and player.hasSabresInSight() and
             self.isHostileTo(state.player))
         {
-            spells.spawnSabreVolley(state.player, self.coord);
+            spells.spawnSabreVolley(state.player, self.coord, .{});
         }
 
         // Apply death effect
