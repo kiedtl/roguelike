@@ -21,7 +21,7 @@ pub const Snap = struct {
 
         const file = try (try std.fs.cwd().openDir("src", .{}))
             .openFile(self.source.file, .{ .mode = .read_write });
-        const data = try file.readToEndAlloc(testing.allocator, 65535);
+        const data = try file.readToEndAlloc(testing.allocator, 1024 * 1024 * 32);
         defer testing.allocator.free(data);
 
         try file.seekTo(0);

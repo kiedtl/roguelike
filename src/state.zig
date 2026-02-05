@@ -437,16 +437,12 @@ pub fn tickLight(level: usize) void {
     const light_buffer = &dungeon.light[level];
 
     // Clear out previous light levels.
-    for (light_buffer) |*row| for (row) |*cell| {
-        cell.* = false;
-    };
+    for (light_buffer) |*row| @memset(row, false);
 
     // Now for the actual party...
 
-    var y: usize = 0;
-    while (y < HEIGHT) : (y += 1) {
-        var x: usize = 0;
-        while (x < WIDTH) : (x += 1) {
+    for (0..HEIGHT) |y| {
+        for (0..WIDTH) |x| {
             const coord = Coord.new2(level, x, y);
             const light = dungeon.emittedLight(coord);
 
@@ -462,9 +458,22 @@ pub fn tickLight(level: usize) void {
             // before noticing the issue.
             //
             if (light > 0) {
-                //fov.rayCast(coord, 20, light, Dungeon.tileOpacity, light_buffer, null);
                 const r = light / Dungeon.FLOOR_OPACITY;
-                fov.shadowCast(coord, r, mapgeometry, light_buffer, Dungeon.isTileOpaque);
+                fov.shadowCast(coord, r, mapgeometry, light_buffer, Dungeon.isTileOpaque, true);
+            }
+        }
+    }
+
+    // Anti-light
+
+    for (0..HEIGHT) |y| {
+        for (0..WIDTH) |x| {
+            const coord = Coord.new2(level, x, y);
+            const antilight = dungeon.emittedAntiLight(coord);
+
+            if (antilight > 0) {
+                const r = antilight / Dungeon.FLOOR_OPACITY;
+                fov.shadowCast(coord, r, mapgeometry, light_buffer, Dungeon.isTileOpaque, false);
             }
         }
     }

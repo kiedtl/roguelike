@@ -236,6 +236,7 @@ pub const DateTime = struct {
     }
 };
 
+// DEPRECATED, use Coord.iterCircleFilled
 pub const IterCircle = struct {
     buf: [HEIGHT][WIDTH]bool = [_][WIDTH]bool{[_]bool{false} ** WIDTH} ** HEIGHT,
     y: usize = 0,
@@ -259,6 +260,7 @@ pub const IterCircle = struct {
     }
 };
 
+// DEPRECATED, use Coord.iterCircleFilled
 pub fn iterCircle(center: Coord, r: usize) IterCircle {
     assert(r < @min(HEIGHT, WIDTH));
 
@@ -268,7 +270,7 @@ pub fn iterCircle(center: Coord, r: usize) IterCircle {
         pub fn f(_: Coord) bool {
             return false;
         }
-    }.f);
+    }.f, true);
 
     return i;
 }

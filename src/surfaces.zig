@@ -389,6 +389,7 @@ pub const MACHINES = [_]Machine{
     ResearchCore,
     TurbinePowerSupply,
     SparklingWorkstation,
+    NightShard,
     Brazier,
     Lamp,
     NormalDoor,
@@ -516,6 +517,35 @@ pub const SparklingWorkstation = Machine{
             }
         }
     }.f,
+};
+
+pub const NightShard = Machine{
+    .id = "night_shard",
+    .name = "night shard",
+    .show_on_hud = true,
+
+    .powered_tile = '7',
+    .unpowered_tile = '7',
+    // .powered_sprite = .S_O_M_NightShard,
+    // .unpowered_sprite = .S_O_M_NightShard,
+
+    .powered_fg = colors.POLISHED_SLADE,
+    .unpowered_fg = colors.POLISHED_SLADE,
+
+    .power_drain = 0,
+    .power = 100,
+
+    .powered_walkable = false,
+    .unpowered_walkable = false,
+
+    .powered_opacity = 1.0,
+    .unpowered_opacity = 1.0,
+
+    .powered_antiluminescence = 30,
+    .unpowered_antiluminescence = 30,
+
+    .flammability = 3,
+    .on_power = powerNone,
 };
 
 pub const Brazier = Machine{

@@ -552,14 +552,72 @@ pub const Coord = struct { // {{{
             ddf_x += 2;
             f += ddf_x + 1;
 
-            if (isValid(center.z, x + dx, y + dy, limit)) |coord| (func)(coord, ctx);
-            if (isValid(center.z, x - dx, y + dy, limit)) |coord| (func)(coord, ctx);
-            if (isValid(center.z, x + dx, y - dy, limit)) |coord| (func)(coord, ctx);
-            if (isValid(center.z, x - dx, y - dy, limit)) |coord| (func)(coord, ctx);
-            if (isValid(center.z, x + dy, y + dx, limit)) |coord| (func)(coord, ctx);
-            if (isValid(center.z, x - dy, y + dx, limit)) |coord| (func)(coord, ctx);
-            if (isValid(center.z, x + dy, y - dx, limit)) |coord| (func)(coord, ctx);
-            if (isValid(center.z, x - dy, y - dx, limit)) |coord| (func)(coord, ctx);
+            const coords = [_]struct { isize, isize }{
+                .{ x + dx, y + dy }, .{ x - dx, y + dy }, .{ x + dx, y - dy },
+                .{ x - dx, y - dy }, .{ x + dy, y + dx }, .{ x - dy, y + dx },
+                .{ x + dy, y - dx }, .{ x - dy, y - dx },
+            };
+
+            for (&coords) |xy|
+                if (isValid(center.z, xy.@"0", xy.@"1", limit)) |c|
+                    (func)(c, ctx);
+        }
+    }
+
+    pub fn iterCircleFilled(
+        center: Coord,
+        p_radius: usize,
+        ctx: anytype,
+        func: *const fn (Coord, @TypeOf(ctx)) void,
+    ) void {
+        const limit = state.mapgeometry;
+        const radius: isize = @intCast(p_radius);
+
+        const x: isize = @as(isize, @intCast(center.x));
+        const y: isize = @as(isize, @intCast(center.y));
+
+        var f = 1 - radius;
+        var ddf_x: isize = 0;
+        var ddf_y: isize = -2 * radius;
+        var dx: isize = 0;
+        var dy: isize = radius;
+
+        if (isValid(center.z, x, y + radius, limit)) |coord| (func)(coord, ctx);
+        if (isValid(center.z, x, y - radius, limit)) |coord| (func)(coord, ctx);
+
+        {
+            var vdx = x - radius;
+            while (vdx < x + radius) : (vdx += 1)
+                if (isValid(center.z, vdx, y, limit)) |coord|
+                    (func)(coord, ctx);
+        }
+
+        while (dx < dy) {
+            if (f >= 0) {
+                dy -= 1;
+                ddf_y += 2;
+                f += ddf_y;
+            }
+
+            dx += 1;
+            ddf_x += 2;
+            f += ddf_x + 1;
+
+            {
+                var vdx = x - dx;
+                while (vdx < x + dx) : (vdx += 1) {
+                    if (isValid(center.z, vdx, y - dy, limit)) |coord| (func)(coord, ctx);
+                    if (isValid(center.z, vdx, y + dy, limit)) |coord| (func)(coord, ctx);
+                }
+            }
+
+            {
+                var vdx = x - dy;
+                while (vdx < x + dy) : (vdx += 1) {
+                    if (isValid(center.z, vdx, y - dx, limit)) |coord| (func)(coord, ctx);
+                    if (isValid(center.z, vdx, y + dx, limit)) |coord| (func)(coord, ctx);
+                }
+            }
         }
     }
 
@@ -690,6 +748,35 @@ test "coord.move" {
     const limit = Coord.new(9, 9);
     const c = Coord.new(0, 0);
     try std.testing.expectEqual(c.move(.East, limit), Coord.new(1, 0));
+}
+
+test "coord.iterCircleFilled" {
+    const snap = utils.testing.snap;
+
+    var buf: [11][11]u8 = undefined;
+    for (&buf) |*row| @memset(row, '.');
+
+    Coord.new2(0, 5, 5).iterCircleFilled(4, &buf, struct {
+        pub fn f(c: Coord, b: *[11][11]u8) void {
+            b[c.y][c.x] = '#';
+        }
+    }.f);
+
+    const s = snap(@src(),
+        \\...........
+        \\....##.....
+        \\..######...
+        \\..######...
+        \\.########..
+        \\.########..
+        \\.########..
+        \\..######...
+        \\..######...
+        \\....##.....
+        \\...........
+    );
+
+    try utils.testing.expectEqual(utils.testing.mapToString(11, 11, &buf), s);
 }
 
 pub const Rect = struct {
@@ -5163,6 +5250,9 @@ pub const Machine = struct {
     unpowered_luminescence: usize = 0,
     dims: bool = false,
 
+    powered_antiluminescence: usize = 0,
+    unpowered_antiluminescence: usize = 0,
+
     porous: bool = false,
     flammability: usize = 0,
     fireproof: bool = false,
@@ -5306,6 +5396,13 @@ pub const Machine = struct {
                 self.powered_luminescence
         else
             self.unpowered_luminescence;
+    }
+
+    pub fn antiluminescence(self: *const Machine) usize {
+        return if (self.isPowered())
+            self.powered_antiluminescence
+        else
+            self.unpowered_antiluminescence;
     }
 
     // Utility funcs to aid machine definition creation
@@ -6598,6 +6695,21 @@ pub const Dungeon = struct {
         }
 
         l += fire.fireLight(self.fireAt(coord).*);
+
+        return l;
+    }
+
+    pub fn emittedAntiLight(_: *Dungeon, coord: Coord) usize {
+        const tile: *Tile = state.dungeon.at(coord);
+
+        var l: usize = 0;
+
+        if (tile.surface) |surface| {
+            switch (surface) {
+                .Machine => |m| l += m.antiluminescence(),
+                else => {},
+            }
+        }
 
         return l;
     }

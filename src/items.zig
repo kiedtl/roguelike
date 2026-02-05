@@ -226,6 +226,7 @@ pub const NIGHT_ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 65, .i = .{ .P = &BlindPotion } },
     .{ .w = 65, .i = .{ .P = &SmokePotion } },
     .{ .w = 65, .i = .{ .P = &ParalysisPotion } },
+    .{ .w = 64, .i = .{ .c = &NightShardKit } },
     // Weapons
     .{ .w = 40, .i = .{ .W = &ShadowSwordWeapon } },
     .{ .w = 40, .i = .{ .W = &ShadowMaulWeapon } },
@@ -1740,6 +1741,15 @@ pub const MineKit = Consumable{
     .verbs_player = Consumable.VERBS_PLAYER_KIT,
     .verbs_other = Consumable.VERBS_OTHER_KIT,
     .hated_by_nc = true,
+};
+
+pub const NightShardKit = Consumable{
+    .id = "kit_night_shard",
+    .name = "night shard",
+    .effects = &[_]Consumable.Effect{.{ .Kit = &surfaces.NightShard }},
+    .color = colors.NIGHT_BLUE,
+    .verbs_player = Consumable.VERBS_PLAYER_KIT,
+    .verbs_other = Consumable.VERBS_OTHER_KIT,
 };
 
 pub const RegeneratePotion = Consumable{

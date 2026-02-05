@@ -453,6 +453,7 @@ pub fn shadowCast(
     limit: Coord,
     buffer: *[HEIGHT][WIDTH]bool,
     opacity_func: *const fn (Coord) bool,
+    value: bool,
 ) void {
     // Area of coverage by each octant (the MULT constant does the job of
     // converting between octants, I think?):
@@ -493,10 +494,10 @@ pub fn shadowCast(
 
     const octants = [_]usize{ 0, 1, 2, 3, 4, 5, 6, 7 };
     for (octants) |oct| {
-        _cast_light(coord.z, @intCast(coord.x), @intCast(coord.y), 1, 1.0, 0.0, @intCast(max_radius), MULT[0][oct], MULT[1][oct], MULT[2][oct], MULT[3][oct], limit, buffer, opacity_func);
+        _cast_light(coord.z, @intCast(coord.x), @intCast(coord.y), 1, 1.0, 0.0, @intCast(max_radius), MULT[0][oct], MULT[1][oct], MULT[2][oct], MULT[3][oct], limit, buffer, opacity_func, value);
     }
 
-    buffer[coord.y][coord.x] = true;
+    buffer[coord.y][coord.x] = value;
 }
 
 fn _cast_light(
@@ -514,6 +515,7 @@ fn _cast_light(
     limit: Coord,
     buffer: *[HEIGHT][WIDTH]bool,
     tile_opacity: *const fn (Coord) bool,
+    value: bool,
 ) void {
     if (start_p < end) {
         return;
@@ -552,7 +554,7 @@ fn _cast_light(
 
             if (dx * dx + dy * dy <= @as(isize, @intCast(radius * radius))) {
                 // Our light beam is hitting this tile, light it.
-                buffer[coord.y][coord.x] = true;
+                buffer[coord.y][coord.x] = value;
             }
 
             const transparent = tile_opacity(coord);
@@ -569,7 +571,7 @@ fn _cast_light(
             } else if (transparent and j < radius) {
                 // This is a blocking square, start a child scan.
                 blocked = true;
-                _cast_light(level, cx, cy, j + 1, start, l_slope, radius, xx, xy, yx, yy, limit, buffer, tile_opacity);
+                _cast_light(level, cx, cy, j + 1, start, l_slope, radius, xx, xy, yx, yy, limit, buffer, tile_opacity, value);
                 new_start = r_slope;
             }
         }
