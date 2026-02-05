@@ -1987,7 +1987,7 @@ fn drawLog() void {
         var fold_iter = utils.FoldedTextIterator.init(buf.constSlice(), linewidth + 1);
         while (fold_iter.next(&fibuf)) |text_line| : (y += 1) {
             var console = Console.initHeap(state.alloc, linewidth, 1);
-            _ = console.drawTextAt(0, 0, text_line, .{});
+            _ = console.drawTextAt(0, 0, text_line, .{ .fg = message.type.color() });
             console.addRevealAnimation(.{ .factor = 6 });
             log_win.main.addSubconsole(console, 0, y);
         }
