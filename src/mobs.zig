@@ -2147,6 +2147,49 @@ pub const SpectralTotemTemplate = MobTemplate{
     },
 };
 
+pub const SpectralTyrantTemplate = MobTemplate{
+    .ignore_conflicting_tiles = true, // conflicts w/ spectral totem
+    .mob = .{
+        .id = "spec_tyrant",
+        .species = &Species{
+            .name = "spectral tyrant",
+            .is_night_creature = true,
+        },
+        .tile = 'Д',
+        .ai = AI{
+            .work_fn = ai.dummyWork,
+            .fight_fn = ai.mageFight,
+            .spellcaster_backup_action = .KeepDistance,
+            .is_curious = false,
+            .is_fearless = true,
+            .work_phase = .NC_Guard,
+        },
+
+        .spells = &[_]SpellOptions{
+            .{ .MP_cost = 5, .spell = &spells.BOLT_CONJURE },
+            .{ .MP_cost = 1, .spell = &spells.CAST_DREAMING_MIND, .power = 1 },
+        },
+        .max_MP = 7,
+
+        .deaf = true,
+        .deg360_vision = true,
+        .base_night_vision = true,
+
+        .immobile = true,
+        .faction = .Night,
+        .max_HP = 18,
+        .memory_duration = 999999,
+
+        .life_type = .Spectral,
+        .blood = null,
+        .corpse = .None,
+
+        // Deliberately less fire vuln than other NCs
+        .innate_resists = .{ .rFume = 100, .Armor = 75, .rElec = RESIST_IMMUNE, .rFire = -25, .rAcid = RESIST_IMMUNE },
+        .stats = .{ .Willpower = 10, .Speed = 40, .Conjuration = 3, .Vision = items.SPECTRAL_EYE_RADIUS + 1 },
+    },
+};
+
 pub const SpectralFlanTemplate = MobTemplate{
     .mob = .{
         .id = "spec_flan",
@@ -2659,6 +2702,7 @@ pub const MOBS = [_]*const MobTemplate{
     &SpectralSwordTemplate,
     &SpectralSabreTemplate,
     &SpectralTotemTemplate,
+    &SpectralTyrantTemplate,
     &SpectralFlanTemplate,
     &NightReaperTemplate,
     &GrueTemplate,

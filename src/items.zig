@@ -240,8 +240,9 @@ pub const NIGHT_ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 15, .i = .{ .H = &SpectralCrown } },
     .{ .w = 15, .i = .{ .A = SpectralVestArmor } },
     .{ .w = 15, .i = .{ .C = &SpectralCloak } },
-    // Spectral orb
+    // Consumables
     .{ .w = 15, .i = .{ .c = &SpectralOrbConsumable } },
+    .{ .w = 10, .i = .{ .c = &SpectralEyeConsumable } },
     // Auxes
     .{ .w = 10, .i = .{ .X = &ShadowShieldAux } },
     .{ .w = 10, .i = .{ .X = &EtherealShieldAux } },
@@ -1709,6 +1710,60 @@ pub const SpectralOrbConsumable = Consumable{
     .color = 0xcacbca,
     .verbs_player = &[_][]const u8{"use"},
     .verbs_other = &[_][]const u8{"[this is a bug]"},
+};
+
+pub const SPECTRAL_EYE_RADIUS = 7;
+pub const SpectralEyeConsumable = Consumable{
+    .id = "cons_spectral_eye",
+    .name = "spectral eye",
+    .effects = &[_]Consumable.Effect{
+        .{ .Custom = struct {
+            pub fn f(mob: ?*Mob, coord: Coord) void {
+                var dijk: dijkstra.Dijkstra = undefined;
+                dijk.init(coord, state.mapgeometry, SPECTRAL_EYE_RADIUS, struct {
+                    pub fn f(c: Coord, _: state.IsWalkableOptions) bool {
+                        return !state.dungeon.lightAt(c).* and
+                            state.is_walkable(c, .{ .ignore_mobs = true, .only_if_breaks_lof = true });
+                    }
+                }.f, .{}, state.alloc);
+                defer dijk.deinit();
+                var spawn_candidates = CoordArrayList.init(state.alloc);
+                defer spawn_candidates.deinit();
+                while (dijk.next()) |child| {
+                    if (state.is_walkable(child, .{ .right_now = true }))
+                        spawn_candidates.append(child) catch err.oom();
+                    if (state.dungeon.at(child).mob) |tilemob|
+                        switch (tilemob.life_type) {
+                            .Construct, .Spectral => {},
+                            .Undead => tilemob.takeDamage(.{
+                                .amount = 1,
+                                .by_mob = mob,
+                                .kind = .Irresistible,
+                                .blood = false,
+                                .source = .Other,
+                            }, .{ .strs = &[_]DamageStr{_dmgstr(1, "blast", "blasts", "")} }),
+                            .Living => if (tilemob != state.player) tilemob.addStatus(.Sleeping, 0, .{ .Tmp = 20 }),
+                        };
+                    if (state.dungeon.machineAt(child)) |mach|
+                        if (mem.eql(u8, mach.id, "light_brazier") or
+                            mem.eql(u8, mach.id, "light_lamp") or
+                            mem.eql(u8, mach.id, "trap_light_plate"))
+                        {
+                            mach.power = 0;
+                        };
+                    state.dungeon.fireAt(child).* = 0;
+                    state.dungeon.at(child).terrain = &surfaces.SladeTerrain;
+                }
+                if (spawn_candidates.items.len > 0) {
+                    const spawn = rng.chooseUnweighted(Coord, spawn_candidates.items);
+                    _ = mobs.placeMob(state.alloc, &mobs.SpectralTyrantTemplate, spawn, .{});
+                }
+            }
+        }.f },
+    },
+    .color = colors.POLISHED_SLADE,
+    .verbs_player = &[_][]const u8{"use"},
+    .verbs_other = &[_][]const u8{"uses"},
 };
 
 pub const GlueTrapKit = Consumable.createTrapKit("kit_trap_glue", "glue trap", false, struct {

@@ -1600,6 +1600,18 @@ pub const CAST_DISCHARGE = Spell{
     }.f }},
 };
 
+pub const CAST_DREAMING_MIND = Spell{
+    .id = "sp_dreaming_mind",
+    .name = "dreaming mind",
+    .cast_type = .Smite,
+    .effects = &[_]Effect{
+        .{ .Status = .Insane },
+        .{ .Status = .Fear },
+    },
+    .checks_will = true,
+    .animation = .{ .Particles = .{ .name = "zap-statues" } },
+};
+
 pub const CAST_BARTENDER_FERMENT = Spell{
     .id = "sp_ferment_bartender",
     .name = "ferment",

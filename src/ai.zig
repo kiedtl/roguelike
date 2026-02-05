@@ -1543,7 +1543,7 @@ fn _isValidTargetForSpell(caster: *Mob, spell: SpellOptions, target: *Mob) bool 
     var is_redundant = true;
     for (spell.spell.effects) |effect|
         switch (effect) {
-            .Status => if (!target.hasStatus(effect.Status)) {
+            .Status => if (!target.hasStatus(effect.Status) and !effect.Status.isMobImmune(target)) {
                 is_redundant = false;
             },
             else => is_redundant = false,

@@ -2855,18 +2855,16 @@ pub const Mob = struct { // {{{
         }
 
         var gen = eyes.iter();
-        while (gen.next()) |eye_coord|
-            if (perceptive) {
-                const S = struct {
-                    pub fn tileOpacity(coord: Coord, slade: bool) usize {
-                        const o = Dungeon.tileOpacity(coord, slade);
-                        return if (o < 100) 0 else 100;
-                    }
-                };
-                fov.rayCast(eye_coord, vision, energy, is_on_slade, S.tileOpacity, self.fov.m, direction, self == state.player);
-            } else {
-                fov.rayCast(eye_coord, vision, energy, is_on_slade, Dungeon.tileOpacity, self.fov.m, direction, self == state.player);
+        while (gen.next()) |eye_coord| {
+            const S = struct {
+                pub fn tileOpacity(coord: Coord, slade: bool) usize {
+                    const o = Dungeon.tileOpacity(coord, slade);
+                    return if (o < 100) 0 else 100;
+                }
             };
+            const opacity_fn: *const fn (Coord, bool) usize = if (perceptive) S.tileOpacity else Dungeon.tileOpacity;
+            fov.rayCast(eye_coord, vision, energy, is_on_slade, opacity_fn, self.fov.m, direction, self == state.player);
+        }
 
         for (self.fov.m, 0..) |row, y| for (row, 0..) |_, x| {
             if (self.fov.m[y][x] > 0) {
@@ -6644,7 +6642,9 @@ pub const Dungeon = struct {
             return @intFromFloat(tile.material.opacity * 100);
 
         const terrain = state.dungeon.terrainAt(coord);
-        const terrain_is_slade = terrain == &surfaces.SladeTerrain;
+
+        // Don't use terrainAt, don't let surface on top of slade affect opacity
+        const terrain_is_slade = state.dungeon.at(coord).terrain == &surfaces.SladeTerrain;
 
         if (standing_on_slade)
             o += if (terrain_is_slade) terrain.opacity else 90
