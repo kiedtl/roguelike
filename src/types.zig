@@ -2449,7 +2449,8 @@ pub const MobFov = struct { // {{{
 }; // }}}
 
 test "MobFov serialization" {
-    var mfov = MobFov{};
+    var mfov = MobFov.new();
+    defer mfov.deinit();
     for (0..HEIGHT) |y|
         for (0..WIDTH) |x|
             if (y % 3 == 0 or x * 3 % 7 > 3) {

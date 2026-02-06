@@ -750,10 +750,8 @@ pub fn getEvents(timeout: ?usize) GetEventsIter {
         .timeout = timeout,
         .timer = std.time.Timer.start() catch err.wat(),
         .got_non_mouse_ev = false,
-        .obsd_timer =
-            if (builtin.os.tag == .openbsd)
-                utils.OBSDTimer.new()
-                    catch err.fatal("kqueue error", .{})
-            else {},
+        .obsd_timer = if (builtin.os.tag == .openbsd)
+            utils.OBSDTimer.new() catch err.fatal("kqueue error", .{})
+        else {},
     };
 }
