@@ -1668,6 +1668,7 @@ x Wood should be creaky?
     loading a save
 - Scoresheets
   x Website, highscore page
+  - Record surroundings in more meaningful way
   - Adding an actual score
     - Record version of game, use different scoring methods for different versions
     - Record number of times player was spotted (ignore statues)
